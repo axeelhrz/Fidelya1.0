@@ -2,29 +2,49 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Button,
+  Stack,
+  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Switch,
+  FormControlLabel,
+  Alert,
+  Chip,
+  alpha,
+  Paper,
+  CircularProgress,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
+import {
+  Store,
+  Email,
+  Phone,
+  LocationOn,
+  Schedule,
+  Language,
+  Description,
+  Save,
+  Refresh,
+  Visibility,
+  VisibilityOff,
+  Business,
+  Category,
+  CheckCircle,
+  Warning,
+} from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { useComercio } from '@/hooks/useComercio';
 import { CATEGORIAS_COMERCIO } from '@/types/comercio';
-import {
-  Store,
-  Mail,
-  Phone,
-  MapPin,
-  Clock,
-  Globe,
-  FileText,
-  Save,
-  RotateCcw,
-  Eye,
-  EyeOff,
-  Building,
-  Tag,
-  CheckCircle,
-  AlertTriangle,
-  Sparkles,
-  Edit3,
-  X
-} from 'lucide-react';
 
 type ComercioProfileFormData = {
   nombre: string;
@@ -49,6 +69,9 @@ type ComercioProfileFormData = {
 };
 
 export const ProfileForm: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
   const { comercio, loading, updateProfile, error, clearError } = useComercio();
   const [isEditing, setIsEditing] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -203,21 +226,14 @@ export const ProfileForm: React.FC = () => {
 
   if (loading && !comercio) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Store className="w-8 h-8 text-white" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Cargando información...
-          </h3>
-          <p className="text-gray-500">Obteniendo datos del comercio</p>
-        </motion.div>
-      </div>
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: { xs: 4, md: 8 } }}>
+        <Stack alignItems="center" spacing={2}>
+          <CircularProgress size={40} sx={{ color: '#06b6d4' }} />
+          <Typography variant="body2" sx={{ color: '#64748b' }}>
+            Cargando información del comercio...
+          </Typography>
+        </Stack>
+      </Box>
     );
   }
 
@@ -226,305 +242,392 @@ export const ProfileForm: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="relative"
     >
-      <div className="p-6 sm:p-8 lg:p-10">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
-          <div className="text-center lg:text-left">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center justify-center lg:justify-start gap-3 mb-3"
-            >
-              <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
-                  <Store className="w-5 h-5 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
-              </div>
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
-                  Información General
-                </h2>
-                <p className="text-gray-600 font-medium">
-                  Mantén actualizada la información de tu comercio
-                </p>
-              </div>
-            </motion.div>
-          </div>
+      <Card
+        elevation={0}
+        sx={{
+          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+          border: '1px solid #e2e8f0',
+          borderRadius: { xs: 2, md: 4 },
+          overflow: 'hidden',
+          position: 'relative',
+        }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: { xs: 100, md: 200 },
+            height: { xs: 100, md: 200 },
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            borderRadius: '50%',
+            opacity: 0.05,
+            transform: 'translate(50%, -50%)',
+          }}
+        />
 
-          {/* Action Buttons */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-3 items-center"
+        <CardContent sx={{ p: { xs: 3, sm: 4, md: 6 }, position: 'relative', zIndex: 1 }}>
+          <Stack 
+            direction={{ xs: 'column', md: 'row' }} 
+            justifyContent="space-between" 
+            alignItems={{ xs: 'flex-start', md: 'center' }} 
+            spacing={{ xs: 3, md: 0 }}
+            sx={{ mb: { xs: 4, md: 6 } }}
           >
-            {/* Status Indicators */}
-            <AnimatePresence>
-              {hasChanges && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl"
-                >
-                  <AlertTriangle className="w-4 h-4 text-amber-600" />
-                  <span className="text-sm font-medium text-amber-700">Cambios sin guardar</span>
-                </motion.div>
-              )}
-              
-              {saveSuccess && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-xl"
-                >
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-700">Guardado exitosamente</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Edit/Save Buttons */}
-            {isEditing ? (
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  disabled={isSubmitting}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-all duration-200 disabled:opacity-50"
-                >
-                  <X className="w-4 h-4" />
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSubmit(onSubmit)}
-                  disabled={isSubmitting || !hasChanges}
-                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Guardando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      Guardar Cambios
-                    </>
-                  )}
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={handleEditToggle}
-                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl w-full sm:w-auto"
+            <Box sx={{ width: { xs: '100%', md: 'auto' } }}>
+              <Typography 
+                variant={isMobile ? "h5" : "h4"}
+                sx={{ 
+                  fontWeight: 900, 
+                  color: '#0f172a',
+                  mb: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: { xs: 1, md: 2 },
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  textAlign: { xs: 'center', sm: 'left' }
+                }}
               >
-                <Edit3 className="w-4 h-4" />
-                Editar Perfil
-              </button>
+                <Store sx={{ fontSize: { xs: 24, md: 32 }, color: '#6366f1' }} />
+                Información General
+              </Typography>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  color: '#64748b', 
+                  fontWeight: 500,
+                  textAlign: { xs: 'center', sm: 'left' },
+                  maxWidth: { xs: '100%', md: '80%' }
+                }}
+              >
+                Mantén actualizada la información de tu comercio para que los socios puedan encontrarte fácilmente.
+              </Typography>
+            </Box>
+
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              spacing={2} 
+              alignItems="center"
+              sx={{ width: { xs: '100%', md: 'auto' } }}
+            >
+              <AnimatePresence>
+                {hasChanges && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                  >
+                    <Chip
+                      icon={<Warning />}
+                      label="Cambios sin guardar"
+                      color="warning"
+                      size="small"
+                      sx={{ fontWeight: 600 }}
+                    />
+                  </motion.div>
+                )}
+                
+                {saveSuccess && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                  >
+                    <Chip
+                      icon={<CheckCircle />}
+                      label="Guardado exitosamente"
+                      sx={{ 
+                        bgcolor: '#10b981', 
+                        color: 'white',
+                        fontWeight: 600 
+                      }}
+                      size="small"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {isEditing ? (
+                <Stack 
+                  direction={{ xs: 'column', sm: 'row' }} 
+                  spacing={2}
+                  sx={{ width: { xs: '100%', sm: 'auto' } }}
+                >
+                  <Button
+                    variant="outlined"
+                    onClick={handleReset}
+                    startIcon={<Refresh />}
+                    disabled={isSubmitting}
+                    fullWidth={isMobile}
+                    size={isMobile ? "medium" : "large"}
+                    sx={{
+                      borderColor: '#d1d5db',
+                      color: '#6b7280',
+                      '&:hover': {
+                        borderColor: '#9ca3af',
+                        bgcolor: alpha('#6b7280', 0.1),
+                      }
+                    }}
+                  >
+                    Restablecer
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={handleSubmit(onSubmit)}
+                    disabled={isSubmitting || !hasChanges}
+                    startIcon={isSubmitting ? <CircularProgress size={16} /> : <Save />}
+                    fullWidth={isMobile}
+                    size={isMobile ? "medium" : "large"}
+                    sx={{
+                      background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                      boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                        boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
+                      },
+                      '&:disabled': {
+                        background: '#e2e8f0',
+                        color: '#94a3b8',
+                        boxShadow: 'none',
+                      }
+                    }}
+                  >
+                    {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+                  </Button>
+                </Stack>
+              ) : (
+                <Button
+                  variant="contained"
+                  onClick={handleEditToggle}
+                  startIcon={<Store />}
+                  fullWidth={isMobile}
+                  size={isMobile ? "medium" : "large"}
+                  sx={{
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                      boxShadow: '0 6px 25px rgba(99, 102, 241, 0.4)',
+                    }
+                  }}
+                >
+                  Editar Perfil
+                </Button>
+              )}
+            </Stack>
+          </Stack>
+
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                style={{ marginBottom: 24 }}
+              >
+                <Alert 
+                  severity="error" 
+                  onClose={clearError}
+                  sx={{ borderRadius: { xs: 2, md: 3 } }}
+                >
+                  {error}
+                </Alert>
+              </motion.div>
             )}
-          </div>
-        </div>
+          </AnimatePresence>
 
-        {/* Error Alert */}
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3"
-            >
-              <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-red-800 font-medium">{error}</p>
-              </div>
-              <button
-                onClick={clearError}
-                className="text-red-600 hover:text-red-800 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {/* Basic Information */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="space-y-6"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <Building className="w-4 h-4 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900">Datos Generales</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Nombre Comercial */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Nombre Comercial *
-                </label>
-                <div className="relative">
-                  <Store className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    {...register('nombreComercio', { 
-                      required: 'El nombre comercial es requerido',
-                      minLength: { value: 2, message: 'Mínimo 2 caracteres' }
-                    })}
-                    disabled={!isEditing}
-                    className={`w-full pl-11 pr-4 py-3 border rounded-xl transition-all duration-200 ${
-                      errors.nombreComercio 
-                        ? 'border-red-300 bg-red-50' 
-                        : isEditing 
-                          ? 'border-gray-300 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20' 
-                          : 'border-gray-200 bg-gray-50'
-                    }`}
-                    placeholder="Nombre de tu comercio"
-                  />
-                </div>
-                {errors.nombreComercio && (
-                  <p className="text-sm text-red-600">{errors.nombreComercio.message}</p>
-                )}
-              </div>
-
-              {/* Categoría */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Rubro o Categoría *
-                </label>
-                <div className="relative">
-                  <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
-                  <Controller
-                    name="categoria"
-                    control={control}
-                    rules={{ required: 'La categoría es requerida' }}
-                    render={({ field }) => (
-                      <select
-                        {...field}
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Stack spacing={{ xs: 4, md: 6 }}>
+              <Box>
+                <Typography 
+                  variant={isMobile ? "subtitle1" : "h6"}
+                  sx={{ 
+                    fontWeight: 700, 
+                    color: '#374151', 
+                    mb: { xs: 2, md: 3 },
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    textAlign: { xs: 'center', sm: 'left' }
+                  }}
+                >
+                  <Business sx={{ fontSize: { xs: 18, md: 20 }, color: '#6366f1' }} />
+                  Datos Generales
+                </Typography>
+                
+                <Stack spacing={{ xs: 3, md: 4 }}>
+                  <Stack 
+                    direction={{ xs: 'column', md: 'row' }} 
+                    spacing={{ xs: 3, md: 3 }}
+                  >
+                    <Box sx={{ flex: 1 }}>
+                      <TextField
+                        {...register('nombreComercio', { 
+                          required: 'El nombre comercial es requerido',
+                          minLength: { value: 2, message: 'Mínimo 2 caracteres' }
+                        })}
+                        label="Nombre Comercial"
+                        fullWidth
                         disabled={!isEditing}
-                        className={`w-full pl-11 pr-4 py-3 border rounded-xl transition-all duration-200 appearance-none ${
-                          errors.categoria 
-                            ? 'border-red-300 bg-red-50' 
-                            : isEditing 
-                              ? 'border-gray-300 bg-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20' 
-                              : 'border-gray-200 bg-gray-50'
-                        }`}
-                      >
-                        <option value="">Selecciona una categoría</option>
-                        {CATEGORIAS_COMERCIO.map((categoria) => (
-                          <option key={categoria} value={categoria}>
-                            {categoria}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  />
-                </div>
-                {errors.categoria && (
-                  <p className="text-sm text-red-600">{errors.categoria.message}</p>
-                )}
-              </div>
-
-              {/* CUIT */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  RUT / CUIT
-                </label>
-                <div className="relative">
-                  <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    {...register('cuit')}
-                    disabled={!isEditing}
-                    className={`w-full pl-11 pr-4 py-3 border rounded-xl transition-all duration-200 ${
-                      isEditing 
-                        ? 'border-gray-300 bg-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20' 
-                        : 'border-gray-200 bg-gray-50'
-                    }`}
-                    placeholder="12-34567890-1"
-                  />
-                </div>
-              </div>
-
-              {/* Visibilidad */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Visibilidad
-                </label>
-                <Controller
-                  name="visible"
-                  control={control}
-                  render={({ field }) => (
-                    <div className="flex items-center gap-3 p-3 border rounded-xl bg-gray-50">
-                      <button
-                        type="button"
-                        onClick={() => isEditing && field.onChange(!field.value)}
-                        disabled={!isEditing}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          field.value ? 'bg-blue-600' : 'bg-gray-300'
-                        } ${isEditing ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            field.value ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                      <div className="flex items-center gap-2">
-                        {field.value ? (
-                          <>
-                            <Eye className="w-4 h-4 text-green-600" />
-                            <span className="text-sm font-medium text-green-700">Visible para socios</span>
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff className="w-4 h-4 text-red-600" />
-                            <span className="text-sm font-medium text-red-700">Oculto para socios</span>
-                          </>
+                        error={!!errors.nombreComercio}
+                        helperText={errors.nombreComercio?.message}
+                        size={isMobile ? "medium" : "medium"}
+                        InputProps={{
+                          startAdornment: <Store sx={{ color: '#94a3b8', mr: 1 }} />,
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: { xs: 2, md: 3 },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#6366f1',
+                              borderWidth: 2,
+                            }
+                          }
+                        }}
+                      />
+                    </Box>
+                    
+                    <Box sx={{ flex: 1 }}>
+                      <Controller
+                        name="categoria"
+                        control={control}
+                        rules={{ required: 'La categoría es requerida' }}
+                        render={({ field }) => (
+                          <FormControl fullWidth disabled={!isEditing} error={!!errors.categoria}>
+                            <InputLabel>Rubro o Categoría</InputLabel>
+                            <Select
+                              {...field}
+                              label="Rubro o Categoría"
+                              size={isMobile ? "medium" : "medium"}
+                              startAdornment={<Category sx={{ color: '#94a3b8', mr: 1 }} />}
+                              sx={{
+                                borderRadius: { xs: 2, md: 3 },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: '#6366f1',
+                                  borderWidth: 2,
+                                }
+                              }}
+                            >
+                              {CATEGORIAS_COMERCIO.map((categoria) => (
+                                <MenuItem key={categoria} value={categoria}>
+                                  {categoria}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                            {errors.categoria && (
+                              <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
+                                {errors.categoria.message}
+                              </Typography>
+                            )}
+                          </FormControl>
                         )}
-                      </div>
-                    </div>
-                  )}
-                />
-              </div>
-            </div>
-          </motion.div>
+                      />
+                    </Box>
+                  </Stack>
 
-          {/* Contact Information */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="space-y-6"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg flex items-center justify-center">
-                <Phone className="w-4 h-4 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900">Información de Contacto</h3>
-            </div>
+                  <Stack 
+                    direction={{ xs: 'column', md: 'row' }} 
+                    spacing={{ xs: 3, md: 3 }}
+                  >
+                    <Box sx={{ flex: 1 }}>
+                      <TextField
+                        {...register('cuit')}
+                        label="RUT / CUIT"
+                        fullWidth
+                        disabled={!isEditing}
+                        placeholder="12-34567890-1"
+                        error={!!errors.cuit}
+                        helperText={errors.cuit?.message}
+                        size={isMobile ? "medium" : "medium"}
+                        InputProps={{
+                          startAdornment: <Description sx={{ color: '#94a3b8', mr: 1 }} />,
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: { xs: 2, md: 3 },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#6366f1',
+                              borderWidth: 2,
+                            }
+                          }
+                        }}
+                      />
+                    </Box>
 
-            <div className="space-y-6">
-              {/* Email */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Email Principal *
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
+                    <Box sx={{ flex: 1 }}>
+                      <Controller
+                        name="visible"
+                        control={control}
+                        render={({ field }) => (
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              p: { xs: 2, md: 3 },
+                              border: '1px solid #e2e8f0',
+                              borderRadius: { xs: 2, md: 3 },
+                              height: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              minHeight: { xs: 56, md: 56 }
+                            }}
+                          >
+                            <FormControlLabel
+                              control={
+                                <Switch
+                                  {...field}
+                                  checked={field.value ?? true}
+                                  disabled={!isEditing}
+                                  sx={{
+                                    '& .MuiSwitch-switchBase.Mui-checked': {
+                                      color: '#6366f1',
+                                    },
+                                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                      backgroundColor: '#6366f1',
+                                    },
+                                  }}
+                                />
+                              }
+                              label={
+                                <Stack direction="row" alignItems="center" spacing={1}>
+                                  {field.value ? <Visibility sx={{ color: '#10b981' }} /> : <VisibilityOff sx={{ color: '#ef4444' }} />}
+                                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                    {field.value ? 'Visible para socios' : 'Oculto para socios'}
+                                  </Typography>
+                                </Stack>
+                              }
+                            />
+                          </Paper>
+                        )}
+                      />
+                    </Box>
+                  </Stack>
+                </Stack>
+              </Box>
+
+              <Divider sx={{ opacity: 0.3 }} />
+
+              <Box>
+                <Typography 
+                  variant={isMobile ? "subtitle1" : "h6"}
+                  sx={{ 
+                    fontWeight: 700, 
+                    color: '#374151', 
+                    mb: { xs: 2, md: 3 },
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    textAlign: { xs: 'center', sm: 'left' }
+                  }}
+                >
+                  <Phone sx={{ fontSize: { xs: 18, md: 20 }, color: '#06b6d4' }} />
+                  Información de Contacto
+                </Typography>
+                
+                <Stack spacing={{ xs: 3, md: 4 }}>
+                  <TextField
                     {...register('email', { 
                       required: 'El email es requerido',
                       pattern: {
@@ -532,271 +635,324 @@ export const ProfileForm: React.FC = () => {
                         message: 'Formato de email inválido'
                       }
                     })}
+                    label="Email Principal"
                     type="email"
+                    fullWidth
                     disabled={!isEditing}
-                    className={`w-full pl-11 pr-4 py-3 border rounded-xl transition-all duration-200 ${
-                      errors.email 
-                        ? 'border-red-300 bg-red-50' 
-                        : isEditing 
-                          ? 'border-gray-300 bg-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20' 
-                          : 'border-gray-200 bg-gray-50'
-                    }`}
-                    placeholder="correo@micomercio.com"
-                  />
-                </div>
-                {errors.email && (
-                  <p className="text-sm text-red-600">{errors.email.message}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Teléfono */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Teléfono
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      {...register('telefono', {
-                        pattern: {
-                          value: /^[\+]?[0-9\s\-\(\)]+$/,
-                          message: 'Formato de teléfono inválido'
+                    error={!!errors.email}
+                    helperText={errors.email?.message}
+                    size={isMobile ? "medium" : "medium"}
+                    InputProps={{
+                      startAdornment: <Email sx={{ color: '#94a3b8', mr: 1 }} />,
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: { xs: 2, md: 3 },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#06b6d4',
+                          borderWidth: 2,
                         }
-                      })}
-                      disabled={!isEditing}
-                      className={`w-full pl-11 pr-4 py-3 border rounded-xl transition-all duration-200 ${
-                        errors.telefono 
-                          ? 'border-red-300 bg-red-50' 
-                          : isEditing 
-                            ? 'border-gray-300 bg-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20' 
-                            : 'border-gray-200 bg-gray-50'
-                      }`}
-                      placeholder="+598 99 123 456"
-                    />
-                  </div>
-                  {errors.telefono && (
-                    <p className="text-sm text-red-600">{errors.telefono.message}</p>
-                  )}
-                </div>
+                      }
+                    }}
+                  />
 
-                {/* Horarios */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Horarios de Atención
-                  </label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      {...register('horario')}
-                      disabled={!isEditing}
-                      className={`w-full pl-11 pr-4 py-3 border rounded-xl transition-all duration-200 ${
-                        isEditing 
-                          ? 'border-gray-300 bg-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20' 
-                          : 'border-gray-200 bg-gray-50'
-                      }`}
-                      placeholder="Lunes a Viernes - 9 a 18 hs"
-                    />
-                  </div>
-                </div>
-              </div>
+                  <Stack 
+                    direction={{ xs: 'column', md: 'row' }} 
+                    spacing={{ xs: 3, md: 3 }}
+                  >
+                    <Box sx={{ flex: 1 }}>
+                      <TextField
+                        {...register('telefono', {
+                          pattern: {
+                            value: /^[\+]?[0-9\s\-\(\)]+$/,
+                            message: 'Formato de teléfono inválido'
+                          }
+                        })}
+                        label="Teléfono"
+                        fullWidth
+                        disabled={!isEditing}
+                        error={!!errors.telefono}
+                        helperText={errors.telefono?.message}
+                        placeholder="+598 99 123 456"
+                        size={isMobile ? "medium" : "medium"}
+                        InputProps={{
+                          startAdornment: <Phone sx={{ color: '#94a3b8', mr: 1 }} />,
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: { xs: 2, md: 3 },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#06b6d4',
+                              borderWidth: 2,
+                            }
+                          }
+                        }}
+                      />
+                    </Box>
+                    
+                    <Box sx={{ flex: 1 }}>
+                      <TextField
+                        {...register('horario')}
+                        label="Horarios de Atención"
+                        fullWidth
+                        disabled={!isEditing}
+                        placeholder="Lunes a Viernes - 9 a 18 hs"
+                        error={!!errors.horario}
+                        helperText={errors.horario?.message}
+                        size={isMobile ? "medium" : "medium"}
+                        InputProps={{
+                          startAdornment: <Schedule sx={{ color: '#94a3b8', mr: 1 }} />,
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: { xs: 2, md: 3 },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#06b6d4',
+                              borderWidth: 2,
+                            }
+                          }
+                        }}
+                      />
+                    </Box>
+                  </Stack>
 
-              {/* Dirección */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Dirección Física *
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
+                  <TextField
                     {...register('direccion', {
                       required: 'La dirección es requerida'
                     })}
+                    label="Dirección Física"
+                    fullWidth
                     disabled={!isEditing}
-                    className={`w-full pl-11 pr-4 py-3 border rounded-xl transition-all duration-200 ${
-                      errors.direccion 
-                        ? 'border-red-300 bg-red-50' 
-                        : isEditing 
-                          ? 'border-gray-300 bg-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20' 
-                          : 'border-gray-200 bg-gray-50'
-                    }`}
-                    placeholder="Dirección completa del comercio"
+                    error={!!errors.direccion}
+                    helperText={errors.direccion?.message}
+                    size={isMobile ? "medium" : "medium"}
+                    InputProps={{
+                      startAdornment: <LocationOn sx={{ color: '#94a3b8', mr: 1 }} />,
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: { xs: 2, md: 3 },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#06b6d4',
+                          borderWidth: 2,
+                        }
+                      }
+                    }}
                   />
-                </div>
-                {errors.direccion && (
-                  <p className="text-sm text-red-600">{errors.direccion.message}</p>
-                )}
-              </div>
-            </div>
-          </motion.div>
+                </Stack>
+              </Box>
 
-          {/* Description */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="space-y-6"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center">
-                <FileText className="w-4 h-4 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900">Descripción y Presentación</h3>
-            </div>
+              <Divider sx={{ opacity: 0.3 }} />
 
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">
-                Descripción del Comercio
-              </label>
-              <textarea
-                {...register('descripcion', {
-                  maxLength: {
-                    value: 500,
-                    message: 'Máximo 500 caracteres'
-                  }
-                })}
-                disabled={!isEditing}
-                rows={4}
-                className={`w-full px-4 py-3 border rounded-xl transition-all duration-200 resize-none ${
-                  errors.descripcion 
-                    ? 'border-red-300 bg-red-50' 
-                    : isEditing 
-                      ? 'border-gray-300 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20' 
-                      : 'border-gray-200 bg-gray-50'
-                }`}
-                placeholder="Describe tu comercio, productos o servicios que ofreces a los socios de Fidelitá..."
-              />
-              <div className="flex justify-between items-center">
-                {errors.descripcion && (
-                  <p className="text-sm text-red-600">{errors.descripcion.message}</p>
-                )}
-                <p className="text-sm text-gray-500 ml-auto">
-                  {watchedFields.descripcion?.length || 0}/500 caracteres
-                </p>
-              </div>
-            </div>
-          </motion.div>
+              <Box>
+                <Typography 
+                  variant={isMobile ? "subtitle1" : "h6"}
+                  sx={{ 
+                    fontWeight: 700, 
+                    color: '#374151', 
+                    mb: { xs: 2, md: 3 },
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    textAlign: { xs: 'center', sm: 'left' }
+                  }}
+                >
+                  <Description sx={{ fontSize: { xs: 18, md: 20 }, color: '#10b981' }} />
+                  Descripción y Presentación
+                </Typography>
+                
+                <TextField
+                  {...register('descripcion', {
+                    maxLength: {
+                      value: 500,
+                      message: 'Máximo 500 caracteres'
+                    }
+                  })}
+                  label="Descripción del Comercio"
+                  fullWidth
+                  multiline
+                  rows={isMobile ? 3 : 4}
+                  disabled={!isEditing}
+                  placeholder="Describe tu comercio, productos o servicios que ofreces a los socios de Fidelitá..."
+                  helperText={`${watchedFields.descripcion?.length || 0}/500 caracteres. Esta descripción será visible para los socios.`}
+                  error={!!errors.descripcion}
+                  size={isMobile ? "medium" : "medium"}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: { xs: 2, md: 3 },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#10b981',
+                        borderWidth: 2,
+                      }
+                    }
+                  }}
+                />
+              </Box>
 
-          {/* Online Presence */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="space-y-6"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg flex items-center justify-center">
-                <Globe className="w-4 h-4 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900">Presencia Online</h3>
-            </div>
+              <Divider sx={{ opacity: 0.3 }} />
 
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">
-                Sitio Web
-              </label>
-              <div className="relative">
-                <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
+              <Box>
+                <Typography 
+                  variant={isMobile ? "subtitle1" : "h6"}
+                  sx={{ 
+                    fontWeight: 700, 
+                    color: '#374151', 
+                    mb: { xs: 2, md: 3 },
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    textAlign: { xs: 'center', sm: 'left' }
+                  }}
+                >
+                  <Language sx={{ fontSize: { xs: 18, md: 20 }, color: '#f59e0b' }} />
+                  Presencia Online
+                </Typography>
+                
+                <TextField
                   {...register('sitioWeb', {
                     pattern: {
                       value: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
                       message: 'URL inválida. Ejemplo: https://www.micomercio.com'
                     }
                   })}
+                  label="Sitio Web"
+                  fullWidth
                   disabled={!isEditing}
-                  className={`w-full pl-11 pr-4 py-3 border rounded-xl transition-all duration-200 ${
-                    errors.sitioWeb 
-                      ? 'border-red-300 bg-red-50' 
-                      : isEditing 
-                        ? 'border-gray-300 bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20' 
-                        : 'border-gray-200 bg-gray-50'
-                  }`}
                   placeholder="https://www.micomercio.com"
+                  error={!!errors.sitioWeb}
+                  helperText={errors.sitioWeb?.message}
+                  size={isMobile ? "medium" : "medium"}
+                  InputProps={{
+                    startAdornment: <Language sx={{ color: '#94a3b8', mr: 1 }} />,
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: { xs: 2, md: 3 },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#f59e0b',
+                        borderWidth: 2,
+                      }
+                    }
+                  }}
                 />
-              </div>
-              {errors.sitioWeb && (
-                <p className="text-sm text-red-600">{errors.sitioWeb.message}</p>
-              )}
-            </div>
-          </motion.div>
-        </form>
-      </div>
+              </Box>
+            </Stack>
+          </form>
+        </CardContent>
+      </Card>
 
-      {/* Floating Save Changes Alert */}
       <AnimatePresence>
         {hasChanges && isEditing && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            className="fixed bottom-6 right-6 left-6 sm:left-auto sm:max-w-md z-50"
+            style={{ 
+              position: 'fixed', 
+              bottom: isMobile ? 16 : 24, 
+              right: isMobile ? 16 : 24, 
+              left: isMobile ? 16 : 'auto',
+              zIndex: 1000,
+              maxWidth: isMobile ? 'auto' : 400
+            }}
           >
-            <div className="bg-white border border-amber-200 rounded-2xl shadow-2xl p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
-                  <AlertTriangle className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900">Cambios sin guardar</h4>
-                  <p className="text-sm text-gray-600">Tienes modificaciones pendientes</p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleReset}
-                  disabled={isSubmitting}
-                  className="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors text-sm"
+            <Alert
+              severity="warning"
+              action={
+                <Stack 
+                  direction={{ xs: 'column', sm: 'row' }} 
+                  spacing={1}
+                  sx={{ width: { xs: '100%', sm: 'auto' } }}
                 >
-                  Descartar
-                </button>
-                <button
-                  onClick={handleSubmit(onSubmit)}
-                  disabled={isSubmitting}
-                  className="flex-1 px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-200 text-sm flex items-center justify-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Guardando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-3 h-3" />
-                      Guardar
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={handleReset}
+                    disabled={isSubmitting}
+                    fullWidth={isMobile}
+                  >
+                    Descartar
+                  </Button>
+                  <Button
+                    color="inherit"
+                    size="small"
+                    variant="outlined"
+                    onClick={handleSubmit(onSubmit)}
+                    disabled={isSubmitting}
+                    startIcon={isSubmitting ? <CircularProgress size={12} /> : undefined}
+                    fullWidth={isMobile}
+                  >
+                    {isSubmitting ? 'Guardando...' : 'Guardar'}
+                  </Button>
+                </Stack>
+              }
+              sx={{
+                boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                borderRadius: { xs: 2, md: 3 },
+                bgcolor: '#fff3cd',
+                border: '1px solid #ffeaa7',
+                flexDirection: { xs: 'column', sm: 'row' },
+                '& .MuiAlert-action': {
+                  width: { xs: '100%', sm: 'auto' },
+                  mt: { xs: 1, sm: 0 },
+                  ml: { xs: 0, sm: 'auto' }
+                }
+              }}
+            >
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                Tienes cambios sin guardar
+              </Typography>
+            </Alert>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Loading Overlay */}
       <AnimatePresence>
         {isSubmitting && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+              padding: isMobile ? '1rem' : '2rem'
+            }}
           >
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl"
+              style={{
+                backgroundColor: 'white',
+                padding: isMobile ? '1.5rem' : '2rem',
+                borderRadius: isMobile ? '0.5rem' : '1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '1rem',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+                maxWidth: isMobile ? '90vw' : 'auto',
+                textAlign: 'center'
+              }}
             >
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
+              <CircularProgress size={40} sx={{ color: '#6366f1' }} />
+              <Typography variant={isMobile ? "body1" : "h6"} sx={{ fontWeight: 600, color: '#374151' }}>
                 Guardando cambios...
-              </h3>
-              <p className="text-gray-600">
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#64748b', textAlign: 'center' }}>
                 Por favor espera mientras actualizamos tu perfil
-              </p>
+              </Typography>
             </motion.div>
           </motion.div>
         )}
