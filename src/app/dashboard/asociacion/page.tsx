@@ -8,6 +8,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AsociacionSidebar } from '@/components/layout/AsociacionSidebar';
 import { LogoutModal } from '@/components/ui/LogoutModal';
 import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAsociacionNavigation } from '@/hooks/useSimpleAsociacionNavigation';
 import { 
   Store, 
   BarChart3, 
@@ -132,29 +133,6 @@ const ModernQuickActions = memo<{
 
 ModernQuickActions.displayName = 'ModernQuickActions';
 
-// Memoized Sidebar Component
-const AsociacionSidebarWithLogout = memo<{
-  open: boolean;
-  onToggle: () => void;
-  onMenuClick: (section: string) => void;
-  activeSection: string;
-  onLogoutClick: () => void;
-  isMobile: boolean;
-}>((props) => {
-  return (
-    <AsociacionSidebar
-      open={props.open}
-      onToggle={props.onToggle}
-      onMenuClick={props.onMenuClick}
-      onLogoutClick={props.onLogoutClick}
-      activeSection={props.activeSection}
-      isMobile={props.isMobile}
-    />
-  );
-});
-
-AsociacionSidebarWithLogout.displayName = 'AsociacionSidebarWithLogout';
-
 // Loading Component
 const DashboardLoading = memo(() => (
   <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
@@ -193,7 +171,6 @@ DashboardLoading.displayName = 'DashboardLoading';
 interface User {
   nombre?: string;
   role?: string;
-  // Add other properties as needed
 }
 
 const DashboardContent = memo<{
@@ -322,15 +299,14 @@ export default function OptimizedAsociacionDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   
-  // Usar el hook de navegación optimizado
+  // Usar el hook de navegación simplificado
   const {
     activeSection,
     navigateToSection,
     isNavigating
-  } = useOptimizedAsociacionNavigation({
+  } = useSimpleAsociacionNavigation({
     autoCloseOnMobile: true,
-    debounceMs: 150,
-    enableCache: true
+    debounceMs: 150
   });
   
   // State management
@@ -398,7 +374,7 @@ export default function OptimizedAsociacionDashboard() {
         onSectionChange={handleNavigate}
         sidebarComponent={AsociacionSidebarWithLogout}
         enableTransitions={true}
-        enableOptimizedNavigation={true}
+        enableOptimizedNavigation={false}
       >
         <motion.div
           key={activeSection}
