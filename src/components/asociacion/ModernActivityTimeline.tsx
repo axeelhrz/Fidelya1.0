@@ -39,16 +39,24 @@ const ModernActivityTimelineComponent: React.FC<ModernActivityTimelineProps> = (
   onViewAll 
 }) => {
   const getActivityIcon = useMemo(() => (type: ActivityLog['type']) => {
-    const icons = {
-      member_added: <UserPlus className="w-4 h-4" />,
-      member_updated: <Users className="w-4 h-4" />,
-      payment_received: <DollarSign className="w-4 h-4" />,
-      backup_completed: <Shield className="w-4 h-4" />,
-      import_completed: <Activity className="w-4 h-4" />,
-      system_alert: <AlertCircle className="w-4 h-4" />,
-    };
-    return icons[type] || <Activity className="w-4 h-4" />;
+    switch (type) {
+      case 'member_added':
+        return <UserPlus className="w-6 h-6" />;
+      case 'member_updated':
+        return <Users className="w-6 h-6" />;
+      case 'payment_received':
+        return <DollarSign className="w-6 h-6" />;
+      case 'backup_completed':
+        return <Shield className="w-6 h-6" />;
+      case 'import_completed':
+        return <Activity className="w-6 h-6" />;
+      case 'system_alert':
+        return <AlertCircle className="w-6 h-6" />;
+      default:
+        return <Activity className="w-6 h-6" />;
+    }
   }, []);
+
 
   const getActivityGradient = useMemo(() => (type: ActivityLog['type']) => {
     const gradients = {
@@ -159,7 +167,7 @@ const ModernActivityTimelineComponent: React.FC<ModernActivityTimelineProps> = (
   );
 };
 
-ModernActivityTimelineComponent.displayName = 'ModernActivityTimeline';
+ModernActivityTimelineComponent.displayName = 'ModernActivityTimelineComponent';
 
 const ModernActivityTimeline = memo(ModernActivityTimelineComponent);
 ModernActivityTimeline.displayName = 'ModernActivityTimeline';
