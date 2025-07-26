@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Gift, 
@@ -10,14 +10,9 @@ import {
   Building2, 
   Users, 
   Info,
-  Search,
-  Filter,
-  Grid3X3,
-  List,
   TrendingUp,
   Calendar,
   DollarSign,
-  ChevronDown,
   Sparkles,
   Target,
   Award,
@@ -48,9 +43,6 @@ type BeneficioUsado = {
   notas?: string;
 };
 
-type ViewMode = 'grid' | 'list';
-type FilterType = 'all' | 'asociacion' | 'comercio' | 'publico';
-
 export default function SocioBeneficiosPage() {
   const { signOut } = useAuth();
   const {
@@ -66,54 +58,6 @@ export default function SocioBeneficiosPage() {
   } = useBeneficiosSocio();
 
   const [activeTab, setActiveTab] = useState<'disponibles' | 'usados' | 'info'>('disponibles');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<FilterType>('all');
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-
-  // Get unique categories
-  const categories = useMemo(() => {
-    return Array.from(new Set(beneficios.map(b => b.categoria))).sort();
-  }, [beneficios]);
-
-  // Filter benefits based on search and filters
-  const filteredBeneficios = useMemo(() => {
-    console.log('🔍 DEBUG - Beneficios originales:', beneficios.length);
-    console.log('🔍 DEBUG - Beneficios completos:', beneficios);
-    
-    const filtered = beneficios.filter(beneficio => {
-      const matchesSearch = 
-        beneficio.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        beneficio.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        beneficio.comercioNombre.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesCategory = !selectedCategory || beneficio.categoria === selectedCategory;
-      
-      const matchesFilter = filterType === 'all' || 
-        (filterType === 'asociacion' && beneficio.origenBeneficio === 'asociacion') ||
-        (filterType === 'comercio' && ['comercio_vinculado', 'comercio_afiliado'].includes(beneficio.origenBeneficio || '')) ||
-        (filterType === 'publico' && beneficio.origenBeneficio === 'publico');
-      
-      console.log(`🔍 DEBUG - Beneficio "${beneficio.titulo}":`, {
-        matchesSearch,
-        matchesCategory,
-        matchesFilter,
-        origenBeneficio: beneficio.origenBeneficio,
-        estado: beneficio.estado,
-        searchTerm,
-        selectedCategory,
-        filterType
-      });
-      
-      return matchesSearch && matchesCategory && matchesFilter;
-    });
-    
-    console.log('🔍 DEBUG - Beneficios filtrados:', filtered.length);
-    console.log('🔍 DEBUG - Beneficios filtrados completos:', filtered);
-    
-    return filtered;
-  }, [beneficios, searchTerm, selectedCategory, filterType]);
 
   const handleUseBenefit = async (beneficioId: string, comercioId: string) => {
     try {
@@ -126,7 +70,7 @@ export default function SocioBeneficiosPage() {
   };
 
   const handleExport = () => {
-    const data = activeTab === 'disponibles' ? filteredBeneficios : beneficiosUsados;
+    const data = activeTab === 'disponibles' ? beneficios : beneficiosUsados;
     const csvContent = [
       ['Título', 'Comercio', 'Categoría', 'Descuento', 'Estado', 'Fecha', 'Origen'],
       ...data.map(item => [
@@ -175,12 +119,6 @@ export default function SocioBeneficiosPage() {
       console.error('Error during logout:', error);
       toast.error('Error al cerrar sesión');
     }
-  };
-
-  const clearFilters = () => {
-    setSearchTerm('');
-    setSelectedCategory('');
-    setFilterType('all');
   };
 
   if (error) {
@@ -426,130 +364,6 @@ export default function SocioBeneficiosPage() {
             </div>
           </motion.div>
 
-          {/* Enhanced Filters for Available Benefits */}
-          {activeTab === 'disponibles' && (
-            <motion.div 
-              className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-                <div className="flex items-center gap-3">
-                  <Filter className="w-5 h-5 text-purple-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Filtros y Búsqueda</h3>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                    className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                  >
-                    {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid3X3 className="w-5 h-5" />}
-                  </button>
-                  
-                  <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                      showFilters ? 'bg-purple-50 border-purple-200 text-purple-700' : 'border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Filter className="w-4 h-4" />
-                    <span className="hidden sm:inline">Filtros</span>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-                  </button>
-                </div>
-              </div>
-
-              <AnimatePresence>
-                {showFilters && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
-                      {/* Search */}
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                          type="text"
-                          placeholder="Buscar beneficios..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                        />
-                      </div>
-
-                      {/* Category Filter */}
-                      <select
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                      >
-                        <option value="">Todas las categorías</option>
-                        {categories.map(category => (
-                          <option key={category} value={category}>{category}</option>
-                        ))}
-                      </select>
-
-                      {/* Source Filter */}
-                      <select
-                        value={filterType}
-                        onChange={(e) => setFilterType(e.target.value as FilterType)}
-                        className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                      >
-                        <option value="all">Todas las fuentes</option>
-                        <option value="asociacion">Mi Asociación</option>
-                        <option value="comercio">Comercios Afiliados</option>
-                        <option value="publico">Públicos</option>
-                      </select>
-
-                      {/* Clear Filters */}
-                      <button
-                        onClick={clearFilters}
-                        className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium"
-                      >
-                        Limpiar filtros
-                      </button>
-                    </div>
-
-                    {/* Filter Summary */}
-                    <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
-                      <span>
-                        Mostrando {filteredBeneficios.length} de {beneficios.length} beneficios
-                      </span>
-                      
-                      {(searchTerm || selectedCategory || filterType !== 'all') && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-purple-600 font-medium">Filtros activos:</span>
-                          {searchTerm && (
-                            <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs">
-                              "{searchTerm}"
-                            </span>
-                          )}
-                          {selectedCategory && (
-                            <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs">
-                              {selectedCategory}
-                            </span>
-                          )}
-                          {filterType !== 'all' && (
-                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs">
-                              {filterType === 'asociacion' ? 'Asociación' : 
-                               filterType === 'comercio' ? 'Comercios' : 'Públicos'}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          )}
-
           {/* Content Area */}
           <AnimatePresence mode="wait">
             {activeTab === 'disponibles' && (
@@ -561,7 +375,7 @@ export default function SocioBeneficiosPage() {
                 transition={{ duration: 0.3 }}
               >
                 <BeneficiosList
-                  beneficios={filteredBeneficios}
+                  beneficios={beneficios}
                   loading={loading}
                   userRole="socio"
                   onUse={handleUseBenefit}
