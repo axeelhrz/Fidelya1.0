@@ -1017,24 +1017,22 @@ export class BeneficiosService {
       let beneficios: Beneficio[] = [];
       let usos: BeneficioUso[] = [];
 
-      // Si es para un socio específico, obtener solo los beneficios que ha usado
+      // Si es para un socio específico, obtener sus beneficios disponibles y usos
       if (filtros?.socioId) {
         console.log('📊 Calculando estadísticas específicas para socio:', filtros.socioId);
+        
+        // Obtener beneficios disponibles para el socio
+        if (filtros.asociacionId) {
+          beneficios = await this.obtenerBeneficiosDisponibles(
+            filtros.socioId,
+            filtros.asociacionId
+          );
+        }
         
         // Obtener usos del socio
         usos = await this.obtenerHistorialUsos(filtros.socioId);
         
-        // Obtener los beneficios únicos que el socio ha usado
-        const beneficiosUsadosIds = [...new Set(usos.map(uso => uso.beneficioId))];
-        
-        // Obtener información de los beneficios usados
-        if (beneficiosUsadosIds.length > 0) {
-          const beneficiosPromises = beneficiosUsadosIds.map(id => this.obtenerBeneficio(id));
-          const beneficiosResults = await Promise.all(beneficiosPromises);
-          beneficios = beneficiosResults.filter(b => b !== null) as Beneficio[];
-        }
-        
-        console.log(`📊 Socio ha usado ${beneficios.length} beneficios únicos con ${usos.length} usos totales`);
+        console.log(`📊 Socio tiene ${beneficios.length} beneficios disponibles y ${usos.length} usos totales`);
       } else {
         // Consultas paralelas para mejor rendimiento (comportamiento original)
         const [beneficiosSnapshot, usosSnapshot] = await Promise.all([
