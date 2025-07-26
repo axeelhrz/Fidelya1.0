@@ -15,12 +15,33 @@ import {
 } from 'lucide-react';
 
 // Lazy load heavy components for optimal performance
+// Note: For named exports, we need to destructure the component from the module
 const OptimizedOverviewDashboard = lazy(() => import('@/components/asociacion/OptimizedOverviewDashboard'));
-const EnhancedMemberManagement = lazy(() => import('@/components/asociacion/EnhancedMemberManagement'));
-const ComercioManagement = lazy(() => import('@/components/asociacion/ComercioManagement'));
-const BeneficiosManagement = lazy(() => import('@/components/asociacion/BeneficiosManagement'));
-const AdvancedAnalytics = lazy(() => import('@/components/asociacion/AdvancedAnalytics'));
-const NotificationsCenter = lazy(() => import('@/components/asociacion/NotificationsCenter'));
+const EnhancedMemberManagement = lazy(() => 
+  import('@/components/asociacion/EnhancedMemberManagement').then(module => ({ 
+    default: module.EnhancedMemberManagement 
+  }))
+);
+const ComercioManagement = lazy(() => 
+  import('@/components/asociacion/ComercioManagement').then(module => ({ 
+    default: module.ComercioManagement 
+  }))
+);
+const BeneficiosManagement = lazy(() => 
+  import('@/components/asociacion/BeneficiosManagement').then(module => ({ 
+    default: module.BeneficiosManagement 
+  }))
+);
+const AdvancedAnalytics = lazy(() => 
+  import('@/components/asociacion/AdvancedAnalytics').then(module => ({ 
+    default: module.AdvancedAnalytics 
+  }))
+);
+const NotificationsCenter = lazy(() => 
+  import('@/components/asociacion/NotificationsCenter').then(module => ({ 
+    default: module.NotificationsCenter 
+  }))
+);
 
 // Tab configuration with optimized structure
 interface TabConfig {
@@ -145,16 +166,6 @@ const TabButton = memo<{
 });
 
 TabButton.displayName = 'TabButton';
-
-// Component renderer for lazy components
-const LazyComponentRenderer = memo<{
-  Component: React.LazyExoticComponent<React.ComponentType<any>>;
-  props: any;
-}>(({ Component, props }) => {
-  return <Component {...props} />;
-});
-
-LazyComponentRenderer.displayName = 'LazyComponentRenderer';
 
 // Main optimized tab system component
 interface OptimizedTabSystemProps {
@@ -324,10 +335,7 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
                 <TabLoadingState tabId={activeTab} />
               ) : (
                 <Suspense fallback={<TabLoadingState tabId={activeTab} />}>
-                  <LazyComponentRenderer 
-                    Component={currentTab.component} 
-                    props={componentProps} 
-                  />
+                  <currentTab.component {...componentProps} />
                 </Suspense>
               )}
             </motion.div>
