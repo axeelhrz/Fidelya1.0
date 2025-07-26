@@ -146,6 +146,16 @@ const TabButton = memo<{
 
 TabButton.displayName = 'TabButton';
 
+// Component renderer for lazy components
+const LazyComponentRenderer = memo<{
+  Component: React.LazyExoticComponent<React.ComponentType<any>>;
+  props: any;
+}>(({ Component, props }) => {
+  return <Component {...props} />;
+});
+
+LazyComponentRenderer.displayName = 'LazyComponentRenderer';
+
 // Main optimized tab system component
 interface OptimizedTabSystemProps {
   onNavigate?: (section: string) => void;
@@ -314,7 +324,10 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
                 <TabLoadingState tabId={activeTab} />
               ) : (
                 <Suspense fallback={<TabLoadingState tabId={activeTab} />}>
-                  <currentTab.component {...componentProps} />
+                  <LazyComponentRenderer 
+                    Component={currentTab.component} 
+                    props={componentProps} 
+                  />
                 </Suspense>
               )}
             </motion.div>
