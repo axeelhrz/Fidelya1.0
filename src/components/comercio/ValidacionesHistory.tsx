@@ -86,15 +86,32 @@ export const ValidacionesHistory: React.FC = () => {
   // Filter and sort validaciones
   const filteredAndSortedValidaciones = useMemo(() => {
     const filtered = validaciones.filter(validacion => {
-      // Search filter
+      // Search filter - handle different data structures safely
       const matchesSearch = searchTerm === '' || 
         (validacion.id && validacion.id.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        validacion.socio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        // Handle socio name - check if it's a string or object
+        (typeof validacion.socio === 'string' 
+          ? validacion.socio.toLowerCase().includes(searchTerm.toLowerCase())
+          : validacion.socio?.nombre && typeof validacion.socio.nombre === 'string'
+            ? validacion.socio.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+            : false
+        ) ||
+        // Handle socioNombre field if it exists
+        (validacion.socioNombre && typeof validacion.socioNombre === 'string'
+          ? validacion.socioNombre.toLowerCase().includes(searchTerm.toLowerCase())
+          : false
+        ) ||
+        // Handle beneficio - check if it's a string or object
         (typeof validacion.beneficio === 'string'
           ? validacion.beneficio.toLowerCase().includes(searchTerm.toLowerCase())
           : validacion.beneficio?.titulo && typeof validacion.beneficio.titulo === 'string'
             ? validacion.beneficio.titulo.toLowerCase().includes(searchTerm.toLowerCase())
             : false
+        ) ||
+        // Handle beneficioTitulo field if it exists
+        (validacion.beneficioTitulo && typeof validacion.beneficioTitulo === 'string'
+          ? validacion.beneficioTitulo.toLowerCase().includes(searchTerm.toLowerCase())
+          : false
         );
 
       // Result filter
@@ -104,7 +121,9 @@ export const ValidacionesHistory: React.FC = () => {
       let matchesFecha = true;
       if (fechaFilter !== 'all') {
         const now = new Date();
-        const validacionDate = validacion.fechaHora.toDate();
+        const validacionDate = validacion.fechaHora instanceof Date 
+          ? validacion.fechaHora 
+          : validacion.fechaHora.toDate();
         
         switch (fechaFilter) {
           case 'today':
@@ -130,13 +149,15 @@ export const ValidacionesHistory: React.FC = () => {
       
       switch (sortBy) {
         case 'fecha':
-          comparison = a.fechaHora.toDate().getTime() - b.fechaHora.toDate().getTime();
+          const dateA = a.fechaHora instanceof Date ? a.fechaHora : a.fechaHora.toDate();
+          const dateB = b.fechaHora instanceof Date ? b.fechaHora : b.fechaHora.toDate();
+          comparison = dateA.getTime() - dateB.getTime();
           break;
         case 'resultado':
           comparison = a.resultado.localeCompare(b.resultado);
           break;
         case 'monto':
-          comparison = (a.montoTransaccion || 0) - (b.montoTransaccion || 0);
+          comparison = (a.montoTransaccion || a.montoDescuento || 0) - (b.montoTransaccion || b.montoDescuento || 0);
           break;
       }
       
