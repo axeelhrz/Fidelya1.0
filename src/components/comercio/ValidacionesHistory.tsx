@@ -12,12 +12,8 @@ import {
   Clock,
   Search,
   Download,
-  Filter,
   RefreshCw,
-  TrendingUp,
   Users,
-  DollarSign,
-  Calendar,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -26,7 +22,6 @@ import {
   ArrowUpDown,
   Zap,
   Target,
-  Award,
   Activity
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -90,12 +85,17 @@ export const ValidacionesHistory: React.FC = () => {
 
   // Filter and sort validaciones
   const filteredAndSortedValidaciones = useMemo(() => {
-    let filtered = validaciones.filter(validacion => {
+    const filtered = validaciones.filter(validacion => {
       // Search filter
       const matchesSearch = searchTerm === '' || 
-        validacion.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        validacion.socioId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        validacion.beneficioId.toLowerCase().includes(searchTerm.toLowerCase());
+        (validacion.id && validacion.id.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        validacion.socio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (typeof validacion.beneficio === 'string'
+          ? validacion.beneficio.toLowerCase().includes(searchTerm.toLowerCase())
+          : validacion.beneficio?.titulo && typeof validacion.beneficio.titulo === 'string'
+            ? validacion.beneficio.titulo.toLowerCase().includes(searchTerm.toLowerCase())
+            : false
+        );
 
       // Result filter
       const matchesResultado = resultadoFilter === 'all' || validacion.resultado === resultadoFilter;
@@ -168,7 +168,7 @@ export const ValidacionesHistory: React.FC = () => {
           format(v.fechaHora.toDate(), 'dd/MM/yyyy', { locale: es }),
           format(v.fechaHora.toDate(), 'HH:mm', { locale: es }),
           v.socioId,
-          v.beneficioId,
+          v.beneficio,
           RESULTADO_CONFIG[v.resultado as keyof typeof RESULTADO_CONFIG]?.label || v.resultado,
           v.montoTransaccion || 0,
           v.descuentoAplicado || 0,
@@ -503,14 +503,14 @@ export const ValidacionesHistory: React.FC = () => {
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-gray-600">Socio:</span>
                               <span className="text-sm font-mono text-gray-900">
-                                {validacion.socioId.substring(0, 8)}...
+                                {validacion.socio.substring(0, 8)}...
                               </span>
                             </div>
                             
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-gray-600">Beneficio:</span>
                               <span className="text-sm font-mono text-gray-900">
-                                {validacion.beneficioId.substring(0, 8)}...
+                                {validacion.beneficio.substring(0, 8)}...
                               </span>
                             </div>
                             
@@ -589,12 +589,12 @@ export const ValidacionesHistory: React.FC = () => {
                             </td>
                             <td className="px-6 py-4">
                               <span className="text-sm font-mono text-gray-600">
-                                {validacion.socioId.substring(0, 8)}...
+                                {validacion.socio.substring(0, 8)}...
                               </span>
                             </td>
                             <td className="px-6 py-4">
                               <span className="text-sm font-mono text-gray-600">
-                                {validacion.beneficioId.substring(0, 8)}...
+                                {validacion.beneficio.substring(0, 8)}...
                               </span>
                             </td>
                             <td className="px-6 py-4">
