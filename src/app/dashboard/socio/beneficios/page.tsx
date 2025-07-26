@@ -48,7 +48,6 @@ export default function SocioBeneficiosPage() {
   const {
     beneficios,
     beneficiosUsados,
-    beneficiosActivos,
     stats,
     loading,
     error,
@@ -507,7 +506,6 @@ export default function SocioBeneficiosPage() {
                 stats={stats}
                 loading={loading}
                 userRole="socio"
-                beneficiosActivos={beneficiosActivos}
                 beneficiosUsados={beneficiosUsados}
               />
             </motion.div>

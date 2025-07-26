@@ -100,6 +100,11 @@ export const useValidaciones = (): UseValidacionesReturn => {
     await cargarValidaciones(false);
   }, [hasMore, loading, cargarValidaciones]);
 
+  const refrescar = useCallback(async () => {
+    setLastDoc(undefined); // Reset pagination
+    await cargarValidaciones(true);
+  }, [cargarValidaciones]);
+
   const validarQR = useCallback(async (qrData: string): Promise<ValidacionResponse> => {
     if (!user) {
       throw new Error('Usuario no autenticado');
@@ -148,11 +153,6 @@ export const useValidaciones = (): UseValidacionesReturn => {
     }
   }, [user, refrescar]);
 
-  const refrescar = useCallback(async () => {
-    setLastDoc(undefined); // Reset pagination
-    await cargarValidaciones(true);
-  }, [cargarValidaciones]);
-
   const refresh = useCallback(async () => {
     await refrescar();
   }, [refrescar]);
@@ -193,7 +193,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
     if (user) {
       cargarValidaciones(true);
     }
-  }, [user]);
+  }, [user, cargarValidaciones]);
 
   return {
     validaciones,
