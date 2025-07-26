@@ -33,7 +33,7 @@ interface ModernActivityTimelineProps {
   onViewAll?: () => void;
 }
 
-const ModernActivityTimeline = memo<ModernActivityTimelineProps>(({ 
+const ModernActivityTimelineComponent: React.FC<ModernActivityTimelineProps> = ({ 
   activities, 
   loading, 
   onViewAll 
@@ -157,8 +157,11 @@ const ModernActivityTimeline = memo<ModernActivityTimelineProps>(({
       )}
     </motion.div>
   );
-});
+};
 
+ModernActivityTimelineComponent.displayName = 'ModernActivityTimeline';
+
+const ModernActivityTimeline = memo(ModernActivityTimelineComponent);
 ModernActivityTimeline.displayName = 'ModernActivityTimeline';
 
 export default ModernActivityTimeline;
