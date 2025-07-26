@@ -101,42 +101,74 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
   stats,
   loading = false,
   userRole = 'socio',
-  className = ''
+  className = '',
+  beneficiosActivos,
+  beneficiosUsados
 }) => {
+  // Para socios, usar datos locales si están disponibles
+  const effectiveStats = useMemo(() => {
+    if (userRole === 'socio' && beneficiosActivos && beneficiosUsados) {
+      console.log('📊 Usando datos locales para socio:', {
+        beneficiosActivos: beneficiosActivos.length,
+        beneficiosUsados: beneficiosUsados.length
+      });
+      
+      const now = new Date();
+      const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+      
+      return {
+        totalBeneficios: beneficiosActivos.length,
+        beneficiosActivos: beneficiosActivos.length,
+        beneficiosUsados: beneficiosUsados.length,
+        beneficiosVencidos: beneficiosActivos.filter(b => b.estado === 'vencido').length,
+        ahorroTotal: beneficiosUsados.reduce((total, uso) => total + (uso.montoDescuento || 0), 0),
+        ahorroEsteMes: beneficiosUsados
+          .filter(uso => uso.fechaUso.toDate() >= inicioMes)
+          .reduce((total, uso) => total + (uso.montoDescuento || 0), 0),
+        usosPorMes: stats?.usosPorMes || [],
+        topBeneficios: stats?.topBeneficios || [],
+        categorias: stats?.categorias || [],
+        comercios: stats?.comercios || [],
+        activos: beneficiosActivos.length
+      };
+    }
+    return stats;
+  }, [userRole, beneficiosActivos, beneficiosUsados, stats]);
+
   const statsCards = useMemo(() => {
-    if (!stats) return [];
+    if (!effectiveStats) return [];
 
     const baseCards = [
       {
         title: 'Total Beneficios',
-        value: stats.totalBeneficios.toLocaleString(),
+        value: effectiveStats.totalBeneficios.toLocaleString(),
         icon: <Gift size={24} />,
         color: '#6366f1',
-        subtitle: 'En la plataforma'
+        subtitle: userRole === 'socio' ? 'Disponibles para ti' : 'En la plataforma'
       },
       {
         title: 'Beneficios Activos',
-        value: stats.beneficiosActivos.toLocaleString(),
+        value: effectiveStats.beneficiosActivos.toLocaleString(),
         icon: <Target size={24} />,
         color: '#10b981',
         subtitle: 'Disponibles para usar',
-        change: stats.beneficiosActivos > 0 ? 5.2 : 0,
+        change: effectiveStats.beneficiosActivos > 0 ? 5.2 : 0,
         trend: 'up' as const
       },
       {
         title: 'Total Usado',
-        value: stats.beneficiosUsados.toLocaleString(),
+        value: effectiveStats.beneficiosUsados.toLocaleString(),
         icon: <Users size={24} />,
         color: '#8b5cf6',
         subtitle: 'Beneficios utilizados'
       },
       {
         title: 'Ahorro Total',
-        value: `$${stats.ahorroTotal.toLocaleString()}`,
+        value: `$${effectiveStats.ahorroTotal.toLocaleString()}`,
         icon: <DollarSign size={24} />,
         color: '#f59e0b',
         subtitle: 'Dinero ahorrado',
-        change: stats.ahorroEsteMes > 0 ? 12.5 : 0,
+        change: effectiveStats.ahorroEsteMes > 0 ? 12.5 : 0,
         trend: 'up' as const
       }
     ];
@@ -145,7 +177,7 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
     if (userRole === 'socio') {
       baseCards.push({
         title: 'Ahorro Este Mes',
-        value: `$${stats.ahorroEsteMes.toLocaleString()}`,
+        value: `$${effectiveStats.ahorroEsteMes.toLocaleString()}`,
         icon: <Calendar size={24} />,
         color: '#ec4899',
         subtitle: 'En el mes actual'
@@ -155,7 +187,7 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
     if (userRole === 'asociacion') {
       baseCards.push({
         title: 'Comercios Activos',
-        value: stats.comercios.length.toLocaleString(),
+        value: effectiveStats.comercios.length.toLocaleString(),
         icon: <Award size={24} />,
         color: '#06b6d4',
         subtitle: 'Con beneficios'
@@ -163,15 +195,15 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
     }
 
     return baseCards;
-  }, [stats, userRole]);
+  }, [effectiveStats, userRole]);
 
   const topBeneficios = useMemo(() => {
-    return stats?.topBeneficios.slice(0, 5) || [];
-  }, [stats]);
+    return effectiveStats?.topBeneficios.slice(0, 5) || [];
+  }, [effectiveStats]);
 
   const topCategorias = useMemo(() => {
-    return stats?.categorias.slice(0, 5) || [];
-  }, [stats]);
+    return effectiveStats?.categorias.slice(0, 5) || [];
+  }, [effectiveStats]);
 
   if (loading) {
     return (
