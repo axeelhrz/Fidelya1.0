@@ -3,6 +3,7 @@ import type { DocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { useAuth } from './useAuth';
 import { validacionesService, HistorialValidacion } from '@/services/validaciones.service';
 import { ValidacionResponse, Validacion } from '@/types/validacion';
+import { ValidacionStats } from '@/types/comercio';
 import { Timestamp } from 'firebase/firestore';
 
 interface UseValidacionesReturn {
@@ -12,12 +13,7 @@ interface UseValidacionesReturn {
   refrescar: () => Promise<void>;
   validarQR: (qrData: string) => Promise<ValidacionResponse>;
   refresh: () => Promise<void>;
-  getStats: () => {
-    totalValidaciones: number;
-    validacionesExitosas: number;
-    clientesUnicos: number;
-    montoTotal: number;
-  };
+  getStats: () => ValidacionStats;
   loadMore: () => Promise<void>;
   hasMore: boolean;
 }
@@ -165,8 +161,28 @@ export const useValidaciones = (): UseValidacionesReturn => {
     const stats = {
       totalValidaciones: validaciones.length,
       validacionesExitosas: validaciones.filter(v => v.resultado === 'habilitado').length,
+      validacionesFallidas: validaciones.filter(v => v.resultado === 'no_habilitado').length,
       clientesUnicos: new Set(validaciones.map(v => v.socioId)).size,
-      montoTotal: validaciones.reduce((sum, v) => sum + (v.montoDescuento || 0), 0)
+      montoTotalDescuentos: validaciones.reduce((sum, v) => sum + (v.montoDescuento || 0), 0),
+      porAsociacion: validaciones.reduce((acc, v) => {
+        acc[v.asociacionId] = (acc[v.asociacionId] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+      porBeneficio: validaciones.reduce((acc, v) => {
+        acc[v.beneficioId] = (acc[v.beneficioId] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+      porDia: validaciones.reduce((acc, v) => {
+        const fecha = v.fechaHora.toDate().toISOString().split('T')[0];
+        acc[fecha] = (acc[fecha] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+      promedioValidacionesDiarias: validaciones.length > 0 ? 
+        Math.round(validaciones.length / Math.max(1, Object.keys(validaciones.reduce((acc, v) => {
+          const fecha = v.fechaHora.toDate().toISOString().split('T')[0];
+          acc[fecha] = true;
+          return acc;
+        }, {} as Record<string, boolean>)).length)) : 0
     };
     
     return stats;
