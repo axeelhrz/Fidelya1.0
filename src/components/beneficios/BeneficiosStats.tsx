@@ -135,6 +135,96 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
     return stats;
   }, [userRole, beneficiosActivos, beneficiosUsados, stats]);
 
+  // Calcular top beneficios específicos para el socio
+  const topBeneficiosSocio = useMemo(() => {
+    if (userRole === 'socio' && beneficiosActivos && beneficiosUsados) {
+      // Crear un mapa de usos por beneficio
+      const usosPorBeneficio = new Map<string, { usos: number; ahorro: number; titulo: string; comercio: string }>();
+      
+      beneficiosUsados.forEach(uso => {
+        const beneficioId = uso.beneficioId || 'unknown';
+        const existing = usosPorBeneficio.get(beneficioId) || { 
+          usos: 0, 
+          ahorro: 0, 
+          titulo: uso.beneficioTitulo || 'Beneficio Usado',
+          comercio: uso.comercioNombre || 'Comercio'
+        };
+        
+        usosPorBeneficio.set(beneficioId, {
+          ...existing,
+          usos: existing.usos + 1,
+          ahorro: existing.ahorro + (uso.montoDescuento || 0)
+        });
+      });
+
+      // Agregar beneficios disponibles que no han sido usados
+      beneficiosActivos.forEach(beneficio => {
+        if (!usosPorBeneficio.has(beneficio.id)) {
+          usosPorBeneficio.set(beneficio.id, {
+            usos: 0,
+            ahorro: 0,
+            titulo: beneficio.titulo,
+            comercio: beneficio.comercioNombre || 'Comercio'
+          });
+        }
+      });
+
+      // Convertir a array y ordenar por usos
+      return Array.from(usosPorBeneficio.entries())
+        .map(([id, data]) => ({
+          id,
+          titulo: data.titulo,
+          usos: data.usos,
+          ahorro: data.ahorro,
+          comercio: data.comercio
+        }))
+        .sort((a, b) => b.usos - a.usos)
+        .slice(0, 5);
+    }
+    return effectiveStats?.topBeneficios.slice(0, 5) || [];
+  }, [userRole, beneficiosActivos, beneficiosUsados, effectiveStats]);
+
+  // Calcular categorías específicas para el socio
+  const categoriasSocio = useMemo(() => {
+    if (userRole === 'socio' && beneficiosActivos) {
+      const categoriaMap = new Map<string, { cantidad: number; usos: number }>();
+      
+      // Contar beneficios por categoría
+      beneficiosActivos.forEach(beneficio => {
+        const categoria = beneficio.categoria || 'Sin categoría';
+        const existing = categoriaMap.get(categoria) || { cantidad: 0, usos: 0 };
+        categoriaMap.set(categoria, {
+          ...existing,
+          cantidad: existing.cantidad + 1
+        });
+      });
+
+      // Agregar usos por categoría
+      if (beneficiosUsados) {
+        beneficiosUsados.forEach(uso => {
+          // Encontrar la categoría del beneficio usado
+          const beneficio = beneficiosActivos.find(b => b.id === uso.beneficioId);
+          const categoria = beneficio?.categoria || 'Sin categoría';
+          const existing = categoriaMap.get(categoria) || { cantidad: 0, usos: 0 };
+          categoriaMap.set(categoria, {
+            ...existing,
+            usos: existing.usos + 1
+          });
+        });
+      }
+
+      return Array.from(categoriaMap.entries())
+        .map(([nombre, data]) => ({
+          nombre,
+          cantidad: data.cantidad,
+          usos: data.usos
+        }))
+        .sort((a, b) => b.cantidad - a.cantidad)
+        .slice(0, 5);
+    }
+    return effectiveStats?.categorias.slice(0, 5) || [];
+  }, [userRole, beneficiosActivos, beneficiosUsados, effectiveStats]);
+
   const statsCards = useMemo(() => {
     if (!effectiveStats) return [];
 
@@ -197,14 +287,6 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
     return baseCards;
   }, [effectiveStats, userRole]);
 
-  const topBeneficios = useMemo(() => {
-    return effectiveStats?.topBeneficios.slice(0, 5) || [];
-  }, [effectiveStats]);
-
-  const topCategorias = useMemo(() => {
-    return effectiveStats?.categorias.slice(0, 5) || [];
-  }, [effectiveStats]);
-
   if (loading) {
     return (
       <div className={`space-y-6 ${className}`}>
@@ -224,7 +306,7 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
     );
   }
 
-  if (!stats) {
+  if (!effectiveStats) {
     return (
       <div className={`text-center py-12 ${className}`}>
         <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
@@ -263,14 +345,18 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
               <Award size={20} />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Top Beneficios</h3>
-              <p className="text-sm text-gray-600">Más utilizados</p>
+              <h3 className="text-lg font-bold text-gray-900">
+                {userRole === 'socio' ? 'Mis Beneficios' : 'Top Beneficios'}
+              </h3>
+              <p className="text-sm text-gray-600">
+                {userRole === 'socio' ? 'Disponibles y utilizados' : 'Más utilizados'}
+              </p>
             </div>
           </div>
 
           <div className="space-y-4">
-            {topBeneficios.length > 0 ? (
-              topBeneficios.map((beneficio, index) => (
+            {topBeneficiosSocio.length > 0 ? (
+              topBeneficiosSocio.map((beneficio, index) => (
                 <div key={beneficio.id} className="flex items-center gap-4">
                   <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-sm font-bold">
                     {index + 1}
@@ -282,18 +368,30 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
                     <p className="text-sm text-gray-500">
                       {beneficio.usos} usos • ${beneficio.ahorro.toLocaleString()} ahorrado
                     </p>
+                    {userRole === 'socio' && (
+                      <p className="text-xs text-blue-600">
+                        {beneficio.comercio}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-purple-600">
                       {beneficio.usos}
                     </div>
+                    {beneficio.ahorro > 0 && (
+                      <div className="text-xs text-green-600 font-semibold">
+                        ${beneficio.ahorro}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))
             ) : (
               <div className="text-center py-8">
                 <PieChart size={32} className="mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-500 text-sm">No hay datos disponibles</p>
+                <p className="text-gray-500 text-sm">
+                  {userRole === 'socio' ? 'No tienes beneficios disponibles' : 'No hay datos disponibles'}
+                </p>
               </div>
             )}
           </div>
@@ -311,16 +409,20 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
               <BarChart3 size={20} />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Categorías Populares</h3>
-              <p className="text-sm text-gray-600">Por cantidad de beneficios</p>
+              <h3 className="text-lg font-bold text-gray-900">
+                {userRole === 'socio' ? 'Mis Categorías' : 'Categorías Populares'}
+              </h3>
+              <p className="text-sm text-gray-600">
+                {userRole === 'socio' ? 'Beneficios por categoría' : 'Por cantidad de beneficios'}
+              </p>
             </div>
           </div>
 
           <div className="space-y-4">
-            {topCategorias.length > 0 ? (
-              topCategorias.map((categoria, index) => {
-                const maxUsos = Math.max(...topCategorias.map(c => c.usos));
-                const percentage = maxUsos > 0 ? (categoria.usos / maxUsos) * 100 : 0;
+            {categoriasSocio.length > 0 ? (
+              categoriasSocio.map((categoria, index) => {
+                const maxCantidad = Math.max(...categoriasSocio.map(c => c.cantidad));
+                const percentage = maxCantidad > 0 ? (categoria.cantidad / maxCantidad) * 100 : 0;
                 
                 return (
                   <div key={categoria.nombre} className="space-y-2">
@@ -346,7 +448,9 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
             ) : (
               <div className="text-center py-8">
                 <BarChart3 size={32} className="mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-500 text-sm">No hay datos disponibles</p>
+                <p className="text-gray-500 text-sm">
+                  {userRole === 'socio' ? 'No tienes beneficios en categorías' : 'No hay datos disponibles'}
+                </p>
               </div>
             )}
           </div>
@@ -354,7 +458,7 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
       </div>
 
       {/* Gráfico de usos por mes */}
-      {stats.usosPorMes.length > 0 && (
+      {effectiveStats.usosPorMes.length > 0 && (
         <motion.div
           className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg"
           initial={{ opacity: 0, y: 20 }}
@@ -367,13 +471,15 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-900">Tendencia Mensual</h3>
-              <p className="text-sm text-gray-600">Usos y ahorros por mes</p>
+              <p className="text-sm text-gray-600">
+                {userRole === 'socio' ? 'Tus usos y ahorros por mes' : 'Usos y ahorros por mes'}
+              </p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            {stats.usosPorMes.slice(-6).map((mes, index) => {
-              const maxUsos = Math.max(...stats.usosPorMes.map(m => m.usos));
+            {effectiveStats.usosPorMes.slice(-6).map((mes, index) => {
+              const maxUsos = Math.max(...effectiveStats.usosPorMes.map(m => m.usos));
               const height = maxUsos > 0 ? (mes.usos / maxUsos) * 100 : 0;
               
               return (
