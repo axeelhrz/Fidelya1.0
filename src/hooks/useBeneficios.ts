@@ -434,14 +434,14 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
   const beneficiosAgotados = beneficios.filter(b => b.estado === 'agotado');
   const beneficiosDestacados = beneficios.filter(b => b.destacado);
 
-  // Estadísticas rápidas - CORREGIDAS PARA USAR LAS MISMAS FUENTES QUE LAS ESTADÍSTICAS PRINCIPALES
+  // Estadísticas rápidas - CORREGIDAS PARA USAR LOS MISMOS DATOS QUE EL SIDEBAR
   const estadisticasRapidas = {
-    // Usar las estadísticas del servicio si están disponibles, sino calcular localmente
-    total: stats?.totalBeneficios || beneficios.length,
-    activos: stats?.beneficiosActivos || beneficiosActivos.length,
-    usados: stats?.beneficiosUsados || beneficiosUsados.length,
-    ahorroTotal: stats?.ahorroTotal || beneficiosUsados.reduce((total, uso) => total + (uso.montoDescuento || 0), 0),
-    ahorroEsteMes: stats?.ahorroEsteMes || beneficiosUsados
+    // Usar los beneficios filtrados localmente (igual que el sidebar)
+    total: beneficiosActivos.length,
+    activos: beneficiosActivos.length,
+    usados: beneficiosUsados.length,
+    ahorroTotal: beneficiosUsados.reduce((total, uso) => total + (uso.montoDescuento || 0), 0),
+    ahorroEsteMes: beneficiosUsados
       .filter(uso => {
         const fecha = uso.fechaUso.toDate();
         const ahora = new Date();

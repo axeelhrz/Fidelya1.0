@@ -56,6 +56,7 @@ export default function SocioBeneficiosPage() {
   const {
     beneficios,
     beneficiosUsados,
+    beneficiosActivos,
     stats,
     loading,
     error,
@@ -701,7 +702,7 @@ export default function SocioBeneficiosPage() {
           </AnimatePresence>
 
           {/* Enhanced Stats Section */}
-          {stats && activeTab === 'disponibles' && (
+          {activeTab === 'disponibles' && (
             <motion.div 
               className="mt-12"
               initial={{ opacity: 0, y: 40 }}
@@ -712,6 +713,8 @@ export default function SocioBeneficiosPage() {
                 stats={stats}
                 loading={loading}
                 userRole="socio"
+                beneficiosActivos={beneficiosActivos}
+                beneficiosUsados={beneficiosUsados}
               />
             </motion.div>
           )}

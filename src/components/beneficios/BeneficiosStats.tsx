@@ -14,7 +14,7 @@ import {
   BarChart3,
   PieChart
 } from 'lucide-react';
-import { BeneficioStats } from '@/types/beneficio';
+import { BeneficioStats, Beneficio, BeneficioUso } from '@/types/beneficio';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -23,6 +23,9 @@ interface BeneficiosStatsProps {
   loading?: boolean;
   userRole?: 'socio' | 'comercio' | 'asociacion';
   className?: string;
+  // Nuevos props para datos locales del socio
+  beneficiosActivos?: Beneficio[];
+  beneficiosUsados?: BeneficioUso[];
 }
 
 interface StatCardProps {
