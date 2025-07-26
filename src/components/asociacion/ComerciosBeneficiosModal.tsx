@@ -44,13 +44,7 @@ export const ComerciosBeneficiosModal: React.FC<ComerciosBeneficiosModalProps> =
   const [selectedCategoria, setSelectedCategoria] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && comercio) {
-      loadBeneficios();
-    }
-  }, [isOpen, comercio]);
-
-  const loadBeneficios = async () => {
+  const loadBeneficios = React.useCallback(async () => {
     if (!comercio) return;
 
     setLoading(true);
@@ -62,7 +56,13 @@ export const ComerciosBeneficiosModal: React.FC<ComerciosBeneficiosModalProps> =
     } finally {
       setLoading(false);
     }
-  };
+  }, [comercio]);
+
+  useEffect(() => {
+    if (isOpen && comercio) {
+      loadBeneficios();
+    }
+  }, [isOpen, comercio, loadBeneficios]);
 
   const filteredBeneficios = beneficios.filter(beneficio => {
     const matchesSearch = !searchTerm || 

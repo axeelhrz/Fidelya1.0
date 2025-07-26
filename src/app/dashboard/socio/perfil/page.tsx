@@ -31,6 +31,7 @@ import {
   Image as ImageIcon,
   AlertCircle,
 } from 'lucide-react';
+import Image from 'next/image';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { Button } from '@/components/ui/Button';
@@ -296,10 +297,14 @@ const PhotoUploadModal: React.FC<{
                 {previewUrl ? (
                   <div className="space-y-4">
                     <div className="relative w-32 h-32 mx-auto">
-                      <img
-                        src={previewUrl}
+                      <Image
+                        src={previewUrl || ''}
                         alt="Preview"
+                        width={128}
+                        height={128}
                         className="w-full h-full object-cover rounded-2xl shadow-lg"
+                        style={{ width: '100%', height: '100%' }}
+                        unoptimized
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl" />
                     </div>
@@ -899,10 +904,14 @@ export default function SocioPerfilPage() {
                     <div className="relative group">
                       <div className="w-32 h-32 bg-white rounded-3xl shadow-2xl flex items-center justify-center border-4 border-white overflow-hidden">
                         {profileData.fotoPerfil ? (
-                          <img
+                          <Image
                             src={profileData.fotoPerfil}
                             alt={profileData.nombre}
+                            width={128}
+                            height={128}
                             className="w-full h-full object-cover"
+                            style={{ width: '100%', height: '100%' }}
+                            unoptimized
                           />
                         ) : (
                           <div className="w-28 h-28 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center relative overflow-hidden">

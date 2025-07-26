@@ -136,6 +136,26 @@ export const EnhancedCsvImport: React.FC<EnhancedCsvImportProps> = ({
     }
   }, [currentStep]);
 
+  // Generación automática de mapeo de columnas
+  const generateColumnMappings = useCallback((headers: string[]): ColumnMapping[] => {
+    return REQUIRED_FIELDS.map(field => {
+      const suggestions = headers.filter(header => 
+        header.toLowerCase().includes(field.key.toLowerCase()) ||
+        field.label.toLowerCase().includes(header.toLowerCase())
+      );
+      
+      const bestMatch = suggestions[0] || '';
+      
+      return {
+        csvColumn: bestMatch,
+        targetField: field.key,
+        required: field.required,
+        validated: !field.required || !!bestMatch,
+        suggestions: headers
+      };
+    });
+  }, []);
+
   // Manejo de archivos
   const handleFileSelect = useCallback((selectedFile: File) => {
     if (!selectedFile) return;
@@ -200,27 +220,7 @@ export const EnhancedCsvImport: React.FC<EnhancedCsvImportProps> = ({
     };
 
     reader.readAsText(file);
-  }, [nextStep]);
-
-  // Generación automática de mapeo de columnas
-  const generateColumnMappings = useCallback((headers: string[]): ColumnMapping[] => {
-    return REQUIRED_FIELDS.map(field => {
-      const suggestions = headers.filter(header => 
-        header.toLowerCase().includes(field.key.toLowerCase()) ||
-        field.label.toLowerCase().includes(header.toLowerCase())
-      );
-      
-      const bestMatch = suggestions[0] || '';
-      
-      return {
-        csvColumn: bestMatch,
-        targetField: field.key,
-        required: field.required,
-        validated: !field.required || !!bestMatch,
-        suggestions: headers
-      };
-    });
-  }, []);
+  }, [nextStep, generateColumnMappings]);
 
   // Validación de datos
   const validateData = useCallback(() => {
@@ -704,7 +704,7 @@ export const EnhancedCsvImport: React.FC<EnhancedCsvImportProps> = ({
                         <div className="text-sm text-blue-600 font-medium">
                           {columnMappings.filter(m => m.validated).length} de {columnMappings.length} columnas mapeadas
                         </div>
-                                      </div>
+                      </div>
                     </div>
                   )}
                 </motion.div>
@@ -797,7 +797,8 @@ export const EnhancedCsvImport: React.FC<EnhancedCsvImportProps> = ({
                                   </div>
                                   <p className="text-sm text-gray-700 mt-1">{error.error}</p>
                                   {error.value && (
-                                    <p className="text-xs text-gray-500 mt-1"></p>                                  )}
+                                    <p className="text-xs text-gray-500 mt-1"></p>
+                                  )}
                                 </div>
                               </div>
                               
@@ -1362,4 +1363,3 @@ export const EnhancedCsvImport: React.FC<EnhancedCsvImportProps> = ({
     </div>
   );
 };
-

@@ -85,13 +85,7 @@ export const ComercioValidationsModal: React.FC<ComercioValidationsModalProps> =
   const [selectedEstado, setSelectedEstado] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    if (open && comercio) {
-      loadValidations();
-    }
-  }, [open, comercio]);
-
-  const loadValidations = async () => {
+  const loadValidations = React.useCallback(async () => {
     if (!comercio) return;
 
     setLoadingData(true);
@@ -104,7 +98,13 @@ export const ComercioValidationsModal: React.FC<ComercioValidationsModalProps> =
     } finally {
       setLoadingData(false);
     }
-  };
+  }, [comercio, onLoadValidations]);
+
+  useEffect(() => {
+    if (open && comercio) {
+      loadValidations();
+    }
+  }, [open, comercio, loadValidations]);
 
   const filteredValidaciones = validaciones.filter(validacion => {
     const matchesSearch = !searchTerm || 
