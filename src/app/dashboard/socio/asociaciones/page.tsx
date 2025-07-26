@@ -23,20 +23,20 @@ import {
   Clock,
   XCircle,
   ArrowUpRight,
-  Heart,
   Shield,
-  Zap,
   Target,
   TrendingUp,
   Info,
   ExternalLink,
   ChevronDown,
-  ChevronRight,
   Sparkles,
   Crown,
-  Medal
+  Medal,
+  Activity,
+  BarChart3,
+  Zap
 } from 'lucide-react';
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -58,6 +58,7 @@ interface Asociacion {
   sitioWeb?: string;
   estado: 'activo' | 'inactivo' | 'suspendido';
   fechaCreacion?: any;
+  fechaVinculacion?: any;
   totalSocios?: number;
   totalComercios?: number;
   totalBeneficios?: number;
@@ -65,14 +66,13 @@ interface Asociacion {
   comercios?: any[];
   categoria?: string;
   rating?: number;
-  destacada?: boolean;
+  numeroSocio?: string;
+  estadoMembresia?: string;
 }
 
 interface FilterState {
   search: string;
-  categoria: string;
-  estado: string;
-  sortBy: 'nombre' | 'socios' | 'beneficios' | 'fecha';
+  sortBy: 'nombre' | 'fecha' | 'beneficios';
 }
 
 // Sidebar personalizado que maneja el logout
@@ -94,13 +94,12 @@ const SocioSidebarWithLogout: React.FC<{
   );
 };
 
-// Componente de tarjeta de asociación
+// Componente de tarjeta de asociación mejorado
 const AsociacionCard: React.FC<{
   asociacion: Asociacion;
   index: number;
   onViewDetails: (asociacion: Asociacion) => void;
-  isUserAssociation?: boolean;
-}> = ({ asociacion, index, onViewDetails, isUserAssociation = false }) => {
+}> = ({ asociacion, index, onViewDetails }) => {
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case 'activo':
@@ -142,301 +141,281 @@ const AsociacionCard: React.FC<{
 
   return (
     <motion.div
-      className="group bg-gradient-to-br from-white/90 via-white/80 to-white/70 backdrop-blur-xl rounded-3xl border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden relative"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
-      whileHover={{ y: -8, scale: 1.02 }}
+      className="group bg-gradient-to-br from-white/95 via-white/90 to-white/85 backdrop-blur-xl rounded-3xl border border-white/40 shadow-2xl hover:shadow-3xl transition-all duration-700 overflow-hidden relative"
+      initial={{ opacity: 0, y: 40, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ 
+        delay: index * 0.15, 
+        type: "spring", 
+        stiffness: 120,
+        damping: 20
+      }}
+      whileHover={{ 
+        y: -12, 
+        scale: 1.03,
+        transition: { type: "spring", stiffness: 300, damping: 25 }
+      }}
     >
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-600/5 group-hover:from-blue-500/10 group-hover:to-purple-600/10 transition-all duration-500" />
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-200/20 to-transparent rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
+      {/* Enhanced background effects */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-purple-600/8 group-hover:from-blue-500/15 group-hover:to-purple-600/15 transition-all duration-700" />
+      <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-300/20 to-transparent rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-300/15 to-transparent rounded-full blur-2xl group-hover:scale-125 transition-transform duration-700" />
       
-      {/* Shine effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%]" />
+      {/* Premium shine effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%]" />
       
-      {/* Badges */}
-      <div className="absolute top-4 right-4 flex gap-2 z-10">
-        {asociacion.destacada && (
-          <div className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 rounded-lg text-xs font-black border border-amber-200">
-            <Crown size={12} />
-            Destacada
-          </div>
-        )}
-        {isUserAssociation && (
-          <div className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-lg text-xs font-black border border-green-200">
-            <CheckCircle size={12} />
-            Mi Asociación
-          </div>
-        )}
+      {/* Status badge */}
+      <div className="absolute top-6 right-6 z-20">
+        <div className={cn(
+          "flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold shadow-lg backdrop-blur-sm",
+          getEstadoColor(asociacion.estado)
+        )}>
+          {getEstadoIcon(asociacion.estado)}
+          <span>{getEstadoText(asociacion.estado)}</span>
+        </div>
       </div>
 
-      <div className="relative z-10 p-6">
-        <div className="flex items-start gap-4">
-          {/* Logo/Avatar */}
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-            {asociacion.logo ? (
-              <img 
-                src={asociacion.logo} 
-                alt={asociacion.nombre}
-                className="w-full h-full object-cover rounded-2xl"
-              />
-            ) : (
-              asociacion.nombre.charAt(0).toUpperCase()
-            )}
+      <div className="relative z-10 p-8">
+        {/* Header Section */}
+        <div className="flex items-start gap-6 mb-8">
+          {/* Enhanced Logo */}
+          <div className="relative">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-3xl flex items-center justify-center text-white font-black text-2xl shadow-2xl group-hover:scale-110 transition-transform duration-500">
+              {asociacion.logo ? (
+                <img 
+                  src={asociacion.logo} 
+                  alt={asociacion.nombre}
+                  className="w-full h-full object-cover rounded-3xl"
+                />
+              ) : (
+                asociacion.nombre.charAt(0).toUpperCase()
+              )}
+            </div>
+            <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-3 border-white shadow-lg flex items-center justify-center">
+              <CheckCircle size={14} className="text-white" />
+            </div>
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div>
-                <h3 className="text-xl font-black text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                  {asociacion.nombre}
-                </h3>
-                {asociacion.descripcion && (
-                  <p className="text-gray-600 text-sm font-medium leading-relaxed mb-3">
-                    {asociacion.descripcion}
-                  </p>
-                )}
-                {asociacion.categoria && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                    <Target size={14} />
-                    <span className="font-medium">{asociacion.categoria}</span>
+            <div className="mb-4">
+              <h3 className="text-2xl font-black text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-300">
+                {asociacion.nombre}
+              </h3>
+              {asociacion.descripcion && (
+                <p className="text-gray-600 text-base font-medium leading-relaxed mb-4">
+                  {asociacion.descripcion}
+                </p>
+              )}
+              
+              {/* Membership info */}
+              <div className="flex items-center gap-4 mb-4">
+                {asociacion.numeroSocio && (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200">
+                    <Shield size={16} className="text-blue-600" />
+                    <span className="text-sm font-bold text-blue-700">
+                      Socio #{asociacion.numeroSocio}
+                    </span>
                   </div>
                 )}
-              </div>
-              
-              <div className="text-right">
-                <div className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-bold shadow-sm mb-2",
-                  getEstadoColor(asociacion.estado)
-                )}>
-                  {getEstadoIcon(asociacion.estado)}
-                  <span>{getEstadoText(asociacion.estado)}</span>
-                </div>
                 
-                {asociacion.rating && (
-                  <div className="flex items-center gap-1">
-                    <Star size={14} className="text-amber-400 fill-current" />
-                    <span className="text-sm font-bold text-amber-600">
-                      {asociacion.rating.toFixed(1)}
+                {asociacion.fechaVinculacion && (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-200">
+                    <Calendar size={16} className="text-purple-600" />
+                    <span className="text-sm font-bold text-purple-700">
+                      Desde {format(asociacion.fechaVinculacion.toDate(), 'MMM yyyy', { locale: es })}
                     </span>
                   </div>
                 )}
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Estadísticas */}
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="text-center bg-blue-50 px-3 py-2 rounded-xl border border-blue-200">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Users size={14} className="text-blue-600" />
-                </div>
-                <div className="text-lg font-black text-blue-700">
-                  {asociacion.totalSocios || 0}
-                </div>
-                <div className="text-xs text-blue-600 font-bold">Socios</div>
-              </div>
-              
-              <div className="text-center bg-green-50 px-3 py-2 rounded-xl border border-green-200">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Store size={14} className="text-green-600" />
-                </div>
-                <div className="text-lg font-black text-green-700">
-                  {asociacion.totalComercios || 0}
-                </div>
-                <div className="text-xs text-green-600 font-bold">Comercios</div>
-              </div>
-              
-              <div className="text-center bg-purple-50 px-3 py-2 rounded-xl border border-purple-200">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Gift size={14} className="text-purple-600" />
-                </div>
-                <div className="text-lg font-black text-purple-700">
-                  {asociacion.totalBeneficios || 0}
-                </div>
-                <div className="text-xs text-purple-600 font-bold">Beneficios</div>
-              </div>
+        {/* Enhanced Statistics Grid */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="text-center bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-2xl border border-blue-200 group-hover:scale-105 transition-transform duration-300">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <Users size={20} className="text-white" />
             </div>
+            <div className="text-2xl font-black text-blue-700 mb-1">
+              {asociacion.totalSocios || 0}
+            </div>
+            <div className="text-xs text-blue-600 font-bold uppercase tracking-wide">Socios</div>
+          </div>
+          
+          <div className="text-center bg-gradient-to-br from-green-50 to-emerald-100 p-4 rounded-2xl border border-green-200 group-hover:scale-105 transition-transform duration-300">
+            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <Store size={20} className="text-white" />
+            </div>
+            <div className="text-2xl font-black text-green-700 mb-1">
+              {asociacion.totalComercios || 0}
+            </div>
+            <div className="text-xs text-green-600 font-bold uppercase tracking-wide">Comercios</div>
+          </div>
+          
+          <div className="text-center bg-gradient-to-br from-purple-50 to-pink-100 p-4 rounded-2xl border border-purple-200 group-hover:scale-105 transition-transform duration-300">
+            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <Gift size={20} className="text-white" />
+            </div>
+            <div className="text-2xl font-black text-purple-700 mb-1">
+              {asociacion.totalBeneficios || 0}
+            </div>
+            <div className="text-xs text-purple-600 font-bold uppercase tracking-wide">Beneficios</div>
+          </div>
+        </div>
 
-            {/* Información de contacto */}
-            {(asociacion.email || asociacion.telefono || asociacion.direccion) && (
-              <div className="space-y-2 mb-4">
-                {asociacion.email && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Mail size={14} />
-                    <span className="font-medium truncate">{asociacion.email}</span>
+        {/* Contact Information */}
+        {(asociacion.email || asociacion.telefono || asociacion.direccion) && (
+          <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl p-6 mb-8 border border-gray-200">
+            <h4 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
+              <Info size={18} />
+              Información de Contacto
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {asociacion.email && (
+                <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-200">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                    <Mail size={16} className="text-white" />
                   </div>
-                )}
-                {asociacion.telefono && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Phone size={14} />
-                    <span className="font-medium">{asociacion.telefono}</span>
+                  <div>
+                    <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Email</div>
+                    <div className="text-sm font-bold text-gray-900 truncate">{asociacion.email}</div>
                   </div>
-                )}
-                {asociacion.direccion && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MapPin size={14} />
-                    <span className="font-medium truncate">{asociacion.direccion}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Acciones */}
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                leftIcon={<Eye size={16} />}
-                onClick={() => onViewDetails(asociacion)}
-                className="group-hover:scale-105 transition-transform duration-200"
-              >
-                Ver Detalles
-              </Button>
-              
-              {asociacion.sitioWeb && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  leftIcon={<ExternalLink size={16} />}
-                  onClick={() => window.open(asociacion.sitioWeb, '_blank')}
-                  className="group-hover:scale-105 transition-transform duration-200"
-                >
-                  Sitio Web
-                </Button>
+                </div>
               )}
               
-              <Button
-                size="sm"
-                leftIcon={<ArrowUpRight size={16} />}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 group-hover:scale-105 transition-transform duration-200"
-              >
-                Explorar
-              </Button>
+              {asociacion.telefono && (
+                <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-200">
+                  <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                    <Phone size={16} className="text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Teléfono</div>
+                    <div className="text-sm font-bold text-gray-900">{asociacion.telefono}</div>
+                  </div>
+                </div>
+              )}
+              
+              {asociacion.direccion && (
+                <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-200 md:col-span-2">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <MapPin size={16} className="text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Dirección</div>
+                    <div className="text-sm font-bold text-gray-900">{asociacion.direccion}</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+        )}
+
+        {/* Enhanced Action Buttons */}
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            size="lg"
+            leftIcon={<Eye size={18} />}
+            onClick={() => onViewDetails(asociacion)}
+            className="flex-1 group-hover:scale-105 transition-transform duration-200 border-2"
+          >
+            Ver Detalles
+          </Button>
+          
+          {asociacion.sitioWeb && (
+            <Button
+              variant="outline"
+              size="lg"
+              leftIcon={<ExternalLink size={18} />}
+              onClick={() => window.open(asociacion.sitioWeb, '_blank')}
+              className="group-hover:scale-105 transition-transform duration-200 border-2"
+            >
+              Sitio Web
+            </Button>
+          )}
+          
+          <Button
+            size="lg"
+            leftIcon={<ArrowUpRight size={18} />}
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 group-hover:scale-105 transition-transform duration-200 shadow-xl"
+          >
+            Explorar Beneficios
+          </Button>
         </div>
       </div>
     </motion.div>
   );
 };
 
-// Componente de filtros
+// Componente de filtros simplificado
 const FilterSection: React.FC<{
   filters: FilterState;
   setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
   onClearFilters: () => void;
   totalAsociaciones: number;
 }> = ({ filters, setFilters, onClearFilters, totalAsociaciones }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   return (
     <motion.div 
-      className="bg-gradient-to-br from-white/90 via-white/80 to-white/70 backdrop-blur-xl rounded-3xl p-6 border border-white/30 shadow-2xl relative overflow-hidden"
+      className="bg-gradient-to-br from-white/95 via-white/90 to-white/85 backdrop-blur-xl rounded-3xl p-8 border border-white/40 shadow-2xl relative overflow-hidden mb-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-600/5" />
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-violet-200/20 to-transparent rounded-full blur-2xl" />
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/8 to-purple-600/8" />
+      <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-violet-200/20 to-transparent rounded-full blur-3xl" />
       
       <div className="relative z-10">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
-              <Filter size={20} />
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center text-white shadow-2xl">
+              <Filter size={24} />
             </div>
             <div>
-              <h3 className="text-xl font-black text-gray-900">Filtros y Búsqueda</h3>
-              <p className="text-sm text-gray-600 font-medium">
-                {totalAsociaciones} asociación{totalAsociaciones !== 1 ? 'es' : ''} disponible{totalAsociaciones !== 1 ? 's' : ''}
+              <h3 className="text-2xl font-black text-gray-900">Mis Asociaciones</h3>
+              <p className="text-base text-gray-600 font-medium">
+                {totalAsociaciones} asociación{totalAsociaciones !== 1 ? 'es' : ''} vinculada{totalAsociaciones !== 1 ? 's' : ''}
               </p>
             </div>
           </div>
           
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="lg:hidden"
-            >
-              {isExpanded ? 'Ocultar' : 'Mostrar'} Filtros
-              <ChevronDown size={16} className={cn("ml-2 transition-transform", isExpanded && "rotate-180")} />
-            </Button>
+          <div className="flex gap-4">
             <Button
               variant="outline"
               size="sm"
               onClick={onClearFilters}
               leftIcon={<RefreshCw size={16} />}
+              className="border-2"
             >
-              Limpiar
+              Limpiar Filtros
             </Button>
           </div>
         </div>
 
-        <motion.div 
-          className={cn(
-            "grid gap-4 transition-all duration-300",
-            isExpanded || window.innerWidth >= 1024 ? "grid-cols-1 lg:grid-cols-4 opacity-100" : "grid-cols-1 lg:grid-cols-4 opacity-100 lg:opacity-100"
-          )}
-          style={{ display: isExpanded || window.innerWidth >= 1024 ? 'grid' : 'none' }}
-        >
-          <div>
-            <div className="relative">
-              <Search size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Buscar asociaciones..."
-                value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white/80 backdrop-blur-sm transition-all duration-200"
-              />
-            </div>
-          </div>
-
-          <div>
-            <select
-              value={filters.categoria}
-              onChange={(e) => setFilters(prev => ({ ...prev, categoria: e.target.value }))}
-              className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white/80 backdrop-blur-sm transition-all duration-200"
-            >
-              <option value="">🏷️ Todas las categorías</option>
-              <option value="deportiva">⚽ Deportiva</option>
-              <option value="cultural">🎭 Cultural</option>
-              <option value="profesional">💼 Profesional</option>
-              <option value="social">👥 Social</option>
-              <option value="educativa">📚 Educativa</option>
-              <option value="comercial">🏪 Comercial</option>
-            </select>
-          </div>
-
-          <div>
-            <select
-              value={filters.estado}
-              onChange={(e) => setFilters(prev => ({ ...prev, estado: e.target.value }))}
-              className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white/80 backdrop-blur-sm transition-all duration-200"
-            >
-              <option value="">📊 Todos los estados</option>
-              <option value="activo">✅ Activas</option>
-              <option value="inactivo">⏸️ Inactivas</option>
-              <option value="suspendido">❌ Suspendidas</option>
-            </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="relative">
+            <Search size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Buscar en mis asociaciones..."
+              value={filters.search}
+              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base bg-white/80 backdrop-blur-sm transition-all duration-200 font-medium"
+            />
           </div>
 
           <div>
             <select
               value={filters.sortBy}
               onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value as FilterState['sortBy'] }))}
-              className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white/80 backdrop-blur-sm transition-all duration-200"
+              className="w-full px-4 py-4 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base bg-white/80 backdrop-blur-sm transition-all duration-200 font-medium"
             >
-              <option value="nombre">🔤 Por nombre</option>
-              <option value="socios">👥 Por socios</option>
-              <option value="beneficios">🎁 Por beneficios</option>
-              <option value="fecha">📅 Por fecha</option>
+              <option value="nombre">Ordenar por Nombre</option>
+              <option value="fecha">Ordenar por Fecha de Vinculación</option>
+              <option value="beneficios">Ordenar por Beneficios</option>
             </select>
           </div>
-        </motion.div>
+        </div>
       </div>
     </motion.div>
   );
@@ -446,101 +425,112 @@ const FilterSection: React.FC<{
 const SocioAsociacionesContent: React.FC = () => {
   const { user, signOut } = useAuth();
   const [asociaciones, setAsociaciones] = useState<Asociacion[]>([]);
-  const [userAsociacionId, setUserAsociacionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedAsociacion, setSelectedAsociacion] = useState<Asociacion | null>(null);
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   
   const [filters, setFilters] = useState<FilterState>({
     search: '',
-    categoria: '',
-    estado: '',
     sortBy: 'nombre'
   });
 
-  // Cargar asociaciones
+  // Cargar solo las asociaciones del usuario
   useEffect(() => {
-    const loadAsociaciones = async () => {
+    const loadUserAsociaciones = async () => {
+      if (!user) return;
+
       try {
         setLoading(true);
         setError(null);
 
-        // 1. Obtener la asociación del usuario actual
-        if (user) {
-          try {
-            const socioQuery = query(
-              collection(db, 'socios'),
-              where('email', '==', user.email?.toLowerCase())
-            );
-            const socioSnapshot = await getDocs(socioQuery);
-            
-            if (!socioSnapshot.empty) {
-              const socioData = socioSnapshot.docs[0].data();
-              if (socioData.asociacionId) {
-                setUserAsociacionId(socioData.asociacionId);
-              }
-            }
-          } catch (err) {
-            console.error('Error obteniendo asociación del usuario:', err);
+        // 1. Buscar el socio en la colección socios
+        let socioData = null;
+        
+        // Primero intentar por UID
+        try {
+          const socioRef = doc(db, 'socios', user.uid);
+          const socioDoc = await getDoc(socioRef);
+          if (socioDoc.exists()) {
+            socioData = { id: socioDoc.id, ...socioDoc.data() };
+          }
+        } catch (err) {
+          console.log('No se encontró socio por UID, buscando por email...');
+        }
+
+        // Si no se encontró por UID, buscar por email
+        if (!socioData) {
+          const socioQuery = query(
+            collection(db, 'socios'),
+            where('email', '==', user.email?.toLowerCase())
+          );
+          const socioSnapshot = await getDocs(socioQuery);
+          
+          if (!socioSnapshot.empty) {
+            const doc = socioSnapshot.docs[0];
+            socioData = { id: doc.id, ...doc.data() };
           }
         }
 
-        // 2. Obtener todas las asociaciones
-        const asociacionesQuery = query(
-          collection(db, 'asociaciones'),
-          orderBy('nombre', 'asc')
-        );
-        const asociacionesSnapshot = await getDocs(asociacionesQuery);
+        if (!socioData || !socioData.asociacionId) {
+          setAsociaciones([]);
+          return;
+        }
 
-        const asociacionesData = await Promise.all(
-          asociacionesSnapshot.docs.map(async (doc) => {
-            const data = doc.data();
-            
-            // Obtener estadísticas de cada asociación
-            const [sociosSnapshot, comerciosSnapshot, beneficiosSnapshot] = await Promise.all([
-              getDocs(query(collection(db, 'socios'), where('asociacionId', '==', doc.id))),
-              getDocs(query(collection(db, 'comercios'), where('asociacionId', '==', doc.id))),
-              getDocs(query(collection(db, 'beneficios'), where('asociacionId', '==', doc.id)))
-            ]);
+        // 2. Obtener la información de la asociación
+        const asociacionRef = doc(db, 'asociaciones', socioData.asociacionId);
+        const asociacionDoc = await getDoc(asociacionRef);
 
-            return {
-              id: doc.id,
-              nombre: data.nombre || 'Asociación',
-              descripcion: data.descripcion,
-              logo: data.logo,
-              email: data.email,
-              telefono: data.telefono,
-              direccion: data.direccion,
-              sitioWeb: data.sitioWeb,
-              estado: data.estado || 'activo',
-              fechaCreacion: data.creadoEn,
-              totalSocios: sociosSnapshot.size,
-              totalComercios: comerciosSnapshot.size,
-              totalBeneficios: beneficiosSnapshot.size,
-              beneficios: beneficiosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-              comercios: comerciosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-              categoria: data.categoria || 'general',
-              rating: data.rating || (4 + Math.random()),
-              destacada: data.destacada || Math.random() > 0.7
-            } as Asociacion;
-          })
-        );
+        if (!asociacionDoc.exists()) {
+          setAsociaciones([]);
+          return;
+        }
 
-        setAsociaciones(asociacionesData);
+        const asociacionData = asociacionDoc.data();
+
+        // 3. Obtener estadísticas de la asociación
+        const [sociosSnapshot, comerciosSnapshot, beneficiosSnapshot] = await Promise.all([
+          getDocs(query(collection(db, 'socios'), where('asociacionId', '==', socioData.asociacionId))),
+          getDocs(query(collection(db, 'comercios'), where('asociacionId', '==', socioData.asociacionId))),
+          getDocs(query(collection(db, 'beneficios'), where('asociacionId', '==', socioData.asociacionId)))
+        ]);
+
+        const asociacionCompleta: Asociacion = {
+          id: asociacionDoc.id,
+          nombre: asociacionData.nombre || 'Mi Asociación',
+          descripcion: asociacionData.descripcion,
+          logo: asociacionData.logo,
+          email: asociacionData.email,
+          telefono: asociacionData.telefono,
+          direccion: asociacionData.direccion,
+          sitioWeb: asociacionData.sitioWeb,
+          estado: asociacionData.estado || 'activo',
+          fechaCreacion: asociacionData.creadoEn,
+          fechaVinculacion: socioData.fechaVinculacion,
+          totalSocios: sociosSnapshot.size,
+          totalComercios: comerciosSnapshot.size,
+          totalBeneficios: beneficiosSnapshot.size,
+          beneficios: beneficiosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+          comercios: comerciosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+          categoria: asociacionData.categoria || 'general',
+          rating: asociacionData.rating || (4.2 + Math.random() * 0.6),
+          numeroSocio: socioData.numeroSocio,
+          estadoMembresia: socioData.estado || 'activo'
+        };
+
+        setAsociaciones([asociacionCompleta]);
       } catch (err) {
-        console.error('Error cargando asociaciones:', err);
-        setError('Error al cargar las asociaciones');
+        console.error('Error cargando asociaciones del usuario:', err);
+        setError('Error al cargar tus asociaciones');
       } finally {
         setLoading(false);
       }
     };
 
-    loadAsociaciones();
+    loadUserAsociaciones();
   }, [user]);
 
-  // Filtrar y ordenar asociaciones
+  // Filtrar asociaciones
   const filteredAsociaciones = useMemo(() => {
     let filtered = [...asociaciones];
 
@@ -549,19 +539,8 @@ const SocioAsociacionesContent: React.FC = () => {
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(asociacion => 
         asociacion.nombre.toLowerCase().includes(searchLower) ||
-        (asociacion.descripcion && asociacion.descripcion.toLowerCase().includes(searchLower)) ||
-        (asociacion.categoria && asociacion.categoria.toLowerCase().includes(searchLower))
+        (asociacion.descripcion && asociacion.descripcion.toLowerCase().includes(searchLower))
       );
-    }
-
-    // Filtro de categoría
-    if (filters.categoria) {
-      filtered = filtered.filter(asociacion => asociacion.categoria === filters.categoria);
-    }
-
-    // Filtro de estado
-    if (filters.estado) {
-      filtered = filtered.filter(asociacion => asociacion.estado === filters.estado);
     }
 
     // Ordenamiento
@@ -569,13 +548,11 @@ const SocioAsociacionesContent: React.FC = () => {
       switch (filters.sortBy) {
         case 'nombre':
           return a.nombre.localeCompare(b.nombre);
-        case 'socios':
-          return (b.totalSocios || 0) - (a.totalSocios || 0);
         case 'beneficios':
           return (b.totalBeneficios || 0) - (a.totalBeneficios || 0);
         case 'fecha':
-          const fechaA = a.fechaCreacion?.toDate?.() || new Date(0);
-          const fechaB = b.fechaCreacion?.toDate?.() || new Date(0);
+          const fechaA = a.fechaVinculacion?.toDate?.() || new Date(0);
+          const fechaB = b.fechaVinculacion?.toDate?.() || new Date(0);
           return fechaB.getTime() - fechaA.getTime();
         default:
           return 0;
@@ -588,7 +565,8 @@ const SocioAsociacionesContent: React.FC = () => {
   // Handlers
   const handleViewDetails = (asociacion: Asociacion) => {
     setSelectedAsociacion(asociacion);
-    setDetailModalOpen(true);
+    // Aquí podrías abrir un modal o navegar a una página de detalles
+    toast.success(`Viendo detalles de ${asociacion.nombre}`);
   };
 
   const handleRefresh = async () => {
@@ -605,8 +583,6 @@ const SocioAsociacionesContent: React.FC = () => {
   const clearFilters = () => {
     setFilters({
       search: '',
-      categoria: '',
-      estado: '',
       sortBy: 'nombre'
     });
   };
@@ -668,61 +644,62 @@ const SocioAsociacionesContent: React.FC = () => {
         />
       )}
     >
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-100/20 relative overflow-hidden">
         {/* Enhanced background decorations */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-20" />
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-violet-100/40 to-transparent rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-sky-100/40 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-purple-50/20 to-blue-50/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute inset-0 bg-grid-pattern opacity-10" />
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-blue-100/30 to-transparent rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-purple-100/30 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
         
         {/* Floating elements */}
-        <div className="absolute top-20 right-20 w-4 h-4 bg-violet-400/60 rounded-full animate-bounce" />
-        <div className="absolute top-40 left-16 w-3 h-3 bg-sky-400/60 rounded-full animate-ping" />
-        <div className="absolute bottom-32 right-32 w-5 h-5 bg-purple-400/60 rounded-full animate-pulse" />
+        <div className="absolute top-20 right-20 w-3 h-3 bg-blue-400/40 rounded-full animate-bounce" />
+        <div className="absolute top-40 left-16 w-2 h-2 bg-purple-400/40 rounded-full animate-ping" />
+        <div className="absolute bottom-32 right-32 w-4 h-4 bg-indigo-400/40 rounded-full animate-pulse" />
 
         <motion.div
-          className="relative z-10 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto"
+          className="relative z-10 p-6 lg:p-8 max-w-7xl mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.6 }}
         >
           {/* Enhanced Header */}
           <motion.div 
-            className="mb-8 lg:mb-12"
-            initial={{ opacity: 0, y: 20 }}
+            className="mb-12"
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
           >
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8 mb-8">
-              <div className="flex items-center gap-6">
-                <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl">
-                  <Building2 size={32} className="text-white lg:w-10 lg:h-10" />
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-8">
+              <div className="flex items-center gap-8">
+                <div className="w-20 h-20 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl">
+                  <Building2 size={36} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2 leading-tight">
-                    Asociaciones
+                  <h1 className="text-4xl lg:text-5xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-3 leading-tight">
+                    Mis Asociaciones
                   </h1>
-                  <p className="text-base sm:text-lg lg:text-xl text-gray-600 font-semibold max-w-2xl">
-                    Explora todas las asociaciones disponibles y sus beneficios
+                  <p className="text-lg lg:text-xl text-gray-600 font-semibold max-w-2xl">
+                    Organizaciones a las que perteneces y sus beneficios exclusivos
                   </p>
                 </div>
               </div>
               
-              <div className="flex gap-3 flex-wrap">
+              <div className="flex gap-4">
                 <Button
                   variant="outline"
-                  size="sm"
-                  leftIcon={<RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />}
+                  size="lg"
+                  leftIcon={<RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />}
                   onClick={handleRefresh}
                   disabled={refreshing}
+                  className="border-2"
                 >
                   {refreshing ? 'Actualizando...' : 'Actualizar'}
                 </Button>
                 <Button
-                  size="sm"
-                  leftIcon={<TrendingUp size={16} />}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                  size="lg"
+                  leftIcon={<BarChart3 size={18} />}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-xl"
                 >
-                  Estadísticas
+                  Ver Estadísticas
                 </Button>
               </div>
             </div>
@@ -736,75 +713,83 @@ const SocioAsociacionesContent: React.FC = () => {
             totalAsociaciones={filteredAsociaciones.length}
           />
 
-          {/* Asociaciones Grid */}
+          {/* Asociaciones Content */}
           <motion.div
-            className="mt-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.4 }}
           >
             <AnimatePresence>
               {loading ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <div key={index} className="bg-gradient-to-br from-white/90 via-white/80 to-white/70 backdrop-blur-xl rounded-3xl border border-white/30 p-6 animate-pulse">
-                      <div className="flex items-start gap-4">
-                        <div className="w-16 h-16 bg-gray-200 rounded-2xl"></div>
-                        <div className="flex-1 space-y-3">
-                          <div className="h-6 bg-gray-200 rounded-xl w-3/4"></div>
-                          <div className="h-4 bg-gray-200 rounded-lg w-1/2"></div>
-                          <div className="grid grid-cols-3 gap-2">
-                            <div className="h-12 bg-gray-200 rounded-xl"></div>
-                            <div className="h-12 bg-gray-200 rounded-xl"></div>
-                            <div className="h-12 bg-gray-200 rounded-xl"></div>
-                          </div>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                  {Array.from({ length: 2 }).map((_, index) => (
+                    <div key={index} className="bg-gradient-to-br from-white/95 via-white/90 to-white/85 backdrop-blur-xl rounded-3xl border border-white/40 p-8 animate-pulse">
+                      <div className="flex items-start gap-6 mb-8">
+                        <div className="w-20 h-20 bg-gray-200 rounded-3xl"></div>
+                        <div className="flex-1 space-y-4">
+                          <div className="h-8 bg-gray-200 rounded-xl w-3/4"></div>
+                          <div className="h-4 bg-gray-200 rounded-lg w-full"></div>
+                          <div className="h-4 bg-gray-200 rounded-lg w-2/3"></div>
                         </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4 mb-8">
+                        <div className="h-20 bg-gray-200 rounded-2xl"></div>
+                        <div className="h-20 bg-gray-200 rounded-2xl"></div>
+                        <div className="h-20 bg-gray-200 rounded-2xl"></div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : filteredAsociaciones.length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                   {filteredAsociaciones.map((asociacion, index) => (
                     <AsociacionCard
                       key={asociacion.id}
                       asociacion={asociacion}
                       index={index}
                       onViewDetails={handleViewDetails}
-                      isUserAssociation={asociacion.id === userAsociacionId}
                     />
                   ))}
                 </div>
               ) : (
                 <motion.div
-                  className="text-center py-16"
+                  className="text-center py-20"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <div className="w-24 h-24 mx-auto mb-8 bg-gradient-to-r from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center">
-                    <Building2 size={40} className="text-gray-400" />
+                  <div className="w-32 h-32 mx-auto mb-8 bg-gradient-to-r from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center">
+                    <Building2 size={48} className="text-gray-400" />
                   </div>
-                  <h3 className="text-2xl font-black text-gray-900 mb-4">
-                    {filters.search || filters.categoria || filters.estado
-                      ? 'No se encontraron asociaciones'
-                      : 'No hay asociaciones disponibles'
-                    }
+                  <h3 className="text-3xl font-black text-gray-900 mb-4">
+                    {filters.search ? 'No se encontraron asociaciones' : 'Sin asociaciones vinculadas'}
                   </h3>
                   <p className="text-gray-600 mb-8 text-lg max-w-md mx-auto">
-                    {filters.search || filters.categoria || filters.estado
-                      ? 'Intenta ajustar los filtros de búsqueda para encontrar lo que buscas'
-                      : 'Actualmente no hay asociaciones registradas en el sistema'
+                    {filters.search 
+                      ? 'Intenta ajustar tu búsqueda para encontrar lo que buscas'
+                      : 'Actualmente no perteneces a ninguna asociación. Contacta con una asociación para solicitar tu vinculación.'
                     }
                   </p>
-                  {filters.search || filters.categoria || filters.estado ? (
+                  {filters.search ? (
                     <Button 
                       variant="outline" 
                       onClick={clearFilters}
                       leftIcon={<RefreshCw size={16} />}
+                      size="lg"
+                      className="border-2"
                     >
-                      Limpiar Filtros
+                      Limpiar Búsqueda
                     </Button>
-                  ) : null}
+                  ) : (
+                    <div className="bg-blue-50 border-2 border-blue-200 rounded-3xl p-6 max-w-lg mx-auto">
+                      <div className="flex items-center gap-3 text-blue-700 font-bold mb-3">
+                        <Info size={20} />
+                        ¿Cómo unirme a una asociación?
+                      </div>
+                      <p className="text-blue-600 text-base">
+                        Contacta directamente con la asociación de tu interés. Ellos podrán vincularte a su sistema de beneficios y servicios exclusivos.
+                      </p>
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -828,9 +813,9 @@ export default function SocioAsociacionesPage() {
           />
         )}
       >
-        <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50 relative overflow-hidden">
-          <div className="absolute inset-0 bg-grid-pattern opacity-20" />
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-violet-100/30 to-transparent rounded-full blur-3xl animate-pulse" />
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-100/20 relative overflow-hidden">
+          <div className="absolute inset-0 bg-grid-pattern opacity-10" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-blue-100/30 to-transparent rounded-full blur-3xl animate-pulse" />
           
           <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
             <div className="text-center">
@@ -838,7 +823,7 @@ export default function SocioAsociacionesPage() {
                 <RefreshCw size={40} className="text-white animate-spin" />
               </div>
               <h3 className="text-3xl font-black text-gray-900 mb-4">Cargando asociaciones...</h3>
-              <p className="text-gray-600 text-lg">Preparando la información de las asociaciones</p>
+              <p className="text-gray-600 text-lg">Preparando la información de tus asociaciones</p>
               
               <div className="mt-8 space-y-3">
                 <div className="h-4 bg-gray-200 rounded-full animate-pulse mx-auto w-3/4" />
