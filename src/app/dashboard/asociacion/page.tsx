@@ -322,8 +322,18 @@ export default function OptimizedAsociacionDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   
+  // Usar el hook de navegación optimizado
+  const {
+    activeSection,
+    navigateToSection,
+    isNavigating
+  } = useOptimizedAsociacionNavigation({
+    autoCloseOnMobile: true,
+    debounceMs: 150,
+    enableCache: true
+  });
+  
   // State management
-  const [activeSection, setActiveSection] = useState('dashboard');
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -351,31 +361,24 @@ export default function OptimizedAsociacionDashboard() {
     setLogoutModalOpen(false);
   }, []);
 
-  // Navigation handlers
+  // Navigation handlers optimizados
   const handleNavigate = useCallback((section: string) => {
-    const sectionRoutes: Record<string, string> = {
-      'dashboard': '/dashboard/asociacion',
-      'socios': '/dashboard/asociacion/socios',
-      'comercios': '/dashboard/asociacion/comercios',
-      'analytics': '/dashboard/asociacion/analytics',
-      'notificaciones': '/dashboard/asociacion/notificaciones',
-      'reportes': '/dashboard/asociacion/reportes',
-      'configuracion': '/dashboard/asociacion/configuracion',
-      'beneficios': '/dashboard/asociacion/beneficios',
-      'pagos': '/dashboard/asociacion/pagos'
-    };
-
-    const route = sectionRoutes[section];
-    if (route && route !== '/dashboard/asociacion') {
-      router.push(route);
-    } else {
-      setActiveSection(section);
-    }
-  }, [router]);
+    navigateToSection(section);
+  }, [navigateToSection]);
 
   const handleAddMember = useCallback(() => {
-    router.push('/dashboard/asociacion/socios');
-  }, [router]);
+    navigateToSection('socios');
+  }, [navigateToSection]);
+
+  // Memoized Sidebar Component
+  const AsociacionSidebarWithLogout = useCallback((props: any) => {
+    return (
+      <AsociacionSidebar
+        {...props}
+        onLogoutClick={handleLogoutClick}
+      />
+    );
+  }, [handleLogoutClick]);
 
   // Redirect if not authenticated or not association
   if (!authLoading && (!user || user.role !== 'asociacion')) {
@@ -392,14 +395,10 @@ export default function OptimizedAsociacionDashboard() {
     <>
       <DashboardLayout 
         activeSection={activeSection} 
-        onSectionChange={setActiveSection}
-        sidebarComponent={(props) => (
-          <AsociacionSidebarWithLogout
-            {...props}
-            onLogoutClick={handleLogoutClick}
-          />
-        )}
+        onSectionChange={handleNavigate}
+        sidebarComponent={AsociacionSidebarWithLogout}
         enableTransitions={true}
+        enableOptimizedNavigation={true}
       >
         <motion.div
           key={activeSection}
@@ -409,11 +408,20 @@ export default function OptimizedAsociacionDashboard() {
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="min-h-full"
         >
-          <DashboardContent
-            user={user}
-            onNavigate={handleNavigate}
-            onAddMember={handleAddMember}
-          />
+          {isNavigating ? (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-8 h-8 border-4 border-gray-200 border-t-gray-600 rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-gray-600">Navegando...</p>
+              </div>
+            </div>
+          ) : (
+            <DashboardContent
+              user={user}
+              onNavigate={handleNavigate}
+              onAddMember={handleAddMember}
+            />
+          )}
         </motion.div>
       </DashboardLayout>
 
