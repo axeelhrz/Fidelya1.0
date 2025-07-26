@@ -33,6 +33,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { BeneficiosService } from '@/services/beneficios.service';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 // Schema de validación mejorado
 const beneficioSchema = z.object({
@@ -104,6 +105,45 @@ interface BeneficioFormProps {
   loading?: boolean;
 }
 
+// Modal personalizado para el formulario
+const BeneficioModal: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}> = ({ open, onClose, children }) => {
+  return (
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.3 }}
+            className="relative bg-white rounded-3xl shadow-2xl w-full max-w-5xl my-8 min-h-[600px] max-h-[calc(100vh-4rem)] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={onClose}
+              className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200 z-10"
+            >
+              <X size={24} />
+            </button>
+            {children}
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 // Componente para sección del formulario
 const FormSection: React.FC<{
   title: string;
@@ -164,7 +204,7 @@ const TipoSelector: React.FC<{
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {tipos.map((tipo) => {
         const IconoComponente = tipo.icono;
         const isSelected = selectedTipo === tipo.id;
@@ -615,7 +655,7 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
                     <p className="text-sm text-gray-600">
                       Selecciona las asociaciones donde estará disponible este beneficio:
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-48 overflow-y-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-40 overflow-y-auto pr-2">
                       {asociacionesDisponibles.map((asociacion) => (
                         <motion.label
                           key={asociacion.id}
@@ -781,112 +821,114 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogContent className="max-w-6xl w-full mx-4 h-[90vh] flex flex-col">
-        {/* Header fijo */}
-        <DialogHeader className="flex-shrink-0 pb-4 border-b border-gray-200">
-          <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div 
-                className={`w-12 h-12 bg-gradient-to-r ${tipoConfig.color} rounded-xl flex items-center justify-center text-white shadow-lg`}
-              >
-                {tipoConfig.icon}
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {isEditing ? 'Editar Beneficio' : 'Crear Nuevo Beneficio'}
-                </h2>
-                <p className="text-sm text-gray-600">
-                  Paso {currentStep} de {totalSteps}
-                </p>
-              </div>
-            </div>
-          </DialogTitle>
-          
-          {/* Progress bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
+    <BeneficioModal open={open} onClose={onClose}>
+      {/* Header fijo */}
+      <div className="flex-shrink-0 p-8 pb-6 border-b border-gray-200">
+        <div className="flex items-center gap-4 mb-6">
+          <div 
+            className={`w-14 h-14 bg-gradient-to-r ${tipoConfig.color} rounded-2xl flex items-center justify-center text-white shadow-lg`}
+          >
+            {tipoConfig.icon}
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">
+              {isEditing ? 'Editar Beneficio' : 'Crear Nuevo Beneficio'}
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Paso {currentStep} de {totalSteps} - {
+                currentStep === 1 ? 'Información básica' :
+                currentStep === 2 ? 'Configuración del descuento' :
+                currentStep === 3 ? 'Período de validez' :
+                'Configuración avanzada'
+              }
+            </p>
+          </div>
+        </div>
+        
+        {/* Progress bar mejorada */}
+        <div className="w-full bg-gray-200 rounded-full h-3">
+          <motion.div
+            className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full shadow-sm"
+            initial={{ width: 0 }}
+            animate={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+          />
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
+        {/* Contenido scrolleable */}
+        <div className="flex-1 overflow-y-auto p-8 py-6">
+          <AnimatePresence mode="wait">
             <motion.div
-              className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${(currentStep / totalSteps) * 100}%` }}
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
-            />
-          </div>
-        </DialogHeader>
+            >
+              {renderStep()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
-          {/* Contenido scrolleable */}
-          <div className="flex-1 overflow-y-auto py-6 px-1">
-            <div className="max-h-full">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentStep}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="h-full"
-                >
-                  {renderStep()}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </div>
-
-          {/* Footer fijo */}
-          <DialogFooter className="flex-shrink-0 pt-6 border-t border-gray-200 bg-white">
-            <div className="flex justify-between w-full">
-              <div className="flex gap-2">
-                {currentStep > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={prevStep}
-                    disabled={submitting}
-                  >
-                    Anterior
-                  </Button>
-                )}
-              </div>
-              
-              <div className="flex gap-2">
+        {/* Footer fijo */}
+        <div className="flex-shrink-0 p-8 pt-6 border-t border-gray-200 bg-gray-50">
+          <div className="flex justify-between items-center">
+            <div className="flex gap-3">
+              {currentStep > 1 && (
                 <Button
                   type="button"
-                  variant="ghost"
-                  onClick={onClose}
+                  variant="outline"
+                  onClick={prevStep}
                   disabled={submitting}
+                  className="px-6"
                 >
-                  Cancelar
+                  Anterior
                 </Button>
-                
-                {currentStep < totalSteps ? (
-                  <Button
-                    type="button"
-                    onClick={nextStep}
-                    disabled={submitting}
-                  >
-                    Siguiente
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    leftIcon={<Save size={16} />}
-                    loading={submitting}
-                    disabled={!isValid || submitting}
-                  >
-                    {submitting 
-                      ? 'Guardando...' 
-                      : isEditing 
-                        ? 'Actualizar Beneficio' 
-                        : 'Crear Beneficio'
-                    }
-                  </Button>
-                )}
-              </div>
+              )}
             </div>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onClose}
+                disabled={submitting}
+                className="px-6"
+              >
+                Cancelar
+              </Button>
+              
+              {currentStep < totalSteps ? (
+                <Button
+                  type="button"
+                  onClick={nextStep}
+                  disabled={submitting}
+                  className="px-8"
+                >
+                  Siguiente
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  leftIcon={<Save size={16} />}
+                  loading={submitting}
+                  disabled={!isValid || submitting}
+                  className="px-8"
+                >
+                  {submitting 
+                    ? 'Guardando...' 
+                    : isEditing 
+                      ? 'Actualizar Beneficio' 
+                      : 'Crear Beneficio'
+                  }
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </form>
+    </BeneficioModal>
   );
 };
