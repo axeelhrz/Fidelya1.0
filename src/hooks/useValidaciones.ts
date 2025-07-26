@@ -169,7 +169,8 @@ export const useValidaciones = (): UseValidacionesReturn => {
         return acc;
       }, {} as Record<string, number>),
       porBeneficio: validaciones.reduce((acc, v) => {
-        acc[v.beneficioId] = (acc[v.beneficioId] || 0) + 1;
+        const beneficioId = v.beneficioId ?? 'desconocido';
+        acc[beneficioId] = (acc[beneficioId] || 0) + 1;
         return acc;
       }, {} as Record<string, number>),
       porDia: validaciones.reduce((acc, v) => {
