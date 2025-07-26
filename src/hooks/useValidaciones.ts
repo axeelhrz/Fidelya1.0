@@ -27,7 +27,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const [lastDoc, setLastDoc] = useState<any>(null);
+  const [lastDoc, setLastDoc] = useState<unknown>(null);
 
   // Transform HistorialValidacion to Validacion
   const transformHistorialToValidacion = useCallback((historial: HistorialValidacion): Validacion => {

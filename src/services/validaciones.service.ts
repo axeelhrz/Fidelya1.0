@@ -186,7 +186,7 @@ class ValidacionesService {
         }
 
         // 4. Select and validate specific benefit
-        let selectedBeneficio;
+        let selectedBeneficio: any;
         
         if (request.beneficioId) {
           const beneficioDoc = beneficiosSnapshot.docs.find(doc => doc.id === request.beneficioId);
@@ -825,4 +825,3 @@ class ValidacionesService {
 // Export singleton instance
 export const validacionesService = new ValidacionesService();
 export default validacionesService;
-
