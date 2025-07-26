@@ -22,23 +22,26 @@ import {
   ArrowUpDown,
   Zap,
   Target,
-  Activity
+  Activity,
+  DollarSign
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Validacion } from '@/types/validacion';
+import { Timestamp } from 'firebase/firestore';
 
 const ITEMS_PER_PAGE = 12;
 
 const RESULTADO_CONFIG = {
-  valido: {
-    label: 'Válido',
+  habilitado: {
+    label: 'Habilitado',
     icon: CheckCircle,
     color: '#10b981',
     bgColor: 'bg-green-50',
     textColor: 'text-green-700',
     borderColor: 'border-green-200'
   },
-  invalido: {
-    label: 'Inválido',
+  no_habilitado: {
+    label: 'No Habilitado',
     icon: XCircle,
     color: '#ef4444',
     bgColor: 'bg-red-50',
@@ -53,26 +56,37 @@ const RESULTADO_CONFIG = {
     textColor: 'text-yellow-700',
     borderColor: 'border-yellow-200'
   },
-  agotado: {
-    label: 'Agotado',
+  suspendido: {
+    label: 'Suspendido',
     icon: AlertTriangle,
     color: '#f97316',
     bgColor: 'bg-orange-50',
     textColor: 'text-orange-700',
     borderColor: 'border-orange-200'
-  },
-  no_autorizado: {
-    label: 'No Autorizado',
-    icon: XCircle,
-    color: '#6b7280',
-    bgColor: 'bg-gray-50',
-    textColor: 'text-gray-700',
-    borderColor: 'border-gray-200'
   }
 };
 
+// Helper function to safely convert Timestamp to Date
+const toDate = (timestamp: Timestamp | Date): Date => {
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  if (timestamp && typeof timestamp.toDate === 'function') {
+    return timestamp.toDate();
+  }
+  return new Date();
+};
+
+// Helper function to safely get string value
+const safeString = (value: any, fallback = ''): string => {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object' && value.nombre) return value.nombre;
+  if (value && typeof value === 'object' && value.titulo) return value.titulo;
+  return fallback;
+};
+
 export const ValidacionesHistory: React.FC = () => {
-  const { validaciones, loading, getStats, loadMore, hasMore } = useValidaciones();
+  const { validaciones, loading, getStats, loadMore, hasMore, refresh, error } = useValidaciones();
   const [searchTerm, setSearchTerm] = useState('');
   const [resultadoFilter, setResultadoFilter] = useState<string>('all');
   const [fechaFilter, setFechaFilter] = useState<string>('all');
@@ -85,45 +99,30 @@ export const ValidacionesHistory: React.FC = () => {
 
   // Filter and sort validaciones
   const filteredAndSortedValidaciones = useMemo(() => {
-    const filtered = validaciones.filter(validacion => {
+    if (!Array.isArray(validaciones)) {
+      return [];
+    }
+
+    const filtered = validaciones.filter((validacion: Validacion) => {
+      if (!validacion) return false;
+
       // Search filter - handle different data structures safely
       const matchesSearch = searchTerm === '' || 
         (validacion.id && validacion.id.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        // Handle socio name - check if it's a string or object
-        (typeof validacion.socio === 'string' 
-          ? validacion.socio.toLowerCase().includes(searchTerm.toLowerCase())
-          : validacion.socio?.nombre && typeof validacion.socio.nombre === 'string'
-            ? validacion.socio.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-            : false
-        ) ||
-        // Handle socioNombre field if it exists
-        (validacion.socioNombre && typeof validacion.socioNombre === 'string'
-          ? validacion.socioNombre.toLowerCase().includes(searchTerm.toLowerCase())
-          : false
-        ) ||
-        // Handle beneficio - check if it's a string or object
-        (typeof validacion.beneficio === 'string'
-          ? validacion.beneficio.toLowerCase().includes(searchTerm.toLowerCase())
-          : validacion.beneficio?.titulo && typeof validacion.beneficio.titulo === 'string'
-            ? validacion.beneficio.titulo.toLowerCase().includes(searchTerm.toLowerCase())
-            : false
-        ) ||
-        // Handle beneficioTitulo field if it exists
-        (validacion.beneficioTitulo && typeof validacion.beneficioTitulo === 'string'
-          ? validacion.beneficioTitulo.toLowerCase().includes(searchTerm.toLowerCase())
-          : false
-        );
+        (validacion.socioNombre && validacion.socioNombre.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (validacion.socioId && validacion.socioId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (validacion.beneficioTitulo && validacion.beneficioTitulo.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (validacion.beneficioId && validacion.beneficioId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (validacion.comercioNombre && validacion.comercioNombre.toLowerCase().includes(searchTerm.toLowerCase()));
 
       // Result filter
       const matchesResultado = resultadoFilter === 'all' || validacion.resultado === resultadoFilter;
 
       // Date filter
       let matchesFecha = true;
-      if (fechaFilter !== 'all') {
+      if (fechaFilter !== 'all' && validacion.fechaHora) {
         const now = new Date();
-        const validacionDate = validacion.fechaHora instanceof Date 
-          ? validacion.fechaHora 
-          : validacion.fechaHora.toDate();
+        const validacionDate = toDate(validacion.fechaHora);
         
         switch (fechaFilter) {
           case 'today':
@@ -149,15 +148,15 @@ export const ValidacionesHistory: React.FC = () => {
       
       switch (sortBy) {
         case 'fecha':
-          const dateA = a.fechaHora instanceof Date ? a.fechaHora : a.fechaHora.toDate();
-          const dateB = b.fechaHora instanceof Date ? b.fechaHora : b.fechaHora.toDate();
+          const dateA = toDate(a.fechaHora);
+          const dateB = toDate(b.fechaHora);
           comparison = dateA.getTime() - dateB.getTime();
           break;
         case 'resultado':
-          comparison = a.resultado.localeCompare(b.resultado);
+          comparison = (a.resultado || '').localeCompare(b.resultado || '');
           break;
         case 'monto':
-          comparison = (a.montoTransaccion || a.montoDescuento || 0) - (b.montoTransaccion || b.montoDescuento || 0);
+          comparison = (a.montoDescuento || a.monto || 0) - (b.montoDescuento || b.monto || 0);
           break;
       }
       
@@ -183,16 +182,22 @@ export const ValidacionesHistory: React.FC = () => {
 
   const exportValidaciones = () => {
     try {
+      if (!filteredAndSortedValidaciones.length) {
+        toast.error('No hay datos para exportar');
+        return;
+      }
+
       const csvContent = [
-        ['Fecha', 'Hora', 'Socio ID', 'Beneficio ID', 'Resultado', 'Monto', 'Descuento'].join(','),
+        ['Fecha', 'Hora', 'Socio', 'Beneficio', 'Comercio', 'Resultado', 'Monto', 'Descuento'].join(','),
         ...filteredAndSortedValidaciones.map(v => [
-          format(v.fechaHora.toDate(), 'dd/MM/yyyy', { locale: es }),
-          format(v.fechaHora.toDate(), 'HH:mm', { locale: es }),
-          v.socioId,
-          v.beneficio,
+          format(toDate(v.fechaHora), 'dd/MM/yyyy', { locale: es }),
+          format(toDate(v.fechaHora), 'HH:mm', { locale: es }),
+          v.socioNombre || v.socioId || '',
+          v.beneficioTitulo || v.beneficioId || '',
+          v.comercioNombre || '',
           RESULTADO_CONFIG[v.resultado as keyof typeof RESULTADO_CONFIG]?.label || v.resultado,
-          v.montoTransaccion || 0,
-          v.descuentoAplicado || 0,
+          v.monto || 0,
+          v.montoDescuento || 0,
         ].join(','))
       ].join('\n');
 
@@ -223,6 +228,16 @@ export const ValidacionesHistory: React.FC = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    try {
+      await refresh();
+      toast.success('✅ Datos actualizados correctamente');
+    } catch (error) {
+      console.error('Error refreshing:', error);
+      toast.error('❌ Error al actualizar los datos');
+    }
+  };
+
   if (loading && validaciones.length === 0) {
     return (
       <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-12">
@@ -236,6 +251,26 @@ export const ValidacionesHistory: React.FC = () => {
           </motion.div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">Cargando validaciones...</h3>
           <p className="text-gray-600">Obteniendo historial completo</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-12">
+        <div className="flex flex-col items-center justify-center">
+          <div className="w-16 h-16 mb-6 bg-red-100 rounded-3xl flex items-center justify-center">
+            <XCircle size={32} className="text-red-500" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Error al cargar validaciones</h3>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={handleRefresh}
+            className="px-6 py-3 bg-blue-500 text-white rounded-2xl hover:bg-blue-600 transition-all duration-300"
+          >
+            Reintentar
+          </button>
         </div>
       </div>
     );
@@ -263,17 +298,19 @@ export const ValidacionesHistory: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={exportValidaciones}
-              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              disabled={!filteredAndSortedValidaciones.length}
+              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <Download size={20} />
               <span className="font-semibold">Exportar</span>
             </button>
             
             <button
-              onClick={() => window.location.reload()}
-              className="flex items-center space-x-2 px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-300"
+              onClick={handleRefresh}
+              disabled={loading}
+              className="flex items-center space-x-2 px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <RefreshCw size={20} />
+              <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
               <span className="font-semibold">Actualizar</span>
             </button>
           </div>
@@ -349,7 +386,7 @@ export const ValidacionesHistory: React.FC = () => {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Buscar por ID de validación, socio o beneficio..."
+                placeholder="Buscar por ID, socio, beneficio o comercio..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300 bg-white/50 backdrop-blur-sm"
@@ -470,6 +507,7 @@ export const ValidacionesHistory: React.FC = () => {
                   setSearchTerm('');
                   setResultadoFilter('all');
                   setFechaFilter('all');
+                  setCurrentPage(1);
                 }}
                 className="px-6 py-3 bg-blue-500 text-white rounded-2xl hover:bg-blue-600 transition-all duration-300"
               >
@@ -490,7 +528,7 @@ export const ValidacionesHistory: React.FC = () => {
                       
                       return (
                         <motion.div
-                          key={validacion.id}
+                          key={validacion.id || index}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -20 }}
@@ -506,10 +544,10 @@ export const ValidacionesHistory: React.FC = () => {
                               </div>
                               <div>
                                 <p className="text-sm font-semibold text-gray-900">
-                                  {format(validacion.fechaHora.toDate(), 'dd/MM/yyyy', { locale: es })}
+                                  {format(toDate(validacion.fechaHora), 'dd/MM/yyyy', { locale: es })}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                  {format(validacion.fechaHora.toDate(), 'HH:mm', { locale: es })}
+                                  {format(toDate(validacion.fechaHora), 'HH:mm', { locale: es })}
                                 </p>
                               </div>
                             </div>
@@ -523,32 +561,41 @@ export const ValidacionesHistory: React.FC = () => {
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-gray-600">Socio:</span>
-                              <span className="text-sm font-mono text-gray-900">
-                                {validacion.socio.substring(0, 8)}...
+                              <span className="text-sm font-mono text-gray-900 truncate max-w-[120px]">
+                                {validacion.socioNombre || (validacion.socioId ? `${validacion.socioId.substring(0, 8)}...` : 'N/A')}
                               </span>
                             </div>
                             
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-gray-600">Beneficio:</span>
-                              <span className="text-sm font-mono text-gray-900">
-                                {validacion.beneficio.substring(0, 8)}...
+                              <span className="text-sm font-mono text-gray-900 truncate max-w-[120px]">
+                                {validacion.beneficioTitulo || (validacion.beneficioId ? `${validacion.beneficioId.substring(0, 8)}...` : 'N/A')}
                               </span>
                             </div>
-                            
-                            {validacion.montoTransaccion && (
+
+                            {validacion.comercioNombre && (
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-600">Monto:</span>
-                                <span className="text-sm font-bold text-gray-900">
-                                  ${validacion.montoTransaccion.toFixed(2)}
+                                <span className="text-sm text-gray-600">Comercio:</span>
+                                <span className="text-sm font-semibold text-gray-900 truncate max-w-[120px]">
+                                  {validacion.comercioNombre}
                                 </span>
                               </div>
                             )}
                             
-                            {validacion.descuentoAplicado && (
+                            {(validacion.monto || validacion.montoDescuento) && (
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-600">Descuento:</span>
+                                <span className="text-sm text-gray-600">Monto:</span>
+                                <span className="text-sm font-bold text-gray-900">
+                                  ${(validacion.monto || validacion.montoDescuento || 0).toFixed(2)}
+                                </span>
+                              </div>
+                            )}
+                            
+                            {validacion.ahorro && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">Ahorro:</span>
                                 <span className="text-sm font-bold text-green-600">
-                                  ${validacion.descuentoAplicado.toFixed(2)}
+                                  ${validacion.ahorro.toFixed(2)}
                                 </span>
                               </div>
                             )}
@@ -557,7 +604,9 @@ export const ValidacionesHistory: React.FC = () => {
                           {/* Footer */}
                           <div className="mt-4 pt-4 border-t border-gray-200">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">ID: {validacion.id.substring(0, 8)}...</span>
+                              <span className="text-xs text-gray-500">
+                                ID: {validacion.id ? `${validacion.id.substring(0, 8)}...` : 'N/A'}
+                              </span>
                               <button className="text-gray-400 hover:text-gray-600 transition-colors">
                                 <MoreVertical size={16} />
                               </button>
@@ -578,9 +627,9 @@ export const ValidacionesHistory: React.FC = () => {
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Fecha y Hora</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Socio</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Beneficio</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Comercio</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Resultado</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Monto</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Descuento</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -591,7 +640,7 @@ export const ValidacionesHistory: React.FC = () => {
                         
                         return (
                           <motion.tr
-                            key={validacion.id}
+                            key={validacion.id || index}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
@@ -601,21 +650,26 @@ export const ValidacionesHistory: React.FC = () => {
                             <td className="px-6 py-4">
                               <div>
                                 <p className="text-sm font-semibold text-gray-900">
-                                  {format(validacion.fechaHora.toDate(), 'dd/MM/yyyy', { locale: es })}
+                                  {format(toDate(validacion.fechaHora), 'dd/MM/yyyy', { locale: es })}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                  {format(validacion.fechaHora.toDate(), 'HH:mm', { locale: es })}
+                                  {format(toDate(validacion.fechaHora), 'HH:mm', { locale: es })}
                                 </p>
                               </div>
                             </td>
                             <td className="px-6 py-4">
-                              <span className="text-sm font-mono text-gray-600">
-                                {validacion.socio.substring(0, 8)}...
+                              <span className="text-sm text-gray-600">
+                                {validacion.socioNombre || (validacion.socioId ? `${validacion.socioId.substring(0, 8)}...` : 'N/A')}
                               </span>
                             </td>
                             <td className="px-6 py-4">
-                              <span className="text-sm font-mono text-gray-600">
-                                {validacion.beneficio.substring(0, 8)}...
+                              <span className="text-sm text-gray-600">
+                                {validacion.beneficioTitulo || (validacion.beneficioId ? `${validacion.beneficioId.substring(0, 8)}...` : 'N/A')}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-sm text-gray-600">
+                                {validacion.comercioNombre || 'N/A'}
                               </span>
                             </td>
                             <td className="px-6 py-4">
@@ -628,12 +682,7 @@ export const ValidacionesHistory: React.FC = () => {
                             </td>
                             <td className="px-6 py-4">
                               <span className="text-sm font-semibold text-gray-900">
-                                {validacion.montoTransaccion ? `$${validacion.montoTransaccion.toFixed(2)}` : '-'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="text-sm font-semibold text-green-600">
-                                {validacion.descuentoAplicado ? `$${validacion.descuentoAplicado.toFixed(2)}` : '-'}
+                                {(validacion.monto || validacion.montoDescuento) ? `$${(validacion.monto || validacion.montoDescuento || 0).toFixed(2)}` : '-'}
                               </span>
                             </td>
                           </motion.tr>
