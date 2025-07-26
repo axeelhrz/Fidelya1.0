@@ -134,7 +134,6 @@ class ValidacionesService {
         // Check business hours if available
         if (comercioData.horarios) {
           const now = new Date();
-          const currentHour = now.getHours();
           const currentDay = now.getDay();
           
           // Simple business hours check (can be enhanced)
@@ -186,18 +185,68 @@ class ValidacionesService {
         }
 
         // 4. Select and validate specific benefit
-        let selectedBeneficio: any;
+        let selectedBeneficio: {
+          id: string;
+          titulo: string;
+          descripcion: string;
+          descuento: number;
+          tipo: string;
+          condiciones?: string;
+          fechaInicio?: Timestamp | Date | string;
+          fechaFin?: Timestamp | Date | string;
+          limiteTotal?: number;
+          usosActuales?: number;
+          limitePorSocio?: number;
+          limiteDiario?: number;
+          tipoAcceso?: string;
+          asociacionesDisponibles?: string[];
+          montoBase?: number;
+        };
         
         if (request.beneficioId) {
           const beneficioDoc = beneficiosSnapshot.docs.find(doc => doc.id === request.beneficioId);
           if (!beneficioDoc) {
             throw new Error('El beneficio solicitado no está disponible para ti');
           }
-          selectedBeneficio = { id: beneficioDoc.id, ...beneficioDoc.data() };
+          const beneficioData = beneficioDoc.data();
+          selectedBeneficio = {
+            id: beneficioDoc.id,
+            titulo: beneficioData.titulo ?? '',
+            descripcion: beneficioData.descripcion ?? '',
+            descuento: beneficioData.descuento ?? 0,
+            tipo: beneficioData.tipo ?? '',
+            condiciones: beneficioData.condiciones,
+            fechaInicio: beneficioData.fechaInicio,
+            fechaFin: beneficioData.fechaFin,
+            limiteTotal: beneficioData.limiteTotal,
+            usosActuales: beneficioData.usosActuales,
+            limitePorSocio: beneficioData.limitePorSocio,
+            limiteDiario: beneficioData.limiteDiario,
+            tipoAcceso: beneficioData.tipoAcceso,
+            asociacionesDisponibles: beneficioData.asociacionesDisponibles,
+            montoBase: beneficioData.montoBase,
+          };
         } else {
           // Use first available benefit
           const firstBeneficio = beneficiosSnapshot.docs[0];
-          selectedBeneficio = { id: firstBeneficio.id, ...firstBeneficio.data() };
+          const beneficioData = firstBeneficio.data();
+          selectedBeneficio = {
+            id: firstBeneficio.id,
+            titulo: beneficioData.titulo ?? '',
+            descripcion: beneficioData.descripcion ?? '',
+            descuento: beneficioData.descuento ?? 0,
+            tipo: beneficioData.tipo ?? '',
+            condiciones: beneficioData.condiciones,
+            fechaInicio: beneficioData.fechaInicio,
+            fechaFin: beneficioData.fechaFin,
+            limiteTotal: beneficioData.limiteTotal,
+            usosActuales: beneficioData.usosActuales,
+            limitePorSocio: beneficioData.limitePorSocio,
+            limiteDiario: beneficioData.limiteDiario,
+            tipoAcceso: beneficioData.tipoAcceso,
+            asociacionesDisponibles: beneficioData.asociacionesDisponibles,
+            montoBase: beneficioData.montoBase,
+          };
         }
 
         // 5. Enhanced benefit validation
@@ -412,8 +461,8 @@ class ValidacionesService {
   async getHistorialValidaciones(
     socioId: string,
     maxResults: number = 50,
-    lastDoc?: any
-  ): Promise<{ validaciones: HistorialValidacion[]; hasMore: boolean; lastDoc: any }> {
+    lastDoc?: import('firebase/firestore').DocumentSnapshot
+  ): Promise<{ validaciones: HistorialValidacion[]; hasMore: boolean; lastDoc: import('firebase/firestore').DocumentSnapshot | null }> {
     try {
       let q = query(
         collection(db, this.collection),
@@ -575,7 +624,13 @@ class ValidacionesService {
       const validaciones = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        fechaValidacion: doc.data().fechaValidacion?.toDate() || new Date()
+        fechaValidacion: doc.data().fechaValidacion?.toDate() || new Date(),
+        estado: doc.data().estado, // Ensure 'estado' is present
+        montoDescuento: doc.data().montoDescuento, // Ensure 'montoDescuento' is present
+        beneficioId: doc.data().beneficioId, // Ensure 'beneficioId' is present
+        beneficioTitulo: doc.data().beneficioTitulo, // Add beneficioTitulo if present
+        comercioId: doc.data().comercioId, // Ensure 'comercioId' is present
+        comercioNombre: doc.data().comercioNombre // Optionally add comercioNombre if used later
       }));
 
       const validacionesExitosas = validaciones.filter(v => v.estado === 'exitosa');
@@ -593,10 +648,10 @@ class ValidacionesService {
           beneficiosCount[key].usos++;
           beneficiosCount[key].ahorro += v.montoDescuento || 0;
         } else {
-          beneficiosCount[key] = { 
-            titulo: v.beneficioTitulo || 'Beneficio', 
-            usos: 1, 
-            ahorro: v.montoDescuento || 0 
+          beneficiosCount[key] = {
+            titulo: v.beneficioTitulo || 'Beneficio',
+            usos: 1,
+            ahorro: v.montoDescuento || 0
           };
         }
       });
@@ -720,14 +775,13 @@ class ValidacionesService {
     }
   }
 
-  private calculateStreaks(validaciones: any[]): { rachaActual: number; mejorRacha: number } {
+  private calculateStreaks(validaciones: Array<{ fechaValidacion: Date }>): { rachaActual: number; mejorRacha: number } {
     if (validaciones.length === 0) return { rachaActual: 0, mejorRacha: 0 };
 
     const sortedValidaciones = validaciones.sort((a, b) => b.fechaValidacion.getTime() - a.fechaValidacion.getTime());
     
     let rachaActual = 0;
     let mejorRacha = 0;
-    let rachaTemp = 0;
     
     const today = new Date();
     const dates = new Set();

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { DocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { useAuth } from './useAuth';
 import { validacionesService, HistorialValidacion } from '@/services/validaciones.service';
 import { ValidacionResponse, Validacion } from '@/types/validacion';
@@ -27,7 +28,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const [lastDoc, setLastDoc] = useState<unknown>(null);
+  const [lastDoc, setLastDoc] = useState<DocumentSnapshot<DocumentData> | null>(null);
 
   // Transform HistorialValidacion to Validacion
   const transformHistorialToValidacion = useCallback((historial: HistorialValidacion): Validacion => {
@@ -72,7 +73,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
       const result = await validacionesService.getHistorialValidaciones(
         user.uid, 
         20, // Load 20 items at a time
-        reset ? null : lastDoc
+        reset ? undefined : lastDoc
       );
       
       // Transform HistorialValidacion[] to Validacion[]
@@ -84,7 +85,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
         setValidaciones(prev => [...prev, ...transformedValidaciones]);
       }
       
-      setLastDoc(result.lastDoc);
+      setLastDoc(result.lastDoc || null);
       setHasMore(result.hasMore);
     } catch (err) {
       console.error('Error loading validaciones:', err);
