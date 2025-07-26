@@ -292,7 +292,7 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
     };
   }, [beneficiosActivos.length, beneficiosUsados]);
 
-  // Funciones de acción optimizadas (mantener las existentes pero con optimizedNotifications)
+  // Funciones de acción optimizadas
   const crearBeneficio = useCallback(async (data: BeneficioFormData): Promise<boolean> => {
     if (!user || (user.role !== 'comercio' && user.role !== 'asociacion')) {
       optimizedNotifications.error('No tienes permisos para crear beneficios');
@@ -321,7 +321,164 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
     }
   }, [user, cargarBeneficios, cargarEstadisticas, useRealtime]);
 
-  // Resto de funciones similares con optimizedNotifications...
+  const actualizarBeneficio = useCallback(async (id: string, data: Partial<BeneficioFormData>): Promise<boolean> => {
+    if (!user || (user.role !== 'comercio' && user.role !== 'asociacion')) {
+      optimizedNotifications.error('No tienes permisos para actualizar beneficios');
+      return false;
+    }
+
+    try {
+      setLoading(true);
+      await BeneficiosService.actualizarBeneficio(id, data);
+      
+      optimizedNotifications.success('Beneficio actualizado exitosamente');
+      
+      if (!useRealtime) {
+        await cargarBeneficios();
+      }
+      await cargarEstadisticas();
+      
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al actualizar beneficio';
+      optimizedNotifications.error(message);
+      setError(message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user, cargarBeneficios, cargarEstadisticas, useRealtime]);
+
+  const eliminarBeneficio = useCallback(async (id: string): Promise<boolean> => {
+    if (!user || (user.role !== 'comercio' && user.role !== 'asociacion')) {
+      optimizedNotifications.error('No tienes permisos para eliminar beneficios');
+      return false;
+    }
+
+    try {
+      setLoading(true);
+      await BeneficiosService.eliminarBeneficio(id);
+      
+      optimizedNotifications.success('Beneficio eliminado exitosamente');
+      
+      if (!useRealtime) {
+        await cargarBeneficios();
+      }
+      await cargarEstadisticas();
+      
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al eliminar beneficio';
+      optimizedNotifications.error(message);
+      setError(message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user, cargarBeneficios, cargarEstadisticas, useRealtime]);
+
+  const cambiarEstadoBeneficio = useCallback(async (
+    id: string, 
+    estado: 'activo' | 'inactivo' | 'vencido' | 'agotado'
+  ): Promise<boolean> => {
+    if (!user || (user.role !== 'comercio' && user.role !== 'asociacion')) {
+      optimizedNotifications.error('No tienes permisos para cambiar el estado del beneficio');
+      return false;
+    }
+
+    try {
+      setLoading(true);
+      await BeneficiosService.actualizarEstadoBeneficio(id, estado);
+      
+      const estadoTexto = {
+        'activo': 'activado',
+        'inactivo': 'desactivado',
+        'vencido': 'marcado como vencido',
+        'agotado': 'marcado como agotado'
+      }[estado];
+      
+      optimizedNotifications.success(`Beneficio ${estadoTexto} exitosamente`);
+      
+      if (!useRealtime) {
+        await cargarBeneficios();
+      }
+      await cargarEstadisticas();
+      
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al cambiar estado del beneficio';
+      optimizedNotifications.error(message);
+      setError(message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user, cargarBeneficios, cargarEstadisticas, useRealtime]);
+
+  const usarBeneficio = useCallback(async (
+    beneficioId: string, 
+    comercioId: string,
+    montoOriginal?: number
+  ): Promise<boolean> => {
+    if (!user || user.role !== 'socio') {
+      optimizedNotifications.error('Solo los socios pueden usar beneficios');
+      return false;
+    }
+
+    if (!user.asociacionId) {
+      optimizedNotifications.error('Debes estar asociado a una asociación para usar beneficios');
+      return false;
+    }
+
+    try {
+      setLoading(true);
+      
+      const socioData = {
+        nombre: user.nombre || user.email || 'Usuario',
+        email: user.email || ''
+      };
+
+      await BeneficiosService.usarBeneficio(
+        beneficioId,
+        user.uid,
+        socioData,
+        comercioId,
+        user.asociacionId,
+        montoOriginal
+      );
+      
+      optimizedNotifications.success('¡Beneficio usado exitosamente!');
+      
+      await Promise.all([
+        cargarHistorialUsos(),
+        cargarEstadisticas(),
+        !useRealtime && cargarBeneficios()
+      ].filter(Boolean));
+      
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al usar beneficio';
+      optimizedNotifications.error(message);
+      setError(message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user, cargarBeneficios, cargarHistorialUsos, cargarEstadisticas, useRealtime]);
+
+  const buscarBeneficios = useCallback(async (
+    termino: string, 
+    filtros?: BeneficioFilter
+  ): Promise<Beneficio[]> => {
+    try {
+      const resultados = await BeneficiosService.buscarBeneficios(termino, filtros);
+      return resultados;
+    } catch (err) {
+      console.error('Error en búsqueda:', err);
+      optimizedNotifications.error('Error al buscar beneficios');
+      return [];
+    }
+  }, []);
 
   const refrescar = useCallback(async () => {
     if (refreshing) return;
@@ -345,6 +502,10 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
     }
   }, [refreshing, cargarBeneficios, cargarHistorialUsos, cargarEstadisticas, user]);
 
+  const filtrarBeneficios = useCallback(async (filtros: BeneficioFilter) => {
+    await cargarBeneficios(filtros);
+  }, [cargarBeneficios]);
+
   return {
     // Estados
     beneficios,
@@ -364,6 +525,12 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
 
     // Acciones
     crearBeneficio,
+    actualizarBeneficio,
+    eliminarBeneficio,
+    cambiarEstadoBeneficio,
+    usarBeneficio,
+    buscarBeneficios,
+    filtrarBeneficios,
     refrescar,
 
     // Funciones de carga manual
@@ -379,5 +546,23 @@ export const useBeneficiosSocio = () => {
     autoLoad: true,
     useRealtime: true,
     cacheEnabled: true
+  });
+};
+
+// Hook especializado para comercios optimizado
+export const useBeneficiosComercios = () => {
+  return useBeneficios({
+    autoLoad: true,
+    useRealtime: true,
+    cacheEnabled: false
+  });
+};
+
+// Hook especializado para asociaciones optimizado
+export const useBeneficiosAsociacion = () => {
+  return useBeneficios({
+    autoLoad: true,
+    useRealtime: false,
+    cacheEnabled: false
   });
 };
