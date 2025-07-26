@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo, Suspense, lazy } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AsociacionSidebar } from '@/components/layout/AsociacionSidebar';
 import { LogoutModal } from '@/components/ui/LogoutModal';
-import { OverviewDashboard } from '@/components/asociacion/OverviewDashboard';
 import { useAuth } from '@/hooks/useAuth';
 import { 
   Store, 
@@ -19,10 +18,13 @@ import {
   Gift
 } from 'lucide-react';
 
-// Modern Quick Actions Component with enhanced responsiveness
-const ModernQuickActions: React.FC<{
+// Lazy load the heavy dashboard component
+const OptimizedOverviewDashboard = lazy(() => import('@/components/asociacion/OptimizedOverviewDashboard'));
+
+// Memoized Quick Actions Component
+const ModernQuickActions = memo<{
   onNavigate: (section: string) => void;
-}> = ({ onNavigate }) => {
+}>(({ onNavigate }) => {
   const quickActions = [
     {
       id: 'add-member',
@@ -126,17 +128,19 @@ const ModernQuickActions: React.FC<{
       ))}
     </div>
   );
-};
+});
 
-// Enhanced Sidebar with logout functionality
-const AsociacionSidebarWithLogout: React.FC<{
+ModernQuickActions.displayName = 'ModernQuickActions';
+
+// Memoized Sidebar Component
+const AsociacionSidebarWithLogout = memo<{
   open: boolean;
   onToggle: () => void;
   onMenuClick: (section: string) => void;
   activeSection: string;
   onLogoutClick: () => void;
   isMobile: boolean;
-}> = (props) => {
+}>((props) => {
   return (
     <AsociacionSidebar
       open={props.open}
@@ -147,9 +151,168 @@ const AsociacionSidebarWithLogout: React.FC<{
       isMobile={props.isMobile}
     />
   );
-};
+});
 
-export default function ModernAsociacionDashboard() {
+AsociacionSidebarWithLogout.displayName = 'AsociacionSidebarWithLogout';
+
+// Loading Component
+const DashboardLoading = memo(() => (
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="text-center"
+    >
+      <div className="relative mb-8">
+        <div className="w-20 h-20 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin mx-auto" />
+        <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-blue-500 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+      </div>
+      <motion.h2 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="text-2xl font-bold text-slate-900 mb-3"
+      >
+        Cargando Dashboard
+      </motion.h2>
+      <motion.p 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="text-slate-600 text-lg"
+      >
+        Preparando tu panel de control optimizado...
+      </motion.p>
+    </motion.div>
+  </div>
+));
+
+DashboardLoading.displayName = 'DashboardLoading';
+
+// Dashboard Content Component
+const DashboardContent = memo<{
+  user: any;
+  onNavigate: (section: string) => void;
+  onAddMember: () => void;
+}>(({ user, onNavigate, onAddMember }) => {
+  return (
+    <div className="asociacion-page-container min-h-screen">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
+        {/* Modern Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6 lg:p-8"
+        >
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 lg:gap-6">
+              <div className="relative">
+                <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 rounded-3xl flex items-center justify-center shadow-2xl">
+                  <Building2 className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full border-3 border-white shadow-lg flex items-center justify-center">
+                  <TrendingUp className="w-3 h-3 text-white" />
+                </div>
+              </div>
+              <div>
+                <motion.h1 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-2"
+                >
+                  Hola, {user?.nombre || 'Administrador'}
+                </motion.h1>
+                <motion.p 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-base sm:text-lg lg:text-xl text-slate-600"
+                >
+                  Bienvenido a tu panel de control optimizado
+                </motion.p>
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex items-center space-x-2 mt-2"
+                >
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                  <span className="text-sm text-slate-500 font-medium">Sistema optimizado</span>
+                </motion.div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4">
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onAddMember}
+                className="bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800 hover:from-slate-700 hover:via-slate-800 hover:to-slate-900 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-xl hover:shadow-2xl group"
+              >
+                <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+                <span>Nuevo Socio</span>
+              </motion.button>
+              
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => onNavigate('analytics')}
+                className="bg-white/80 backdrop-blur-sm hover:bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 px-6 lg:px-8 py-3 lg:py-4 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+              >
+                <BarChart3 className="w-5 h-5" />
+                <span className="hidden sm:inline">Analytics</span>
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Modern Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <ModernQuickActions onNavigate={onNavigate} />
+        </motion.div>
+
+        {/* Main Dashboard with Suspense */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Suspense fallback={
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6 lg:p-8">
+              <div className="flex justify-center py-12">
+                <div className="relative">
+                  <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin" />
+                  <div className="absolute inset-0 w-12 h-12 border-4 border-transparent border-t-blue-500 rounded-full animate-spin" style={{ animationDirection: 'reverse' }} />
+                </div>
+              </div>
+            </div>
+          }>
+            <OptimizedOverviewDashboard
+              onNavigate={onNavigate}
+              onAddMember={onAddMember}
+            />
+          </Suspense>
+        </motion.div>
+      </div>
+    </div>
+  );
+});
+
+DashboardContent.displayName = 'DashboardContent';
+
+// Main Component
+export default function OptimizedAsociacionDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   
@@ -165,11 +328,11 @@ export default function ModernAsociacionDashboard() {
   }
 
   // Logout handlers
-  const handleLogoutClick = () => {
+  const handleLogoutClick = useCallback(() => {
     setLogoutModalOpen(true);
-  };
+  }, []);
 
-  const handleLogoutConfirm = async () => {
+  const handleLogoutConfirm = useCallback(async () => {
     setLoggingOut(true);
     try {
       await signOut();
@@ -182,14 +345,14 @@ export default function ModernAsociacionDashboard() {
       setLoggingOut(false);
       setLogoutModalOpen(false);
     }
-  };
+  }, [signOut, router]);
 
-  const handleLogoutCancel = () => {
+  const handleLogoutCancel = useCallback(() => {
     setLogoutModalOpen(false);
-  };
+  }, []);
 
   // Navigation handlers
-  const handleNavigate = (section: string) => {
+  const handleNavigate = useCallback((section: string) => {
     const sectionRoutes: Record<string, string> = {
       'dashboard': '/dashboard/asociacion',
       'socios': '/dashboard/asociacion/socios',
@@ -208,150 +371,16 @@ export default function ModernAsociacionDashboard() {
     } else {
       setActiveSection(section);
     }
-  };
+  }, [router]);
 
-  const handleAddMember = () => {
+  const handleAddMember = useCallback(() => {
     router.push('/dashboard/asociacion/socios');
-  };
+  }, [router]);
 
-  // Loading state with modern design
+  // Loading state
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="relative mb-8">
-            <div className="w-20 h-20 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin mx-auto" />
-            <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-blue-500 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
-          </div>
-          <motion.h2 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-2xl font-bold text-slate-900 mb-3"
-          >
-            Cargando Dashboard
-          </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-slate-600 text-lg"
-          >
-            Preparando tu panel de control...
-          </motion.p>
-        </motion.div>
-      </div>
-    );
+    return <DashboardLoading />;
   }
-
-  // Render modern dashboard content
-  const renderModernDashboardContent = () => {
-    return (
-      <div className="asociacion-page-container min-h-screen">
-        <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
-          {/* Modern Header */}
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6 lg:p-8"
-          >
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 lg:gap-6">
-                <div className="relative">
-                  <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 rounded-3xl flex items-center justify-center shadow-2xl">
-                    <Building2 className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
-                  </div>
-                  <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full border-3 border-white shadow-lg flex items-center justify-center">
-                    <TrendingUp className="w-3 h-3 text-white" />
-                  </div>
-                </div>
-                <div>
-                  <motion.h1 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-2"
-                  >
-                    Hola, {user?.nombre || 'Administrador'}
-                  </motion.h1>
-                  <motion.p 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="text-base sm:text-lg lg:text-xl text-slate-600"
-                  >
-                    Bienvenido a tu panel de control ejecutivo
-                  </motion.p>
-                  <motion.div 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="flex items-center space-x-2 mt-2"
-                  >
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                    <span className="text-sm text-slate-500 font-medium">Sistema operativo</span>
-                  </motion.div>
-                </div>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4">
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.4 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleAddMember}
-                  className="bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800 hover:from-slate-700 hover:via-slate-800 hover:to-slate-900 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-xl hover:shadow-2xl group"
-                >
-                  <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
-                  <span>Nuevo Socio</span>
-                </motion.button>
-                
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleNavigate('analytics')}
-                  className="bg-white/80 backdrop-blur-sm hover:bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 px-6 lg:px-8 py-3 lg:py-4 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
-                >
-                  <BarChart3 className="w-5 h-5" />
-                  <span className="hidden sm:inline">Analytics</span>
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Modern Quick Actions */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <ModernQuickActions onNavigate={handleNavigate} />
-          </motion.div>
-
-          {/* Main Dashboard with enhanced animations */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <OverviewDashboard
-              onNavigate={handleNavigate}
-              onAddMember={handleAddMember}
-            />
-          </motion.div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <>
@@ -374,7 +403,11 @@ export default function ModernAsociacionDashboard() {
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="min-h-full"
         >
-          {renderModernDashboardContent()}
+          <DashboardContent
+            user={user}
+            onNavigate={handleNavigate}
+            onAddMember={handleAddMember}
+          />
         </motion.div>
       </DashboardLayout>
 

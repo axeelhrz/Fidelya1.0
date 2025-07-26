@@ -1,257 +1,160 @@
-'use client';
-
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  limit,
-  Timestamp
-} from 'firebase/firestore';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { socioService, SocioFilters } from '@/services/socio.service';
+import { Socio, SocioStats } from '@/types/socio';
 import { useAuth } from './useAuth';
-import { useOptimizedRealtimeCollection } from './useOptimizedRealtimeFirebase';
-import { useDebouncedCallback } from './useDebounce';
+import { useDebounce } from './useDebounce';
 
-interface OptimizedValidacion {
-  id: string;
-  comercioId: string;
-  comercioNombre: string;
-  comercioLogo?: string;
-  beneficioId: string;
-  beneficioTitulo: string;
-  beneficioDescripcion: string;
-  descuento: number;
-  tipoDescuento: string;
-  fechaValidacion: Timestamp;
-  montoDescuento: number;
-  estado: 'exitosa' | 'fallida' | 'pendiente' | 'cancelada';
-  codigoValidacion: string;
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  expiry: number;
 }
 
-interface OptimizedStats {
-  totalValidaciones: number;
-  ahorroTotal: number;
-  beneficiosEsteMes: number;
-  ahorroEsteMes: number;
-  comerciosVisitados: number;
-  beneficiosMasUsados: Array<{ titulo: string; usos: number }>;
-  comerciosFavoritos: Array<{ nombre: string; visitas: number }>;
-  validacionesPorMes: Array<{ mes: string; validaciones: number; ahorro: number }>;
+class DataCache {
+  private cache = new Map<string, CacheEntry<any>>();
+  private readonly DEFAULT_EXPIRY = 5 * 60 * 1000; // 5 minutes
+
+  set<T>(key: string, data: T, expiry = this.DEFAULT_EXPIRY): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      expiry
+    });
+  }
+
+  get<T>(key: string): T | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+
+    if (Date.now() - entry.timestamp > entry.expiry) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return entry.data;
+  }
+
+  invalidate(pattern?: string): void {
+    if (!pattern) {
+      this.cache.clear();
+      return;
+    }
+
+    for (const key of this.cache.keys()) {
+      if (key.includes(pattern)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  has(key: string): boolean {
+    const entry = this.cache.get(key);
+    if (!entry) return false;
+    
+    if (Date.now() - entry.timestamp > entry.expiry) {
+      this.cache.delete(key);
+      return false;
+    }
+    
+    return true;
+  }
 }
 
-interface ActivityLog {
-  id: string;
-  type: 'benefit_used' | 'profile_updated' | 'level_up' | 'achievement_earned' | 'system_alert';
-  title: string;
-  description: string;
-  timestamp: Timestamp;
-  metadata?: Record<string, unknown>;
-}
-
-interface ConnectionState {
-  isConnected: boolean;
-  isReconnecting: boolean;
-  lastSync: Date | null;
-  error: string | null;
-}
+const dataCache = new DataCache();
 
 interface UseOptimizedSocioDataReturn {
-  validaciones: OptimizedValidacion[];
-  stats: OptimizedStats;
-  activities: ActivityLog[];
-  connectionState: ConnectionState;
+  stats: SocioStats;
   loading: boolean;
   error: string | null;
-  refreshData: () => void;
-  hasNewActivity: boolean;
-  markActivityAsRead: () => void;
-  isFromCache: boolean;
+  refreshStats: () => Promise<void>;
+  invalidateCache: () => void;
+  lastUpdated: Date | null;
 }
 
 export function useOptimizedSocioData(): UseOptimizedSocioDataReturn {
   const { user } = useAuth();
-  const [hasNewActivity, setHasNewActivity] = useState(false);
-  const [lastActivityCount, setLastActivityCount] = useState(0);
+  const [stats, setStats] = useState<SocioStats>({
+    total: 0,
+    activos: 0,
+    inactivos: 0,
+    alDia: 0,
+    vencidos: 0,
+    pendientes: 0,
+    ingresosMensuales: 0,
+    beneficiosUsados: 0,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const socioId = user?.uid || '';
+  const asociacionId = user?.uid || '';
+  const cacheKey = useMemo(() => `socio-stats-${asociacionId}`, [asociacionId]);
 
-  // Usar el hook optimizado para validaciones
-  const {
-    data: validaciones = [],
-    loading,
-    error,
-    connectionState,
-    forceRefresh,
-    isFromCache
-  } = useOptimizedRealtimeCollection<OptimizedValidacion>(
-    'validaciones',
-    socioId ? [
-      where('socioId', '==', socioId),
-      where('estado', '==', 'exitosa'),
-      orderBy('fechaValidacion', 'desc'),
-      limit(100)
-    ] : [],
-    {
-      enableToasts: false,
-      debounceMs: 500,
-      cacheTimeout: 60000, // 1 minuto de cache
-      enableOfflineSupport: true
-    }
-  );
+  const refreshStats = useCallback(async (forceRefresh = false) => {
+    if (!asociacionId) return;
 
-  // Detectar nuevas actividades con debounce
-  const debouncedActivityCheck = useDebouncedCallback((newCount: number) => {
-    if (lastActivityCount > 0 && newCount > lastActivityCount && !isFromCache) {
-      setHasNewActivity(true);
-    }
-    setLastActivityCount(newCount);
-  }, 1000);
-
-  useEffect(() => {
-    debouncedActivityCheck(validaciones.length);
-  }, [validaciones.length, debouncedActivityCheck]);
-
-  // Calcular estadísticas con memoización optimizada
-  const stats = useMemo<OptimizedStats>(() => {
-    if (!validaciones.length) {
-      return {
-        totalValidaciones: 0,
-        ahorroTotal: 0,
-        beneficiosEsteMes: 0,
-        ahorroEsteMes: 0,
-        comerciosVisitados: 0,
-        beneficiosMasUsados: [],
-        comerciosFavoritos: [],
-        validacionesPorMes: []
-      };
+    // Check cache first
+    if (!forceRefresh && dataCache.has(cacheKey)) {
+      const cachedStats = dataCache.get<SocioStats>(cacheKey);
+      if (cachedStats) {
+        setStats(cachedStats);
+        return;
+      }
     }
 
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    // Filtrar validaciones del mes actual
-    const validacionesEsteMes = validaciones.filter(v => {
-      const fecha = v.fechaValidacion.toDate();
-      return fecha.getMonth() === currentMonth && fecha.getFullYear() === currentYear;
-    });
-
-    // Calcular estadísticas básicas
-    const totalValidaciones = validaciones.length;
-    const ahorroTotal = validaciones.reduce((total, v) => total + (v.montoDescuento || 0), 0);
-    const beneficiosEsteMes = validacionesEsteMes.length;
-    const ahorroEsteMes = validacionesEsteMes.reduce((total, v) => total + (v.montoDescuento || 0), 0);
-
-    // Calcular comercios únicos
-    const comerciosUnicos = new Set(validaciones.map(v => v.comercioId));
-    const comerciosVisitados = comerciosUnicos.size;
-
-    // Calcular beneficios más usados (optimizado)
-    const beneficiosMap = new Map<string, { titulo: string; usos: number }>();
-    validaciones.forEach(v => {
-      const existing = beneficiosMap.get(v.beneficioId);
-      if (existing) {
-        existing.usos++;
-      } else {
-        beneficiosMap.set(v.beneficioId, { titulo: v.beneficioTitulo, usos: 1 });
-      }
-    });
-
-    const beneficiosMasUsados = Array.from(beneficiosMap.values())
-      .sort((a, b) => b.usos - a.usos)
-      .slice(0, 5);
-
-    // Calcular comercios favoritos (optimizado)
-    const comerciosMap = new Map<string, { nombre: string; visitas: number }>();
-    validaciones.forEach(v => {
-      const existing = comerciosMap.get(v.comercioId);
-      if (existing) {
-        existing.visitas++;
-      } else {
-        comerciosMap.set(v.comercioId, { nombre: v.comercioNombre, visitas: 1 });
-      }
-    });
-
-    const comerciosFavoritos = Array.from(comerciosMap.values())
-      .sort((a, b) => b.visitas - a.visitas)
-      .slice(0, 5);
-
-    // Calcular validaciones por mes (últimos 6 meses)
-    const mesesMap = new Map<string, { validaciones: number; ahorro: number }>();
-    
-    // Inicializar últimos 6 meses
-    for (let i = 5; i >= 0; i--) {
-      const fecha = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = fecha.toISOString().substr(0, 7);
-      mesesMap.set(key, { validaciones: 0, ahorro: 0 });
+    // Cancel previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
 
-    // Procesar validaciones
-    validaciones.forEach(v => {
-      const fecha = v.fechaValidacion.toDate();
-      const key = fecha.toISOString().substr(0, 7);
-      const existing = mesesMap.get(key);
-      if (existing) {
-        existing.validaciones++;
-        existing.ahorro += v.montoDescuento || 0;
+    abortControllerRef.current = new AbortController();
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const newStats = await socioService.getAsociacionStats(asociacionId);
+      
+      // Update state and cache
+      setStats(newStats);
+      setLastUpdated(new Date());
+      dataCache.set(cacheKey, newStats, 3 * 60 * 1000); // 3 minutes cache
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
+        const errorMessage = err.message || 'Error al cargar estadísticas';
+        setError(errorMessage);
+        console.error('Error loading socio stats:', err);
       }
-    });
+    } finally {
+      setLoading(false);
+    }
+  }, [asociacionId, cacheKey]);
 
-    const validacionesPorMes = Array.from(mesesMap.entries()).map(([mes, data]) => ({
-      mes: new Date(mes + '-01').toLocaleDateString('es-ES', { month: 'short', year: 'numeric' }),
-      ...data,
-    }));
-
-    return {
-      totalValidaciones,
-      ahorroTotal,
-      beneficiosEsteMes,
-      ahorroEsteMes,
-      comerciosVisitados,
-      beneficiosMasUsados,
-      comerciosFavoritos,
-      validacionesPorMes
-    };
-  }, [validaciones]);
-
-  // Convertir validaciones a logs de actividad (memoizado)
-  const activities = useMemo<ActivityLog[]>(() => {
-    return validaciones.slice(0, 10).map(validacion => ({
-      id: validacion.id,
-      type: 'benefit_used' as const,
-      title: 'Beneficio utilizado',
-      description: `${validacion.beneficioTitulo} en ${validacion.comercioNombre}`,
-      timestamp: validacion.fechaValidacion,
-      metadata: {
-        comercioId: validacion.comercioId,
-        beneficioId: validacion.beneficioId,
-        descuento: validacion.descuento,
-        montoDescuento: validacion.montoDescuento
-      }
-    }));
-  }, [validaciones]);
-
-  // Función para refrescar datos
-  const refreshData = useCallback(() => {
-    forceRefresh();
-  }, [forceRefresh]);
-
-  // Marcar actividad como leída
-  const markActivityAsRead = useCallback(() => {
-    setHasNewActivity(false);
+  const invalidateCache = useCallback(() => {
+    dataCache.invalidate('socio-stats');
+    setLastUpdated(null);
   }, []);
 
+  // Load initial data
+  useEffect(() => {
+    if (asociacionId) {
+      refreshStats();
+    }
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [asociacionId, refreshStats]);
+
   return {
-    validaciones,
     stats,
-    activities,
-    connectionState,
     loading,
     error,
-    refreshData,
-    hasNewActivity,
-    markActivityAsRead,
-    isFromCache
+    refreshStats: () => refreshStats(true),
+    invalidateCache,
+    lastUpdated,
   };
 }

@@ -1,76 +1,51 @@
-'use client';
+import { useCallback, useRef } from 'react';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-
-export function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
-
-export function useDebouncedCallback<T extends (...args: any[]) => any>(
+export function useDebounce<T extends (...args: any[]) => any>(
   callback: T,
   delay: number
-): T {
-  const callbackRef = useRef(callback);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+): (...args: Parameters<T>) => void {
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Actualizar la referencia del callback
-  useEffect(() => {
-    callbackRef.current = callback;
-  }, [callback]);
-
-  // Limpiar timeout al desmontar
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  const debouncedCallback = useCallback(
-    ((...args: Parameters<T>) => {
+  return useCallback(
+    (...args: Parameters<T>) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
 
       timeoutRef.current = setTimeout(() => {
-        callbackRef.current(...args);
+        callback(...args);
       }, delay);
-    }) as T,
-    [delay]
+    },
+    [callback, delay]
   );
-
-  return debouncedCallback;
 }
 
-export function useThrottle<T>(value: T, limit: number): T {
-  const [throttledValue, setThrottledValue] = useState<T>(value);
-  const lastRan = useRef(Date.now());
+export function useThrottle<T extends (...args: any[]) => any>(
+  callback: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  const lastCallRef = useRef<number>(0);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (Date.now() - lastRan.current >= limit) {
-        setThrottledValue(value);
-        lastRan.current = Date.now();
+  return useCallback(
+    (...args: Parameters<T>) => {
+      const now = Date.now();
+      const timeSinceLastCall = now - lastCallRef.current;
+
+      if (timeSinceLastCall >= delay) {
+        lastCallRef.current = now;
+        callback(...args);
+      } else {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        
+        timeoutRef.current = setTimeout(() => {
+          lastCallRef.current = Date.now();
+          callback(...args);
+        }, delay - timeSinceLastCall);
       }
-    }, limit - (Date.now() - lastRan.current));
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, limit]);
-
-  return throttledValue;
+    },
+    [callback, delay]
+  );
 }
