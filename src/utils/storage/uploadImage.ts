@@ -50,32 +50,61 @@ export const uploadImage = async (
   
   console.log('📤 Subiendo imagen a:', finalPath);
 
-  // Try different upload strategies
+  // Try different upload strategies with better error handling
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       console.log(`📤 Intento ${attempt} de ${retries} para subir imagen...`);
       
-      // Strategy 1: Try resumable upload first
+      // Strategy 1: Try simple upload first (more reliable for CORS)
       if (attempt === 1) {
-        return await uploadWithResumable(finalPath, processedFile, onProgress);
-      }
-      
-      // Strategy 2: Try simple upload
-      if (attempt === 2) {
         return await uploadWithSimple(finalPath, processedFile, onProgress);
       }
       
-      // Strategy 3: Try with different path structure
-      if (attempt === 3) {
+      // Strategy 2: Try with different path structure
+      if (attempt === 2) {
         const fallbackPath = `uploads/${timestamp}_${randomId}.${extension}`;
+        console.log('📤 Intentando con ruta alternativa:', fallbackPath);
         return await uploadWithSimple(fallbackPath, processedFile, onProgress);
+      }
+      
+      // Strategy 3: Try resumable upload as last resort
+      if (attempt === 3) {
+        console.log('📤 Intentando upload resumable como último recurso...');
+        return await uploadWithResumable(finalPath, processedFile, onProgress);
       }
       
     } catch (error) {
       console.error(`❌ Error en intento ${attempt}:`, error);
       
+      // Check if it's a CORS error
+      const isCorsError = error instanceof Error && (
+        error.message.includes('CORS') ||
+        error.message.includes('cors') ||
+        error.message.includes('preflight') ||
+        error.message.includes('Access-Control-Allow-Origin')
+      );
+      
+      if (isCorsError) {
+        console.warn('🚫 Error CORS detectado, intentando estrategia alternativa...');
+        
+        // For CORS errors, try a different approach immediately
+        if (attempt < retries) {
+          try {
+            const corsWorkaroundPath = `temp/${timestamp}_${randomId}.${extension}`;
+            console.log('📤 Intentando workaround CORS con ruta temporal:', corsWorkaroundPath);
+            return await uploadWithCorsWorkaround(corsWorkaroundPath, processedFile, onProgress);
+          } catch (workaroundError) {
+            console.error('❌ Workaround CORS también falló:', workaroundError);
+          }
+        }
+      }
+      
       // If it's the last attempt, throw the error
       if (attempt === retries) {
+        // Provide more helpful error messages
+        if (isCorsError) {
+          throw new Error('Error de configuración CORS. Por favor, contacta al administrador del sistema.');
+        }
         throw error;
       }
       
@@ -89,12 +118,47 @@ export const uploadImage = async (
   throw new Error('No se pudo subir la imagen después de todos los intentos');
 };
 
+// Simple upload strategy (most reliable for CORS issues)
+const uploadWithSimple = async (
+  path: string,
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<string> => {
+  console.log('📤 Usando estrategia de upload simple...');
+  const storageRef = ref(storage, path);
+  
+  onProgress?.(10);
+  
+  const metadata = {
+    contentType: file.type,
+    customMetadata: {
+      originalName: file.name,
+      uploadedAt: new Date().toISOString(),
+      method: 'simple'
+    }
+  };
+  
+  onProgress?.(30);
+  
+  const snapshot = await uploadBytes(storageRef, file, metadata);
+  
+  onProgress?.(80);
+  
+  const downloadURL = await getDownloadURL(snapshot.ref);
+  
+  onProgress?.(100);
+  
+  console.log('✅ Upload simple exitoso:', downloadURL);
+  return downloadURL;
+};
+
 // Resumable upload strategy
 const uploadWithResumable = async (
   path: string,
   file: File,
   onProgress?: (progress: number) => void
 ): Promise<string> => {
+  console.log('📤 Usando estrategia de upload resumable...');
   const storageRef = ref(storage, path);
   
   const uploadTask = uploadBytesResumable(storageRef, file, {
@@ -134,24 +198,36 @@ const uploadWithResumable = async (
   });
 };
 
-// Simple upload strategy
-const uploadWithSimple = async (
+// CORS workaround strategy
+const uploadWithCorsWorkaround = async (
   path: string,
   file: File,
   onProgress?: (progress: number) => void
 ): Promise<string> => {
+  console.log('📤 Usando workaround para CORS...');
+  
+  // Convert file to base64 and use a different approach
+  const base64Data = await fileToBase64(file);
   const storageRef = ref(storage, path);
   
-  onProgress?.(10);
+  onProgress?.(20);
   
-  const snapshot = await uploadBytes(storageRef, file, {
+  // Create a blob from base64
+  const response = await fetch(base64Data);
+  const blob = await response.blob();
+  
+  onProgress?.(50);
+  
+  const metadata = {
     contentType: file.type,
     customMetadata: {
       originalName: file.name,
       uploadedAt: new Date().toISOString(),
-      method: 'simple'
+      method: 'cors-workaround'
     }
-  });
+  };
+  
+  const snapshot = await uploadBytes(storageRef, blob, metadata);
   
   onProgress?.(90);
   
@@ -159,8 +235,18 @@ const uploadWithSimple = async (
   
   onProgress?.(100);
   
-  console.log('✅ Upload simple exitoso:', downloadURL);
+  console.log('✅ Upload con workaround CORS exitoso:', downloadURL);
   return downloadURL;
+};
+
+// Helper function to convert file to base64
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
 };
 
 export const deleteImage = async (url: string): Promise<void> => {
@@ -300,7 +386,7 @@ export const checkStorageConnection = async (): Promise<{
     const testPath = `test/${Date.now()}_connection_test.txt`;
     const testRef = ref(storage, testPath);
     
-    // Try to upload
+    // Try to upload using simple method first
     await uploadBytes(testRef, testFile);
     
     // Try to get download URL
@@ -317,10 +403,62 @@ export const checkStorageConnection = async (): Promise<{
     
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
     
+    // Check if it's a CORS error
+    const isCorsError = errorMessage.includes('CORS') || 
+                       errorMessage.includes('cors') || 
+                       errorMessage.includes('preflight');
+    
+    if (isCorsError) {
+      return {
+        connected: false,
+        canUpload: false,
+        error: 'Error de configuración CORS. Contacta al administrador del sistema.'
+      };
+    }
+    
     return {
       connected: false,
       canUpload: false,
       error: errorMessage
     };
   }
+};
+
+// Enhanced error handling for Firebase Storage errors
+export const handleStorageError = (error: any): string => {
+  if (!error) return 'Error desconocido';
+  
+  const errorMessage = error.message || error.toString();
+  
+  // CORS errors
+  if (errorMessage.includes('CORS') || errorMessage.includes('cors') || errorMessage.includes('preflight')) {
+    return 'Error de configuración del servidor. Por favor, intenta de nuevo más tarde o contacta al soporte técnico.';
+  }
+  
+  // Network errors
+  if (errorMessage.includes('network') || errorMessage.includes('ERR_NETWORK')) {
+    return 'Error de conexión. Verifica tu conexión a internet e intenta de nuevo.';
+  }
+  
+  // Permission errors
+  if (errorMessage.includes('permission') || errorMessage.includes('unauthorized')) {
+    return 'No tienes permisos para realizar esta acción. Contacta al administrador.';
+  }
+  
+  // File size errors
+  if (errorMessage.includes('size') || errorMessage.includes('large')) {
+    return 'El archivo es demasiado grande. Reduce el tamaño e intenta de nuevo.';
+  }
+  
+  // Quota errors
+  if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
+    return 'Se ha alcanzado el límite de almacenamiento. Contacta al administrador.';
+  }
+  
+  // Generic Firebase errors
+  if (errorMessage.includes('firebase') || errorMessage.includes('storage')) {
+    return 'Error del servicio de almacenamiento. Intenta de nuevo más tarde.';
+  }
+  
+  return 'Error al subir la imagen. Intenta de nuevo más tarde.';
 };
