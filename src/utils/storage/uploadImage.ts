@@ -45,149 +45,122 @@ export const uploadImage = async (
   // Create storage reference with timestamp to avoid conflicts
   const timestamp = Date.now();
   const randomId = Math.random().toString(36).substring(2, 15);
-  const finalPath = `${path}_${timestamp}_${randomId}`;
-  const storageRef = ref(storage, finalPath);
-
-  // Retry logic with exponential backoff
-  let lastError: Error | null = null;
+  const extension = processedFile.name.split('.').pop() || 'jpg';
+  const finalPath = `${path}.${extension}`;
   
+  console.log('📤 Subiendo imagen a:', finalPath);
+
+  // Try different upload strategies
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       console.log(`📤 Intento ${attempt} de ${retries} para subir imagen...`);
       
-      // Use resumable upload for better progress tracking and reliability
-      const uploadTask = uploadBytesResumable(storageRef, processedFile, {
-        contentType: processedFile.type,
-        customMetadata: {
-          originalName: file.name,
-          uploadedAt: new Date().toISOString(),
-          attempt: attempt.toString(),
-        }
-      });
-
-      // Return promise that resolves when upload completes
-      const downloadURL = await new Promise<string>((resolve, reject) => {
-        uploadTask.on('state_changed',
-          // Progress callback
-          (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            onProgress?.(progress);
-            console.log(`📊 Progreso de subida: ${progress.toFixed(1)}%`);
-          },
-          // Error callback
-          (error) => {
-            console.error(`❌ Error en intento ${attempt}:`, error);
-            reject(error);
-          },
-          // Success callback
-          async () => {
-            try {
-              const url = await getDownloadURL(uploadTask.snapshot.ref);
-              console.log('✅ Imagen subida exitosamente:', url);
-              resolve(url);
-            } catch (urlError) {
-              reject(urlError);
-            }
-          }
-        );
-      });
-
-      return downloadURL;
+      // Strategy 1: Try resumable upload first
+      if (attempt === 1) {
+        return await uploadWithResumable(finalPath, processedFile, onProgress);
+      }
+      
+      // Strategy 2: Try simple upload
+      if (attempt === 2) {
+        return await uploadWithSimple(finalPath, processedFile, onProgress);
+      }
+      
+      // Strategy 3: Try with different path structure
+      if (attempt === 3) {
+        const fallbackPath = `uploads/${timestamp}_${randomId}.${extension}`;
+        return await uploadWithSimple(fallbackPath, processedFile, onProgress);
+      }
       
     } catch (error) {
-      lastError = error as Error;
       console.error(`❌ Error en intento ${attempt}:`, error);
       
-      // Handle specific error types
-      if (error instanceof Error) {
-        // CORS error handling
-        if (error.message.includes('CORS') || error.message.includes('cors')) {
-          console.log('🔄 Detectado error CORS, intentando método alternativo...');
-          
-          try {
-            const alternativeResult = await uploadWithFallbackMethod(processedFile, finalPath, onProgress);
-            if (alternativeResult) {
-              return alternativeResult;
-            }
-          } catch (altError) {
-            console.error('❌ Método alternativo también falló:', altError);
-          }
-        }
-        
-        // Network error handling
-        if (error.message.includes('network') || error.message.includes('timeout')) {
-          console.log('🌐 Error de red detectado, reintentando...');
-        }
-        
-        // Permission error handling
-        if (error.message.includes('permission') || error.message.includes('unauthorized')) {
-          throw new Error('No tienes permisos para subir archivos. Verifica tu autenticación.');
-        }
+      // If it's the last attempt, throw the error
+      if (attempt === retries) {
+        throw error;
       }
       
       // Wait before retry with exponential backoff
-      if (attempt < retries) {
-        const delay = Math.min(Math.pow(2, attempt) * 1000, 10000); // Max 10 seconds
-        console.log(`⏳ Esperando ${delay}ms antes del siguiente intento...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
+      const delay = Math.min(Math.pow(2, attempt) * 1000, 5000);
+      console.log(`⏳ Esperando ${delay}ms antes del siguiente intento...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
 
-  // If all retries failed, provide helpful error message
-  const errorMessage = lastError?.message || 'Error desconocido al subir la imagen';
-  
-  if (errorMessage.includes('CORS') || errorMessage.includes('cors')) {
-    throw new Error(
-      'Error de configuración CORS. La imagen no se pudo subir debido a restricciones de seguridad. ' +
-      'Por favor, contacta al administrador del sistema.'
-    );
-  }
-  
-  if (errorMessage.includes('network') || errorMessage.includes('timeout')) {
-    throw new Error(
-      'Error de conexión. Verifica tu conexión a internet e intenta nuevamente.'
-    );
-  }
-  
-  throw new Error(`No se pudo subir la imagen después de ${retries} intentos: ${errorMessage}`);
+  throw new Error('No se pudo subir la imagen después de todos los intentos');
 };
 
-// Fallback upload method for CORS issues
-const uploadWithFallbackMethod = async (
-  file: File, 
-  path: string, 
+// Resumable upload strategy
+const uploadWithResumable = async (
+  path: string,
+  file: File,
   onProgress?: (progress: number) => void
-): Promise<string | null> => {
-  try {
-    console.log('🔄 Intentando método de subida alternativo...');
-    
-    // Create reference with different path structure
-    const fallbackPath = `temp/${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-    const tempRef = ref(storage, fallbackPath);
-    
-    // Simple upload without resumable features
-    onProgress?.(10);
-    const snapshot = await uploadBytes(tempRef, file, {
-      contentType: file.type,
-      customMetadata: {
-        originalName: file.name,
-        uploadedAt: new Date().toISOString(),
-        method: 'fallback'
+): Promise<string> => {
+  const storageRef = ref(storage, path);
+  
+  const uploadTask = uploadBytesResumable(storageRef, file, {
+    contentType: file.type,
+    customMetadata: {
+      originalName: file.name,
+      uploadedAt: new Date().toISOString(),
+      method: 'resumable'
+    }
+  });
+
+  return new Promise<string>((resolve, reject) => {
+    uploadTask.on('state_changed',
+      // Progress callback
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        onProgress?.(progress);
+        console.log(`📊 Progreso de subida: ${progress.toFixed(1)}%`);
+      },
+      // Error callback
+      (error) => {
+        console.error('❌ Error en upload resumable:', error);
+        reject(error);
+      },
+      // Success callback
+      async () => {
+        try {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          console.log('✅ Upload resumable exitoso:', url);
+          resolve(url);
+        } catch (urlError) {
+          console.error('❌ Error obteniendo URL:', urlError);
+          reject(urlError);
+        }
       }
-    });
-    
-    onProgress?.(90);
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    onProgress?.(100);
-    
-    console.log('✅ Método alternativo exitoso:', downloadURL);
-    return downloadURL;
-    
-  } catch (error) {
-    console.error('❌ Método alternativo falló:', error);
-    return null;
-  }
+    );
+  });
+};
+
+// Simple upload strategy
+const uploadWithSimple = async (
+  path: string,
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<string> => {
+  const storageRef = ref(storage, path);
+  
+  onProgress?.(10);
+  
+  const snapshot = await uploadBytes(storageRef, file, {
+    contentType: file.type,
+    customMetadata: {
+      originalName: file.name,
+      uploadedAt: new Date().toISOString(),
+      method: 'simple'
+    }
+  });
+  
+  onProgress?.(90);
+  
+  const downloadURL = await getDownloadURL(snapshot.ref);
+  
+  onProgress?.(100);
+  
+  console.log('✅ Upload simple exitoso:', downloadURL);
+  return downloadURL;
 };
 
 export const deleteImage = async (url: string): Promise<void> => {
@@ -287,10 +260,10 @@ const compressImage = async (file: File, quality: number): Promise<File> => {
   });
 };
 
-export const generateImagePath = (userId: string, type: 'logo' | 'portada'): string => {
+export const generateImagePath = (userId: string, type: 'profile' | 'logo' | 'portada'): string => {
   const timestamp = Date.now();
   const randomId = Math.random().toString(36).substring(2, 15);
-  return `comercios/${userId}/${type}/${timestamp}_${randomId}`;
+  return `users/${userId}/${type}/${timestamp}_${randomId}`;
 };
 
 // Utility to validate image file

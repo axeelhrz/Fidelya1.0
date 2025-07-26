@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
   Mail, 
@@ -29,7 +29,10 @@ import {
   Clock,
   Target,
   Trophy,
-  Activity
+  Activity,
+  Image as ImageIcon,
+  AlertCircle,
+  Check
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
@@ -40,6 +43,7 @@ import { LogoutModal } from '@/components/ui/LogoutModal';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useAuth } from '@/hooks/useAuth';
+import { uploadImage, validateImageFile } from '@/utils/storage/uploadImage';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
@@ -175,6 +179,392 @@ const ModernStatsCard: React.FC<{
   </motion.div>
 );
 
+// Modern Photo Upload Modal
+const PhotoUploadModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onUpload: (file: File) => Promise<void>;
+  uploading: boolean;
+  uploadProgress: number;
+}> = ({ isOpen, onClose, onUpload, uploading, uploadProgress }) => {
+  const [dragActive, setDragActive] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileSelect(e.dataTransfer.files[0]);
+    }
+  }, []);
+
+  const handleFileSelect = useCallback((file: File) => {
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      toast.error(validation.error || 'Archivo no válido');
+      return;
+    }
+
+    setSelectedFile(file);
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+  }, []);
+
+  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileSelect(e.target.files[0]);
+    }
+  }, [handleFileSelect]);
+
+  const handleUpload = useCallback(async () => {
+    if (!selectedFile) return;
+    
+    try {
+      await onUpload(selectedFile);
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      onClose();
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+    }
+  }, [selectedFile, onUpload, onClose]);
+
+  const handleClose = useCallback(() => {
+    if (uploading) return;
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    onClose();
+  }, [uploading, onClose]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <Dialog open={isOpen} onClose={handleClose}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3 text-xl">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                  <Camera size={20} className="text-white" />
+                </div>
+                Cambiar Foto de Perfil
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              {/* Upload Area */}
+              <div
+                className={cn(
+                  "relative border-2 border-dashed rounded-3xl p-8 text-center transition-all duration-300",
+                  dragActive 
+                    ? "border-blue-500 bg-blue-50" 
+                    : "border-gray-300 hover:border-gray-400 hover:bg-gray-50",
+                  uploading && "pointer-events-none opacity-50"
+                )}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileInput}
+                  className="hidden"
+                  disabled={uploading}
+                />
+
+                {previewUrl ? (
+                  <div className="space-y-4">
+                    <div className="relative w-32 h-32 mx-auto">
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="w-full h-full object-cover rounded-2xl shadow-lg"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-700">
+                      {selectedFile?.name}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      Cambiar Imagen
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center mx-auto">
+                      <ImageIcon className="w-8 h-8 text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-gray-900 mb-2">
+                        Arrastra una imagen aquí
+                      </p>
+                      <p className="text-sm text-gray-500 mb-4">
+                        o haz clic para seleccionar
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        leftIcon={<Upload size={16} />}
+                      >
+                        Seleccionar Archivo
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      PNG, JPG, WEBP hasta 5MB
+                    </p>
+                  </div>
+                )}
+
+                {/* Upload Progress */}
+                {uploading && (
+                  <div className="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-3xl flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                      <div className="relative w-16 h-16 mx-auto">
+                        <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+                        <div 
+                          className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"
+                          style={{
+                            background: `conic-gradient(from 0deg, transparent ${uploadProgress * 3.6}deg, #e5e7eb ${uploadProgress * 3.6}deg)`
+                          }}
+                        ></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-sm font-bold text-blue-600">
+                            {Math.round(uploadProgress)}%
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-sm font-medium text-gray-700">
+                        Subiendo imagen...
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                disabled={uploading}
+                leftIcon={<X size={16} />}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleUpload}
+                disabled={!selectedFile || uploading}
+                loading={uploading}
+                leftIcon={<Upload size={16} />}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                Subir Foto
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </AnimatePresence>
+  );
+};
+
+// Modern Edit Profile Modal
+const ModernEditProfileModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  formData: ProfileFormData;
+  setFormData: React.Dispatch<React.SetStateAction<ProfileFormData>>;
+  onSave: () => Promise<void>;
+  updating: boolean;
+}> = ({ isOpen, onClose, formData, setFormData, onSave, updating }) => {
+  const [errors, setErrors] = useState<Partial<ProfileFormData>>({});
+
+  const validateForm = useCallback(() => {
+    const newErrors: Partial<ProfileFormData> = {};
+    
+    if (!formData.nombre.trim()) {
+      newErrors.nombre = 'El nombre es requerido';
+    }
+    
+    if (formData.telefono && !/^\+?[\d\s-()]+$/.test(formData.telefono)) {
+      newErrors.telefono = 'Formato de teléfono inválido';
+    }
+    
+    if (formData.dni && !/^\d{7,8}$/.test(formData.dni.replace(/\D/g, ''))) {
+      newErrors.dni = 'DNI debe tener 7-8 dígitos';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData]);
+
+  const handleSave = useCallback(async () => {
+    if (!validateForm()) return;
+    
+    try {
+      await onSave();
+      onClose();
+    } catch (error) {
+      console.error('Error saving profile:', error);
+    }
+  }, [validateForm, onSave, onClose]);
+
+  const handleClose = useCallback(() => {
+    if (updating) return;
+    setErrors({});
+    onClose();
+  }, [updating, onClose]);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <Dialog open={isOpen} onClose={handleClose}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3 text-2xl">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Edit3 size={24} className="text-white" />
+                </div>
+                <div>
+                  <span>Editar Perfil</span>
+                  <p className="text-sm font-normal text-gray-600 mt-1">
+                    Actualiza tu información personal
+                  </p>
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <div>
+                  <Input
+                    label="Nombre completo"
+                    value={formData.nombre}
+                    onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
+                    placeholder="Tu nombre completo"
+                    required
+                    error={errors.nombre}
+                    leftIcon={<User size={18} />}
+                  />
+                </div>
+
+                <div>
+                  <Input
+                    label="Teléfono"
+                    value={formData.telefono}
+                    onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
+                    placeholder="+54 11 1234-5678"
+                    error={errors.telefono}
+                    leftIcon={<Phone size={18} />}
+                  />
+                </div>
+
+                <div>
+                  <Input
+                    label="DNI"
+                    value={formData.dni}
+                    onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
+                    placeholder="12345678"
+                    error={errors.dni}
+                    leftIcon={<Shield size={18} />}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <Input
+                    label="Dirección"
+                    value={formData.direccion}
+                    onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
+                    placeholder="Tu dirección completa"
+                    leftIcon={<MapPin size={18} />}
+                  />
+                </div>
+
+                <div>
+                  <Input
+                    label="Fecha de nacimiento"
+                    type="date"
+                    value={formData.fechaNacimiento}
+                    onChange={(e) => setFormData(prev => ({ ...prev, fechaNacimiento: e.target.value }))}
+                    leftIcon={<Calendar size={18} />}
+                  />
+                </div>
+
+                {/* Info Card */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-200">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <AlertCircle size={16} className="text-white" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-blue-900 text-sm">Información importante</h4>
+                      <p className="text-blue-700 text-xs mt-1">
+                        Mantén tu información actualizada para recibir beneficios y comunicaciones importantes.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="flex gap-3 pt-6">
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                disabled={updating}
+                leftIcon={<X size={16} />}
+                className="flex-1 md:flex-none"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSave}
+                loading={updating}
+                leftIcon={<Save size={16} />}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 flex-1 md:flex-none"
+              >
+                Guardar Cambios
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </AnimatePresence>
+  );
+};
+
 // Enhanced Sidebar with logout functionality
 const SocioSidebarWithLogout: React.FC<{
   open: boolean;
@@ -204,7 +594,6 @@ export default function SocioPerfilPage() {
     refreshData,
   } = useSocioProfile();
 
-  // CAMBIO PRINCIPAL: Usar el hook de beneficios para estadísticas consistentes
   const { 
     beneficiosUsados, 
     estadisticasRapidas, 
@@ -214,12 +603,15 @@ export default function SocioPerfilPage() {
 
   // Modal states
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   // UI states
   const [refreshing, setRefreshing] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Calcular beneficios más usados desde beneficiosUsados
   const beneficiosMasUsados = useMemo(() => {
@@ -260,6 +652,7 @@ export default function SocioPerfilPage() {
       estado: socio?.estado || 'activo',
       creadoEn: creadoEnDate,
       numeroSocio: socio?.numeroSocio || '',
+      fotoPerfil: socio?.fotoPerfil || '',
       nivel: {
         nivel: 'Bronze' as const,
         puntos: Math.floor(estadisticasRapidas.usados * 10),
@@ -347,8 +740,7 @@ export default function SocioPerfilPage() {
       
       const success = await updateProfile(updateData);
       if (success) {
-        setEditModalOpen(false);
-        toast.success('Perfil actualizado');
+        toast.success('Perfil actualizado exitosamente');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -357,6 +749,39 @@ export default function SocioPerfilPage() {
       setUpdating(false);
     }
   }, [formData, updateProfile]);
+
+  const handlePhotoUpload = useCallback(async (file: File) => {
+    setUploadingPhoto(true);
+    setUploadProgress(0);
+    
+    try {
+      const photoPath = `socios/${user?.uid}/profile/foto_perfil`;
+      
+      const photoUrl = await uploadImage(file, photoPath, {
+        maxSize: 5 * 1024 * 1024, // 5MB
+        allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+        quality: 0.8,
+        onProgress: (progress) => {
+          setUploadProgress(progress);
+        }
+      });
+
+      // Update profile with new photo URL
+      const success = await updateProfile({
+        fotoPerfil: photoUrl
+      });
+
+      if (success) {
+        toast.success('Foto de perfil actualizada exitosamente');
+      }
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast.error('Error al subir la foto de perfil');
+    } finally {
+      setUploadingPhoto(false);
+      setUploadProgress(0);
+    }
+  }, [user?.uid, updateProfile]);
 
   // Logout handlers
   const handleLogoutClick = () => {
@@ -466,20 +891,32 @@ export default function SocioPerfilPage() {
               <div className="px-6 sm:px-8 pb-8">
                 <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between -mt-20 mb-8">
                   <div className="flex flex-col sm:flex-row sm:items-end space-y-4 sm:space-y-0 sm:space-x-6">
-                    {/* Modern Avatar */}
+                    {/* Modern Avatar with Photo Upload */}
                     <div className="relative group">
-                      <div className="w-32 h-32 bg-white rounded-3xl shadow-2xl flex items-center justify-center border-4 border-white">
-                        <div className="w-28 h-28 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center relative overflow-hidden">
-                          <User size={48} className="text-white z-10" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                        </div>
+                      <div className="w-32 h-32 bg-white rounded-3xl shadow-2xl flex items-center justify-center border-4 border-white overflow-hidden">
+                        {profileData.fotoPerfil ? (
+                          <img
+                            src={profileData.fotoPerfil}
+                            alt={profileData.nombre}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-28 h-28 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center relative overflow-hidden">
+                            <User size={48} className="text-white z-10" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                          </div>
+                        )}
                       </div>
+                      
                       <div className={`absolute -bottom-2 -right-2 w-8 h-8 ${getStatusColor(profileData.estado)} rounded-2xl border-4 border-white shadow-lg flex items-center justify-center`}>
                         <CheckCircle className="w-4 h-4 text-white" />
                       </div>
                       
                       {/* Upload overlay */}
-                      <div className="absolute inset-0 bg-black/50 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center cursor-pointer">
+                      <div 
+                        className="absolute inset-0 bg-black/50 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center cursor-pointer"
+                        onClick={() => setPhotoModalOpen(true)}
+                      >
                         <div className="text-center text-white">
                           <Camera className="w-6 h-6 mx-auto mb-1" />
                           <span className="text-xs font-medium">Cambiar</span>
@@ -509,6 +946,15 @@ export default function SocioPerfilPage() {
 
                   {/* Action Buttons */}
                   <div className="flex flex-wrap gap-3 mt-6 lg:mt-0">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      leftIcon={<Camera size={20} />}
+                      onClick={() => setPhotoModalOpen(true)}
+                      className="font-bold"
+                    >
+                      Cambiar Foto
+                    </Button>
                     <Button
                       size="lg"
                       leftIcon={<Edit3 size={20} />}
@@ -689,7 +1135,14 @@ export default function SocioPerfilPage() {
                 {beneficiosMasUsados && beneficiosMasUsados.length > 0 ? (
                   <div className="space-y-4">
                     {beneficiosMasUsados.slice(0, 5).map((beneficio, index) => (
-                      <div key={index} className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50 hover:shadow-md transition-all duration-300">
+                      <motion.div 
+                        key={index} 
+                        className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50 hover:shadow-md transition-all duration-300"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={{ scale: 1.02 }}
+                      >
                         <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-black shadow-lg">
                           {beneficio.usos}
                         </div>
@@ -697,7 +1150,7 @@ export default function SocioPerfilPage() {
                           <div className="font-bold text-gray-900 truncate">{beneficio.titulo}</div>
                           <div className="text-sm text-gray-500 font-medium">{beneficio.usos} usos</div>
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 ) : (
@@ -713,77 +1166,26 @@ export default function SocioPerfilPage() {
             </div>
           </div>
         </div>
-
-        {/* Modern Edit Profile Modal */}
-        <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-3 text-xl">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
-                  <Edit3 size={20} className="text-white" />
-                </div>
-                Editar Perfil
-              </DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-6">
-              <Input
-                label="Nombre completo"
-                value={formData.nombre}
-                onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
-                placeholder="Tu nombre completo"
-                required
-              />
-
-              <Input
-                label="Teléfono"
-                value={formData.telefono}
-                onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
-                placeholder="Tu número de teléfono"
-              />
-
-              <Input
-                label="DNI"
-                value={formData.dni}
-                onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
-                placeholder="Tu número de documento"
-              />
-
-              <Input
-                label="Dirección"
-                value={formData.direccion}
-                onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
-                placeholder="Tu dirección"
-              />
-
-              <Input
-                label="Fecha de nacimiento"
-                type="date"
-                value={formData.fechaNacimiento}
-                onChange={(e) => setFormData(prev => ({ ...prev, fechaNacimiento: e.target.value }))}
-              />
-            </div>
-
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setEditModalOpen(false)}
-                leftIcon={<X size={16} />}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                onClick={handleSaveProfile}
-                loading={updating}
-                leftIcon={<Save size={16} />}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                Guardar Cambios
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </DashboardLayout>
+
+      {/* Photo Upload Modal */}
+      <PhotoUploadModal
+        isOpen={photoModalOpen}
+        onClose={() => setPhotoModalOpen(false)}
+        onUpload={handlePhotoUpload}
+        uploading={uploadingPhoto}
+        uploadProgress={uploadProgress}
+      />
+
+      {/* Modern Edit Profile Modal */}
+      <ModernEditProfileModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        formData={formData}
+        setFormData={setFormData}
+        onSave={handleSaveProfile}
+        updating={updating}
+      />
 
       {/* Logout Modal */}
       <LogoutModal
