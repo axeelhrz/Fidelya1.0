@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { 
   Home, 
@@ -20,8 +20,8 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
 import { useBeneficiosSocio } from '@/hooks/useBeneficios';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useOptimizedRealtimeCollection } from '@/hooks/useOptimizedRealtimeFirebase';
+import { where, orderBy, limit } from 'firebase/firestore';
 import SocioSidebarStats from '@/components/socio/SocioSidebarStats';
 
 interface SocioSidebarProps {
@@ -32,7 +32,7 @@ interface SocioSidebarProps {
   activeSection: string;
 }
 
-interface RealtimeStats {
+interface OptimizedStats {
   totalBeneficios: number;
   beneficiosUsados: number;
   estadoMembresia: string;
@@ -50,6 +50,75 @@ interface MenuItem {
   description?: string;
 }
 
+interface Validacion {
+  id: string;
+  socioId: string;
+  fechaValidacion: any;
+  estado: string;
+}
+
+// Componente de elemento de menú memoizado
+const MenuItem = React.memo<{
+  item: MenuItem;
+  isActive: boolean;
+  isOpen: boolean;
+  onClick: () => void;
+}>(({ item, isActive, isOpen, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`
+      group w-full flex items-center space-x-3 px-3 py-3 rounded-2xl text-left transition-all duration-300
+      ${isActive 
+        ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border border-blue-200/50 shadow-lg transform scale-[1.02]' 
+        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:text-gray-900 hover:shadow-md hover:scale-[1.01]'
+      }
+      ${!isOpen && 'lg:justify-center lg:px-2'}
+    `}
+  >
+    <div className={`
+      flex items-center justify-center w-8 h-8 rounded-xl transition-all duration-300
+      ${isActive 
+        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' 
+        : 'text-gray-500 group-hover:bg-gradient-to-r group-hover:from-blue-100 group-hover:to-purple-100 group-hover:text-blue-600'
+      }
+    `}>
+      <item.icon className="w-5 h-5" />
+    </div>
+    
+    {isOpen && (
+      <>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-2">
+            <span className="font-bold truncate">{item.label}</span>
+            {item.isNew && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Nuevo
+              </span>
+            )}
+          </div>
+          {item.description && (
+            <p className="text-xs text-gray-500 truncate font-medium">{item.description}</p>
+          )}
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          {item.badge !== undefined && item.badge > 0 && (
+            <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-black text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-full min-w-[20px] shadow-lg">
+              {item.badge > 99 ? '99+' : item.badge}
+            </span>
+          )}
+          <ChevronRight className={`w-4 h-4 transition-all duration-300 ${
+            isActive ? 'text-blue-600 transform rotate-90' : 'text-gray-400 group-hover:text-blue-500'
+          }`} />
+        </div>
+      </>
+    )}
+  </button>
+));
+
+MenuItem.displayName = 'MenuItem';
+
 const SocioSidebar: React.FC<SocioSidebarProps> = ({
   open,
   onToggle,
@@ -63,8 +132,8 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
   const { socio, estadisticas, loading: socioLoading } = useSocioProfile();
   const { beneficiosActivos, estadisticasRapidas } = useBeneficiosSocio();
   
-  // Optimized state management without savings
-  const [realtimeStats, setRealtimeStats] = useState<RealtimeStats>({
+  // Estado optimizado con referencias estables
+  const [optimizedStats, setOptimizedStats] = useState<OptimizedStats>({
     totalBeneficios: 0,
     beneficiosUsados: 0,
     estadoMembresia: 'pendiente',
@@ -72,7 +141,88 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
     beneficiosEstesMes: 0
   });
 
-  // Memoized menu items to prevent unnecessary re-renders
+  // Referencias para evitar re-renders innecesarios
+  const lastStatsRef = useRef<OptimizedStats>(optimizedStats);
+  const updateTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Hook optimizado para validaciones en tiempo real
+  const {
+    data: validaciones = [],
+    loading: validacionesLoading
+  } = useOptimizedRealtimeCollection<Validacion>(
+    'validaciones',
+    user?.uid ? [
+      where('socioId', '==', user.uid),
+      where('estado', '==', 'exitosa'),
+      orderBy('fechaValidacion', 'desc'),
+      limit(50)
+    ] : [],
+    {
+      enableToasts: false,
+      debounceMs: 1000, // Debounce más largo para el sidebar
+      cacheTimeout: 120000, // 2 minutos de cache
+      enableOfflineSupport: true
+    }
+  );
+
+  // Memoizar estadísticas derivadas con dependencias estables
+  const derivedStats = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    // Calcular beneficios del mes actual
+    const beneficiosEstesMes = validaciones.filter(v => {
+      if (!v.fechaValidacion) return false;
+      const fecha = v.fechaValidacion.toDate ? v.fechaValidacion.toDate() : new Date(v.fechaValidacion);
+      return fecha.getMonth() === currentMonth && fecha.getFullYear() === currentYear;
+    }).length;
+
+    return {
+      totalBeneficios: beneficiosActivos?.length || 0,
+      beneficiosUsados: validaciones.length,
+      estadoMembresia: socio?.estadoMembresia || 'pendiente',
+      actividadReciente: validaciones.length,
+      beneficiosEstesMes
+    };
+  }, [
+    beneficiosActivos?.length,
+    validaciones.length,
+    socio?.estadoMembresia,
+    validaciones // Solo incluir validaciones si realmente cambió el array
+  ]);
+
+  // Actualizar estadísticas con debounce para evitar actualizaciones muy frecuentes
+  useEffect(() => {
+    // Comparar si realmente cambió algo importante
+    const hasChanged = (
+      lastStatsRef.current.totalBeneficios !== derivedStats.totalBeneficios ||
+      lastStatsRef.current.beneficiosUsados !== derivedStats.beneficiosUsados ||
+      lastStatsRef.current.beneficiosEstesMes !== derivedStats.beneficiosEstesMes ||
+      lastStatsRef.current.estadoMembresia !== derivedStats.estadoMembresia
+    );
+
+    if (!hasChanged) return;
+
+    // Limpiar timeout anterior
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+
+    // Actualizar con debounce
+    updateTimeoutRef.current = setTimeout(() => {
+      setOptimizedStats(derivedStats);
+      lastStatsRef.current = derivedStats;
+    }, 500); // 500ms de debounce
+
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
+  }, [derivedStats]);
+
+  // Memoizar elementos del menú con dependencias estables
   const menuItems: MenuItem[] = useMemo(() => [
     {
       id: 'dashboard',
@@ -93,7 +243,7 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
       label: 'Beneficios',
       icon: Gift,
       route: '/dashboard/socio/beneficios',
-      badge: realtimeStats.totalBeneficios,
+      badge: optimizedStats.totalBeneficios,
       description: 'Ofertas disponibles'
     },
     {
@@ -116,67 +266,12 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
       label: 'Historial',
       icon: History,
       route: '/dashboard/socio/historial',
-      badge: realtimeStats.beneficiosUsados,
+      badge: optimizedStats.beneficiosUsados,
       description: 'Beneficios usados'
     }
-  ], [realtimeStats.totalBeneficios, realtimeStats.beneficiosUsados]);
+  ], [optimizedStats.totalBeneficios, optimizedStats.beneficiosUsados]);
 
-  // Optimized stats calculation without savings
-  const memoizedStats = useMemo(() => ({
-    totalBeneficios: beneficiosActivos?.length || 0,
-    beneficiosUsados: estadisticas?.totalValidaciones || estadisticasRapidas?.usados || 0,
-    estadoMembresia: socio?.estadoMembresia || 'pendiente',
-    actividadReciente: estadisticas?.totalValidaciones || 0,
-    beneficiosEstesMes: estadisticasRapidas?.ahorroEsteMes || 0
-  }), [
-    beneficiosActivos?.length,
-    estadisticas?.totalValidaciones,
-    estadisticasRapidas?.usados,
-    estadisticasRapidas?.ahorroEsteMes,
-    socio?.estadoMembresia
-  ]);
-
-  // Update stats only when memoized values change
-  useEffect(() => {
-    setRealtimeStats(prev => ({
-      ...prev,
-      ...memoizedStats
-    }));
-  }, [memoizedStats]);
-
-  // Optimized Firebase listener with cleanup
-  useEffect(() => {
-    if (!user?.uid) return;
-
-    const validacionesRef = collection(db, 'validaciones');
-    const validacionesQuery = query(validacionesRef, where('socioId', '==', user.uid));
-    
-    const unsubscribe = onSnapshot(validacionesQuery, (snapshot) => {
-      const validaciones = snapshot.docs.map(doc => doc.data());
-      const totalValidaciones = validaciones.length;
-      
-      // Get current month validations
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      const beneficiosEstesMes = validaciones.filter(v => {
-        const validacionDate = v.fechaValidacion?.toDate?.() || new Date(v.fechaValidacion);
-        return validacionDate.getMonth() === currentMonth && validacionDate.getFullYear() === currentYear;
-      }).length;
-      
-      setRealtimeStats(prev => ({
-        ...prev,
-        beneficiosUsados: totalValidaciones,
-        actividadReciente: totalValidaciones,
-        beneficiosEstesMes
-      }));
-    }, (error) => {
-      console.error('Error listening to validaciones:', error);
-    });
-
-    return () => unsubscribe();
-  }, [user?.uid]);
-
-  // Optimized navigation handler
+  // Handler de navegación optimizado
   const handleNavigation = useCallback((route: string, itemId: string) => {
     if (pathname !== route) {
       router.push(route);
@@ -184,13 +279,20 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
     onMenuClick(itemId);
   }, [router, pathname, onMenuClick]);
 
-  // Check if menu item is active
+  // Verificar si un elemento está activo
   const isActiveItem = useCallback((item: MenuItem) => {
     return pathname === item.route || activeSection === item.id;
   }, [pathname, activeSection]);
 
-  // Modern loading skeleton
-  if (socioLoading) {
+  // Información del usuario memoizada
+  const userInfo = useMemo(() => ({
+    name: socio?.nombre || user?.nombre || 'Socio',
+    number: socio?.numeroSocio || 'N/A',
+    initial: (socio?.nombre || user?.nombre)?.charAt(0).toUpperCase() || 'S'
+  }), [socio?.nombre, socio?.numeroSocio, user?.nombre]);
+
+  // Loading skeleton optimizado
+  if (socioLoading || validacionesLoading) {
     return (
       <div className={`
         fixed left-0 top-0 h-full bg-white/95 backdrop-blur-md border-r border-gray-200/50 shadow-2xl z-40 transition-all duration-300
@@ -213,7 +315,7 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
 
   return (
     <>
-      {/* Modern mobile backdrop */}
+      {/* Backdrop móvil */}
       {open && (
         <div 
           className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden transition-all duration-300"
@@ -221,13 +323,13 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
         />
       )}
 
-      {/* Modern Sidebar */}
+      {/* Sidebar principal */}
       <div className={`
         fixed left-0 top-0 h-full bg-white/95 backdrop-blur-md border-r border-gray-200/50 shadow-2xl z-40 transition-all duration-300
         ${open ? 'w-80' : 'w-0 lg:w-20'}
         lg:relative lg:translate-x-0 flex flex-col
       `}>
-        {/* Modern Header */}
+        {/* Header */}
         <div className="px-4 py-4 border-b border-gray-100/50 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <div className="relative">
@@ -242,15 +344,14 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
             {open && (
               <div className="flex-1 min-w-0">
                 <h2 className="text-lg font-black text-gray-900 truncate">
-                  {socio?.nombre || user?.nombre || 'Socio'}
+                  {userInfo.name}
                 </h2>
                 <p className="text-sm text-gray-500 font-medium">
-                  #{socio?.numeroSocio || 'N/A'}
+                  #{userInfo.number}
                 </p>
               </div>
             )}
             
-            {/* Mobile toggle button */}
             <button
               onClick={onToggle}
               className="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors duration-200"
@@ -260,77 +361,28 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
           </div>
         </div>
 
-        {/* Modern Stats */}
+        {/* Estadísticas optimizadas */}
         <SocioSidebarStats
-          totalBeneficios={realtimeStats.totalBeneficios}
-          beneficiosUsados={realtimeStats.beneficiosUsados}
-          beneficiosEstesMes={realtimeStats.beneficiosEstesMes}
+          totalBeneficios={optimizedStats.totalBeneficios}
+          beneficiosUsados={optimizedStats.beneficiosUsados}
+          beneficiosEstesMes={optimizedStats.beneficiosEstesMes}
           isOpen={open}
         />
 
-        {/* Modern Navigation */}
+        {/* Navegación */}
         <nav className="flex-1 px-3 py-3 space-y-2 overflow-y-auto min-h-0">
-          {menuItems.map((item) => {
-            const isActive = isActiveItem(item);
-            
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleNavigation(item.route, item.id)}
-                className={`
-                  group w-full flex items-center space-x-3 px-3 py-3 rounded-2xl text-left transition-all duration-300
-                  ${isActive 
-                    ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border border-blue-200/50 shadow-lg transform scale-[1.02]' 
-                    : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:text-gray-900 hover:shadow-md hover:scale-[1.01]'
-                  }
-                  ${!open && 'lg:justify-center lg:px-2'}
-                `}
-              >
-                <div className={`
-                  flex items-center justify-center w-8 h-8 rounded-xl transition-all duration-300
-                  ${isActive 
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' 
-                    : 'text-gray-500 group-hover:bg-gradient-to-r group-hover:from-blue-100 group-hover:to-purple-100 group-hover:text-blue-600'
-                  }
-                `}>
-                  <item.icon className="w-5 h-5" />
-                </div>
-                
-                {open && (
-                  <>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold truncate">{item.label}</span>
-                        {item.isNew && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200">
-                            <Sparkles className="w-3 h-3 mr-1" />
-                            Nuevo
-                          </span>
-                        )}
-                      </div>
-                      {item.description && (
-                        <p className="text-xs text-gray-500 truncate font-medium">{item.description}</p>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      {item.badge !== undefined && item.badge > 0 && (
-                        <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-black text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-full min-w-[20px] shadow-lg">
-                          {item.badge > 99 ? '99+' : item.badge}
-                        </span>
-                      )}
-                      <ChevronRight className={`w-4 h-4 transition-all duration-300 ${
-                        isActive ? 'text-blue-600 transform rotate-90' : 'text-gray-400 group-hover:text-blue-500'
-                      }`} />
-                    </div>
-                  </>
-                )}
-              </button>
-            );
-          })}
+          {menuItems.map((item) => (
+            <MenuItem
+              key={item.id}
+              item={item}
+              isActive={isActiveItem(item)}
+              isOpen={open}
+              onClick={() => handleNavigation(item.route, item.id)}
+            />
+          ))}
         </nav>
 
-        {/* Modern Quick Actions */}
+        {/* Acciones rápidas */}
         {open && (
           <div className="px-3 py-3 border-t border-gray-100/50 flex-shrink-0">
             <div className="grid grid-cols-2 gap-2">
@@ -347,22 +399,22 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
           </div>
         )}
 
-        {/* Modern User Section */}
+        {/* Sección de usuario */}
         <div className="px-3 py-4 border-t border-gray-100/50 flex-shrink-0">
           {open ? (
             <div className="space-y-3">
               <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
                   <span className="text-white font-black text-sm">
-                    {(socio?.nombre || user?.nombre)?.charAt(0).toUpperCase() || 'S'}
+                    {userInfo.initial}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-gray-900 truncate">
-                    {socio?.nombre || user?.nombre || 'Socio'}
+                    {userInfo.name}
                   </p>
                   <p className="text-xs text-gray-500 truncate font-medium">
-                    Socio #{socio?.numeroSocio || 'N/A'}
+                    Socio #{userInfo.number}
                   </p>
                 </div>
                 <div className="flex items-center space-x-1">
