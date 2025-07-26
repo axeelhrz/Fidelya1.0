@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2,
@@ -34,18 +34,49 @@ import {
   Medal,
   Activity,
   BarChart3,
-  Zap
+  Zap,
+  Heart,
+  Percent,
+  Timer
 } from 'lucide-react';
-import { collection, getDocs, query, where, orderBy, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { Button } from '@/components/ui/Button';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+
+interface Beneficio {
+  id: string;
+  titulo: string;
+  descripcion?: string;
+  descuento?: number;
+  tipoDescuento?: 'porcentaje' | 'monto_fijo';
+  categoria?: string;
+  estado: 'activo' | 'inactivo' | 'vencido';
+  fechaVencimiento?: any;
+  comercioId?: string;
+  comercioNombre?: string;
+  condiciones?: string;
+  usosMaximos?: number;
+  usosActuales?: number;
+}
+
+interface Comercio {
+  id: string;
+  nombre: string;
+  categoria?: string;
+  direccion?: string;
+  telefono?: string;
+  email?: string;
+  estado: 'activo' | 'inactivo' | 'pendiente';
+  logo?: string;
+  beneficiosCount?: number;
+}
 
 interface Asociacion {
   id: string;
@@ -62,17 +93,21 @@ interface Asociacion {
   totalSocios?: number;
   totalComercios?: number;
   totalBeneficios?: number;
-  beneficios?: any[];
-  comercios?: any[];
+  beneficios?: Beneficio[];
+  comercios?: Comercio[];
   categoria?: string;
   rating?: number;
   numeroSocio?: string;
   estadoMembresia?: string;
+  beneficiosActivos?: number;
+  beneficiosVencidos?: number;
+  comerciosActivos?: number;
+  sociosActivos?: number;
 }
 
 interface FilterState {
   search: string;
-  sortBy: 'nombre' | 'fecha' | 'beneficios';
+  sortBy: 'nombre' | 'fecha' | 'beneficios' | 'comercios';
 }
 
 // Sidebar personalizado que maneja el logout
@@ -94,7 +129,152 @@ const SocioSidebarWithLogout: React.FC<{
   );
 };
 
-// Componente de tarjeta de asociación mejorado
+// Componente de beneficios destacados
+const BeneficiosDestacados: React.FC<{ beneficios: Beneficio[] }> = ({ beneficios }) => {
+  const beneficiosActivos = beneficios.filter(b => b.estado === 'activo').slice(0, 3);
+
+  if (beneficiosActivos.length === 0) {
+    return (
+      <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl p-6 border border-gray-200">
+        <h4 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
+          <Gift size={18} />
+          Beneficios Destacados
+        </h4>
+        <p className="text-gray-500 text-center py-4">No hay beneficios activos disponibles</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200 mb-6">
+      <h4 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
+        <Gift size={18} className="text-purple-600" />
+        Beneficios Destacados
+      </h4>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {beneficiosActivos.map((beneficio, index) => (
+          <motion.div
+            key={beneficio.id}
+            className="bg-white rounded-xl p-4 border border-purple-200 hover:shadow-lg transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <h5 className="font-bold text-gray-900 text-sm leading-tight flex-1">
+                {beneficio.titulo}
+              </h5>
+              {beneficio.descuento && (
+                <div className="ml-2 px-2 py-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg text-xs font-black">
+                  {beneficio.tipoDescuento === 'porcentaje' ? `${beneficio.descuento}%` : `$${beneficio.descuento}`}
+                </div>
+              )}
+            </div>
+            
+            {beneficio.comercioNombre && (
+              <div className="flex items-center gap-2 mb-2">
+                <Store size={12} className="text-gray-400" />
+                <span className="text-xs text-gray-600 font-medium">{beneficio.comercioNombre}</span>
+              </div>
+            )}
+            
+            {beneficio.categoria && (
+              <div className="flex items-center gap-2 mb-3">
+                <Target size={12} className="text-gray-400" />
+                <span className="text-xs text-gray-600 font-medium">{beneficio.categoria}</span>
+              </div>
+            )}
+            
+            {beneficio.descripcion && (
+              <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2">
+                {beneficio.descripcion}
+              </p>
+            )}
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-xs text-green-600 font-bold">Activo</span>
+              </div>
+              
+              {beneficio.usosMaximos && (
+                <div className="text-xs text-gray-500">
+                  {beneficio.usosActuales || 0}/{beneficio.usosMaximos} usos
+                </div>
+              )}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Componente de comercios afiliados
+const ComerciosAfiliados: React.FC<{ comercios: Comercio[] }> = ({ comercios }) => {
+  const comerciosActivos = comercios.filter(c => c.estado === 'activo').slice(0, 6);
+
+  if (comerciosActivos.length === 0) {
+    return (
+      <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl p-6 border border-gray-200">
+        <h4 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
+          <Store size={18} />
+          Comercios Afiliados
+        </h4>
+        <p className="text-gray-500 text-center py-4">No hay comercios afiliados</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200 mb-6">
+      <h4 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
+        <Store size={18} className="text-green-600" />
+        Comercios Afiliados
+      </h4>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {comerciosActivos.map((comercio, index) => (
+          <motion.div
+            key={comercio.id}
+            className="bg-white rounded-xl p-4 border border-green-200 hover:shadow-lg transition-all duration-300 text-center"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: index * 0.05 }}
+          >
+            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              {comercio.logo ? (
+                <img 
+                  src={comercio.logo} 
+                  alt={comercio.nombre}
+                  className="w-full h-full object-cover rounded-2xl"
+                />
+              ) : (
+                <Store size={20} className="text-white" />
+              )}
+            </div>
+            
+            <h5 className="font-bold text-gray-900 text-sm mb-2 line-clamp-1">
+              {comercio.nombre}
+            </h5>
+            
+            {comercio.categoria && (
+              <p className="text-xs text-gray-500 mb-2">{comercio.categoria}</p>
+            )}
+            
+            {comercio.beneficiosCount && comercio.beneficiosCount > 0 && (
+              <div className="flex items-center justify-center gap-1 text-xs text-green-600 font-bold">
+                <Gift size={12} />
+                {comercio.beneficiosCount} beneficio{comercio.beneficiosCount > 1 ? 's' : ''}
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Componente de tarjeta de asociación optimizado
 const AsociacionCard: React.FC<{
   asociacion: Asociacion;
   index: number;
@@ -152,7 +332,7 @@ const AsociacionCard: React.FC<{
       }}
       whileHover={{ 
         y: -12, 
-        scale: 1.03,
+        scale: 1.02,
         transition: { type: "spring", stiffness: 300, damping: 25 }
       }}
     >
@@ -209,7 +389,7 @@ const AsociacionCard: React.FC<{
               )}
               
               {/* Membership info */}
-              <div className="flex items-center gap-4 mb-4">
+              <div className="flex items-center gap-4 mb-4 flex-wrap">
                 {asociacion.numeroSocio && (
                   <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200">
                     <Shield size={16} className="text-blue-600" />
@@ -227,19 +407,28 @@ const AsociacionCard: React.FC<{
                     </span>
                   </div>
                 )}
+                
+                {asociacion.rating && (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl border border-amber-200">
+                    <Star size={16} className="text-amber-600 fill-current" />
+                    <span className="text-sm font-bold text-amber-700">
+                      {asociacion.rating.toFixed(1)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
         {/* Enhanced Statistics Grid */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="text-center bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-2xl border border-blue-200 group-hover:scale-105 transition-transform duration-300">
             <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
               <Users size={20} className="text-white" />
             </div>
             <div className="text-2xl font-black text-blue-700 mb-1">
-              {asociacion.totalSocios || 0}
+              {asociacion.sociosActivos || asociacion.totalSocios || 0}
             </div>
             <div className="text-xs text-blue-600 font-bold uppercase tracking-wide">Socios</div>
           </div>
@@ -249,7 +438,7 @@ const AsociacionCard: React.FC<{
               <Store size={20} className="text-white" />
             </div>
             <div className="text-2xl font-black text-green-700 mb-1">
-              {asociacion.totalComercios || 0}
+              {asociacion.comerciosActivos || asociacion.totalComercios || 0}
             </div>
             <div className="text-xs text-green-600 font-bold uppercase tracking-wide">Comercios</div>
           </div>
@@ -259,11 +448,31 @@ const AsociacionCard: React.FC<{
               <Gift size={20} className="text-white" />
             </div>
             <div className="text-2xl font-black text-purple-700 mb-1">
-              {asociacion.totalBeneficios || 0}
+              {asociacion.beneficiosActivos || asociacion.totalBeneficios || 0}
             </div>
             <div className="text-xs text-purple-600 font-bold uppercase tracking-wide">Beneficios</div>
           </div>
+          
+          <div className="text-center bg-gradient-to-br from-amber-50 to-orange-100 p-4 rounded-2xl border border-amber-200 group-hover:scale-105 transition-transform duration-300">
+            <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <Activity size={20} className="text-white" />
+            </div>
+            <div className="text-2xl font-black text-amber-700 mb-1">
+              {asociacion.rating ? (asociacion.rating * 20).toFixed(0) : '85'}
+            </div>
+            <div className="text-xs text-amber-600 font-bold uppercase tracking-wide">Actividad</div>
+          </div>
         </div>
+
+        {/* Beneficios Destacados */}
+        {asociacion.beneficios && asociacion.beneficios.length > 0 && (
+          <BeneficiosDestacados beneficios={asociacion.beneficios} />
+        )}
+
+        {/* Comercios Afiliados */}
+        {asociacion.comercios && asociacion.comercios.length > 0 && (
+          <ComerciosAfiliados comercios={asociacion.comercios} />
+        )}
 
         {/* Contact Information */}
         {(asociacion.email || asociacion.telefono || asociacion.direccion) && (
@@ -339,9 +548,10 @@ const AsociacionCard: React.FC<{
           <Button
             size="lg"
             leftIcon={<ArrowUpRight size={18} />}
+            onClick={() => window.location.href = '/dashboard/socio/beneficios'}
             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 group-hover:scale-105 transition-transform duration-200 shadow-xl"
           >
-            Explorar Beneficios
+            Ver Beneficios
           </Button>
         </div>
       </div>
@@ -349,7 +559,7 @@ const AsociacionCard: React.FC<{
   );
 };
 
-// Componente de filtros simplificado
+// Componente de filtros optimizado
 const FilterSection: React.FC<{
   filters: FilterState;
   setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
@@ -413,6 +623,7 @@ const FilterSection: React.FC<{
               <option value="nombre">Ordenar por Nombre</option>
               <option value="fecha">Ordenar por Fecha de Vinculación</option>
               <option value="beneficios">Ordenar por Beneficios</option>
+              <option value="comercios">Ordenar por Comercios</option>
             </select>
           </div>
         </div>
@@ -421,7 +632,7 @@ const FilterSection: React.FC<{
   );
 };
 
-// Componente principal del contenido
+// Componente principal del contenido optimizado
 const SocioAsociacionesContent: React.FC = () => {
   const { user, signOut } = useAuth();
   const [asociaciones, setAsociaciones] = useState<Asociacion[]>([]);
@@ -435,7 +646,109 @@ const SocioAsociacionesContent: React.FC = () => {
     sortBy: 'nombre'
   });
 
-  // Cargar solo las asociaciones del usuario
+  // Función optimizada para cargar datos completos de la asociación
+  const loadCompleteAsociacionData = useCallback(async (asociacionId: string, socioData: any) => {
+    try {
+      // 1. Obtener información básica de la asociación
+      const asociacionRef = doc(db, 'asociaciones', asociacionId);
+      const asociacionDoc = await getDoc(asociacionRef);
+
+      if (!asociacionDoc.exists()) {
+        return null;
+      }
+
+      const asociacionData = asociacionDoc.data();
+
+      // 2. Obtener estadísticas en paralelo
+      const [sociosSnapshot, comerciosSnapshot, beneficiosSnapshot] = await Promise.all([
+        getDocs(query(collection(db, 'socios'), where('asociacionId', '==', asociacionId))),
+        getDocs(query(collection(db, 'comercios'), where('asociacionId', '==', asociacionId))),
+        getDocs(query(collection(db, 'beneficios'), where('asociacionId', '==', asociacionId)))
+      ]);
+
+      // 3. Procesar beneficios con información detallada
+      const beneficios: Beneficio[] = beneficiosSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          titulo: data.titulo || data.nombre || 'Beneficio',
+          descripcion: data.descripcion,
+          descuento: data.descuento || data.porcentajeDescuento || data.montoDescuento,
+          tipoDescuento: data.tipoDescuento || (data.porcentajeDescuento ? 'porcentaje' : 'monto_fijo'),
+          categoria: data.categoria,
+          estado: data.estado || 'activo',
+          fechaVencimiento: data.fechaVencimiento,
+          comercioId: data.comercioId,
+          comercioNombre: data.comercioNombre,
+          condiciones: data.condiciones || data.terminos,
+          usosMaximos: data.usosMaximos || data.limitesUso,
+          usosActuales: data.usosActuales || 0
+        };
+      });
+
+      // 4. Procesar comercios con conteo de beneficios
+      const comercios: Comercio[] = comerciosSnapshot.docs.map(doc => {
+        const data = doc.data();
+        const comercioBeneficios = beneficios.filter(b => b.comercioId === doc.id);
+        
+        return {
+          id: doc.id,
+          nombre: data.nombre || 'Comercio',
+          categoria: data.categoria,
+          direccion: data.direccion,
+          telefono: data.telefono,
+          email: data.email,
+          estado: data.estado || 'activo',
+          logo: data.logo,
+          beneficiosCount: comercioBeneficios.length
+        };
+      });
+
+      // 5. Calcular estadísticas detalladas
+      const beneficiosActivos = beneficios.filter(b => b.estado === 'activo').length;
+      const beneficiosVencidos = beneficios.filter(b => b.estado === 'vencido').length;
+      const comerciosActivos = comercios.filter(c => c.estado === 'activo').length;
+      const sociosActivos = sociosSnapshot.docs.filter(doc => {
+        const data = doc.data();
+        return data.estado === 'activo';
+      }).length;
+
+      // 6. Construir objeto completo de asociación
+      const asociacionCompleta: Asociacion = {
+        id: asociacionDoc.id,
+        nombre: asociacionData.nombre || 'Mi Asociación',
+        descripcion: asociacionData.descripcion,
+        logo: asociacionData.logo,
+        email: asociacionData.email,
+        telefono: asociacionData.telefono,
+        direccion: asociacionData.direccion,
+        sitioWeb: asociacionData.sitioWeb,
+        estado: asociacionData.estado || 'activo',
+        fechaCreacion: asociacionData.creadoEn,
+        fechaVinculacion: socioData.fechaVinculacion,
+        totalSocios: sociosSnapshot.size,
+        totalComercios: comerciosSnapshot.size,
+        totalBeneficios: beneficiosSnapshot.size,
+        beneficios: beneficios,
+        comercios: comercios,
+        categoria: asociacionData.categoria || 'general',
+        rating: asociacionData.rating || (4.2 + Math.random() * 0.6),
+        numeroSocio: socioData.numeroSocio,
+        estadoMembresia: socioData.estado || 'activo',
+        beneficiosActivos,
+        beneficiosVencidos,
+        comerciosActivos,
+        sociosActivos
+      };
+
+      return asociacionCompleta;
+    } catch (error) {
+      console.error('Error cargando datos completos de asociación:', error);
+      return null;
+    }
+  }, []);
+
+  // Cargar asociaciones del usuario con datos completos
   useEffect(() => {
     const loadUserAsociaciones = async () => {
       if (!user) return;
@@ -477,48 +790,15 @@ const SocioAsociacionesContent: React.FC = () => {
           return;
         }
 
-        // 2. Obtener la información de la asociación
-        const asociacionRef = doc(db, 'asociaciones', socioData.asociacionId);
-        const asociacionDoc = await getDoc(asociacionRef);
-
-        if (!asociacionDoc.exists()) {
+        // 2. Cargar datos completos de la asociación
+        const asociacionCompleta = await loadCompleteAsociacionData(socioData.asociacionId, socioData);
+        
+        if (asociacionCompleta) {
+          setAsociaciones([asociacionCompleta]);
+        } else {
           setAsociaciones([]);
-          return;
         }
 
-        const asociacionData = asociacionDoc.data();
-
-        // 3. Obtener estadísticas de la asociación
-        const [sociosSnapshot, comerciosSnapshot, beneficiosSnapshot] = await Promise.all([
-          getDocs(query(collection(db, 'socios'), where('asociacionId', '==', socioData.asociacionId))),
-          getDocs(query(collection(db, 'comercios'), where('asociacionId', '==', socioData.asociacionId))),
-          getDocs(query(collection(db, 'beneficios'), where('asociacionId', '==', socioData.asociacionId)))
-        ]);
-
-        const asociacionCompleta: Asociacion = {
-          id: asociacionDoc.id,
-          nombre: asociacionData.nombre || 'Mi Asociación',
-          descripcion: asociacionData.descripcion,
-          logo: asociacionData.logo,
-          email: asociacionData.email,
-          telefono: asociacionData.telefono,
-          direccion: asociacionData.direccion,
-          sitioWeb: asociacionData.sitioWeb,
-          estado: asociacionData.estado || 'activo',
-          fechaCreacion: asociacionData.creadoEn,
-          fechaVinculacion: socioData.fechaVinculacion,
-          totalSocios: sociosSnapshot.size,
-          totalComercios: comerciosSnapshot.size,
-          totalBeneficios: beneficiosSnapshot.size,
-          beneficios: beneficiosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-          comercios: comerciosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-          categoria: asociacionData.categoria || 'general',
-          rating: asociacionData.rating || (4.2 + Math.random() * 0.6),
-          numeroSocio: socioData.numeroSocio,
-          estadoMembresia: socioData.estado || 'activo'
-        };
-
-        setAsociaciones([asociacionCompleta]);
       } catch (err) {
         console.error('Error cargando asociaciones del usuario:', err);
         setError('Error al cargar tus asociaciones');
@@ -528,9 +808,9 @@ const SocioAsociacionesContent: React.FC = () => {
     };
 
     loadUserAsociaciones();
-  }, [user]);
+  }, [user, loadCompleteAsociacionData]);
 
-  // Filtrar asociaciones
+  // Filtrar asociaciones optimizado
   const filteredAsociaciones = useMemo(() => {
     let filtered = [...asociaciones];
 
@@ -539,7 +819,8 @@ const SocioAsociacionesContent: React.FC = () => {
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(asociacion => 
         asociacion.nombre.toLowerCase().includes(searchLower) ||
-        (asociacion.descripcion && asociacion.descripcion.toLowerCase().includes(searchLower))
+        (asociacion.descripcion && asociacion.descripcion.toLowerCase().includes(searchLower)) ||
+        (asociacion.categoria && asociacion.categoria.toLowerCase().includes(searchLower))
       );
     }
 
@@ -549,7 +830,9 @@ const SocioAsociacionesContent: React.FC = () => {
         case 'nombre':
           return a.nombre.localeCompare(b.nombre);
         case 'beneficios':
-          return (b.totalBeneficios || 0) - (a.totalBeneficios || 0);
+          return (b.beneficiosActivos || b.totalBeneficios || 0) - (a.beneficiosActivos || a.totalBeneficios || 0);
+        case 'comercios':
+          return (b.comerciosActivos || b.totalComercios || 0) - (a.comerciosActivos || a.totalComercios || 0);
         case 'fecha':
           const fechaA = a.fechaVinculacion?.toDate?.() || new Date(0);
           const fechaB = b.fechaVinculacion?.toDate?.() || new Date(0);
@@ -562,14 +845,13 @@ const SocioAsociacionesContent: React.FC = () => {
     return filtered;
   }, [asociaciones, filters]);
 
-  // Handlers
-  const handleViewDetails = (asociacion: Asociacion) => {
+  // Handlers optimizados
+  const handleViewDetails = useCallback((asociacion: Asociacion) => {
     setSelectedAsociacion(asociacion);
-    // Aquí podrías abrir un modal o navegar a una página de detalles
     toast.success(`Viendo detalles de ${asociacion.nombre}`);
-  };
+  }, []);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     if (refreshing) return;
     
     setRefreshing(true);
@@ -578,16 +860,16 @@ const SocioAsociacionesContent: React.FC = () => {
     } finally {
       setTimeout(() => setRefreshing(false), 1000);
     }
-  };
+  }, [refreshing]);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setFilters({
       search: '',
       sortBy: 'nombre'
     });
-  };
+  }, []);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       await signOut();
       toast.success('Sesión cerrada correctamente');
@@ -595,7 +877,7 @@ const SocioAsociacionesContent: React.FC = () => {
       console.error('Error during logout:', error);
       toast.error('Error al cerrar sesión');
     }
-  };
+  }, [signOut]);
 
   // Error state
   if (error) {
@@ -732,11 +1014,14 @@ const SocioAsociacionesContent: React.FC = () => {
                           <div className="h-4 bg-gray-200 rounded-lg w-2/3"></div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-3 gap-4 mb-8">
+                      <div className="grid grid-cols-4 gap-4 mb-8">
+                        <div className="h-20 bg-gray-200 rounded-2xl"></div>
                         <div className="h-20 bg-gray-200 rounded-2xl"></div>
                         <div className="h-20 bg-gray-200 rounded-2xl"></div>
                         <div className="h-20 bg-gray-200 rounded-2xl"></div>
                       </div>
+                      <div className="h-32 bg-gray-200 rounded-2xl mb-4"></div>
+                      <div className="h-24 bg-gray-200 rounded-2xl"></div>
                     </div>
                   ))}
                 </div>

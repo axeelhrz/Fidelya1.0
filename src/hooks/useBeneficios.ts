@@ -129,14 +129,15 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
     if (!user) return;
 
     try {
-      const filtros: { comercioId?: string; asociacionId?: string } = {};
+      const filtros: { comercioId?: string; asociacionId?: string; socioId?: string } = {};
       
       if (user.role === 'comercio') {
         filtros.comercioId = user.uid;
       } else if (user.role === 'asociacion') {
         filtros.asociacionId = user.uid;
       } else if (user.role === 'socio' && user.asociacionId) {
-        // Para socios, obtener estadísticas de su asociación
+        // Para socios, pasar tanto el socioId como la asociacionId para estadísticas específicas
+        filtros.socioId = user.uid;
         filtros.asociacionId = user.asociacionId;
       }
 
@@ -433,13 +434,14 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
   const beneficiosAgotados = beneficios.filter(b => b.estado === 'agotado');
   const beneficiosDestacados = beneficios.filter(b => b.destacado);
 
-  // Estadísticas rápidas
+  // Estadísticas rápidas - CORREGIDAS PARA USAR LAS MISMAS FUENTES QUE LAS ESTADÍSTICAS PRINCIPALES
   const estadisticasRapidas = {
-    total: beneficios.length,
-    activos: beneficiosActivos.length,
-    usados: beneficiosUsados.length,
-    ahorroTotal: beneficiosUsados.reduce((total, uso) => total + (uso.montoDescuento || 0), 0),
-    ahorroEsteMes: beneficiosUsados
+    // Usar las estadísticas del servicio si están disponibles, sino calcular localmente
+    total: stats?.totalBeneficios || beneficios.length,
+    activos: stats?.beneficiosActivos || beneficiosActivos.length,
+    usados: stats?.beneficiosUsados || beneficiosUsados.length,
+    ahorroTotal: stats?.ahorroTotal || beneficiosUsados.reduce((total, uso) => total + (uso.montoDescuento || 0), 0),
+    ahorroEsteMes: stats?.ahorroEsteMes || beneficiosUsados
       .filter(uso => {
         const fecha = uso.fechaUso.toDate();
         const ahora = new Date();
