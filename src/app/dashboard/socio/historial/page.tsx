@@ -71,16 +71,12 @@ interface FilterState {
 
 interface HistorialStats {
   totalUsos: number;
-  ahorroTotal: number;
-  ahorroEsteMes: number;
   comerciosUnicos: number;
   beneficioMasUsado: string;
-  promedioAhorro: number;
   usosEsteMes: number;
   crecimientoMensual: number;
   rachaActual: number;
   mejorMes: string;
-  tendenciaAhorro: 'up' | 'down' | 'stable';
 }
 
 // Utility functions
@@ -590,13 +586,8 @@ const SocioHistorialContent: React.FC = () => {
       return fechaUso >= lastMonth && fechaUso <= endLastMonth;
     });
 
-    const ahorroTotal = beneficiosUsados.reduce((total, uso) => total + (uso.montoDescuento || 0), 0);
-    const ahorroEsteMes = usosEsteMes.reduce((total, uso) => total + (uso.montoDescuento || 0), 0);
-    const ahorroUltimoMes = usosUltimoMes.reduce((total, uso) => total + (uso.montoDescuento || 0), 0);
-
     const comerciosUnicos = new Set(beneficiosUsados.map(uso => uso.comercioId)).size;
     const beneficioMasUsado = beneficiosUsados.length > 0 ? 'Descuento en Restaurantes' : 'N/A';
-    const promedioAhorro = beneficiosUsados.length > 0 ? ahorroTotal / beneficiosUsados.length : 0;
 
     const crecimientoMensual = usosUltimoMes.length > 0 
       ? Math.round(((usosEsteMes.length - usosUltimoMes.length) / usosUltimoMes.length) * 100)
@@ -626,20 +617,15 @@ const SocioHistorialContent: React.FC = () => {
     }
 
     const mejorMes = 'Octubre 2024'; // Placeholder
-    const tendenciaAhorro: 'up' | 'down' | 'stable' = ahorroEsteMes > ahorroUltimoMes ? 'up' : ahorroEsteMes < ahorroUltimoMes ? 'down' : 'stable';
 
     return {
       totalUsos: beneficiosUsados.length,
-      ahorroTotal,
-      ahorroEsteMes,
       comerciosUnicos,
       beneficioMasUsado,
-      promedioAhorro,
       usosEsteMes: usosEsteMes.length,
       crecimientoMensual,
       rachaActual,
-      mejorMes,
-      tendenciaAhorro
+      mejorMes
     };
   }, [beneficiosUsados]);
 
@@ -826,9 +812,9 @@ const SocioHistorialContent: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50 relative overflow-hidden">
         {/* Enhanced background decorations */}
         <div className="absolute inset-0 bg-grid-pattern opacity-20" />
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-violet-100/40 to-transparent rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-sky-100/40 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-purple-50/20 to-blue-50/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-violet-100/40 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-sky-100/40 to-transparent rounded-full blur-3xl" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-purple-50/20 to-blue-50/20 rounded-full blur-3xl" style={{ animationDelay: '2s' }} />
         
         {/* Floating elements */}
         <div className="absolute top-20 right-20 w-4 h-4 bg-violet-400/60 rounded-full animate-bounce" />
@@ -889,7 +875,7 @@ const SocioHistorialContent: React.FC = () => {
 
           {/* Enhanced Stats Grid */}
           <motion.div 
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6 mb-8 lg:mb-12"
+            className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8 lg:mb-12"
             variants={containerVariants}
           >
             <StatsCard
@@ -900,26 +886,6 @@ const SocioHistorialContent: React.FC = () => {
               subtitle={`${stats.usosEsteMes} este mes`}
               trend={stats.crecimientoMensual > 0 ? 'up' : stats.crecimientoMensual < 0 ? 'down' : 'neutral'}
               trendValue={Math.abs(stats.crecimientoMensual)}
-            />
-            
-            <StatsCard
-              title="Ahorro Total"
-              value={formatCurrency(stats.ahorroTotal)}
-              icon={<Wallet size={24} />}
-              gradient="from-emerald-500 to-teal-600"
-              subtitle="Acumulado"
-              trend={stats.tendenciaAhorro}
-              trendValue={15}
-            />
-            
-            <StatsCard
-              title="Este Mes"
-              value={formatCurrency(stats.ahorroEsteMes)}
-              icon={<TrendingUp size={24} />}
-              gradient="from-green-500 to-emerald-600"
-              subtitle="Ahorro mensual"
-              trend="up"
-              trendValue={25}
             />
             
             <StatsCard
@@ -941,11 +907,11 @@ const SocioHistorialContent: React.FC = () => {
             />
             
             <StatsCard
-              title="Promedio"
-              value={formatCurrency(stats.promedioAhorro)}
-              icon={<Target size={24} />}
+              title="Beneficio Top"
+              value={stats.beneficioMasUsado}
+              icon={<Award size={24} />}
               gradient="from-indigo-500 to-purple-600"
-              subtitle="Por uso"
+              subtitle="Más utilizado"
             />
           </motion.div>
 
