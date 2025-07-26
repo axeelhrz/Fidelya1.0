@@ -78,7 +78,10 @@ export default function SocioBeneficiosPage() {
 
   // Filter benefits based on search and filters
   const filteredBeneficios = useMemo(() => {
-    return beneficios.filter(beneficio => {
+    console.log('🔍 DEBUG - Beneficios originales:', beneficios.length);
+    console.log('🔍 DEBUG - Beneficios completos:', beneficios);
+    
+    const filtered = beneficios.filter(beneficio => {
       const matchesSearch = 
         beneficio.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
         beneficio.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,8 +94,24 @@ export default function SocioBeneficiosPage() {
         (filterType === 'comercio' && ['comercio_vinculado', 'comercio_afiliado'].includes(beneficio.origenBeneficio || '')) ||
         (filterType === 'publico' && beneficio.origenBeneficio === 'publico');
       
+      console.log(`🔍 DEBUG - Beneficio "${beneficio.titulo}":`, {
+        matchesSearch,
+        matchesCategory,
+        matchesFilter,
+        origenBeneficio: beneficio.origenBeneficio,
+        estado: beneficio.estado,
+        searchTerm,
+        selectedCategory,
+        filterType
+      });
+      
       return matchesSearch && matchesCategory && matchesFilter;
     });
+    
+    console.log('🔍 DEBUG - Beneficios filtrados:', filtered.length);
+    console.log('🔍 DEBUG - Beneficios filtrados completos:', filtered);
+    
+    return filtered;
   }, [beneficios, searchTerm, selectedCategory, filterType]);
 
   const handleUseBenefit = async (beneficioId: string, comercioId: string) => {
