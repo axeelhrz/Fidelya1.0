@@ -40,6 +40,7 @@ import { useSocioProfile } from '@/hooks/useSocioProfile';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { AsociacionesList } from './AsociacionesList';
 
 interface SocioOverviewDashboardProps {
   onNavigate?: (section: string) => void;
@@ -653,7 +654,7 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
         ))}
       </div>
 
-      {/* Secondary Cards */}
+      {/* Secondary Cards - Updated to include AsociacionesList */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <div className="xl:col-span-2">
           <ModernActivityTimeline
@@ -662,12 +663,18 @@ const SocioOverviewDashboard: React.FC<SocioOverviewDashboardProps> = ({
             onViewAll={() => onNavigate?.('historial')}
           />
         </div>
-        <div>
+        <div className="space-y-8">
           <ModernSocioStatusCard
             health={socioHealth}
             loading={socioLoading}
             socio={socio ?? {}}
             nivel={profileData.nivel}
+          />
+          
+          {/* New AsociacionesList Component */}
+          <AsociacionesList 
+            showHeader={true}
+            maxHeight="max-h-80"
           />
         </div>
       </div>
