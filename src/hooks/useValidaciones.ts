@@ -30,13 +30,13 @@ export const useValidaciones = (): UseValidacionesReturn => {
   const [lastDoc, setLastDoc] = useState<any>(null);
 
   // Transform HistorialValidacion to Validacion
-  const transformHistorialToValidacion = (historial: HistorialValidacion): Validacion => {
+  const transformHistorialToValidacion = useCallback((historial: HistorialValidacion): Validacion => {
     return {
       id: historial.id,
       socioId: user?.uid || '',
-      socioNombre: user?.displayName || 'Usuario',
+      socioNombre: user?.nombre || 'Usuario',
       asociacionId: user?.asociacionId || '',
-      asociacionNombre: user?.asociacionNombre || '',
+      asociacionNombre: '', // This field doesn't exist in UserData, so we'll leave it empty
       comercioId: historial.comercioId,
       comercioNombre: historial.comercioNombre,
       beneficioId: historial.beneficioId,
@@ -56,7 +56,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
       monto: historial.montoDescuento || 0,
       ahorro: historial.montoDescuento || 0
     };
-  };
+  }, [user]);
 
   const cargarValidaciones = useCallback(async (reset = false) => {
     if (!user) {
@@ -129,7 +129,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
         beneficioTitulo: result.data?.beneficio?.titulo,
         comercioNombre: result.data?.comercio?.nombre,
         socio: result.data?.socio || {
-          nombre: user.displayName || 'Usuario',
+          nombre: user.nombre || 'Usuario',
           estado: 'activo',
           asociacion: user.asociacionId || 'independiente'
         },
