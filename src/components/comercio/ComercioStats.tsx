@@ -83,7 +83,7 @@ export const ComercioStats: React.FC = () => {
         return vDate >= dayStart && vDate <= dayEnd;
       });
 
-      const daySuccessful = dayValidations.filter(v => v.resultado === 'valido');
+      const daySuccessful = dayValidations.filter(v => v.resultado === 'habilitado');
 
       dailyValidations.push({
         date: format(date, 'dd/MM', { locale: es }),
