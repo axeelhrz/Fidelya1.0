@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { 
   Home, 
@@ -57,8 +57,8 @@ interface Validacion {
   estado: string;
 }
 
-// Componente de elemento de menú memoizado
-const MenuItem = React.memo<{
+// Componente de elemento de menú memoizado con comparación profunda
+const MenuItemComponent = memo<{
   item: MenuItem;
   isActive: boolean;
   isOpen: boolean;
@@ -115,9 +115,119 @@ const MenuItem = React.memo<{
       </>
     )}
   </button>
+), (prevProps, nextProps) => {
+  // Comparación personalizada para evitar re-renders innecesarios
+  return (
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.item.badge === nextProps.item.badge &&
+    prevProps.isActive === nextProps.isActive &&
+    prevProps.isOpen === nextProps.isOpen &&
+    prevProps.item.label === nextProps.item.label &&
+    prevProps.item.description === nextProps.item.description &&
+    prevProps.item.isNew === nextProps.item.isNew
+  );
+});
+
+MenuItemComponent.displayName = 'MenuItemComponent';
+
+// Header del sidebar memoizado
+const SidebarHeader = memo<{
+  userInfo: {
+    name: string;
+    number: string;
+    initial: string;
+  };
+  isOpen: boolean;
+  onToggle: () => void;
+}>(({ userInfo, isOpen, onToggle }) => (
+  <div className="px-4 py-4 border-b border-gray-100/50 flex-shrink-0">
+    <div className="flex items-center space-x-3">
+      <div className="relative">
+        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+          <User className="w-6 h-6 text-white" />
+        </div>
+        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white shadow-lg">
+          <div className="w-full h-full bg-emerald-500 rounded-full animate-pulse"></div>
+        </div>
+      </div>
+      
+      {isOpen && (
+        <div className="flex-1 min-w-0">
+          <h2 className="text-lg font-black text-gray-900 truncate">
+            {userInfo.name}
+          </h2>
+          <p className="text-sm text-gray-500 font-medium">
+            #{userInfo.number}
+          </p>
+        </div>
+      )}
+      
+      <button
+        onClick={onToggle}
+        className="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors duration-200"
+      >
+        <Menu className="w-5 h-5 text-gray-500" />
+      </button>
+    </div>
+  </div>
 ));
 
-MenuItem.displayName = 'MenuItem';
+SidebarHeader.displayName = 'SidebarHeader';
+
+// Sección de usuario memoizada
+const UserSection = memo<{
+  userInfo: {
+    name: string;
+    number: string;
+    initial: string;
+  };
+  isOpen: boolean;
+  onLogoutClick: () => void;
+}>(({ userInfo, isOpen, onLogoutClick }) => (
+  <div className="px-3 py-4 border-t border-gray-100/50 flex-shrink-0">
+    {isOpen ? (
+      <div className="space-y-3">
+        <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+            <span className="text-white font-black text-sm">
+              {userInfo.initial}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-gray-900 truncate">
+              {userInfo.name}
+            </p>
+            <p className="text-xs text-gray-500 truncate font-medium">
+              Socio #{userInfo.number}
+            </p>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Star className="w-4 h-4 text-amber-400" />
+            <span className="text-xs font-bold text-amber-600">VIP</span>
+          </div>
+        </div>
+        
+        <button
+          onClick={onLogoutClick}
+          className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50 rounded-2xl transition-all duration-300 border border-red-200/50 hover:border-red-300 hover:shadow-lg font-bold"
+        >
+          <LogOut className="w-5 h-5" />
+          <span>Cerrar Sesión</span>
+        </button>
+      </div>
+    ) : (
+      <button
+        onClick={onLogoutClick}
+        className="w-full flex items-center justify-center p-3 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50 rounded-2xl transition-all duration-300 hover:shadow-lg"
+        title="Cerrar Sesión"
+      >
+        <LogOut className="w-5 h-5" />
+      </button>
+    )}
+  </div>
+));
+
+UserSection.displayName = 'UserSection';
 
 const SocioSidebar: React.FC<SocioSidebarProps> = ({
   open,
@@ -132,7 +242,7 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
   const { socio, estadisticas, loading: socioLoading } = useSocioProfile();
   const { beneficiosActivos, estadisticasRapidas } = useBeneficiosSocio();
   
-  // Estado optimizado con referencias estables
+  // Estado optimizado con referencias estables - NO SE ACTUALIZA CON CAMBIOS DE PESTAÑA
   const [optimizedStats, setOptimizedStats] = useState<OptimizedStats>({
     totalBeneficios: 0,
     beneficiosUsados: 0,
@@ -144,6 +254,7 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
   // Referencias para evitar re-renders innecesarios
   const lastStatsRef = useRef<OptimizedStats>(optimizedStats);
   const updateTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastActiveSection = useRef<string>(activeSection);
 
   // Hook optimizado para validaciones en tiempo real
   const {
@@ -159,8 +270,8 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
     ] : [],
     {
       enableToasts: false,
-      debounceMs: 1000, // Debounce más largo para el sidebar
-      cacheTimeout: 120000, // 2 minutos de cache
+      debounceMs: 2000, // Debounce más largo para el sidebar
+      cacheTimeout: 300000, // 5 minutos de cache
       enableOfflineSupport: true
     }
   );
@@ -189,10 +300,10 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
     beneficiosActivos?.length,
     validaciones.length,
     socio?.estadoMembresia,
-    validaciones // Solo incluir validaciones si realmente cambió el array
+    validaciones
   ]);
 
-  // Actualizar estadísticas con debounce para evitar actualizaciones muy frecuentes
+  // Actualizar estadísticas con debounce MUY LARGO para evitar actualizaciones frecuentes
   useEffect(() => {
     // Comparar si realmente cambió algo importante
     const hasChanged = (
@@ -209,11 +320,11 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
       clearTimeout(updateTimeoutRef.current);
     }
 
-    // Actualizar con debounce
+    // Actualizar con debounce LARGO
     updateTimeoutRef.current = setTimeout(() => {
       setOptimizedStats(derivedStats);
       lastStatsRef.current = derivedStats;
-    }, 500); // 500ms de debounce
+    }, 2000); // 2 segundos de debounce
 
     return () => {
       if (updateTimeoutRef.current) {
@@ -222,7 +333,7 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
     };
   }, [derivedStats]);
 
-  // Memoizar elementos del menú con dependencias estables
+  // Memoizar elementos del menú con dependencias estables - NO CAMBIAN CON PESTAÑAS
   const menuItems: MenuItem[] = useMemo(() => [
     {
       id: 'dashboard',
@@ -271,7 +382,7 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
     }
   ], [optimizedStats.totalBeneficios, optimizedStats.beneficiosUsados]);
 
-  // Handler de navegación optimizado
+  // Handler de navegación optimizado - ESTABLE
   const handleNavigation = useCallback((route: string, itemId: string) => {
     if (pathname !== route) {
       router.push(route);
@@ -279,12 +390,12 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
     onMenuClick(itemId);
   }, [router, pathname, onMenuClick]);
 
-  // Verificar si un elemento está activo
+  // Verificar si un elemento está activo - OPTIMIZADO
   const isActiveItem = useCallback((item: MenuItem) => {
     return pathname === item.route || activeSection === item.id;
   }, [pathname, activeSection]);
 
-  // Información del usuario memoizada
+  // Información del usuario memoizada - NO CAMBIA CON PESTAÑAS
   const userInfo = useMemo(() => ({
     name: socio?.nombre || user?.nombre || 'Socio',
     number: socio?.numeroSocio || 'N/A',
@@ -329,39 +440,14 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
         ${open ? 'w-80' : 'w-0 lg:w-20'}
         lg:relative lg:translate-x-0 flex flex-col
       `}>
-        {/* Header */}
-        <div className="px-4 py-4 border-b border-gray-100/50 flex-shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <User className="w-6 h-6 text-white" />
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white shadow-lg">
-                <div className="w-full h-full bg-emerald-500 rounded-full animate-pulse"></div>
-              </div>
-            </div>
-            
-            {open && (
-              <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-black text-gray-900 truncate">
-                  {userInfo.name}
-                </h2>
-                <p className="text-sm text-gray-500 font-medium">
-                  #{userInfo.number}
-                </p>
-              </div>
-            )}
-            
-            <button
-              onClick={onToggle}
-              className="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors duration-200"
-            >
-              <Menu className="w-5 h-5 text-gray-500" />
-            </button>
-          </div>
-        </div>
+        {/* Header memoizado */}
+        <SidebarHeader
+          userInfo={userInfo}
+          isOpen={open}
+          onToggle={onToggle}
+        />
 
-        {/* Estadísticas optimizadas */}
+        {/* Estadísticas optimizadas - SOLO SE ACTUALIZA CUANDO CAMBIAN LOS DATOS REALES */}
         <SocioSidebarStats
           totalBeneficios={optimizedStats.totalBeneficios}
           beneficiosUsados={optimizedStats.beneficiosUsados}
@@ -369,10 +455,10 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
           isOpen={open}
         />
 
-        {/* Navegación */}
+        {/* Navegación - MEMOIZADA */}
         <nav className="flex-1 px-3 py-3 space-y-2 overflow-y-auto min-h-0">
           {menuItems.map((item) => (
-            <MenuItem
+            <MenuItemComponent
               key={item.id}
               item={item}
               isActive={isActiveItem(item)}
@@ -399,48 +485,12 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
           </div>
         )}
 
-        {/* Sección de usuario */}
-        <div className="px-3 py-4 border-t border-gray-100/50 flex-shrink-0">
-          {open ? (
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-white font-black text-sm">
-                    {userInfo.initial}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-900 truncate">
-                    {userInfo.name}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate font-medium">
-                    Socio #{userInfo.number}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Star className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs font-bold text-amber-600">VIP</span>
-                </div>
-              </div>
-              
-              <button
-                onClick={onLogoutClick}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50 rounded-2xl transition-all duration-300 border border-red-200/50 hover:border-red-300 hover:shadow-lg font-bold"
-              >
-                <LogOut className="w-5 h-5" />
-                <span>Cerrar Sesión</span>
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={onLogoutClick}
-              className="w-full flex items-center justify-center p-3 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50 rounded-2xl transition-all duration-300 hover:shadow-lg"
-              title="Cerrar Sesión"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+        {/* Sección de usuario memoizada */}
+        <UserSection
+          userInfo={userInfo}
+          isOpen={open}
+          onLogoutClick={onLogoutClick}
+        />
       </div>
     </>
   );

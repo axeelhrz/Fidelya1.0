@@ -70,7 +70,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
   const { stats: comerciosStats, loading: comerciosLoading } = useComercios();
   const { stats: beneficiosStats, loading: beneficiosLoading } = useBeneficiosAsociacion();
   
-  const { navigate } = useSidebarNavigation({
+  const { navigateTo } = useSidebarNavigation({
     onMenuClick,
     debounceMs: 150
   });
@@ -183,11 +183,11 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = ({
   }, [pathname, activeSection]);
 
   const handleMenuClick = useCallback((itemId: string, route: string) => {
-    navigate(route, itemId);
+    navigateTo(route, itemId);
     if (isMobile) {
       onToggle();
     }
-  }, [navigate, onToggle, isMobile]);
+  }, [navigateTo, onToggle, isMobile]);
 
   const handleLogout = async () => {
     if (onLogoutClick) {
