@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
@@ -8,7 +8,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
-import { useComercios } from '@/hooks/useComercios';
+import { useComercio } from '@/hooks/useComercio'; // Usar el hook correcto para comercios individuales
 import { 
   QrCode, 
   Download, 
@@ -19,7 +19,6 @@ import {
   Printer,
   Copy,
   Eye,
-  Settings,
   Zap,
   Smartphone,
   Monitor,
@@ -31,29 +30,27 @@ import {
   Calendar,
   Clock,
   CheckCircle2,
-  AlertCircle,
   Info,
   Sparkles,
   ArrowRight,
   ExternalLink,
-  Camera,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // Component that uses useSearchParams - needs to be wrapped in Suspense
 function ComercioQRContent() {
   const { signOut } = useAuth();
-  const { comerciosVinculados, loading, generateQRCode, stats } = useComercios();
-  const comercio = comerciosVinculados[0];
+  const { comercio, stats, loading, generateQRCode } = useComercio(); // Hook correcto
   const searchParams = useSearchParams();
   const activeTab = searchParams.get('tab') || 'generar';
 
-  const [qrData, setQrData] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [previewDevice, setPreviewDevice] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
+  type DeviceType = 'mobile' | 'tablet' | 'desktop';
+  const [previewDevice, setPreviewDevice] = useState<DeviceType>('mobile');
   const [customization, setCustomization] = useState({
     size: 256,
     margin: 4,
@@ -74,46 +71,103 @@ function ComercioQRContent() {
   };
 
   const handleGenerateQR = async () => {
-    if (!comercio) return;
+    if (!comercio) {
+      toast.error('❌ No se pudo identificar el comercio');
+      return;
+    }
 
     setGenerating(true);
     try {
-      const qrCodeDataURL = await generateQRCode(comercio.id);
-      if (qrCodeDataURL) {
-        setQrData(qrCodeDataURL);
-        toast.success('🎉 Código QR generado exitosamente');
+      // Mostrar toast de inicio
+      const loadingToast = toast.loading('🔄 Generando código QR...');
+      
+      const success = await generateQRCode();
+      
+      // Remover toast de loading
+      toast.dismiss(loadingToast);
+      
+      if (success) {
+        // Toast de éxito con animación
+        toast.success('🎉 ¡Código QR generado exitosamente!', {
+          duration: 4000,
+          style: {
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            color: 'white',
+            fontWeight: '600',
+            borderRadius: '12px',
+            padding: '16px 20px',
+          },
+        });
       }
     } catch (error) {
       console.error('Error generating QR:', error);
-      toast.error('❌ Error al generar el código QR');
+      toast.error('❌ Error al generar el código QR', {
+        duration: 4000,
+        style: {
+          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+          color: 'white',
+          fontWeight: '600',
+          borderRadius: '12px',
+          padding: '16px 20px',
+        },
+      });
     } finally {
       setGenerating(false);
     }
   };
 
   const handleDownloadQR = () => {
-    if (!qrData || !comercio) return;
+    if (!comercio?.qrCode) {
+      toast.error('❌ No hay código QR para descargar');
+      return;
+    }
 
-    const link = document.createElement('a');
-    link.href = qrData;
-    link.download = `qr-${comercio.nombreComercio}-${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success('📥 QR descargado exitosamente');
+    try {
+      const link = document.createElement('a');
+      link.href = comercio.qrCode;
+      link.download = `qr-${comercio.nombreComercio.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('📥 QR descargado exitosamente', {
+        duration: 3000,
+        style: {
+          background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+          color: 'white',
+          fontWeight: '600',
+          borderRadius: '12px',
+          padding: '16px 20px',
+        },
+      });
+    } catch (error) {
+      console.error('Error downloading QR:', error);
+      toast.error('❌ Error al descargar el QR');
+    }
   };
 
   const handleCopyQR = async () => {
-    if (!qrData) return;
+    if (!comercio?.qrCode) {
+      toast.error('❌ No hay código QR para copiar');
+      return;
+    }
 
     try {
-      const response = await fetch(qrData);
+      const response = await fetch(comercio.qrCode);
       const blob = await response.blob();
       await navigator.clipboard.write([
         new ClipboardItem({ 'image/png': blob })
       ]);
-      toast.success('📋 QR copiado al portapapeles');
+      toast.success('📋 QR copiado al portapapeles', {
+        duration: 3000,
+        style: {
+          background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+          color: 'white',
+          fontWeight: '600',
+          borderRadius: '12px',
+          padding: '16px 20px',
+        },
+      });
     } catch (error) {
       console.error('Error copying QR:', error);
       toast.error('❌ Error al copiar el QR');
@@ -121,14 +175,17 @@ function ComercioQRContent() {
   };
 
   const handlePrintQR = () => {
-    if (!qrData) return;
+    if (!comercio?.qrCode) {
+      toast.error('❌ No hay código QR para imprimir');
+      return;
+    }
 
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(`
         <html>
           <head>
-            <title>Código QR - ${comercio?.nombreComercio}</title>
+            <title>Código QR - ${comercio.nombreComercio}</title>
             <style>
               @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
               
@@ -265,12 +322,12 @@ function ComercioQRContent() {
             <div class="print-container">
               <div class="header">
                 <div class="logo">QR</div>
-                <h1 class="title">${comercio?.nombreComercio}</h1>
+                <h1 class="title">${comercio.nombreComercio}</h1>
                 <p class="subtitle">Código QR para Validación de Beneficios</p>
               </div>
               
               <div class="qr-section">
-                <img src="${qrData}" alt="Código QR" class="qr-image" />
+                <img src="${comercio.qrCode}" alt="Código QR" class="qr-image" />
                 <p style="color: #64748b; font-size: 14px; margin: 0;">
                   Escanea este código para acceder a los beneficios
                 </p>
@@ -288,7 +345,7 @@ function ComercioQRContent() {
                 
                 <div class="url-box">
                   <strong>URL directa:</strong><br>
-                  ${window.location.origin}/validar-beneficio?comercio=${comercio?.id}
+                  ${window.location.origin}/validar-beneficio?comercio=${comercio.id}
                 </div>
               </div>
               
@@ -300,7 +357,7 @@ function ComercioQRContent() {
                   hour: '2-digit',
                   minute: '2-digit'
                 })}</p>
-                <p>Este código QR es único para ${comercio?.nombreComercio}</p>
+                <p>Este código QR es único para ${comercio.nombreComercio}</p>
               </div>
             </div>
           </body>
@@ -308,11 +365,25 @@ function ComercioQRContent() {
       `);
       printWindow.document.close();
       printWindow.print();
+      
+      toast.success('🖨️ Ventana de impresión abierta', {
+        duration: 3000,
+        style: {
+          background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+          color: 'white',
+          fontWeight: '600',
+          borderRadius: '12px',
+          padding: '16px 20px',
+        },
+      });
     }
   };
 
   const handleShareQR = async () => {
-    if (!qrData || !comercio) return;
+    if (!comercio?.qrCode) {
+      toast.error('❌ No hay código QR para compartir');
+      return;
+    }
 
     if (navigator.share) {
       try {
@@ -328,7 +399,16 @@ function ComercioQRContent() {
     } else {
       // Fallback: copy URL to clipboard
       await navigator.clipboard.writeText(`${window.location.origin}/validar-beneficio?comercio=${comercio.id}`);
-      toast.success('🔗 Enlace copiado al portapapeles');
+      toast.success('🔗 Enlace copiado al portapapeles', {
+        duration: 3000,
+        style: {
+          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+          color: 'white',
+          fontWeight: '600',
+          borderRadius: '12px',
+          padding: '16px 20px',
+        },
+      });
     }
   };
 
@@ -368,13 +448,6 @@ function ComercioQRContent() {
     { id: 'tablet', icon: Tablet, label: 'Tablet', width: '768px' },
     { id: 'desktop', icon: Monitor, label: 'Desktop', width: '1024px' }
   ];
-
-  // Load existing QR if available
-  useEffect(() => {
-    if (comercio?.qrCode) {
-      setQrData(comercio.qrCode);
-    }
-  }, [comercio]);
 
   if (loading) {
     return (
@@ -502,14 +575,14 @@ function ComercioQRContent() {
                     <Button
                       size="lg"
                       className="bg-white text-blue-600 hover:bg-white/90 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
-                      leftIcon={<Sparkles size={20} />}
+                      leftIcon={generating ? <Loader2 size={20} className="animate-spin" /> : <Sparkles size={20} />}
                       onClick={handleGenerateQR}
-                      loading={generating}
+                      disabled={generating}
                     >
-                      {qrData ? 'Regenerar QR' : 'Crear QR Ahora'}
+                      {generating ? 'Generando...' : (comercio?.qrCode ? 'Regenerar QR' : 'Crear QR Ahora')}
                     </Button>
                     
-                    {qrData && (
+                    {comercio?.qrCode && (
                       <Button
                         variant="outline"
                         size="lg"
@@ -542,7 +615,7 @@ function ComercioQRContent() {
                             <Eye className="w-5 h-5 text-white" />
                           </div>
                           <div>
-                            <p className="text-2xl font-bold text-white">{stats?.valiacionesHoy || 0}</p>
+                            <p className="text-2xl font-bold text-white">{stats?.validacionesHoy || 0}</p>
                             <p className="text-white/70 text-sm">Escaneos Hoy</p>
                           </div>
                         </div>
@@ -566,7 +639,7 @@ function ComercioQRContent() {
                     </div>
 
                     {/* QR Preview */}
-                    {qrData && (
+                    {comercio?.qrCode && (
                       <motion.div 
                         className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20"
                         whileHover={{ scale: 1.02 }}
@@ -576,7 +649,7 @@ function ComercioQRContent() {
                           <p className="text-white/80 text-sm mb-4">Vista Previa</p>
                           <div className="relative inline-block">
                             <Image
-                              src={qrData}
+                              src={comercio.qrCode}
                               alt="QR Preview"
                               width={120}
                               height={120}
@@ -676,7 +749,7 @@ function ComercioQRContent() {
                             Código único para validación de beneficios
                           </p>
                           
-                          {qrData ? (
+                          {comercio?.qrCode ? (
                             <motion.div 
                               className="space-y-8"
                               initial={{ opacity: 0, scale: 0.8 }}
@@ -691,7 +764,7 @@ function ComercioQRContent() {
                                   transition={{ type: "spring", stiffness: 300 }}
                                 >
                                   <Image
-                                    src={qrData}
+                                    src={comercio.qrCode}
                                     alt="Código QR"
                                     width={280}
                                     height={280}
@@ -767,7 +840,7 @@ function ComercioQRContent() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                   <div>
                                     <span className="font-semibold text-gray-700">Comercio:</span>
-                                    <p className="text-gray-600 mt-1">{comercio?.nombreComercio}</p>
+                                    <p className="text-gray-600 mt-1">{comercio.nombreComercio}</p>
                                   </div>
                                   <div>
                                     <span className="font-semibold text-gray-700">Generado:</span>
@@ -795,9 +868,9 @@ function ComercioQRContent() {
                               <Button
                                 size="lg"
                                 className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-2xl hover:shadow-blue-500/25 transform hover:scale-105 transition-all duration-300"
-                                leftIcon={<Sparkles size={20} />}
+                                leftIcon={generating ? <Loader2 size={20} className="animate-spin" /> : <Sparkles size={20} />}
                                 onClick={handleGenerateQR}
-                                loading={generating}
+                                disabled={generating}
                               >
                                 {generating ? 'Generando...' : 'Generar Mi Código QR'}
                               </Button>
@@ -831,18 +904,18 @@ function ComercioQRContent() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">Estado:</span>
                           <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
-                            qrData 
+                            comercio?.qrCode 
                               ? 'bg-green-100 text-green-700' 
                               : 'bg-gray-100 text-gray-600'
                           }`}>
-                            {qrData ? '✅ Activo' : '⏳ Pendiente'}
+                            {comercio?.qrCode ? '✅ Activo' : '⏳ Pendiente'}
                           </span>
                         </div>
                         
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">Escaneos hoy:</span>
                           <span className="text-sm font-bold text-blue-600">
-                            {stats?.valiacionesHoy || 0}
+                            {stats?.validacionesHoy || 0}
                           </span>
                         </div>
                         
@@ -916,14 +989,14 @@ function ComercioQRContent() {
                         <Button
                           variant="outline"
                           className="w-full justify-start hover:bg-blue-50 border-blue-200 text-blue-700"
-                          leftIcon={<QrCode size={16} />}
+                          leftIcon={generating ? <Loader2 size={16} className="animate-spin" /> : <QrCode size={16} />}
                           onClick={handleGenerateQR}
-                          loading={generating}
+                          disabled={generating}
                         >
-                          {qrData ? 'Regenerar QR' : 'Generar QR'}
+                          {generating ? 'Generando...' : (comercio?.qrCode ? 'Regenerar QR' : 'Generar QR')}
                         </Button>
                         
-                        {qrData && (
+                        {comercio?.qrCode && (
                           <>
                             <Button
                               variant="outline"
@@ -1000,7 +1073,7 @@ function ComercioQRContent() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                            Color del QR
+                            Color del QR
                           </label>
                           <div className="relative">
                             <input
@@ -1100,11 +1173,11 @@ function ComercioQRContent() {
                       {/* Apply Button */}
                       <Button
                         className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
-                        leftIcon={<Sparkles size={20} />}
+                        leftIcon={generating ? <Loader2 size={20} className="animate-spin" /> : <Sparkles size={20} />}
                         onClick={handleGenerateQR}
-                        loading={generating}
+                        disabled={generating}
                       >
-                        Aplicar Personalización
+                        {generating ? 'Aplicando...' : 'Aplicar Personalización'}
                       </Button>
                     </div>
                   </motion.div>
@@ -1124,7 +1197,7 @@ function ComercioQRContent() {
                         {devicePresets.map((device) => (
                           <button
                             key={device.id}
-                            onClick={() => setPreviewDevice(device.id as any)}
+                            onClick={() => setPreviewDevice(device.id as DeviceType)}
                             className={`p-3 rounded-xl transition-all duration-300 ${
                               previewDevice === device.id
                                 ? 'bg-blue-500 text-white shadow-lg'
@@ -1147,10 +1220,10 @@ function ComercioQRContent() {
                         >
                           <div className="p-6">
                             <div className="text-center">
-                              {qrData ? (
+                              {comercio?.qrCode ? (
                                 <div className="space-y-4">
                                   <Image
-                                    src={qrData}
+                                    src={comercio.qrCode}
                                     alt="Preview QR"
                                     width={customization.size / 2}
                                     height={customization.size / 2}
@@ -1165,7 +1238,7 @@ function ComercioQRContent() {
                                   {customization.includeText && (
                                     <div className="space-y-2">
                                       <p className="text-sm font-semibold text-gray-900">
-                                        {comercio?.nombreComercio}
+                                        {comercio.nombreComercio}
                                       </p>
                                       <p className="text-xs text-gray-600">
                                         Escanea para validar beneficio
@@ -1222,7 +1295,7 @@ function ComercioQRContent() {
                       </div>
                     </div>
                     
-                    {qrData ? (
+                    {comercio?.qrCode ? (
                       <div className="space-y-6">
                         {/* Format Options */}
                         <div className="grid grid-cols-1 gap-4">
@@ -1356,11 +1429,11 @@ function ComercioQRContent() {
                         </p>
                         <Button
                           className="bg-gradient-to-r from-blue-500 to-purple-600"
-                          leftIcon={<QrCode size={20} />}
+                          leftIcon={generating ? <Loader2 size={20} className="animate-spin" /> : <QrCode size={20} />}
                           onClick={handleGenerateQR}
-                          loading={generating}
+                          disabled={generating}
                         >
-                          Generar Código QR
+                          {generating ? 'Generando...' : 'Generar Código QR'}
                         </Button>
                       </div>
                     )}
@@ -1374,7 +1447,7 @@ function ComercioQRContent() {
                     transition={{ duration: 0.5, delay: 0.2 }}
                   >
                     {/* QR Preview */}
-                    {qrData && (
+                    {comercio?.qrCode && (
                       <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-8">
                         <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
                           Vista Previa de Descarga
@@ -1382,7 +1455,7 @@ function ComercioQRContent() {
                         
                         <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 text-center">
                           <Image
-                            src={qrData}
+                            src={comercio.qrCode}
                             alt="QR para descargar"
                             width={200}
                             height={200}
@@ -1409,7 +1482,7 @@ function ComercioQRContent() {
                             <Eye className="w-5 h-5 text-white" />
                           </div>
                           <p className="text-2xl font-bold text-blue-600">
-                            {stats?.valiacionesHoy || 0}
+                            {stats?.validacionesHoy || 0}
                           </p>
                           <p className="text-sm text-blue-600 font-medium">Escaneos Hoy</p>
                         </div>
@@ -1466,7 +1539,7 @@ function ComercioQRContent() {
                     {[
                       {
                         title: 'Escaneos Hoy',
-                        value: stats?.valiacionesHoy || 0,
+                        value: stats?.validacionesHoy || 0,
                         icon: Eye,
                         color: 'from-blue-500 to-blue-600',
                         bgColor: 'from-blue-50 to-blue-100',
@@ -1686,7 +1759,7 @@ function ComercioQRContent() {
 
         {/* Fullscreen QR Modal */}
         <AnimatePresence>
-          {isFullscreen && qrData && (
+          {isFullscreen && comercio?.qrCode && (
             <motion.div
               className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
               initial={{ opacity: 0 }}
@@ -1703,7 +1776,7 @@ function ComercioQRContent() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <Image
-                  src={qrData}
+                  src={comercio.qrCode}
                   alt="Código QR Fullscreen"
                   width={400}
                   height={400}
@@ -1764,4 +1837,3 @@ export default function ComercioQRPage() {
     </Suspense>
   );
 }
-

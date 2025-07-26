@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import {
   Building2,
   Users,
@@ -10,10 +11,8 @@ import {
   MapPin,
   Phone,
   Mail,
-  Globe,
   Calendar,
   Star,
-  Award,
   Eye,
   Search,
   Filter,
@@ -25,27 +24,18 @@ import {
   ArrowUpRight,
   Shield,
   Target,
-  TrendingUp,
   Info,
   ExternalLink,
-  ChevronDown,
-  Sparkles,
-  Crown,
-  Medal,
   Activity,
   BarChart3,
-  Zap,
-  Heart,
-  Percent,
-  Timer
 } from 'lucide-react';
-import { collection, getDocs, query, where, orderBy, doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { Button } from '@/components/ui/Button';
-import { format, isValid } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
@@ -58,7 +48,7 @@ interface Beneficio {
   tipoDescuento?: 'porcentaje' | 'monto_fijo';
   categoria?: string;
   estado: 'activo' | 'inactivo' | 'vencido';
-  fechaVencimiento?: any;
+  fechaVencimiento?: Date | { toDate: () => Date } | null;
   comercioId?: string;
   comercioNombre?: string;
   condiciones?: string;
@@ -88,8 +78,8 @@ interface Asociacion {
   direccion?: string;
   sitioWeb?: string;
   estado: 'activo' | 'inactivo' | 'suspendido';
-  fechaCreacion?: any;
-  fechaVinculacion?: any;
+  fechaCreacion?: Date | { toDate: () => Date } | null;
+  fechaVinculacion?: Date | { toDate: () => Date } | null;
   totalSocios?: number;
   totalComercios?: number;
   totalBeneficios?: number;
@@ -243,10 +233,14 @@ const ComerciosAfiliados: React.FC<{ comercios: Comercio[] }> = ({ comercios }) 
           >
             <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
               {comercio.logo ? (
-                <img 
-                  src={comercio.logo} 
+                <Image
+                  src={comercio.logo}
                   alt={comercio.nombre}
+                  width={48}
+                  height={48}
                   className="w-full h-full object-cover rounded-2xl"
+                  style={{ objectFit: 'cover', borderRadius: '1rem' }}
+                  unoptimized={true}
                 />
               ) : (
                 <Store size={20} className="text-white" />
@@ -362,10 +356,14 @@ const AsociacionCard: React.FC<{
           <div className="relative">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-3xl flex items-center justify-center text-white font-black text-2xl shadow-2xl group-hover:scale-110 transition-transform duration-500">
               {asociacion.logo ? (
-                <img 
-                  src={asociacion.logo} 
+                <Image
+                  src={asociacion.logo}
                   alt={asociacion.nombre}
+                  width={80}
+                  height={80}
                   className="w-full h-full object-cover rounded-3xl"
+                  style={{ objectFit: 'cover', borderRadius: '1.5rem' }}
+                  unoptimized={true}
                 />
               ) : (
                 asociacion.nombre.charAt(0).toUpperCase()
@@ -403,7 +401,13 @@ const AsociacionCard: React.FC<{
                   <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-200">
                     <Calendar size={16} className="text-purple-600" />
                     <span className="text-sm font-bold text-purple-700">
-                      Desde {format(asociacion.fechaVinculacion.toDate(), 'MMM yyyy', { locale: es })}
+                      Desde {format(
+                        typeof asociacion.fechaVinculacion === 'object' && asociacion.fechaVinculacion !== null && 'toDate' in asociacion.fechaVinculacion
+                          ? asociacion.fechaVinculacion.toDate()
+                          : (asociacion.fechaVinculacion as Date),
+                        'MMM yyyy',
+                        { locale: es }
+                      )}
                     </span>
                   </div>
                 )}
@@ -633,12 +637,11 @@ const FilterSection: React.FC<{
 };
 
 // Componente principal del contenido optimizado
-const SocioAsociacionesContent: React.FC = () => {
+function SocioAsociacionesContent() {
   const { user, signOut } = useAuth();
   const [asociaciones, setAsociaciones] = useState<Asociacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedAsociacion, setSelectedAsociacion] = useState<Asociacion | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   
   const [filters, setFilters] = useState<FilterState>({
@@ -647,7 +650,17 @@ const SocioAsociacionesContent: React.FC = () => {
   });
 
   // Función optimizada para cargar datos completos de la asociación
-  const loadCompleteAsociacionData = useCallback(async (asociacionId: string, socioData: any) => {
+  interface SocioData {
+    id: string;
+    asociacionId: string;
+    fechaVinculacion?: Date | { toDate: () => Date } | null;
+    numeroSocio?: string;
+    estado?: string;
+    email?: string;
+    // Add other fields as needed
+  }
+  
+    const loadCompleteAsociacionData = useCallback(async (asociacionId: string, socioData: SocioData) => {
     try {
       // 1. Obtener información básica de la asociación
       const asociacionRef = doc(db, 'asociaciones', asociacionId);
@@ -765,9 +778,9 @@ const SocioAsociacionesContent: React.FC = () => {
           const socioRef = doc(db, 'socios', user.uid);
           const socioDoc = await getDoc(socioRef);
           if (socioDoc.exists()) {
-            socioData = { id: socioDoc.id, ...socioDoc.data() };
+            socioData = { ...(socioDoc.data() as SocioData), id: socioDoc.id };
           }
-        } catch (err) {
+        } catch {
           console.log('No se encontró socio por UID, buscando por email...');
         }
 
@@ -781,7 +794,7 @@ const SocioAsociacionesContent: React.FC = () => {
           
           if (!socioSnapshot.empty) {
             const doc = socioSnapshot.docs[0];
-            socioData = { id: doc.id, ...doc.data() };
+            socioData = { ...(doc.data() as SocioData), id: doc.id };
           }
         }
 
@@ -834,8 +847,16 @@ const SocioAsociacionesContent: React.FC = () => {
         case 'comercios':
           return (b.comerciosActivos || b.totalComercios || 0) - (a.comerciosActivos || a.totalComercios || 0);
         case 'fecha':
-          const fechaA = a.fechaVinculacion?.toDate?.() || new Date(0);
-          const fechaB = b.fechaVinculacion?.toDate?.() || new Date(0);
+          const fechaA = a.fechaVinculacion
+            ? typeof a.fechaVinculacion === 'object' && 'toDate' in a.fechaVinculacion
+              ? a.fechaVinculacion.toDate()
+              : a.fechaVinculacion as Date
+            : new Date(0);
+          const fechaB = b.fechaVinculacion
+            ? typeof b.fechaVinculacion === 'object' && 'toDate' in b.fechaVinculacion
+              ? b.fechaVinculacion.toDate()
+              : b.fechaVinculacion as Date
+            : new Date(0);
           return fechaB.getTime() - fechaA.getTime();
         default:
           return 0;
@@ -847,10 +868,8 @@ const SocioAsociacionesContent: React.FC = () => {
 
   // Handlers optimizados
   const handleViewDetails = useCallback((asociacion: Asociacion) => {
-    setSelectedAsociacion(asociacion);
     toast.success(`Viendo detalles de ${asociacion.nombre}`);
   }, []);
-
   const handleRefresh = useCallback(async () => {
     if (refreshing) return;
     

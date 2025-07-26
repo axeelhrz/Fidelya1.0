@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   History, 
   Calendar, 
-  DollarSign, 
   TrendingUp, 
   Search, 
   Filter,
@@ -21,20 +20,11 @@ import {
   AlertCircle,
   ArrowUpRight,
   MapPin,
-  Star,
-  Zap,
-  Target,
   ChevronDown,
   ChevronRight,
   Sparkles,
   Coins,
-  Timer,
-  TrendingDown,
-  Activity,
-  Wallet,
   Gift,
-  Users,
-  ShoppingBag,
   Calendar as CalendarIcon,
   Clock as ClockIcon,
   ArrowUp,
@@ -44,13 +34,12 @@ import {
   Crown,
   Medal,
   Percent,
-  Plus,
-  X
+  X,
+  Info
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useAuth } from '@/hooks/useAuth';
@@ -151,21 +140,12 @@ const itemVariants = {
     y: 0, 
     scale: 1,
     transition: {
-      type: "spring",
       stiffness: 100,
       damping: 15
     }
   }
 };
 
-const cardHoverVariants = {
-  hover: { 
-    y: -8, 
-    scale: 1.02,
-    transition: { type: "spring", stiffness: 300, damping: 20 }
-  },
-  tap: { scale: 0.98 }
-};
 
 // Enhanced Stats Card Component
 const StatsCard: React.FC<{

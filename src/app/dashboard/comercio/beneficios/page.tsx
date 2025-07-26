@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, Suspense } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { 
   Plus, 
   RefreshCw, 
@@ -11,17 +10,12 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  Calendar,
   TrendingUp,
   Filter,
   Search,
   BarChart3,
   Zap,
-  Target,
-  Users,
   Star,
-  Eye,
-  Settings
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
@@ -34,8 +28,14 @@ import { Beneficio, BeneficioFormData } from '@/types/beneficio';
 import toast from 'react-hot-toast';
 
 // Componente para métricas rápidas mejoradas
+interface EstadisticasRapidas {
+  total: number;
+  activos: number;
+  usados: number;
+}
+
 const MetricasRapidas: React.FC<{
-  estadisticas: any;
+  estadisticas: EstadisticasRapidas;
   beneficios: Beneficio[];
 }> = ({ estadisticas, beneficios }) => {
   const metricas = [
@@ -301,9 +301,6 @@ const FiltrosAvanzados: React.FC<{
 
 // Component that uses useSearchParams - needs to be wrapped in Suspense
 function ComercioBeneficiosContent() {
-  const searchParams = useSearchParams();
-  const action = searchParams.get('action');
-  const filter = searchParams.get('filter');
 
   const {
     beneficios,
@@ -314,7 +311,6 @@ function ComercioBeneficiosContent() {
     crearBeneficio,
     actualizarBeneficio,
     eliminarBeneficio,
-    cambiarEstadoBeneficio,
     refrescar,
     estadisticasRapidas
   } = useBeneficiosComercios();
@@ -384,16 +380,6 @@ function ComercioBeneficiosContent() {
         console.error('Error eliminando beneficio:', error);
         toast.error('Error al eliminar el beneficio');
       }
-    }
-  };
-
-  const handleToggleStatus = async (beneficioId: string, estado: 'activo' | 'inactivo') => {
-    try {
-      await cambiarEstadoBeneficio(beneficioId, estado);
-      toast.success(`Beneficio ${estado === 'activo' ? 'activado' : 'desactivado'} exitosamente`);
-    } catch (error) {
-      console.error('Error cambiando estado:', error);
-      toast.error('Error al cambiar el estado del beneficio');
     }
   };
 

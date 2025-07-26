@@ -15,7 +15,6 @@ import {
   RefreshCw,
   QrCode,
   User,
-  Settings,
   Sparkles,
   ChevronRight
 } from 'lucide-react';

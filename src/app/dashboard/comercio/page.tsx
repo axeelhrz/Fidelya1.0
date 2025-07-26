@@ -11,11 +11,9 @@ import { ComercioOverviewDashboard } from '@/components/comercio/ComercioOvervie
 import { useAuth } from '@/hooks/useAuth';
 import { 
   BarChart3, 
-  Plus,
   Store,
   Sparkles,
   TrendingUp,
-  Users,
   Gift,
   QrCode,
   Activity,
@@ -165,8 +163,14 @@ const ComercioSidebarWithLogout: React.FC<{
 };
 
 // Modern Welcome Header Component
+type User = {
+  nombre?: string;
+  role?: string;
+  // Add other properties as needed
+};
+
 const WelcomeHeader: React.FC<{
-  user: any;
+  user: User | null;
   onRefresh: () => void;
   onNavigate: (section: string) => void;
 }> = ({ user, onRefresh, onNavigate }) => {
