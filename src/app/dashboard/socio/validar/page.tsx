@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { 
   QrCode,
   Scan,
-  CheckCircle,
-  AlertCircle,
   RefreshCw,
   Zap,
   Shield,
@@ -71,7 +69,7 @@ const itemVariants = {
     y: 0, 
     scale: 1,
     transition: {
-      type: "spring",
+      type: 'spring' as const,
       stiffness: 100,
       damping: 15
     }
@@ -154,11 +152,17 @@ const SocioValidarContent: React.FC = () => {
           montoDescuento: result.data?.validacion?.montoDescuento || 0,
           beneficioTitulo: result.data?.beneficio?.titulo,
           comercioNombre: result.data?.comercio?.nombre,
-          socio: result.data?.socio || {
-            nombre: user.displayName || 'Usuario',
-            estado: 'activo',
-            asociacion: user.asociacionId || 'independiente'
-          },
+          socio: result.data?.socio
+            ? {
+                nombre: result.data.socio.nombre,
+                estado: result.data.socio.estadoMembresia || 'activo',
+                asociacion: user.asociacionId || 'independiente'
+              }
+            : {
+                nombre: user.nombre || 'Usuario',
+                estado: 'activo',
+                asociacion: user.asociacionId || 'independiente'
+              },
           id: result.data?.validacion?.id
         };
 
@@ -181,7 +185,7 @@ const SocioValidarContent: React.FC = () => {
           motivo: errorMessage,
           fechaHora: new Date(),
           socio: {
-            nombre: user.displayName || 'Usuario',
+            nombre: user.nombre || 'Usuario',
             estado: 'activo',
             asociacion: user.asociacionId || 'independiente'
           }
