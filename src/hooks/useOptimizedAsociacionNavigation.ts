@@ -1,205 +1,153 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { navigationCache } from '@/lib/cache-manager';
-
-interface NavigationState {
-  activeSection: string;
-  previousSection: string;
-  isNavigating: boolean;
-}
+import { useState, useCallback, useEffect, useMemo } from 'react';
 
 interface UseOptimizedAsociacionNavigationOptions {
-  autoCloseOnMobile?: boolean;
+  initialTab?: string;
   debounceMs?: number;
-  enableCache?: boolean;
+  enableTransitions?: boolean;
 }
 
 export const useOptimizedAsociacionNavigation = (
   options: UseOptimizedAsociacionNavigationOptions = {}
 ) => {
   const { 
-    autoCloseOnMobile = true, 
-    debounceMs = 200,
-    enableCache = true 
+    initialTab = 'dashboard', 
+    debounceMs = 100,
+    enableTransitions = true
   } = options;
   
-  const router = useRouter();
-  const pathname = usePathname();
-  
-  // Navigation state
-  const [navigationState, setNavigationState] = useState<NavigationState>(() => {
-    const cached = enableCache ? navigationCache.get<NavigationState>('nav-state') : null;
-    return cached || {
-      activeSection: getActiveSectionFromPath(pathname),
-      previousSection: '',
-      isNavigating: false
-    };
-  });
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [previousTab, setPreviousTab] = useState<string | null>(null);
 
-  const [isMobile, setIsMobile] = useState(false);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout>();
-  const lastPathnameRef = useRef(pathname);
-  const isInitializedRef = useRef(false);
-
-  // Route mapping - memoized for performance
-  const routeMap = useMemo(() => ({
-    'dashboard': '/dashboard/asociacion',
-    'socios': '/dashboard/asociacion/socios',
-    'comercios': '/dashboard/asociacion/comercios',
-    'beneficios': '/dashboard/asociacion/beneficios',
-    'analytics': '/dashboard/asociacion/analytics',
-    'notificaciones': '/dashboard/asociacion/notificaciones'
+  // Tab configuration memoized
+  const tabConfig = useMemo(() => ({
+    dashboard: { 
+      label: 'Dashboard', 
+      preload: true,
+      cacheTime: 300000 // 5 minutes
+    },
+    socios: { 
+      label: 'Socios', 
+      preload: false,
+      cacheTime: 180000 // 3 minutes
+    },
+    comercios: { 
+      label: 'Comercios', 
+      preload: false,
+      cacheTime: 180000 // 3 minutes
+    },
+    beneficios: { 
+      label: 'Beneficios', 
+      preload: false,
+      cacheTime: 120000 // 2 minutes
+    },
+    analytics: { 
+      label: 'Analytics', 
+      preload: false,
+      cacheTime: 60000 // 1 minute
+    },
+    notificaciones: { 
+      label: 'Notificaciones', 
+      preload: false,
+      cacheTime: 30000 // 30 seconds
+    }
   }), []);
 
-  const reverseRouteMap = useMemo(() => {
-    const reversed: Record<string, string> = {};
-    Object.entries(routeMap).forEach(([section, route]) => {
-      reversed[route] = section;
-    });
-    return reversed;
-  }, [routeMap]);
+  // Ultra optimized navigation function
+  const navigateToTab = useCallback((tabId: string) => {
+    if (tabId === activeTab || isTransitioning) return;
 
-  // Helper function to get active section from pathname
-  function getActiveSectionFromPath(path: string): string {
-    return reverseRouteMap[path] || 'dashboard';
-  }
-
-  // Detect mobile/desktop
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Update navigation state when pathname changes
-  useEffect(() => {
-    if (pathname !== lastPathnameRef.current) {
-      const newActiveSection = getActiveSectionFromPath(pathname);
+    if (enableTransitions) {
+      setIsTransitioning(true);
+      setPreviousTab(activeTab);
       
-      setNavigationState(prev => {
-        const newState = {
-          activeSection: newActiveSection,
-          previousSection: prev.activeSection,
-          isNavigating: false
-        };
-        
-        // Cache the navigation state
-        if (enableCache) {
-          navigationCache.set('nav-state', newState);
-        }
-        
-        return newState;
-      });
-      
-      lastPathnameRef.current = pathname;
+      // Ultra fast transition
+      setTimeout(() => {
+        setActiveTab(tabId);
+        setIsTransitioning(false);
+      }, debounceMs);
+    } else {
+      // Instant navigation
+      setPreviousTab(activeTab);
+      setActiveTab(tabId);
     }
-  }, [pathname, enableCache]);
+  }, [activeTab, isTransitioning, enableTransitions, debounceMs]);
 
-  // Initialize
-  useEffect(() => {
-    if (!isInitializedRef.current) {
-      isInitializedRef.current = true;
-      const currentSection = getActiveSectionFromPath(pathname);
-      
-      setNavigationState(prev => ({
-        ...prev,
-        activeSection: currentSection
-      }));
+  // Check if tab is active
+  const isActiveTab = useCallback((tabId: string) => {
+    return activeTab === tabId;
+  }, [activeTab]);
+
+  // Get tab configuration
+  const getTabConfig = useCallback((tabId: string) => {
+    return tabConfig[tabId as keyof typeof tabConfig] || tabConfig.dashboard;
+  }, [tabConfig]);
+
+  // Preload next likely tab (predictive loading)
+  const preloadTab = useCallback((tabId: string) => {
+    const config = getTabConfig(tabId);
+    if (config.preload) {
+      // Implement preloading logic here if needed
+      console.log(`Preloading tab: ${tabId}`);
     }
-  }, [pathname]);
+  }, [getTabConfig]);
 
-  // Optimized navigation function
-  const navigateToSection = useCallback((section: string) => {
-    // Clear any pending navigation
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
+  // Navigation history for back/forward
+  const [navigationHistory, setNavigationHistory] = useState<string[]>([initialTab]);
 
-    // Set navigating state immediately for UI feedback
-    setNavigationState(prev => ({
-      ...prev,
-      isNavigating: true
-    }));
-
-    // Debounced navigation
-    debounceTimeoutRef.current = setTimeout(() => {
-      const targetRoute = routeMap[section];
-      
-      if (targetRoute && pathname !== targetRoute) {
-        // Update state before navigation for immediate UI update
-        setNavigationState(prev => {
-          const newState = {
-            activeSection: section,
-            previousSection: prev.activeSection,
-            isNavigating: false
-          };
-          
-          if (enableCache) {
-            navigationCache.set('nav-state', newState);
-          }
-          
-          return newState;
-        });
-        
-        // Navigate
-        router.push(targetRoute);
-      } else {
-        // Just update the active section if already on the route
-        setNavigationState(prev => ({
-          ...prev,
-          activeSection: section,
-          isNavigating: false
-        }));
-      }
-    }, debounceMs);
-  }, [router, pathname, routeMap, debounceMs, enableCache]);
-
-  // Check if a section is active
-  const isActiveSection = useCallback((section: string) => {
-    return navigationState.activeSection === section;
-  }, [navigationState.activeSection]);
-
-  // Check if a route is active
-  const isActiveRoute = useCallback((route: string) => {
-    return pathname === route;
-  }, [pathname]);
-
-  // Get section from route
-  const getSectionFromRoute = useCallback((route: string) => {
-    return reverseRouteMap[route] || 'dashboard';
-  }, [reverseRouteMap]);
-
-  // Cleanup
   useEffect(() => {
+    if (activeTab && !navigationHistory.includes(activeTab)) {
+      setNavigationHistory(prev => [...prev.slice(-4), activeTab]); // Keep last 5 tabs
+    }
+  }, [activeTab, navigationHistory]);
+
+  // Go back to previous tab
+  const goBack = useCallback(() => {
+    if (previousTab && previousTab !== activeTab) {
+      navigateToTab(previousTab);
+    }
+  }, [previousTab, activeTab, navigateToTab]);
+
+  // Performance metrics
+  const [performanceMetrics, setPerformanceMetrics] = useState({
+    navigationCount: 0,
+    averageTransitionTime: 0,
+    lastNavigationTime: 0
+  });
+
+  useEffect(() => {
+    const startTime = performance.now();
+    
     return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
+      const endTime = performance.now();
+      const transitionTime = endTime - startTime;
+      
+      setPerformanceMetrics(prev => ({
+        navigationCount: prev.navigationCount + 1,
+        averageTransitionTime: (prev.averageTransitionTime + transitionTime) / 2,
+        lastNavigationTime: transitionTime
+      }));
     };
-  }, []);
+  }, [activeTab]);
 
   return {
     // State
-    activeSection: navigationState.activeSection,
-    previousSection: navigationState.previousSection,
-    isNavigating: navigationState.isNavigating,
-    isMobile,
-    pathname,
+    activeTab,
+    isTransitioning,
+    previousTab,
+    navigationHistory,
+    performanceMetrics,
     
     // Actions
-    navigateToSection,
-    isActiveSection,
-    isActiveRoute,
-    getSectionFromRoute,
+    navigateToTab,
+    isActiveTab,
+    goBack,
+    preloadTab,
     
     // Utils
-    routeMap,
-    reverseRouteMap
+    tabConfig,
+    getTabConfig
   };
 };

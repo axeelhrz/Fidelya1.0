@@ -58,11 +58,21 @@ const OptimizedLoadingState = memo(() => (
 OptimizedLoadingState.displayName = 'OptimizedLoadingState';
 
 // Memoized header component
+interface User {
+  nombre?: string;
+  role?: string;
+  // Add other user properties as needed
+}
+
+interface Stats {
+  [key: string]: number;
+}
+
 const DashboardHeader = memo<{
-  user: any;
-  stats: any;
+  user: User;
+  stats: Stats;
   onAddMember: () => void;
-}>(({ user, stats, onAddMember }) => {
+}>(({ user, onAddMember }) => {
   return (
     <motion.div 
       initial={{ opacity: 0, y: -20 }}
@@ -158,9 +168,9 @@ export default function OptimizedAsociacionDashboard() {
   const { user, loading: authLoading, signOut } = useAuth();
   
   // Hooks for stats
-  const { stats: sociosStats, loading: sociosLoading } = useSocios();
-  const { stats: comerciosStats, loading: comerciosLoading } = useComercios();
-  const { stats: beneficiosStats, loading: beneficiosLoading } = useBeneficiosAsociacion();
+  const { stats: sociosStats} = useSocios();
+  const { stats: comerciosStats} = useComercios();
+  const { stats: beneficiosStats } = useBeneficiosAsociacion();
   
   // State management - optimized to prevent unnecessary re-renders
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
@@ -238,7 +248,7 @@ export default function OptimizedAsociacionDashboard() {
           <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
             {/* Optimized Header */}
             <DashboardHeader
-              user={user}
+              user={user ?? {}}
               stats={consolidatedStats}
               onAddMember={handleAddMember}
             />

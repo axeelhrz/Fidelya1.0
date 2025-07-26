@@ -8,7 +8,6 @@ import {
   BarChart3, 
   Gift,
   LogOut,
-  Activity,
   Building2,
   Bell,
   Settings,
@@ -53,10 +52,27 @@ interface MenuItem {
   priority?: number;
 }
 
+interface ConsolidatedStats {
+  totalSocios: number;
+  sociosActivos: number;
+  sociosVencidos: number;
+  sociosAlDia: number;
+  totalComercios: number;
+  comerciosActivos: number;
+  beneficiosActivos: number;
+  beneficiosUsadosHoy: number;
+  beneficiosUsadosMes: number;
+  beneficiosUsadosTotal: number;
+  ingresosMensuales: number;
+  beneficiosUsados: number;
+  ahorroTotal: number;
+  ahorroEsteMes: number;
+}
+
 // Componente de estadísticas ultra optimizado
 const OptimizedStatsCards = memo<{
   realtimeStats: RealtimeStats;
-  consolidatedStats: any;
+  consolidatedStats: ConsolidatedStats;
   isLoadingStats: boolean;
   formatNumber: (num: number) => string;
   formatCurrency: (amount: number) => string;
@@ -249,7 +265,7 @@ export const AsociacionSidebar: React.FC<AsociacionSidebarProps> = memo(({
       totalSocios: sociosStats?.total || 0,
       sociosActivos: sociosStats?.activos || 0,
       sociosVencidos: sociosStats?.vencidos || 0,
-      sociosAlDia: sociosStats?.alDia || 0,
+      sociosAlDia: typeof sociosStats?.alDia === 'number' ? sociosStats.alDia : 0,
       totalComercios: comerciosStats?.totalComercios || 0,
       comerciosActivos: comerciosStats?.comerciosActivos || 0,
       beneficiosActivos: beneficiosStats?.beneficiosActivos || 0,
