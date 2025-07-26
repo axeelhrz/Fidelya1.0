@@ -4,8 +4,6 @@ import React, { useState, useCallback, memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { AsociacionSidebar } from '@/components/layout/AsociacionSidebar';
 import { LogoutModal } from '@/components/ui/LogoutModal';
 import { OptimizedTabSystem } from '@/components/layout/OptimizedTabSystem';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,7 +14,9 @@ import {
   Building2,
   TrendingUp,
   Zap,
-  Shield
+  Shield,
+  LogOut,
+  Settings
 } from 'lucide-react';
 
 // Optimized loading component
@@ -72,7 +72,8 @@ const DashboardHeader = memo<{
   user: User;
   stats: Stats;
   onAddMember: () => void;
-}>(({ user, onAddMember }) => {
+  onLogout: () => void;
+}>(({ user, onAddMember, onLogout }) => {
   return (
     <motion.div 
       initial={{ opacity: 0, y: -20 }}
@@ -131,9 +132,39 @@ const DashboardHeader = memo<{
             <span>Nuevo Socio</span>
           </motion.button>
           
-          <div className="flex items-center gap-2 bg-emerald-50 px-4 py-3 rounded-2xl border border-emerald-200">
-            <Shield className="w-5 h-5 text-emerald-600" />
-            <span className="text-sm font-medium text-emerald-700">Seguro</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-emerald-50 px-4 py-3 rounded-2xl border border-emerald-200">
+              <Shield className="w-5 h-5 text-emerald-600" />
+              <span className="text-sm font-medium text-emerald-700">Seguro</span>
+            </div>
+            
+            {/* Settings and Logout buttons */}
+            <div className="flex items-center gap-2">
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all duration-200"
+                title="Configuración"
+              >
+                <Settings className="w-5 h-5" />
+              </motion.button>
+              
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.6 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onLogout}
+                className="p-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-2xl transition-all duration-200"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-5 h-5" />
+              </motion.button>
+            </div>
           </div>
         </div>
       </div>
@@ -142,25 +173,6 @@ const DashboardHeader = memo<{
 });
 
 DashboardHeader.displayName = 'DashboardHeader';
-
-// Enhanced Sidebar with logout functionality - memoized
-const AsociacionSidebarWithLogout = memo<{
-  open: boolean;
-  onToggle: () => void;
-  onMenuClick: (section: string) => void;
-  activeSection: string;
-  onLogoutClick: () => void;
-  isMobile: boolean;
-}>(({ onLogoutClick, ...props }) => {
-  return (
-    <AsociacionSidebar
-      {...props}
-      onLogoutClick={onLogoutClick}
-    />
-  );
-});
-
-AsociacionSidebarWithLogout.displayName = 'AsociacionSidebarWithLogout';
 
 // Main component
 export default function OptimizedAsociacionDashboard() {
@@ -219,11 +231,6 @@ export default function OptimizedAsociacionDashboard() {
     setCurrentSection('socios');
   }, []);
 
-  // Optimized menu click handler for sidebar
-  const handleMenuClick = useCallback((section: string) => {
-    setCurrentSection(section);
-  }, []);
-
   // Redirect if not authenticated or not association
   if (!authLoading && (!user || user.role !== 'asociacion')) {
     router.push('/auth/login');
@@ -237,38 +244,31 @@ export default function OptimizedAsociacionDashboard() {
 
   return (
     <>
-      <DashboardLayout 
-        activeSection={currentSection} 
-        onSectionChange={handleMenuClick}
-        sidebarComponent={AsociacionSidebarWithLogout}
-        enableTransitions={false} // Disable transitions for better performance
-        onLogout={handleLogoutClick}
-      >
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-          <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
-            {/* Optimized Header */}
-            <DashboardHeader
-              user={user ?? {}}
-              stats={consolidatedStats}
-              onAddMember={handleAddMember}
-            />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
+          {/* Optimized Header */}
+          <DashboardHeader
+            user={user ?? {}}
+            stats={consolidatedStats}
+            onAddMember={handleAddMember}
+            onLogout={handleLogoutClick}
+          />
 
-            {/* Ultra Optimized Tab System */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <OptimizedTabSystem
-                onNavigate={handleNavigate}
-                onAddMember={handleAddMember}
-                initialTab={currentSection}
-                stats={consolidatedStats}
-              />
-            </motion.div>
-          </div>
+          {/* Ultra Optimized Tab System */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <OptimizedTabSystem
+              onNavigate={handleNavigate}
+              onAddMember={handleAddMember}
+              initialTab={currentSection}
+              stats={consolidatedStats}
+            />
+          </motion.div>
         </div>
-      </DashboardLayout>
+      </div>
 
       {/* Enhanced Logout Modal */}
       <LogoutModal
@@ -292,7 +292,7 @@ export default function OptimizedAsociacionDashboard() {
               <span>Pestañas: {currentSection}</span>
             </div>
             <div className="w-px h-4 bg-white/30"></div>
-            <span className="text-green-400">Sin Re-renders</span>
+            <span className="text-green-400">Sin Sidebar</span>
           </div>
         </div>
       )}
