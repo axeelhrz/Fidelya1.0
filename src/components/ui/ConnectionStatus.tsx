@@ -2,7 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wifi, WifiOff, Signal, AlertCircle, CheckCircle } from 'lucide-react';
+import { Wifi, WifiOff, Signal } from 'lucide-react';
+
+// Type definition for navigator.connection
+type NetworkInformation = {
+  effectiveType?: 'slow-2g' | '2g' | '3g' | '4g';
+  downlink?: number;
+  rtt?: number;
+  saveData?: boolean;
+  onchange?: (() => void) | null;
+};
 
 interface ConnectionStatusProps {
   className?: string;
@@ -26,7 +35,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className = 
     // Check connection quality
     const checkConnectionQuality = () => {
       if ('connection' in navigator) {
-        const connection = (navigator as any).connection;
+        const connection = (navigator.connection as NetworkInformation | undefined);
         if (connection) {
           const effectiveType = connection.effectiveType;
           switch (effectiveType) {

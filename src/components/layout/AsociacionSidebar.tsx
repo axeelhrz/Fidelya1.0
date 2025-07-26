@@ -17,7 +17,6 @@ import {
   Menu,
   X,
   Zap,
-  Target
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';

@@ -13,7 +13,6 @@ import {
   Bell,
   HelpCircle,
   Star,
-  Zap,
   Menu,
   Sparkles,
   Building2
@@ -128,12 +127,12 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
     beneficiosUsados: estadisticas?.totalValidaciones || estadisticasRapidas?.usados || 0,
     estadoMembresia: socio?.estadoMembresia || 'pendiente',
     actividadReciente: estadisticas?.totalValidaciones || 0,
-    beneficiosEstesMes: estadisticasRapidas?.beneficiosEsteMes || 0
+    beneficiosEstesMes: estadisticasRapidas?.ahorroEsteMes || 0
   }), [
     beneficiosActivos?.length,
     estadisticas?.totalValidaciones,
     estadisticasRapidas?.usados,
-    estadisticasRapidas?.beneficiosEsteMes,
+    estadisticasRapidas?.ahorroEsteMes,
     socio?.estadoMembresia
   ]);
 

@@ -12,7 +12,6 @@ import {
   BarChart3,
   Activity,
   Clock,
-  Zap,
   ArrowUpRight,
   Shield,
   Minus,

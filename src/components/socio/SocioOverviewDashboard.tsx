@@ -22,7 +22,6 @@ import {
   Target,
   Calendar,
   CheckCircle,
-  Sparkles,
   Trophy
 } from 'lucide-react';
 import {
@@ -230,7 +229,7 @@ const ModernActivityTimeline: React.FC<{
         </div>
       ) : (
         <div className="space-y-4">
-          {activities.slice(0, 5).map((activity, index) => (
+          {activities.slice(0, 5).map((activity) => (
             <div
               key={activity.id}
               className="group flex items-start space-x-4 p-4 rounded-2xl hover:bg-slate-50/50 transition-all duration-300 hover:shadow-md"

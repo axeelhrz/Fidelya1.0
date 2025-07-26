@@ -17,10 +17,7 @@ import {
   Target,
   Users,
   Clock,
-  CheckCircle,
-  Zap,
   Tag,
-  FileText,
   Settings
 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
@@ -29,11 +26,9 @@ import { z } from 'zod';
 import { Beneficio, BeneficioFormData, CATEGORIAS_BENEFICIOS } from '@/types/beneficio';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { BeneficiosService } from '@/services/beneficios.service';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 // Schema de validación mejorado
 const beneficioSchema = z.object({

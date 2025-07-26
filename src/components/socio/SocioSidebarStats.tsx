@@ -5,8 +5,6 @@ import {
   Gift, 
   TrendingUp, 
   Calendar, 
-  Store,
-  Target
 } from 'lucide-react';
 
 interface SocioSidebarStatsProps {

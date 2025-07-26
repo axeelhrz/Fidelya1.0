@@ -16,7 +16,6 @@ import {
   X,
   AlertTriangle,
   Users,
-  BarChart3,
   ArrowRight,
   Edit,
   Trash2,
@@ -25,8 +24,6 @@ import {
   Power,
   PowerOff,
   Pause,
-  CheckCircle,
-  XCircle,
   Gift,
   Percent,
   DollarSign,
@@ -34,7 +31,6 @@ import {
   Eye,
   ChevronDown,
   ChevronUp,
-  Sparkles,
   TrendingUp,
   Activity,
   Zap,
@@ -666,12 +662,12 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   };
 
   // Función para generar QR desde el modal
-  const handleGenerateQRFromModal = async (comercioId: string) => {
+  const handleGenerateQRFromModal = async (comercioId: string): Promise<{ qrCode: string; qrCodeUrl: string }> => {
     const result = await generateQRCode(comercioId);
-    if (typeof result === 'string') {
-      return { qrCode: result, qrCodeUrl: result };
+    if (result === null) {
+      throw new Error('No se pudo generar el código QR');
     }
-    return result;
+    return { qrCode: result, qrCodeUrl: result };
   };
 
   // Manejar generación de QR masiva
@@ -967,7 +963,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                       : 'text-slate-500 hover:text-slate-700'
                   }`}
                 >
-                  <Grid3X3                  size={16} />
+                  <Grid3X3 size={16} />
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -1858,5 +1854,3 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     </div>
   );
 };
-                            
-

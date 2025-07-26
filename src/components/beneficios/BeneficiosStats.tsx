@@ -13,9 +13,6 @@ import {
   Target,
   BarChart3,
   PieChart,
-  Percent,
-  Clock,
-  Star
 } from 'lucide-react';
 import { BeneficioStats, Beneficio, BeneficioUso } from '@/types/beneficio';
 import { format } from 'date-fns';
@@ -108,13 +105,11 @@ const StatCard: React.FC<StatCardProps> = ({
 };
 
 export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
-  stats,
   loading = false,
   userRole = 'comercio',
   className = '',
   beneficios = [],
   beneficiosUsados = [],
-  estadisticasRapidas
 }) => {
   // Calcular estadísticas reales basadas en los datos locales
   const realStats = useMemo(() => {
@@ -382,7 +377,7 @@ export const BeneficiosStats: React.FC<BeneficiosStatsProps> = ({
       {/* Cards de estadísticas principales */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {statsCards.map((card, index) => (
-          <StatCard key={index} {...card} />
+          <StatCard key={index} {...card} trend={card.trend as 'up' | 'down' | 'neutral'} />
         ))}
       </div>
 

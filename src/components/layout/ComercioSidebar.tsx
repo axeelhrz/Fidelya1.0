@@ -11,7 +11,6 @@ import {
   UserCheck,
   LogOut,
   CheckCircle,
-  Activity,
   BarChart3,
   Bell,
   Settings,
@@ -82,7 +81,6 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
     actividadReciente: 0
   });
 
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   // Simplified menu items without submenus
   const menuItems: MenuItem[] = useMemo(() => [
@@ -470,11 +468,8 @@ export const ComercioSidebar: React.FC<ComercioSidebarProps> = ({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleNavigation(item.route, item.id)}
-                  onMouseEnter={() => setHoveredItem(item.id)}
-                  onMouseLeave={() => setHoveredItem(null)}
                   className={`
                     w-full flex items-center space-x-4 px-4 py-3.5 rounded-2xl text-left transition-all duration-300
-                    ${isActive 
                       ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25' 
                       : 'text-slate-700 hover:bg-white/60 hover:shadow-md'
                     }

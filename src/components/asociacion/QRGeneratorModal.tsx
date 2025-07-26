@@ -32,7 +32,6 @@ export const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
   onClose,
   comercio,
   onGenerateQR,
-  loading
 }) => {
   const [qrData, setQrData] = useState<{ qrCode: string; qrCodeUrl: string } | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -325,7 +324,7 @@ export const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
                       <span>Imprimir</span>
                     </motion.button>
 
-                    {navigator.share && (
+                    {typeof navigator.share === 'function' && (
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}

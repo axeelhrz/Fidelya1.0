@@ -425,10 +425,13 @@ export const checkStorageConnection = async (): Promise<{
 };
 
 // Enhanced error handling for Firebase Storage errors
-export const handleStorageError = (error: any): string => {
+export const handleStorageError = (error: unknown): string => {
   if (!error) return 'Error desconocido';
   
-  const errorMessage = error.message || error.toString();
+  const errorMessage =
+    typeof error === 'object' && error !== null && 'message' in error
+      ? (error as { message: string }).message
+      : String(error);
   
   // CORS errors
   if (errorMessage.includes('CORS') || errorMessage.includes('cors') || errorMessage.includes('preflight')) {
