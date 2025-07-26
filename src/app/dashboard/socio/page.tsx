@@ -68,12 +68,13 @@ export default function SocioDashboard() {
     setLogoutModalOpen(false);
   };
 
-  // Navigation handlers
+  // Navigation handlers - Updated to include asociaciones route
   const handleNavigate = (section: string) => {
     const sectionRoutes: Record<string, string> = {
       'dashboard': '/dashboard/socio',
       'perfil': '/dashboard/socio/perfil',
       'beneficios': '/dashboard/socio/beneficios',
+      'asociaciones': '/dashboard/socio/asociaciones',
       'validar': '/dashboard/socio/validar',
       'historial': '/dashboard/socio/historial'
     };

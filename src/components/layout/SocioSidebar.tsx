@@ -15,7 +15,8 @@ import {
   Star,
   Zap,
   Menu,
-  Sparkles
+  Sparkles,
+  Building2
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
@@ -95,6 +96,13 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
       route: '/dashboard/socio/beneficios',
       badge: realtimeStats.totalBeneficios,
       description: 'Ofertas disponibles'
+    },
+    {
+      id: 'asociaciones',
+      label: 'Asociaciones',
+      icon: Building2,
+      route: '/dashboard/socio/asociaciones',
+      description: 'Organizaciones disponibles'
     },
     {
       id: 'validar',
