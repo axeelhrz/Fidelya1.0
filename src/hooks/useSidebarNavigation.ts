@@ -6,10 +6,17 @@ import { useRouter, usePathname } from 'next/navigation';
 interface UseSidebarNavigationOptions {
   autoCloseOnMobile?: boolean;
   persistState?: boolean;
+  onMenuClick?: (section: string) => void;
+  debounceMs?: number;
 }
 
 export const useSidebarNavigation = (options: UseSidebarNavigationOptions = {}) => {
-  const { autoCloseOnMobile = true, persistState = true } = options;
+  const { 
+    autoCloseOnMobile = true, 
+    persistState = true, 
+    onMenuClick,
+    debounceMs = 150 
+  } = options;
   
   const router = useRouter();
   const pathname = usePathname();
@@ -31,6 +38,7 @@ export const useSidebarNavigation = (options: UseSidebarNavigationOptions = {}) 
 
   const [isMobile, setIsMobile] = useState(false);
   const lastPathnameRef = useRef(pathname);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Detectar cambios de tamaño de pantalla
   useEffect(() => {
@@ -63,20 +71,36 @@ export const useSidebarNavigation = (options: UseSidebarNavigationOptions = {}) 
     setSidebarOpen(prev => !prev);
   }, []);
 
-  // Navegación optimizada
+  // Navegación optimizada con debounce
   const navigateTo = useCallback((route: string, section?: string) => {
-    // Solo navegar si la ruta es diferente
-    if (pathname !== route) {
-      router.push(route);
+    // Limpiar timeout anterior
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
     }
-    
-    // Auto-cerrar en mobile después de navegación
-    if (isMobile && autoCloseOnMobile) {
-      setSidebarOpen(false);
-    }
-    
-    lastPathnameRef.current = route;
-  }, [router, pathname, isMobile, autoCloseOnMobile]);
+
+    // Aplicar debounce
+    debounceTimeoutRef.current = setTimeout(() => {
+      // Solo navegar si la ruta es diferente
+      if (pathname !== route) {
+        router.push(route);
+      }
+      
+      // Llamar al callback de menú si existe
+      if (onMenuClick && section) {
+        onMenuClick(section);
+      }
+      
+      // Auto-cerrar en mobile después de navegación
+      if (isMobile && autoCloseOnMobile) {
+        setSidebarOpen(false);
+      }
+      
+      lastPathnameRef.current = route;
+    }, debounceMs);
+  }, [router, pathname, isMobile, autoCloseOnMobile, onMenuClick, debounceMs]);
+
+  // Alias para compatibilidad
+  const navigate = navigateTo;
 
   // Verificar si una ruta está activa
   const isActiveRoute = useCallback((route: string) => {
@@ -91,11 +115,21 @@ export const useSidebarNavigation = (options: UseSidebarNavigationOptions = {}) 
     lastPathnameRef.current = pathname;
   }, [pathname, isMobile, autoCloseOnMobile]);
 
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return {
     sidebarOpen,
     isMobile,
     toggleSidebar,
     navigateTo,
+    navigate, // Alias para compatibilidad
     isActiveRoute,
     setSidebarOpen
   };
