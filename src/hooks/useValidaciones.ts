@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
-import { validacionesService } from '@/services/validaciones.service';
+import { validacionesService, HistorialValidacion } from '@/services/validaciones.service';
 import { ValidacionResponse, Validacion } from '@/types/validacion';
 import { Timestamp } from 'firebase/firestore';
 
@@ -29,6 +29,35 @@ export const useValidaciones = (): UseValidacionesReturn => {
   const [hasMore, setHasMore] = useState(true);
   const [lastDoc, setLastDoc] = useState<any>(null);
 
+  // Transform HistorialValidacion to Validacion
+  const transformHistorialToValidacion = (historial: HistorialValidacion): Validacion => {
+    return {
+      id: historial.id,
+      socioId: user?.uid || '',
+      socioNombre: user?.displayName || 'Usuario',
+      asociacionId: user?.asociacionId || '',
+      asociacionNombre: user?.asociacionNombre || '',
+      comercioId: historial.comercioId,
+      comercioNombre: historial.comercioNombre,
+      beneficioId: historial.beneficioId,
+      beneficioTitulo: historial.beneficioTitulo,
+      fechaHora: Timestamp.fromDate(historial.fechaValidacion),
+      resultado: historial.estado === 'exitosa' ? 'habilitado' : 
+                 historial.estado === 'fallida' ? 'no_habilitado' :
+                 historial.estado === 'cancelada' ? 'suspendido' : 'vencido',
+      motivo: historial.estado === 'exitosa' ? 'Validación exitosa' : 'Validación fallida',
+      montoDescuento: historial.montoDescuento,
+      metadata: {
+        qrData: historial.codigoValidacion,
+        dispositivo: 'mobile',
+        ip: '0.0.0.0'
+      },
+      estado: historial.estado === 'exitosa' ? 'completado' : 'fallido',
+      monto: historial.montoDescuento || 0,
+      ahorro: historial.montoDescuento || 0
+    };
+  };
+
   const cargarValidaciones = useCallback(async (reset = false) => {
     if (!user) {
       setValidaciones([]);
@@ -42,17 +71,21 @@ export const useValidaciones = (): UseValidacionesReturn => {
       
       const result = await validacionesService.getHistorialValidaciones(
         user.uid, 
+        20, // Load 20 items at a time
         reset ? null : lastDoc
       );
       
+      // Transform HistorialValidacion[] to Validacion[]
+      const transformedValidaciones = result.validaciones.map(transformHistorialToValidacion);
+      
       if (reset) {
-        setValidaciones(result.validaciones || []);
+        setValidaciones(transformedValidaciones);
       } else {
-        setValidaciones(prev => [...prev, ...(result.validaciones || [])]);
+        setValidaciones(prev => [...prev, ...transformedValidaciones]);
       }
       
       setLastDoc(result.lastDoc);
-      setHasMore(result.hasMore || false);
+      setHasMore(result.hasMore);
     } catch (err) {
       console.error('Error loading validaciones:', err);
       setError(err instanceof Error ? err.message : 'Error al cargar validaciones');
@@ -62,7 +95,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
     } finally {
       setLoading(false);
     }
-  }, [user, lastDoc]);
+  }, [user, lastDoc, transformHistorialToValidacion]);
 
   const loadMore = useCallback(async () => {
     if (!hasMore || loading) return;
@@ -118,6 +151,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
   }, [user]);
 
   const refrescar = useCallback(async () => {
+    setLastDoc(null); // Reset pagination
     await cargarValidaciones(true);
   }, [cargarValidaciones]);
 
@@ -137,7 +171,9 @@ export const useValidaciones = (): UseValidacionesReturn => {
   }, [validaciones]);
 
   useEffect(() => {
-    cargarValidaciones(true);
+    if (user) {
+      cargarValidaciones(true);
+    }
   }, [user]);
 
   return {

@@ -23,7 +23,6 @@ import {
   Zap,
   Target,
   Activity,
-  DollarSign
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Validacion } from '@/types/validacion';
@@ -78,12 +77,6 @@ const toDate = (timestamp: Timestamp | Date): Date => {
 };
 
 // Helper function to safely get string value
-const safeString = (value: any, fallback = ''): string => {
-  if (typeof value === 'string') return value;
-  if (value && typeof value === 'object' && value.nombre) return value.nombre;
-  if (value && typeof value === 'object' && value.titulo) return value.titulo;
-  return fallback;
-};
 
 export const ValidacionesHistory: React.FC = () => {
   const { validaciones, loading, getStats, loadMore, hasMore, refresh, error } = useValidaciones();
@@ -467,7 +460,7 @@ export const ValidacionesHistory: React.FC = () => {
               ].map((option) => (
                 <button
                   key={option.key}
-                  onClick={() => handleSort(option.key as any)}
+                  onClick={() => handleSort(option.key as 'fecha' | 'resultado' | 'monto')}
                   className={`flex items-center space-x-1 px-3 py-2 rounded-xl transition-all duration-300 ${
                     sortBy === option.key
                       ? 'bg-blue-100 text-blue-700'
