@@ -190,7 +190,7 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
       id: 'dashboard',
       label: 'Dashboard',
       icon: Home,
-      component: OptimizedOverviewDashboard,
+      component: OptimizedOverviewDashboard as React.LazyExoticComponent<React.ComponentType<any>>,
       gradient: 'from-blue-500 to-blue-600',
       description: 'Vista general del sistema'
     },
@@ -198,7 +198,7 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
       id: 'socios',
       label: 'Socios',
       icon: Users,
-      component: EnhancedMemberManagement,
+      component: EnhancedMemberManagement as React.LazyExoticComponent<React.ComponentType<any>>,
       gradient: 'from-emerald-500 to-emerald-600',
       description: 'Gestión de miembros',
       badge: stats?.totalSocios || 0
@@ -207,7 +207,7 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
       id: 'comercios',
       label: 'Comercios',
       icon: Store,
-      component: ComercioManagement,
+      component: ComercioManagement as React.LazyExoticComponent<React.ComponentType<any>>,
       gradient: 'from-purple-500 to-purple-600',
       description: 'Red de comercios',
       badge: stats?.comerciosActivos || 0
@@ -216,7 +216,7 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
       id: 'beneficios',
       label: 'Beneficios',
       icon: Gift,
-      component: BeneficiosManagement,
+      component: BeneficiosManagement as React.LazyExoticComponent<React.ComponentType<any>>,
       gradient: 'from-orange-500 to-orange-600',
       description: 'Ofertas y promociones',
       badge: stats?.beneficiosActivos || 0
@@ -225,7 +225,7 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
       id: 'analytics',
       label: 'Analytics',
       icon: BarChart3,
-      component: AdvancedAnalytics,
+      component: AdvancedAnalytics as React.LazyExoticComponent<React.ComponentType<any>>,
       gradient: 'from-indigo-500 to-indigo-600',
       description: 'Métricas avanzadas',
       isNew: true
@@ -234,7 +234,7 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
       id: 'notificaciones',
       label: 'Notificaciones',
       icon: Bell,
-      component: NotificationsCenter,
+      component: NotificationsCenter as React.LazyExoticComponent<React.ComponentType<any>>,
       gradient: 'from-red-500 to-red-600',
       description: 'Centro de alertas'
     }
