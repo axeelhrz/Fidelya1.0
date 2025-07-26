@@ -224,7 +224,7 @@ export default function SocioBeneficiosPage() {
             </div>
 
             {/* Enhanced Quick Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mt-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mt-8">
               <motion.div
                 className="bg-gradient-to-br from-emerald-50 to-green-100 rounded-2xl p-4 lg:p-6 border border-emerald-200/50 shadow-lg hover:shadow-xl transition-all duration-300"
                 whileHover={{ y: -4, scale: 1.02 }}
@@ -266,31 +266,11 @@ export default function SocioBeneficiosPage() {
               </motion.div>
 
               <motion.div
-                className="bg-gradient-to-br from-yellow-50 to-orange-100 rounded-2xl p-4 lg:p-6 border border-yellow-200/50 shadow-lg hover:shadow-xl transition-all duration-300"
-                whileHover={{ y: -4, scale: 1.02 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center text-white shadow-lg">
-                    <DollarSign size={24} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xl lg:text-2xl font-black text-yellow-700">
-                      ${estadisticasRapidas.ahorroTotal.toLocaleString()}
-                    </div>
-                    <div className="text-sm font-semibold text-yellow-600 truncate">Total Ahorrado</div>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
                 className="bg-gradient-to-br from-pink-50 to-rose-100 rounded-2xl p-4 lg:p-6 border border-pink-200/50 shadow-lg hover:shadow-xl transition-all duration-300"
                 whileHover={{ y: -4, scale: 1.02 }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.3 }}
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl flex items-center justify-center text-white shadow-lg">
