@@ -6,7 +6,7 @@
     },
     {
       "source": "/es/privacypolicy",
-      "destination": "/privacy.html"
+      "destination": "/privacypolicy.html"
     },
     {
       "source": "/terms",
@@ -14,7 +14,7 @@
     },
     {
       "source": "/privacypolicy",
-      "destination": "/privacy.html"
+      "destination": "/privacypolicy.html"
     },
     {
       "source": "/es",
