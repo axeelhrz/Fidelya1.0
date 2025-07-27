@@ -718,25 +718,19 @@ function detectInitialLanguage() {
     return 'en';
 }
 
-// ===== FUNCIONES PARA NAVEGACIÓN A PÁGINAS LEGALES - CORREGIDAS =====
+// ===== FUNCIONES PARA NAVEGACIÓN A PÁGINAS LEGALES =====
 function goToPrivacyPolicy(event) {
     event.preventDefault();
-    console.log('🔗 Navegando a Política de Privacidad');
-    
-    const targetPath = currentLanguage === 'es' ? '/es/privacypolicy' : '/privacypolicy';
-    
-    // Usar window.location.href para navegación directa
-    window.location.href = targetPath;
+    const currentLang = getCurrentLanguage();
+    const privacyUrl = currentLang === 'es' ? '/es/privacypolicy' : '/privacypolicy';
+    window.location.href = privacyUrl;
 }
 
 function goToTermsPolicy(event) {
     event.preventDefault();
-    console.log('🔗 Navegando a Términos y Condiciones');
-    
-    const targetPath = currentLanguage === 'es' ? '/es/terms' : '/terms';
-    
-    // Usar window.location.href para navegación directa
-    window.location.href = targetPath;
+    const currentLang = getCurrentLanguage();
+    const termsUrl = currentLang === 'es' ? '/es/terms' : '/terms';
+    window.location.href = termsUrl;
 }
 
 function getCurrentLanguage() {
