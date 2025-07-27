@@ -811,13 +811,19 @@
         function detectInitialLanguage() {
             const pathname = window.location.pathname;
             const href = window.location.href;
+            const hash = window.location.hash;
             
             console.log('🔍 Detectando idioma...');
             console.log('📍 pathname:', pathname);
             console.log('🌐 href:', href);
+            console.log('🔗 hash:', hash);
             
             // Detectar si la URL contiene /es/ para español
-            if (pathname.includes('/es/') || pathname.startsWith('/es/') || href.includes('/es/')) {
+            if (pathname.includes('/es/') || 
+                pathname.startsWith('/es/') || 
+                href.includes('/es/') ||
+                pathname === '/es/privacypolicy' ||
+                href.includes('es/privacypolicy')) {
                 console.log('✅ Idioma detectado: ESPAÑOL');
                 return 'es';
             }
