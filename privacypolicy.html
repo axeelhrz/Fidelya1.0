@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    
+    <!-- SEO -->
+    <title data-translate="privacy-page-title">Privacy Policy - StarFlex</title>
+    <meta name="description" data-translate="privacy-page-description" content="Privacy Policy of StarFlex - Intelligent automation for Amazon Flex drivers">
+    <meta name="keywords" content="StarFlex, privacy policy, Amazon Flex, automation, data protection">
+    <meta name="author" content="Starflex">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://starflexapp.com/privacypolicy" id="canonical-link">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" data-translate="privacy-og-title" content="Privacy Policy - StarFlex">
+    <meta property="og:description" data-translate="privacy-og-description" content="Privacy Policy of StarFlex - Intelligent automation for Amazon Flex drivers">
+    <meta property="og:image" content="https://starflexapp.com/assets/og-starflex-hero.jpg">
+    <meta property="og:url" content="https://starflexapp.com/privacypolicy" id="og-url">
+    <meta property="og:type" content="website">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" href="./assets/icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/icon.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Mobile optimizations -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    
+    <style>
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Variables CSS */
+        :root {
+            --primary-color: #e91e63;
+            --primary-light: #f06292;
+            --primary-dark: #c2185b;
+            --secondary-color: #9c27b0;
+            --accent-color: #ff4081;
+            --background-dark: #0a0a0a;
+            --background-darker: #050505;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --text-muted: #808080;
+            --border-color: #333333;
+            --card-background: #1a1a1a;
+            --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            --gradient-accent: linear-gradient(135deg, var(--primary-light) 0%, var(--accent-color) 100%);
+        }
+
+        /* Estilos base */
+        body {
+            font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Efectos de fondo */
+        .bg-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .bg-effects::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 20%, rgba(233, 30, 99, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(156, 39, 176, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 60%, rgba(240, 98, 146, 0.05) 0%, transparent 50%);
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+            padding: 1rem 0;
+        }
+
+        .header__container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--gradient-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(233, 30, 99, 0.3);
+        }
+
+        .back-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* Contenido principal */
+        .main-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 3rem;
+            padding: 1rem;
+            background: var(--card-background);
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* Secciones */
+        .section {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--card-background);
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--gradient-primary);
+        }
+
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .section-content {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .section-content p {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-content ul {
+            margin: 1.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .section-content li {
+            margin-bottom: 0.75rem;
+            position: relative;
+        }
+
+        .section-content li::marker {
+            color: var(--primary-color);
+        }
+
+        .highlight {
+            color: var(--primary-light);
+            font-weight: 600;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 4rem;
+            padding: 2rem;
+            text-align: center;
+            background: var(--card-background);
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .contact-info {
+            color: var(--text-secondary);
+        }
+
+        .contact-email {
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .contact-email:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            background: var(--gradient-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(233, 30, 99, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header__container {
+                padding: 0 1rem;
+            }
+
+            .main-content {
+                padding: 2rem 1rem;
+            }
+
+            .section {
+                padding: 1.5rem;
+            }
+
+            .back-btn {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.8rem;
+            }
+
+            .section-title {
+                font-size: 1.3rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .footer-content {
+                gap: 1rem;
+            }
+        }
+
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .section:nth-child(even) {
+            animation-delay: 0.1s;
+        }
+
+        .section:nth-child(odd) {
+            animation-delay: 0.2s;
+        }
+
+        /* Modo performance para dispositivos de baja potencia */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Efectos de fondo -->
+    <div class="bg-effects"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header__container">
+            <button class="back-btn" onclick="goToHome()" data-translate="back-to-home" aria-label="Back to Home">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                </svg>
+                Back to Home
+            </button>
+            
+            <div class="logo" onclick="goToHome()">StarFlex</div>
+        </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+        <h1 class="page-title" data-translate="privacy-title">Privacy Policy</h1>
+        <p class="page-subtitle" data-translate="privacy-subtitle">StarFlex Privacy Policy and Data Protection</p>
+        
+        <div class="last-updated">
+            <strong data-translate="last-updated-label">Last updated:</strong> <span data-translate="last-updated-date">December 15, 2024</span>
+        </div>
+
+        <!-- Sección 1 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">1</span>
+                <span data-translate="privacy-section-1-title">Information We Collect</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="privacy-section-1-p1">
+                    At <span class="highlight">StarFlex</span>, we collect information necessary to provide our automation services for Amazon Flex drivers. This includes account information, usage data, and technical information about your device and application usage.
+                </p>
+                <p data-translate="privacy-section-1-p2">
+                    The types of information we collect include:
+                </p>
+                <ul>
+                    <li data-translate="privacy-section-1-item-1">Personal identification information (name, email address)</li>
+                    <li data-translate="privacy-section-1-item-2">Amazon Flex account credentials (encrypted and securely stored)</li>
+                    <li data-translate="privacy-section-1-item-3">Device information and technical specifications</li>
+                    <li data-translate="privacy-section-1-item-4">Application usage patterns and preferences</li>
+                    <li data-translate="privacy-section-1-item-5">Location data for station optimization</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 2 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">2</span>
+                <span data-translate="privacy-section-2-title">How We Use Your Information</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="privacy-section-2-p1">
+                    We use the collected information to provide, maintain, and improve our <span class="highlight">automation services</span>. Our primary goal is to optimize your Amazon Flex experience while maintaining the highest security standards.
+                </p>
+                <p data-translate="privacy-section-2-p2">
+                    Specifically, we use your information to:
+                </p>
+                <ul>
+                    <li data-translate="privacy-section-2-item-1">Automate block selection based on your preferences</li>
+                    <li data-translate="privacy-section-2-item-2">Optimize schedules and station selections</li>
+                    <li data-translate="privacy-section-2-item-3">Send notifications about available blocks</li>
+                    <li data-translate="privacy-section-2-item-4">Provide customer support and technical assistance</li>
+                    <li data-translate="privacy-section-2-item-5">Improve our services and develop new features</li>
+                    <li data-translate="privacy-section-2-item-6">Ensure security and prevent unauthorized access</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 3 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">3</span>
+                <span data-translate="privacy-section-3-title">Data Security and Protection</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="privacy-section-3-p1">
+                    We implement <span class="highlight">industry-leading security measures</span> to protect your personal information and Amazon Flex credentials. All sensitive data is encrypted using advanced encryption standards both in transit and at rest.
+                </p>
+                <p data-translate="privacy-section-3-p2">
+                    Our security measures include:
+                </p>
+                <ul>
+                    <li data-translate="privacy-section-3-item-1">End-to-end encryption for all sensitive data</li>
+                    <li data-translate="privacy-section-3-item-2">Secure cloud infrastructure with regular security audits</li>
+                    <li data-translate="privacy-section-3-item-3">Multi-factor authentication for account access</li>
+                    <li data-translate="privacy-section-3-item-4">Regular security updates and vulnerability assessments</li>
+                    <li data-translate="privacy-section-3-item-5">Strict access controls and employee training</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 4 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">4</span>
+                <span data-translate="privacy-section-4-title">Information Sharing and Disclosure</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="privacy-section-4-p1">
+                    We do not sell, trade, or rent your personal information to third parties. Your data is used exclusively to provide StarFlex services and is only shared in specific, limited circumstances outlined below.
+                </p>
+                <p data-translate="privacy-section-4-p2">
+                    We may share information only when:
+                </p>
+                <ul>
+                    <li data-translate="privacy-section-4-item-1">Required by law or legal process</li>
+                    <li data-translate="privacy-section-4-item-2">Necessary to protect our rights or property</li>
+                    <li data-translate="privacy-section-4-item-3">With your explicit consent</li>
+                    <li data-translate="privacy-section-4-item-4">With trusted service providers under strict confidentiality agreements</li>
+                    <li data-translate="privacy-section-4-item-5">In case of business transfer or merger (with prior notice)</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 5 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">5</span>
+                <span data-translate="privacy-section-5-title">Your Rights and Choices</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="privacy-section-5-p1">
+                    You have full control over your personal information and can exercise various rights regarding your data. We are committed to <span class="highlight">transparency and user control</span> over personal information.
+                </p>
+                <p data-translate="privacy-section-5-p2">
+                    Your rights include:
+                </p>
+                <ul>
+                    <li data-translate="privacy-section-5-item-1">Access and review your personal information</li>
+                    <li data-translate="privacy-section-5-item-2">Request correction of inaccurate data</li>
+                    <li data-translate="privacy-section-5-item-3">Delete your account and associated data</li>
+                    <li data-translate="privacy-section-5-item-4">Export your data in a portable format</li>
+                    <li data-translate="privacy-section-5-item-5">Opt-out of certain data processing activities</li>
+                    <li data-translate="privacy-section-5-item-6">Withdraw consent at any time</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 6 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">6</span>
+                <span data-translate="privacy-section-6-title">Data Retention</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="privacy-section-6-p1">
+                    We retain your personal information only for as long as necessary to provide our services and fulfill the purposes outlined in this privacy policy. When data is no longer needed, it is <span class="highlight">securely deleted</span> from our systems.
+                </p>
+                <p data-translate="privacy-section-6-p2">
+                    Our retention periods are based on:
+                </p>
+                <ul>
+                    <li data-translate="privacy-section-6-item-1">The length of time you use our services</li>
+                    <li data-translate="privacy-section-6-item-2">Legal and regulatory requirements</li>
+                    <li data-translate="privacy-section-6-item-3">Business and operational needs</li>
+                    <li data-translate="privacy-section-6-item-4">Security and fraud prevention requirements</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 7 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">7</span>
+                <span data-translate="privacy-section-7-title">Cookies and Tracking Technologies</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="privacy-section-7-p1">
+                    We use cookies and similar tracking technologies to enhance your experience, analyze usage patterns, and improve our services. You can control cookie settings through your browser preferences.
+                </p>
+                <p data-translate="privacy-section-7-p2">
+                    We use the following types of cookies:
+                </p>
+                <ul>
+                    <li data-translate="privacy-section-7-item-1">Essential cookies for basic functionality</li>
+                    <li data-translate="privacy-section-7-item-2">Performance cookies for analytics and optimization</li>
+                    <li data-translate="privacy-section-7-item-3">Preference cookies to remember your settings</li>
+                    <li data-translate="privacy-section-7-item-4">Security cookies for fraud prevention</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 8 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">8</span>
+                <span data-translate="privacy-section-8-title">Changes to This Privacy Policy</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="privacy-section-8-p1">
+                    We may update this privacy policy from time to time to reflect changes in our practices or legal requirements. We will notify you of any significant changes through the application or via email.
+                </p>
+                <p data-translate="privacy-section-8-p2">
+                    When we update this policy:
+                </p>
+                <ul>
+                    <li data-translate="privacy-section-8-item-1">We will post the updated version on our website</li>
+                    <li data-translate="privacy-section-8-item-2">We will notify active users of material changes</li>
+                    <li data-translate="privacy-section-8-item-3">The "Last Updated" date will be revised</li>
+                    <li data-translate="privacy-section-8-item-4">Continued use constitutes acceptance of changes</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="contact-info">
+                    <p data-translate="privacy-contact-info">For questions about this Privacy Policy, you can contact us at:</p>
+                    <a href="mailto:support@starflexapp.com" class="contact-email">support@starflexapp.com</a>
+                </div>
+                
+                <a href="https://starflex.web.app/" class="cta-button">
+                    <span data-translate="privacy-cta-button">Start with StarFlex</span>
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </a>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        // Variables globales para el sistema de idiomas
+        let currentLanguage = 'en';
+        
+        // Traducciones completas
+        const translations = {
+            en: {
+                // Meta tags
+                'privacy-page-title': 'Privacy Policy - StarFlex',
+                'privacy-page-description': 'Privacy Policy of StarFlex - Intelligent automation for Amazon Flex drivers',
+                'privacy-og-title': 'Privacy Policy - StarFlex',
+                'privacy-og-description': 'Privacy Policy of StarFlex - Intelligent automation for Amazon Flex drivers',
+                
+                // Header y navegación
+                'back-to-home': 'Back to Home',
+                
+                // Contenido principal
+                'privacy-title': 'Privacy Policy',
+                'privacy-subtitle': 'StarFlex Privacy Policy and Data Protection',
+                'last-updated-label': 'Last updated:',
+                'last-updated-date': 'December 15, 2024',
+                
+                // Sección 1
+                'privacy-section-1-title': 'Information We Collect',
+                'privacy-section-1-p1': 'At <span class="highlight">StarFlex</span>, we collect information necessary to provide our automation services for Amazon Flex drivers. This includes account information, usage data, and technical information about your device and application usage.',
+                'privacy-section-1-p2': 'The types of information we collect include:',
+                'privacy-section-1-item-1': 'Personal identification information (name, email address)',
+                'privacy-section-1-item-2': 'Amazon Flex account credentials (encrypted and securely stored)',
+                'privacy-section-1-item-3': 'Device information and technical specifications',
+                'privacy-section-1-item-4': 'Application usage patterns and preferences',
+                'privacy-section-1-item-5': 'Location data for station optimization',
+                
+                // Sección 2
+                'privacy-section-2-title': 'How We Use Your Information',
+                'privacy-section-2-p1': 'We use the collected information to provide, maintain, and improve our <span class="highlight">automation services</span>. Our primary goal is to optimize your Amazon Flex experience while maintaining the highest security standards.',
+                'privacy-section-2-p2': 'Specifically, we use your information to:',
+                'privacy-section-2-item-1': 'Automate block selection based on your preferences',
+                'privacy-section-2-item-2': 'Optimize schedules and station selections',
+                'privacy-section-2-item-3': 'Send notifications about available blocks',
+                'privacy-section-2-item-4': 'Provide customer support and technical assistance',
+                'privacy-section-2-item-5': 'Improve our services and develop new features',
+                'privacy-section-2-item-6': 'Ensure security and prevent unauthorized access',
+                
+                // Sección 3
+                'privacy-section-3-title': 'Data Security and Protection',
+                'privacy-section-3-p1': 'We implement <span class="highlight">industry-leading security measures</span> to protect your personal information and Amazon Flex credentials. All sensitive data is encrypted using advanced encryption standards both in transit and at rest.',
+                'privacy-section-3-p2': 'Our security measures include:',
+                'privacy-section-3-item-1': 'End-to-end encryption for all sensitive data',
+                'privacy-section-3-item-2': 'Secure cloud infrastructure with regular security audits',
+                'privacy-section-3-item-3': 'Multi-factor authentication for account access',
+                'privacy-section-3-item-4': 'Regular security updates and vulnerability assessments',
+                'privacy-section-3-item-5': 'Strict access controls and employee training',
+                
+                // Sección 4
+                'privacy-section-4-title': 'Information Sharing and Disclosure',
+                'privacy-section-4-p1': 'We do not sell, trade, or rent your personal information to third parties. Your data is used exclusively to provide StarFlex services and is only shared in specific, limited circumstances outlined below.',
+                'privacy-section-4-p2': 'We may share information only when:',
+                'privacy-section-4-item-1': 'Required by law or legal process',
+                'privacy-section-4-item-2': 'Necessary to protect our rights or property',
+                'privacy-section-4-item-3': 'With your explicit consent',
+                'privacy-section-4-item-4': 'With trusted service providers under strict confidentiality agreements',
+                'privacy-section-4-item-5': 'In case of business transfer or merger (with prior notice)',
+                
+                // Sección 5
+                'privacy-section-5-title': 'Your Rights and Choices',
+                'privacy-section-5-p1': 'You have full control over your personal information and can exercise various rights regarding your data. We are committed to <span class="highlight">transparency and user control</span> over personal information.',
+                'privacy-section-5-p2': 'Your rights include:',
+                'privacy-section-5-item-1': 'Access and review your personal information',
+                'privacy-section-5-item-2': 'Request correction of inaccurate data',
+                'privacy-section-5-item-3': 'Delete your account and associated data',
+                'privacy-section-5-item-4': 'Export your data in a portable format',
+                'privacy-section-5-item-5': 'Opt-out of certain data processing activities',
+                'privacy-section-5-item-6': 'Withdraw consent at any time',
+                
+                // Sección 6
+                'privacy-section-6-title': 'Data Retention',
+                'privacy-section-6-p1': 'We retain your personal information only for as long as necessary to provide our services and fulfill the purposes outlined in this privacy policy. When data is no longer needed, it is <span class="highlight">securely deleted</span> from our systems.',
+                'privacy-section-6-p2': 'Our retention periods are based on:',
+                'privacy-section-6-item-1': 'The length of time you use our services',
+                'privacy-section-6-item-2': 'Legal and regulatory requirements',
+                'privacy-section-6-item-3': 'Business and operational needs',
+                'privacy-section-6-item-4': 'Security and fraud prevention requirements',
+                
+                // Sección 7
+                'privacy-section-7-title': 'Cookies and Tracking Technologies',
+                'privacy-section-7-p1': 'We use cookies and similar tracking technologies to enhance your experience, analyze usage patterns, and improve our services. You can control cookie settings through your browser preferences.',
+                'privacy-section-7-p2': 'We use the following types of cookies:',
+                'privacy-section-7-item-1': 'Essential cookies for basic functionality',
+                'privacy-section-7-item-2': 'Performance cookies for analytics and optimization',
+                'privacy-section-7-item-3': 'Preference cookies to remember your settings',
+                'privacy-section-7-item-4': 'Security cookies for fraud prevention',
+                
+                // Sección 8
+                'privacy-section-8-title': 'Changes to This Privacy Policy',
+                'privacy-section-8-p1': 'We may update this privacy policy from time to time to reflect changes in our practices or legal requirements. We will notify you of any significant changes through the application or via email.',
+                'privacy-section-8-p2': 'When we update this policy:',
+                'privacy-section-8-item-1': 'We will post the updated version on our website',
+                'privacy-section-8-item-2': 'We will notify active users of material changes',
+                'privacy-section-8-item-3': 'The "Last Updated" date will be revised',
+                'privacy-section-8-item-4': 'Continued use constitutes acceptance of changes',
+                
+                // Footer
+                'privacy-contact-info': 'For questions about this Privacy Policy, you can contact us at:',
+                'privacy-cta-button': 'Start with StarFlex'
+            },
+            es: {
+                // Meta tags
+                'privacy-page-title': 'Política de Privacidad - StarFlex',
+                'privacy-page-description': 'Política de Privacidad de StarFlex - Automatización inteligente para conductores de Amazon Flex',
+                'privacy-og-title': 'Política de Privacidad - StarFlex',
+                'privacy-og-description': 'Política de Privacidad de StarFlex - Automatización inteligente para conductores de Amazon Flex',
+                
+                // Header y navegación
+                'back-to-home': 'Volver al Inicio',
+                
+                // Contenido principal
+                'privacy-title': 'Política de Privacidad',
+                'privacy-subtitle': 'Política de Privacidad y Protección de Datos de StarFlex',
+                'last-updated-label': 'Última actualización:',
+                'last-updated-date': '15 de diciembre de 2024',
+                
+                // Sección 1
+                'privacy-section-1-title': 'Información que Recopilamos',
+                'privacy-section-1-p1': 'En <span class="highlight">StarFlex</span>, recopilamos información necesaria para proporcionar nuestros servicios de automatización para conductores de Amazon Flex. Esto incluye información de cuenta, datos de uso e información técnica sobre su dispositivo y uso de la aplicación.',
+                'privacy-section-1-p2': 'Los tipos de información que recopilamos incluyen:',
+                'privacy-section-1-item-1': 'Información de identificación personal (nombre, dirección de correo electrónico)',
+                'privacy-section-1-item-2': 'Credenciales de cuenta de Amazon Flex (encriptadas y almacenadas de forma segura)',
+                'privacy-section-1-item-3': 'Información del dispositivo y especificaciones técnicas',
+                'privacy-section-1-item-4': 'Patrones de uso de la aplicación y preferencias',
+                'privacy-section-1-item-5': 'Datos de ubicación para optimización de estaciones',
+                
+                // Sección 2
+                'privacy-section-2-title': 'Cómo Usamos su Información',
+                'privacy-section-2-p1': 'Utilizamos la información recopilada para proporcionar, mantener y mejorar nuestros <span class="highlight">servicios de automatización</span>. Nuestro objetivo principal es optimizar su experiencia con Amazon Flex manteniendo los más altos estándares de seguridad.',
+                'privacy-section-2-p2': 'Específicamente, utilizamos su información para:',
+                'privacy-section-2-item-1': 'Automatizar la selección de bloques basada en sus preferencias',
+                'privacy-section-2-item-2': 'Optimizar horarios y selecciones de estaciones',
+                'privacy-section-2-item-3': 'Enviar notificaciones sobre bloques disponibles',
+                'privacy-section-2-item-4': 'Proporcionar soporte al cliente y asistencia técnica',
+                'privacy-section-2-item-5': 'Mejorar nuestros servicios y desarrollar nuevas características',
+                'privacy-section-2-item-6': 'Garantizar la seguridad y prevenir accesos no autorizados',
+                
+                // Sección 3
+                'privacy-section-3-title': 'Seguridad y Protección de Datos',
+                'privacy-section-3-p1': 'Implementamos <span class="highlight">medidas de seguridad líderes en la industria</span> para proteger su información personal y credenciales de Amazon Flex. Todos los datos sensibles están encriptados usando estándares de encriptación avanzados tanto en tránsito como en reposo.',
+                'privacy-section-3-p2': 'Nuestras medidas de seguridad incluyen:',
+                'privacy-section-3-item-1': 'Encriptación de extremo a extremo para todos los datos sensibles',
+                'privacy-section-3-item-2': 'Infraestructura en la nube segura con auditorías de seguridad regulares',
+                'privacy-section-3-item-3': 'Autenticación multifactor para acceso a cuentas',
+                'privacy-section-3-item-4': 'Actualizaciones de seguridad regulares y evaluaciones de vulnerabilidades',
+                'privacy-section-3-item-5': 'Controles de acceso estrictos y capacitación de empleados',
+                
+                // Sección 4
+                'privacy-section-4-title': 'Compartir y Divulgación de Información',
+                'privacy-section-4-p1': 'No vendemos, intercambiamos o alquilamos su información personal a terceros. Sus datos se utilizan exclusivamente para proporcionar servicios de StarFlex y solo se comparten en circunstancias específicas y limitadas que se describen a continuación.',
+                'privacy-section-4-p2': 'Podemos compartir información solo cuando:',
+                'privacy-section-4-item-1': 'Sea requerido por ley o proceso legal',
+                'privacy-section-4-item-2': 'Sea necesario para proteger nuestros derechos o propiedad',
+                'privacy-section-4-item-3': 'Con su consentimiento explícito',
+                'privacy-section-4-item-4': 'Con proveedores de servicios de confianza bajo acuerdos estrictos de confidencialidad',
+                'privacy-section-4-item-5': 'En caso de transferencia comercial o fusión (con aviso previo)',
+                
+                // Sección 5
+                'privacy-section-5-title': 'Sus Derechos y Opciones',
+                'privacy-section-5-p1': 'Usted tiene control total sobre su información personal y puede ejercer varios derechos con respecto a sus datos. Estamos comprometidos con la <span class="highlight">transparencia y el control del usuario</span> sobre la información personal.',
+                'privacy-section-5-p2': 'Sus derechos incluyen:',
+                'privacy-section-5-item-1': 'Acceder y revisar su información personal',
+                'privacy-section-5-item-2': 'Solicitar corrección de datos inexactos',
+                'privacy-section-5-item-3': 'Eliminar su cuenta y datos asociados',
+                'privacy-section-5-item-4': 'Exportar sus datos en un formato portable',
+                'privacy-section-5-item-5': 'Optar por no participar en ciertas actividades de procesamiento de datos',
+                'privacy-section-5-item-6': 'Retirar el consentimiento en cualquier momento',
+                
+                // Sección 6
+                'privacy-section-6-title': 'Retención de Datos',
+                'privacy-section-6-p1': 'Conservamos su información personal solo durante el tiempo necesario para proporcionar nuestros servicios y cumplir con los propósitos descritos en esta política de privacidad. Cuando los datos ya no son necesarios, se <span class="highlight">eliminan de forma segura</span> de nuestros sistemas.',
+                'privacy-section-6-p2': 'Nuestros períodos de retención se basan en:',
+                'privacy-section-6-item-1': 'El tiempo que utiliza nuestros servicios',
+                'privacy-section-6-item-2': 'Requisitos legales y regulatorios',
+                'privacy-section-6-item-3': 'Necesidades comerciales y operativas',
+                'privacy-section-6-item-4': 'Requisitos de seguridad y prevención de fraudes',
+                
+                // Sección 7
+                'privacy-section-7-title': 'Cookies y Tecnologías de Seguimiento',
+                'privacy-section-7-p1': 'Utilizamos cookies y tecnologías de seguimiento similares para mejorar su experiencia, analizar patrones de uso y mejorar nuestros servicios. Puede controlar la configuración de cookies a través de las preferencias de su navegador.',
+                'privacy-section-7-p2': 'Utilizamos los siguientes tipos de cookies:',
+                'privacy-section-7-item-1': 'Cookies esenciales para funcionalidad básica',
+                'privacy-section-7-item-2': 'Cookies de rendimiento para análisis y optimización',
+                'privacy-section-7-item-3': 'Cookies de preferencias para recordar su configuración',
+                'privacy-section-7-item-4': 'Cookies de seguridad para prevención de fraudes',
+                
+                // Sección 8
+                'privacy-section-8-title': 'Cambios a esta Política de Privacidad',
+                'privacy-section-8-p1': 'Podemos actualizar esta política de privacidad de vez en cuando para reflejar cambios en nuestras prácticas o requisitos legales. Le notificaremos sobre cualquier cambio significativo a través de la aplicación o por correo electrónico.',
+                'privacy-section-8-p2': 'Cuando actualicemos esta política:',
+                'privacy-section-8-item-1': 'Publicaremos la versión actualizada en nuestro sitio web',
+                'privacy-section-8-item-2': 'Notificaremos a los usuarios activos sobre cambios materiales',
+                'privacy-section-8-item-3': 'Se revisará la fecha de "Última Actualización"',
+                'privacy-section-8-item-4': 'El uso continuado constituye aceptación de los cambios',
+                
+                // Footer
+                'privacy-contact-info': 'Para preguntas sobre esta Política de Privacidad, puede contactarnos en:',
+                'privacy-cta-button': 'Comenzar con StarFlex'
+            }
+        };
+
+        // Función para detectar idioma inicial
+        function detectInitialLanguage() {
+            const pathname = window.location.pathname;
+            
+            if (pathname === '/es/privacypolicy' || pathname.startsWith('/es/')) {
+                return 'es';
+            } else if (pathname === '/privacypolicy' || pathname === '/') {
+                return 'en';
+            }
+            
+            // Fallback al idioma del navegador
+            const browserLanguage = navigator.language.slice(0, 2);
+            return browserLanguage === 'es' ? 'es' : 'en';
+        }
+
+        // Función para aplicar traducciones
+        function applyTranslations() {
+            const currentTranslations = translations[currentLanguage];
+            
+            if (!currentTranslations) {
+                console.warn(`Translations for ${currentLanguage} not found`);
+                return;
+            }
+            
+            // Aplicar traducciones a elementos con data-translate
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                const translation = currentTranslations[key];
+                
+                if (translation) {
+                    if (element.tagName === 'INPUT' && element.type === 'text') {
+                        element.placeholder = translation;
+                    } else if (element.tagName === 'META') {
+                        element.content = translation;
+                    } else if (element.tagName === 'TITLE') {
+                        element.textContent = translation;
+                    } else {
+                        element.innerHTML = translation;
+                    }
+                }
+            });
+            
+            // Actualizar meta tags específicos
+            updateMetaTags();
+        }
+
+        // Función para actualizar meta tags
+        function updateMetaTags() {
+            const canonicalLink = document.getElementById('canonical-link');
+            const ogUrl = document.getElementById('og-url');
+            
+            if (currentLanguage === 'es') {
+                if (canonicalLink) canonicalLink.href = 'https://starflexapp.com/es/privacypolicy';
+                if (ogUrl) ogUrl.content = 'https://starflexapp.com/es/privacypolicy';
+            } else {
+                if (canonicalLink) canonicalLink.href = 'https://starflexapp.com/privacypolicy';
+                if (ogUrl) ogUrl.content = 'https://starflexapp.com/privacypolicy';
+            }
+        }
+
+        // Función para navegar al inicio
+        function goToHome() {
+            const targetUrl = currentLanguage === 'es' ? '/es' : '/';
+            window.location.href = targetUrl;
+        }
+
+        // Detección de dispositivo móvil
+        const isMobile = window.innerWidth <= 768;
+        
+        // Optimizaciones para dispositivos de baja potencia
+        const isLowEndDevice = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
+        const isSlowConnection = navigator.connection && (
+            navigator.connection.effectiveType === 'slow-2g' || 
+            navigator.connection.effectiveType === '2g'
+        );
+        
+        if (isMobile && (isLowEndDevice || isSlowConnection)) {
+            document.body.classList.add('performance-mode');
+            
+            // Deshabilitar animaciones en dispositivos de baja potencia
+            const style = document.createElement('style');
+            style.textContent = `
+                .performance-mode * {
+                    animation-duration: 0.01ms !important;
+                    animation-iteration-count: 1 !important;
+                    transition-duration: 0.1s !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Smooth scroll para navegación interna
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Mejorar accesibilidad con navegación por teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                document.body.classList.add('keyboard-navigation');
+            }
+        });
+        
+        document.addEventListener('mousedown', () => {
+            document.body.classList.remove('keyboard-navigation');
+        });
+        
+        // Lazy loading para imágenes si las hubiera
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.classList.remove('lazy');
+                            imageObserver.unobserve(img);
+                        }
+                    }
+                });
+            });
+            
+            document.querySelectorAll('img[data-src]').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            // Detectar idioma inicial
+            currentLanguage = detectInitialLanguage();
+            
+            // Aplicar traducciones
+            applyTranslations();
+            
+            // Actualizar atributo lang del HTML
+            document.documentElement.lang = currentLanguage;
+            
+            console.log('✅ Página de Política de Privacidad cargada correctamente en idioma:', currentLanguage);
+        });
+    </script>
+</body>
+</html>
