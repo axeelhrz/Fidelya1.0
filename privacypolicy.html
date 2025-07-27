@@ -811,15 +811,13 @@
         function detectInitialLanguage() {
             const pathname = window.location.pathname;
             
-            if (pathname === '/es/privacypolicy' || pathname.startsWith('/es/')) {
+            // Detectar si la URL contiene /es/ para español
+            if (pathname.includes('/es/') || pathname.startsWith('/es/')) {
                 return 'es';
-            } else if (pathname === '/privacypolicy' || pathname === '/') {
-                return 'en';
             }
             
-            // Fallback al idioma del navegador
-            const browserLanguage = navigator.language.slice(0, 2);
-            return browserLanguage === 'es' ? 'es' : 'en';
+            // Por defecto, inglés para todas las demás rutas
+            return 'en';
         }
 
         // Función para aplicar traducciones

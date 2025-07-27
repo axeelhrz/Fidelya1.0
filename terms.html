@@ -773,18 +773,18 @@
                 'terms-section-7-p1': 'Cualquiera de las partes puede terminar este acuerdo en cualquier momento. StarFlex se reserva el derecho de <span class="highlight">suspender o terminar cuentas</span> que violen estos términos o participen en actividades prohibidas.',
                 'terms-section-7-p2': 'Condiciones de terminación:',
                 'terms-section-7-item-1': 'Terminación inmediata por violaciones de términos',
-                'terms-section-7-item-2': 'Aviso de 30 días para cambios de servicio',
-                'terms-section-7-item-3': 'Retención de datos para cumplimiento legal',
-                'terms-section-7-item-4': 'Elegibilidad de reembolso basada en circunstancias',
+                'terms-section-7-item-2': '30-day notice for service changes',
+                'terms-section-7-item-3': 'Data retention for legal compliance',
+                'terms-section-7-item-4': 'Refund eligibility based on circumstances',
                 
                 // Sección 8
                 'terms-section-8-title': 'Cambios a los Términos',
                 'terms-section-8-p1': 'Nos reservamos el derecho de modificar estos términos en cualquier momento. Los usuarios serán notificados de cambios significativos a través de la aplicación o por correo electrónico. El uso continuado del servicio constituye aceptación de los términos modificados.',
                 'terms-section-8-p2': 'Proceso de notificación de cambios:',
-                'terms-section-8-item-1': 'Notificación por correo electrónico a usuarios activos',
-                'terms-section-8-item-2': 'Notificaciones en la aplicación para cambios importantes',
-                'terms-section-8-item-3': 'Términos actualizados publicados en el sitio web',
-                'terms-section-8-item-4': 'Período de gracia de 30 días para objeciones',
+                'terms-section-8-item-1': 'Email notification to active users',
+                'terms-section-8-item-2': 'In-app notifications for major changes',
+                'terms-section-8-item-3': 'Updated terms posted on website',
+                'terms-section-8-item-4': '30-day grace period for objections',
                 
                 // Footer
                 'terms-contact-info': 'Para preguntas sobre estos Términos y Condiciones, puede contactarnos en:',
@@ -796,15 +796,13 @@
         function detectInitialLanguage() {
             const pathname = window.location.pathname;
             
-            if (pathname === '/es/terms' || pathname.startsWith('/es/')) {
+            // Detectar si la URL contiene /es/ para español
+            if (pathname.includes('/es/') || pathname.startsWith('/es/')) {
                 return 'es';
-            } else if (pathname === '/terms' || pathname === '/') {
-                return 'en';
             }
             
-            // Fallback al idioma del navegador
-            const browserLanguage = navigator.language.slice(0, 2);
-            return browserLanguage === 'es' ? 'es' : 'en';
+            // Por defecto, inglés para todas las demás rutas
+            return 'en';
         }
 
         // Función para aplicar traducciones

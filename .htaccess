@@ -3,24 +3,33 @@
 # Enable rewrite engine
 RewriteEngine On
 
-# Spanish terms page
-RewriteRule ^es/terms$ /terms.html [L]
+# Force HTTPS (optional, uncomment if needed)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# Spanish privacy policy page
-RewriteRule ^es/privacypolicy$ /privacypolicy.html [L]
+# Spanish terms page
+RewriteRule ^es/terms/?$ /terms.html [L]
+
+# Spanish privacy policy page  
+RewriteRule ^es/privacypolicy/?$ /privacypolicy.html [L]
 
 # English terms page
-RewriteRule ^terms$ /terms.html [L]
+RewriteRule ^terms/?$ /terms.html [L]
 
 # English privacy policy page
-RewriteRule ^privacypolicy$ /privacypolicy.html [L]
+RewriteRule ^privacypolicy/?$ /privacypolicy.html [L]
 
 # Spanish main page
 RewriteRule ^es/?$ /index.html [L]
 
+# Prevent direct access to .html files (redirect to clean URLs)
+RewriteCond %{THE_REQUEST} /([^.]+)\.html [NC]
+RewriteRule ^ /%1 [NC,L,R=301]
+
 # Main fallback - redirect everything else to index.html
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/(terms|privacypolicy|es)
 RewriteRule ^(.*)$ /index.html [L,QSA]
 
 # Cache static assets

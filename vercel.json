@@ -28,5 +28,17 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/terms.html",
+      "destination": "/terms",
+      "permanent": true
+    },
+    {
+      "source": "/privacypolicy.html",
+      "destination": "/privacypolicy",
+      "permanent": true
+    }
   ]
 }
