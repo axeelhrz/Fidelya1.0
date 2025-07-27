@@ -721,23 +721,38 @@ function detectInitialLanguage() {
 // ===== FUNCIONES PARA NAVEGACIÓN A PÁGINAS LEGALES =====
 function goToPrivacyPolicy(event) {
     event.preventDefault();
+    event.stopPropagation();
     const currentLang = getCurrentLanguage();
     const privacyUrl = currentLang === 'es' ? '/es/privacypolicy' : '/privacypolicy';
+    console.log(`🔗 Navegando a Política de Privacidad: ${privacyUrl} (idioma: ${currentLang})`);
     window.location.href = privacyUrl;
 }
 
 function goToTermsPolicy(event) {
     event.preventDefault();
+    event.stopPropagation();
     const currentLang = getCurrentLanguage();
     const termsUrl = currentLang === 'es' ? '/es/terms' : '/terms';
+    console.log(`🔗 Navegando a Términos y Condiciones: ${termsUrl} (idioma: ${currentLang})`);
     window.location.href = termsUrl;
 }
 
 function getCurrentLanguage() {
     const pathname = window.location.pathname;
-    if (pathname === '/es' || pathname.startsWith('/es/')) {
+    const href = window.location.href;
+    
+    console.log(`🔍 Detectando idioma actual - pathname: ${pathname}, href: ${href}`);
+    
+    // Detectar español en múltiples patrones
+    if (pathname === '/es' || 
+        pathname.startsWith('/es/') || 
+        href.includes('/es/') || 
+        href.endsWith('/es')) {
+        console.log('✅ Idioma detectado: ESPAÑOL');
         return 'es';
     }
+    
+    console.log('✅ Idioma detectado: INGLÉS (por defecto)');
     return 'en';
 }
 
