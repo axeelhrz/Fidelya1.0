@@ -13,7 +13,6 @@ import { useBeneficiosAsociacion } from '@/hooks/useBeneficios';
 import { 
   Building2,
   TrendingUp,
-  Zap,
   Shield,
   LogOut,
   Settings
@@ -49,7 +48,7 @@ const OptimizedLoadingState = memo(() => (
         transition={{ delay: 0.3 }}
         className="text-slate-600 text-lg"
       >
-        Optimizando tu experiencia...
+        Cargando tu panel de control...
       </motion.p>
     </motion.div>
   </div>
@@ -78,16 +77,16 @@ const DashboardHeader = memo<{
     <motion.div 
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6 lg:p-8 mb-8"
+      className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl border border-white/30 p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8"
     >
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 lg:gap-6">
           <div className="relative">
-            <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 rounded-3xl flex items-center justify-center shadow-2xl">
-              <Building2 className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
+            <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-xl sm:shadow-2xl">
+              <Building2 className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-white" />
             </div>
-            <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full border-3 border-white shadow-lg flex items-center justify-center">
-              <TrendingUp className="w-3 h-3 text-white" />
+            <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full border-2 sm:border-3 border-white shadow-lg flex items-center justify-center">
+              <TrendingUp className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
             </div>
           </div>
           <div>
@@ -95,7 +94,7 @@ const DashboardHeader = memo<{
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-2"
+              className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-1 sm:mb-2"
             >
               Hola, {user?.nombre || 'Administrador'}
             </motion.h1>
@@ -103,19 +102,10 @@ const DashboardHeader = memo<{
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-base sm:text-lg lg:text-xl text-slate-600"
+              className="text-sm sm:text-base lg:text-lg xl:text-xl text-slate-600"
             >
-              Panel de control ultra optimizado
+              Panel de control de asociación
             </motion.p>
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="flex items-center space-x-2 mt-2"
-            >
-              <Zap className="w-4 h-4 text-yellow-500" />
-              <span className="text-sm text-slate-500 font-medium">Sistema optimizado al 10000%</span>
-            </motion.div>
           </div>
         </div>
         
@@ -127,15 +117,15 @@ const DashboardHeader = memo<{
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onAddMember}
-            className="bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800 hover:from-slate-700 hover:via-slate-800 hover:to-slate-900 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-xl hover:shadow-2xl group"
+            className="bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800 hover:from-slate-700 hover:via-slate-800 hover:to-slate-900 text-white px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 lg:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl group text-sm sm:text-base"
           >
             <span>Nuevo Socio</span>
           </motion.button>
           
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-emerald-50 px-4 py-3 rounded-2xl border border-emerald-200">
-              <Shield className="w-5 h-5 text-emerald-600" />
-              <span className="text-sm font-medium text-emerald-700">Seguro</span>
+            <div className="flex items-center gap-2 bg-emerald-50 px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl border border-emerald-200">
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+              <span className="text-xs sm:text-sm font-medium text-emerald-700">Seguro</span>
             </div>
             
             {/* Settings and Logout buttons */}
@@ -146,10 +136,10 @@ const DashboardHeader = memo<{
                 transition={{ delay: 0.5 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all duration-200"
+                className="p-2.5 sm:p-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl sm:rounded-2xl transition-all duration-200"
                 title="Configuración"
               >
-                <Settings className="w-5 h-5" />
+                <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
               </motion.button>
               
               <motion.button
@@ -159,10 +149,10 @@ const DashboardHeader = memo<{
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onLogout}
-                className="p-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-2xl transition-all duration-200"
+                className="p-2.5 sm:p-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl sm:rounded-2xl transition-all duration-200"
                 title="Cerrar sesión"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
               </motion.button>
             </div>
           </div>
@@ -245,7 +235,7 @@ export default function OptimizedAsociacionDashboard() {
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-        <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
+        <div className="p-3 sm:p-4 lg:p-6 xl:p-8 space-y-4 sm:space-y-6 lg:space-y-8 max-w-7xl mx-auto">
           {/* Optimized Header */}
           <DashboardHeader
             user={user ?? {}}
@@ -277,25 +267,6 @@ export default function OptimizedAsociacionDashboard() {
         onConfirm={handleLogoutConfirm}
         onCancel={handleLogoutCancel}
       />
-
-      {/* Performance indicator */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 left-4 z-50 bg-black/90 backdrop-blur-sm text-white text-xs px-4 py-3 rounded-xl border border-white/20">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <Zap className="w-4 h-4 text-yellow-400" />
-              <span className="font-semibold">Ultra Optimizado</span>
-            </div>
-            <div className="w-px h-4 bg-white/30"></div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span>Pestañas: {currentSection}</span>
-            </div>
-            <div className="w-px h-4 bg-white/30"></div>
-            <span className="text-green-400">Sin Sidebar</span>
-          </div>
-        </div>
-      )}
     </>
   );
 }
