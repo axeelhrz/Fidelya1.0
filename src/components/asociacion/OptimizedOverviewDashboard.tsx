@@ -25,12 +25,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOptimizedSocioData } from '@/hooks/useOptimizedSocioData';
 import { useOptimizedComercioData } from '@/hooks/useOptimizedComercioData';
 import { useDebounce } from '@/hooks/useDebounce';
-import { format, subDays } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 // Lazy load heavy components
 const ModernActivityTimeline = lazy(() => import('./ModernActivityTimeline'));
-const ModernSystemStatusCard = lazy(() => import('./ModernSystemStatusCard'));
 
 interface OverviewDashboardProps {
   onNavigate: (section: string) => void;
@@ -46,15 +45,6 @@ interface ActivityLog {
   metadata?: Record<string, unknown>;
   userId?: string;
   userName?: string;
-}
-
-interface SystemHealth {
-  status: 'excellent' | 'good' | 'warning' | 'critical';
-  lastBackup: Date | null;
-  storageUsed: number;
-  storageLimit: number;
-  uptime: number;
-  responseTime: number;
 }
 
 // Memoized Quick Stats Component - Mobile Optimized
@@ -179,21 +169,10 @@ const LoadingSkeleton = memo(() => (
       ))}
     </div>
 
-    {/* Secondary Cards Skeleton */}
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-      <div className="xl:col-span-2">
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
-          <div className="flex justify-center py-8 sm:py-12">
-            <div className="w-8 h-8 sm:w-12 sm:h-12 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin" />
-          </div>
-        </div>
-      </div>
-      <div>
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
-          <div className="flex justify-center py-8 sm:py-12">
-            <div className="w-8 h-8 sm:w-12 sm:h-12 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin" />
-          </div>
-        </div>
+    {/* Activity Timeline Skeleton */}
+    <div className="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
+      <div className="flex justify-center py-8 sm:py-12">
+        <div className="w-8 h-8 sm:w-12 sm:h-12 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin" />
       </div>
     </div>
   </div>
@@ -228,15 +207,6 @@ const OptimizedOverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const debouncedRefresh = useDebounce(() => {
     handleRefresh();
   }, 1000);
-
-  const systemHealth = useMemo<SystemHealth>(() => ({
-    status: 'good',
-    lastBackup: subDays(new Date(), 1),
-    storageUsed: 1024,
-    storageLimit: 5120,
-    uptime: 99.9,
-    responseTime: 120,
-  }), []);
 
   // Optimized refresh handler
   const handleRefresh = useCallback(async () => {
@@ -355,38 +325,20 @@ const OptimizedOverviewDashboard: React.FC<OverviewDashboardProps> = ({
         loading={sociosLoading || comerciosLoading}
       />
 
-      {/* Secondary Cards - Activity Timeline and System Status */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-        <div className="xl:col-span-2">
-          <Suspense fallback={
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
-              <div className="flex justify-center py-8 sm:py-12">
-                <div className="w-8 h-8 sm:w-12 sm:h-12 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin" />
-              </div>
-            </div>
-          }>
-            <ModernActivityTimeline
-              activities={activities}
-              loading={activitiesLoading}
-              onViewAll={() => onNavigate('notificaciones')}
-            />
-          </Suspense>
+      {/* Activity Timeline - Full Width */}
+      <Suspense fallback={
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
+          <div className="flex justify-center py-8 sm:py-12">
+            <div className="w-8 h-8 sm:w-12 sm:h-12 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin" />
+          </div>
         </div>
-        <div>
-          <Suspense fallback={
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
-              <div className="flex justify-center py-8 sm:py-12">
-                <div className="w-8 h-8 sm:w-12 sm:h-12 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin" />
-              </div>
-            </div>
-          }>
-            <ModernSystemStatusCard
-              health={systemHealth}
-              loading={false}
-            />
-          </Suspense>
-        </div>
-      </div>
+      }>
+        <ModernActivityTimeline
+          activities={activities}
+          loading={activitiesLoading}
+          onViewAll={() => onNavigate('notificaciones')}
+        />
+      </Suspense>
     </div>
   );
 };
