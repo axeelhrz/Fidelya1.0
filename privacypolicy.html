@@ -810,12 +810,19 @@
         // Función para detectar idioma inicial
         function detectInitialLanguage() {
             const pathname = window.location.pathname;
+            const href = window.location.href;
+            
+            console.log('🔍 Detectando idioma...');
+            console.log('📍 pathname:', pathname);
+            console.log('🌐 href:', href);
             
             // Detectar si la URL contiene /es/ para español
-            if (pathname.includes('/es/') || pathname.startsWith('/es/')) {
+            if (pathname.includes('/es/') || pathname.startsWith('/es/') || href.includes('/es/')) {
+                console.log('✅ Idioma detectado: ESPAÑOL');
                 return 'es';
             }
             
+            console.log('✅ Idioma detectado: INGLÉS (por defecto)');
             // Por defecto, inglés para todas las demás rutas
             return 'en';
         }
