@@ -246,7 +246,7 @@ const OptimizedKPICard = memo<{
 
 OptimizedKPICard.displayName = 'OptimizedKPICard';
 
-// Memoized Quick Stats Component - Mobile Optimized
+// Memoized Quick Stats Component - Mobile Optimized (Only show if vencidos > 0)
 const OptimizedQuickStats = memo<{
   totalSocios: number;
   activosSocios: number;
@@ -254,43 +254,53 @@ const OptimizedQuickStats = memo<{
   totalComercios: number;
   loading: boolean;
 }>(({ totalSocios, activosSocios, vencidosSocios, totalComercios, loading }) => {
-  const stats = useMemo(() => [
-    {
-      label: 'Total Socios',
-      value: totalSocios,
-      icon: <Users className="w-4 h-4 sm:w-5 sm:h-5" />,
-      gradient: 'from-blue-500 to-cyan-500',
-      bgGradient: 'from-blue-50 to-cyan-50',
-      borderColor: 'border-blue-100'
-    },
-    {
-      label: 'Socios Activos',
-      value: activosSocios,
-      icon: <UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />,
-      gradient: 'from-emerald-500 to-teal-500',
-      bgGradient: 'from-emerald-50 to-teal-50',
-      borderColor: 'border-emerald-100'
-    },
-    {
-      label: 'Socios Vencidos',
-      value: vencidosSocios,
-      icon: <UserX className="w-4 h-4 sm:w-5 sm:h-5" />,
-      gradient: 'from-red-500 to-pink-500',
-      bgGradient: 'from-red-50 to-pink-50',
-      borderColor: 'border-red-100'
-    },
-    {
-      label: 'Comercios Activos',
-      value: totalComercios,
-      icon: <Store className="w-4 h-4 sm:w-5 sm:h-5" />,
-      gradient: 'from-purple-500 to-violet-500',
-      bgGradient: 'from-purple-50 to-violet-50',
-      borderColor: 'border-purple-100'
+  const stats = useMemo(() => {
+    const baseStats = [
+      {
+        label: 'Total Socios',
+        value: totalSocios,
+        icon: <Users className="w-4 h-4 sm:w-5 sm:h-5" />,
+        gradient: 'from-blue-500 to-cyan-500',
+        bgGradient: 'from-blue-50 to-cyan-50',
+        borderColor: 'border-blue-100'
+      },
+      {
+        label: 'Socios Activos',
+        value: activosSocios,
+        icon: <UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />,
+        gradient: 'from-emerald-500 to-teal-500',
+        bgGradient: 'from-emerald-50 to-teal-50',
+        borderColor: 'border-emerald-100'
+      },
+      {
+        label: 'Comercios Activos',
+        value: totalComercios,
+        icon: <Store className="w-4 h-4 sm:w-5 sm:h-5" />,
+        gradient: 'from-purple-500 to-violet-500',
+        bgGradient: 'from-purple-50 to-violet-50',
+        borderColor: 'border-purple-100'
+      }
+    ];
+
+    // Only add vencidos if there are any
+    if (vencidosSocios > 0) {
+      baseStats.splice(2, 0, {
+        label: 'Socios Vencidos',
+        value: vencidosSocios,
+        icon: <UserX className="w-4 h-4 sm:w-5 sm:h-5" />,
+        gradient: 'from-red-500 to-pink-500',
+        bgGradient: 'from-red-50 to-pink-50',
+        borderColor: 'border-red-100'
+      });
     }
-  ], [totalSocios, activosSocios, vencidosSocios, totalComercios]);
+
+    return baseStats;
+  }, [totalSocios, activosSocios, vencidosSocios, totalComercios]);
+
+  const gridCols = vencidosSocios > 0 ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3';
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+    <div className={`grid ${gridCols} gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8`}>
       {stats.map((stat, index) => (
         <motion.div
           key={stat.label}
@@ -344,8 +354,8 @@ const LoadingSkeleton = memo(() => (
     </div>
 
     {/* Quick Stats Skeleton */}
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-      {[1, 2, 3, 4].map((i) => (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+      {[1, 2, 3].map((i) => (
         <div key={i} className="bg-slate-50 rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-md sm:shadow-lg p-3 sm:p-4 lg:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 lg:space-x-4">
             <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 bg-slate-200 rounded-xl sm:rounded-2xl animate-pulse mx-auto sm:mx-0" />
@@ -359,8 +369,8 @@ const LoadingSkeleton = memo(() => (
     </div>
 
     {/* KPI Cards Skeleton */}
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-      {[1, 2, 3].map((i) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+      {[1, 2].map((i) => (
         <div key={i} className="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
           <div className="flex items-start justify-between mb-4 sm:mb-6">
             <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-slate-200 rounded-xl sm:rounded-2xl animate-pulse" />
@@ -431,13 +441,12 @@ const OptimizedOverviewDashboard: React.FC<OverviewDashboardProps> = ({
     };
   }, [activities, socioStats]);
 
-  // Memoized KPI metrics - Fixed percentages and removed duplicates
+  // Memoized KPI metrics - Only show relevant metrics, exclude vencidos if 0
   const kpiMetrics = useMemo(() => {
     const activosPercentage = socioStats.total > 0 ? (socioStats.activos / socioStats.total) * 100 : 0;
-    const vencidosPercentage = socioStats.total > 0 ? (socioStats.vencidos / socioStats.total) * 100 : 0;
     const comerciosGrowth = comercioStats.comerciosActivos > 0 ? 5.2 : 0; // Simulated growth
     
-    return [
+    const metrics = [
       {
         title: 'Socios Activos',
         value: `${socioStats.activos.toLocaleString()}`,
@@ -448,18 +457,6 @@ const OptimizedOverviewDashboard: React.FC<OverviewDashboardProps> = ({
         trend: activosPercentage > 80 ? 'up' as const : activosPercentage > 60 ? 'neutral' as const : 'down' as const,
         onClick: () => onNavigate('socios'),
         loading: sociosLoading
-      },
-      {
-        title: 'Socios Vencidos',
-        value: `${socioStats.vencidos.toString()}`,
-        change: vencidosPercentage,
-        icon: <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7" />,
-        gradient: 'from-red-500 to-pink-500',
-        subtitle: `${vencidosPercentage.toFixed(1)}% requieren atención`,
-        trend: vencidosPercentage > 20 ? 'up' as const : vencidosPercentage > 10 ? 'neutral' as const : 'down' as const,
-        onClick: () => onNavigate('socios'),
-        loading: sociosLoading,
-        badge: vencidosPercentage > 15 ? 'Crítico' : undefined
       },
       {
         title: 'Comercios Vinculados',
@@ -473,6 +470,25 @@ const OptimizedOverviewDashboard: React.FC<OverviewDashboardProps> = ({
         loading: comerciosLoading
       }
     ];
+
+    // Only add vencidos metric if there are vencidos > 0
+    if (socioStats.vencidos > 0) {
+      const vencidosPercentage = (socioStats.vencidos / socioStats.total) * 100;
+      metrics.splice(1, 0, {
+        title: 'Socios Vencidos',
+        value: `${socioStats.vencidos.toString()}`,
+        change: vencidosPercentage,
+        icon: <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7" />,
+        gradient: 'from-red-500 to-pink-500',
+        subtitle: `${vencidosPercentage.toFixed(1)}% requieren atención`,
+        trend: vencidosPercentage > 20 ? 'up' as const : vencidosPercentage > 10 ? 'neutral' as const : 'down' as const,
+        onClick: () => onNavigate('socios'),
+        loading: sociosLoading,
+        badge: vencidosPercentage > 15 ? 'Crítico' : undefined
+      });
+    }
+
+    return metrics;
   }, [socioStats, comercioStats, sociosLoading, comerciosLoading, onNavigate]);
 
   // Optimized refresh handler
@@ -593,7 +609,7 @@ const OptimizedOverviewDashboard: React.FC<OverviewDashboardProps> = ({
       />
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
         <AnimatePresence mode="wait">
           {kpiMetrics.map((metric, index) => (
             <OptimizedKPICard key={metric.title} {...metric} delay={index * 0.1} />
