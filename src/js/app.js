@@ -726,12 +726,10 @@ function goToPrivacyPolicy(event) {
     
     console.log(`🔗 Navegando a Política de Privacidad (idioma: ${currentLang})`);
     
-    // Navegar manteniendo el idioma en la URL
-    if (currentLang === 'es') {
-        window.location.href = './privacypolicy.html?lang=es';
-    } else {
-        window.location.href = './privacypolicy.html';
-    }
+    // Usar el sistema de rutas basado en pathname en lugar de navegar a archivos HTML
+    const targetPath = currentLang === 'es' ? '/es/privacypolicy' : '/privacypolicy';
+    window.history.pushState({}, '', targetPath);
+    handleRouteChange();
 }
 
 function goToTermsPolicy(event) {
@@ -741,12 +739,10 @@ function goToTermsPolicy(event) {
     
     console.log(`🔗 Navegando a Términos y Condiciones (idioma: ${currentLang})`);
     
-    // Navegar manteniendo el idioma en la URL
-    if (currentLang === 'es') {
-        window.location.href = './terms.html?lang=es';
-    } else {
-        window.location.href = './terms.html';
-    }
+    // Usar el sistema de rutas basado en pathname en lugar de navegar a archivos HTML
+    const targetPath = currentLang === 'es' ? '/es/terms' : '/terms';
+    window.history.pushState({}, '', targetPath);
+    handleRouteChange();
 }
 
 function getCurrentLanguage() {
