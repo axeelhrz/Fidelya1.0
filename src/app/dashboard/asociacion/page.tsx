@@ -178,6 +178,7 @@ export default function OptimizedAsociacionDashboard() {
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [currentSection, setCurrentSection] = useState('dashboard');
+  const [triggerNewSocio, setTriggerNewSocio] = useState(false);
 
   // Memoized consolidated stats
   const consolidatedStats = useMemo(() => ({
@@ -212,13 +213,20 @@ export default function OptimizedAsociacionDashboard() {
     setLogoutModalOpen(false);
   }, []);
 
-  // Optimized navigation handler - NO ROUTING, just state change
+  // Optimized navigation handler
   const handleNavigate = useCallback((section: string) => {
     setCurrentSection(section);
   }, []);
 
+  // Enhanced add member handler that triggers the new socio dialog
   const handleAddMember = useCallback(() => {
     setCurrentSection('socios');
+    setTriggerNewSocio(true);
+  }, []);
+
+  // Callback to reset the trigger after the dialog is opened
+  const handleNewSocioTriggered = useCallback(() => {
+    setTriggerNewSocio(false);
   }, []);
 
   // Redirect if not authenticated or not association
@@ -255,6 +263,8 @@ export default function OptimizedAsociacionDashboard() {
               onAddMember={handleAddMember}
               initialTab={currentSection}
               stats={consolidatedStats}
+              triggerNewSocio={triggerNewSocio}
+              onNewSocioTriggered={handleNewSocioTriggered}
             />
           </motion.div>
         </div>
