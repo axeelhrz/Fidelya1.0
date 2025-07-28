@@ -2639,6 +2639,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializePerformanceOptimizations();
     
     console.log(`✅ StarFlex Ultra-Optimizado con rutas basadas en pathname - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}, Idioma actual: ${currentLanguage}, Pathname: ${window.location.pathname}`);
+    
 });
 
 // ===== MANEJO DE ERRORES ULTRA-OPTIMIZADO =====
