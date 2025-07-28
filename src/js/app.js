@@ -723,18 +723,30 @@ function goToPrivacyPolicy(event) {
     event.preventDefault();
     event.stopPropagation();
     const currentLang = getCurrentLanguage();
-    const privacyUrl = currentLang === 'es' ? '/es/privacypolicy' : '/privacypolicy';
-    console.log(`🔗 Navegando a Política de Privacidad: ${privacyUrl} (idioma: ${currentLang})`);
-    window.location.href = privacyUrl;
+    
+    console.log(`🔗 Navegando a Política de Privacidad (idioma: ${currentLang})`);
+    
+    // Navegar manteniendo el idioma en la URL
+    if (currentLang === 'es') {
+        window.location.href = './privacypolicy.html?lang=es';
+    } else {
+        window.location.href = './privacypolicy.html';
+    }
 }
 
 function goToTermsPolicy(event) {
     event.preventDefault();
     event.stopPropagation();
     const currentLang = getCurrentLanguage();
-    const termsUrl = currentLang === 'es' ? '/es/terms' : '/terms';
-    console.log(`🔗 Navegando a Términos y Condiciones: ${termsUrl} (idioma: ${currentLang})`);
-    window.location.href = termsUrl;
+    
+    console.log(`🔗 Navegando a Términos y Condiciones (idioma: ${currentLang})`);
+    
+    // Navegar manteniendo el idioma en la URL
+    if (currentLang === 'es') {
+        window.location.href = './terms.html?lang=es';
+    } else {
+        window.location.href = './terms.html';
+    }
 }
 
 function getCurrentLanguage() {

@@ -804,6 +804,45 @@
             }
         };
 
+        // Detectar idioma desde URL parameter
+function detectLanguageFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const langParam = urlParams.get('lang');
+    
+    if (langParam === 'es') {
+        return 'es';
+    }
+    
+    // También detectar desde la URL actual si viene de /es
+    const referrer = document.referrer;
+    if (referrer.includes('/es') || referrer.endsWith('/es')) {
+        return 'es';
+    }
+    
+    return 'en';
+}
+
+// Actualizar la función de detección inicial
+function detectInitialLanguage() {
+    // Primero intentar detectar desde URL parameter
+    const langFromURL = detectLanguageFromURL();
+    if (langFromURL) {
+        return langFromURL;
+    }
+    
+    // Fallback a detección por pathname
+    const pathname = window.location.pathname;
+    const href = window.location.href;
+    
+    if (pathname.includes('/es/') || pathname.startsWith('/es/') || 
+        href.includes('/es/') || pathname === '/es') {
+        return 'es';
+    }
+    
+    return 'en';
+}
+
+
         // Función para detectar idioma inicial
         function detectInitialLanguage() {
             const pathname = window.location.pathname;
