@@ -42,6 +42,8 @@ import toast from 'react-hot-toast';
 import Image from 'next/image';
 import * as XLSX from 'xlsx';
 
+
+
 export const EnhancedMemberManagement = () => {
   const { 
     socios, 

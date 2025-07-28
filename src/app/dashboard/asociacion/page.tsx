@@ -60,7 +60,6 @@ OptimizedLoadingState.displayName = 'OptimizedLoadingState';
 interface User {
   nombre?: string;
   role?: string;
-  // Add other user properties as needed
 }
 
 interface Stats {
@@ -128,7 +127,6 @@ const DashboardHeader = memo<{
               <span className="text-xs sm:text-sm font-medium text-emerald-700">Seguro</span>
             </div>
             
-            {/* Settings and Logout buttons */}
             <div className="flex items-center gap-2">
               <motion.button
                 initial={{ opacity: 0, scale: 0.9 }}

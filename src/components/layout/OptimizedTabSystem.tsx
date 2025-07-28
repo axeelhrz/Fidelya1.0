@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 
 // Lazy load heavy components for optimal performance
-// Note: For named exports, we need to destructure the component from the module
 const OptimizedOverviewDashboard = lazy(() => import('@/components/asociacion/OptimizedOverviewDashboard'));
 const EnhancedMemberManagement = lazy(() => 
   import('@/components/asociacion/EnhancedMemberManagement').then(module => ({ 
@@ -177,13 +176,17 @@ interface OptimizedTabSystemProps {
     beneficiosActivos?: number;
     [key: string]: number | undefined;
   };
+  triggerNewSocio?: boolean;
+  onNewSocioTriggered?: () => void;
 }
 
 export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({ 
   onNavigate, 
   onAddMember,
   initialTab = 'dashboard',
-  stats 
+  stats,
+  triggerNewSocio = false,
+  onNewSocioTriggered
 }) => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -270,8 +273,10 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
   const componentProps = useMemo(() => ({
     onNavigate,
     onAddMember,
-    stats
-  }), [onNavigate, onAddMember, stats]);
+    stats,
+    triggerNewSocio: activeTab === 'socios' ? triggerNewSocio : false,
+    onNewSocioTriggered
+  }), [onNavigate, onAddMember, stats, activeTab, triggerNewSocio, onNewSocioTriggered]);
 
   return (
     <div className="space-y-6">
