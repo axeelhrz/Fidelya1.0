@@ -28,7 +28,7 @@ import {
   DollarSign,
   Clock,
   Users,
-  Award,
+  Award
 } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import { SocioFormData, Socio } from '@/types/socio';
@@ -116,6 +116,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
   onClose,
   onSave,
   socio,
+  loading = false
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -206,33 +207,16 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
 
   // Verificar si el paso actual es válido
   const isCurrentStepValid = useMemo(() => {
-    const currentStepFields = FORM_STEPS[currentStep].fields;
-    if (isEditing && currentStep === 3) return true; // Skip password validation for editing
-    return currentStepFields.every(field => !errors[field as keyof SocioFormInputs]);
-  }, [currentStep, errors, isEditing]);
+    const currentStepFields = FORM_STEPS[currentStep].fields as (keyof SocioFormInputs)[];
+    return currentStepFields.every(field => !errors[field]);
+  }, [currentStep, errors]);
 
-  // Marcar paso como completado
+  // Marcar pasos como completados
   useEffect(() => {
     if (isCurrentStepValid) {
       setCompletedSteps(prev => new Set([...prev, currentStep]));
     }
   }, [isCurrentStepValid, currentStep]);
-
-  // Navegación entre pasos
-  const nextStep = useCallback(async () => {
-    const fieldsToValidate = FORM_STEPS[currentStep].fields;
-    const isStepValid = await trigger(fieldsToValidate as (keyof SocioFormInputs)[]);
-    
-    if (isStepValid && currentStep < FORM_STEPS.length - 1) {
-      setCurrentStep(prev => prev + 1);
-    }
-  }, [currentStep, trigger]);
-
-  const prevStep = useCallback(() => {
-    if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
-    }
-  }, [currentStep]);
 
   // Manejar envío del formulario
   const onSubmit = useCallback(async (data: SocioFormInputs) => {
@@ -264,8 +248,24 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     }
   }, [isSubmitting, onSave, onClose, isEditing]);
 
-  // Componente de campo ultra optimizado
-  const Field = React.memo(({ 
+  // Navegación entre pasos
+  const nextStep = useCallback(async () => {
+    const fieldsToValidate = FORM_STEPS[currentStep].fields as (keyof SocioFormInputs)[];
+    const isStepValid = await trigger(fieldsToValidate);
+    
+    if (isStepValid && currentStep < FORM_STEPS.length - 1) {
+      setCurrentStep(prev => prev + 1);
+    }
+  }, [currentStep, trigger]);
+
+  const prevStep = useCallback(() => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    }
+  }, [currentStep]);
+
+  // Componente de campo ultra optimizado y FUNCIONAL
+  const FormField = React.memo(({ 
     name, 
     label, 
     type = 'text', 
@@ -278,11 +278,11 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     name: keyof SocioFormInputs;
     label: string;
     type?: string;
-    icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    icon?: React.ComponentType<any>;
     placeholder?: string;
     required?: boolean;
     options?: { value: string; label: string }[];
-    [key: string]: unknown;
+    [key: string]: any;
   }) => {
     const error = errors[name];
     const hasError = !!error;
@@ -290,16 +290,16 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     const hasValue = value !== undefined && value !== '' && value !== 0;
 
     return (
-      <div className="space-y-1.5">
-        <label className="block text-xs font-medium text-slate-700">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-slate-700">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
         
-        <div className="relative group">
+        <div className="relative">
           {Icon && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Icon className={`h-4 w-4 transition-colors duration-200 ${
-                hasError ? 'text-red-400' : hasValue ? 'text-emerald-500' : 'text-slate-400'
+                hasError ? 'text-red-400' : hasValue ? 'text-emerald-400' : 'text-slate-400'
               }`} />
             </div>
           )}
@@ -308,16 +308,16 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
             <select
               {...register(name)}
               className={`
-                block w-full rounded-xl border-0 py-2.5 shadow-sm ring-1 ring-inset transition-all duration-200
-                ${Icon ? 'pl-10' : 'pl-3'} pr-8 text-sm
+                block w-full rounded-lg border py-2.5 px-3 text-sm transition-all duration-200
+                ${Icon ? 'pl-10' : 'pl-3'} pr-8
                 ${hasError 
-                  ? 'ring-red-300 bg-red-50/50 text-red-900' 
+                  ? 'border-red-300 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-500' 
                   : hasValue
-                  ? 'ring-emerald-300 bg-emerald-50/50 text-emerald-900'
-                  : 'ring-slate-200 bg-white text-slate-900'
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-900 focus:border-emerald-500 focus:ring-emerald-500'
+                  : 'border-slate-300 bg-white text-slate-900 focus:border-blue-500 focus:ring-blue-500'
                 }
-                focus:ring-2 focus:ring-blue-500 focus:outline-none appearance-none
-                group-hover:ring-slate-300
+                focus:outline-none focus:ring-2 focus:ring-opacity-50
+                appearance-none cursor-pointer
               `}
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
@@ -338,31 +338,30 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               type={type}
               placeholder={placeholder}
               className={`
-                block w-full rounded-xl border-0 py-2.5 shadow-sm ring-1 ring-inset transition-all duration-200
-                ${Icon ? 'pl-10' : 'pl-3'} pr-9 text-sm
+                block w-full rounded-lg border py-2.5 px-3 text-sm transition-all duration-200
+                ${Icon ? 'pl-10' : 'pl-3'} pr-10
                 ${hasError 
-                  ? 'ring-red-300 bg-red-50/50 text-red-900 placeholder:text-red-400' 
+                  ? 'border-red-300 bg-red-50 text-red-900 placeholder:text-red-400 focus:border-red-500 focus:ring-red-500' 
                   : hasValue
-                  ? 'ring-emerald-300 bg-emerald-50/50 text-emerald-900 placeholder:text-emerald-400'
-                  : 'ring-slate-200 bg-white text-slate-900 placeholder:text-slate-400'
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-900 placeholder:text-emerald-400 focus:border-emerald-500 focus:ring-emerald-500'
+                  : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500'
                 }
-                focus:ring-2 focus:ring-blue-500 focus:outline-none
-                group-hover:ring-slate-300
+                focus:outline-none focus:ring-2 focus:ring-opacity-50
               `}
               {...props}
             />
           )}
           
           {hasValue && !hasError && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
             </div>
           )}
         </div>
         
         {hasError && (
-          <p className="text-xs text-red-600 flex items-center gap-1">
-            <AlertCircle className="h-3 w-3" />
+          <p className="text-xs text-red-600 flex items-center gap-1.5">
+            <AlertCircle className="h-3 w-3 flex-shrink-0" />
             {error?.message}
           </p>
         )}
@@ -370,29 +369,27 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     );
   });
 
-  Field.displayName = "Field";
-
   // Renderizar contenido del paso actual
   const renderStepContent = () => {
     switch (currentStep) {
       case 0: // Información Personal
         return (
           <div className="space-y-6">
-            <Field
+            <FormField
               name="nombre"
               label="Nombre Completo"
               icon={User}
-              placeholder="Nombre completo del socio"
+              placeholder="Ingresa el nombre completo"
               required
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field
+              <FormField
                 name="dni"
                 label="DNI"
                 icon={CreditCard}
                 placeholder="Número de documento"
               />
-              <Field
+              <FormField
                 name="fechaNacimiento"
                 label="Fecha de Nacimiento"
                 type="date"
@@ -405,7 +402,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
       case 1: // Contacto
         return (
           <div className="space-y-6">
-            <Field
+            <FormField
               name="email"
               label="Email"
               type="email"
@@ -414,13 +411,13 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               required
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field
+              <FormField
                 name="telefono"
                 label="Teléfono"
                 icon={Phone}
                 placeholder="+54 9 11 1234-5678"
               />
-              <Field
+              <FormField
                 name="direccion"
                 label="Dirección"
                 icon={MapPin}
@@ -434,7 +431,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field
+              <FormField
                 name="estado"
                 label="Estado"
                 icon={Users}
@@ -447,7 +444,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                   { value: 'vencido', label: 'Vencido' }
                 ]}
               />
-              <Field
+              <FormField
                 name="estadoMembresia"
                 label="Estado Membresía"
                 icon={Crown}
@@ -459,22 +456,22 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Field
+              <FormField
                 name="numeroSocio"
                 label="Número de Socio"
                 icon={Award}
                 placeholder="Número único"
               />
-              <Field
+              <FormField
                 name="montoCuota"
-                label="Cuota"
+                label="Monto Cuota"
                 type="number"
                 icon={DollarSign}
                 placeholder="0.00"
                 min="0"
                 step="0.01"
               />
-              <Field
+              <FormField
                 name="fechaVencimiento"
                 label="Vencimiento"
                 type="date"
@@ -488,13 +485,13 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
         if (isEditing) {
           return (
             <div className="text-center py-12">
-              <div className="w-20 h-20 bg-gradient-to-br from-emerald-100 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+              <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-8 h-8 text-slate-600" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-3">
+              <h3 className="text-lg font-semibold text-slate-900 mb-3">
                 Modo Edición
               </h3>
-              <p className="text-slate-600 max-w-md mx-auto">
+              <p className="text-slate-600 max-w-md mx-auto text-sm leading-relaxed">
                 La contraseña se mantiene sin cambios. Para modificarla, el socio debe usar la opción de recuperación de contraseña.
               </p>
             </div>
@@ -504,7 +501,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
         return (
           <div className="space-y-6">
             <div className="relative">
-              <Field
+              <FormField
                 name="password"
                 label="Contraseña"
                 type={showPassword ? 'text' : 'password'}
@@ -515,13 +512,13 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-8 text-slate-400 hover:text-slate-600 transition-colors z-20"
+                className="absolute right-3 top-8 text-slate-400 hover:text-slate-600 transition-colors z-10"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
             <div className="relative">
-              <Field
+              <FormField
                 name="confirmPassword"
                 label="Confirmar Contraseña"
                 type={showConfirmPassword ? 'text' : 'password'}
@@ -532,7 +529,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-8 text-slate-400 hover:text-slate-600 transition-colors z-20"
+                className="absolute right-3 top-8 text-slate-400 hover:text-slate-600 transition-colors z-10"
               >
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -550,31 +547,31 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           {/* Backdrop */}
           <motion.div
             initial={shouldUseAnimations ? { opacity: 0 } : false}
             animate={shouldUseAnimations ? { opacity: 1 } : false}
             exit={shouldUseAnimations ? { opacity: 0 } : false}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
             onClick={onClose}
           />
 
           {/* Modal */}
           <motion.div
-            initial={shouldUseAnimations ? { opacity: 0, scale: 0.96, y: 8 } : false}
+            initial={shouldUseAnimations ? { opacity: 0, scale: 0.98, y: 8 } : false}
             animate={shouldUseAnimations ? { opacity: 1, scale: 1, y: 0 } : false}
-            exit={shouldUseAnimations ? { opacity: 0, scale: 0.96, y: 8 } : false}
+            exit={shouldUseAnimations ? { opacity: 0, scale: 0.98, y: 8 } : false}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-xl overflow-hidden"
+            className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 z-[10000]"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header minimalista */}
+            {/* Header */}
             <div className="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-slate-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                  <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200">
                     {React.createElement(FORM_STEPS[currentStep].icon, { 
                       className: "w-5 h-5 text-slate-600" 
                     })}
@@ -589,21 +586,22 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={onClose}
                   className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
                 >
-                  <X className="w-5 h-5 text-slate-500" />
+                  <X className="w-5 h-5 text-slate-400" />
                 </button>
               </div>
 
-              {/* Indicador de progreso minimalista */}
+              {/* Indicador de progreso */}
               <div className="flex items-center gap-2 mt-4">
                 {FORM_STEPS.map((step, index) => (
                   <div key={step.id} className="flex items-center">
                     <div className={`
                       w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200
                       ${index <= currentStep 
-                        ? 'bg-blue-500 text-white shadow-sm' 
+                        ? 'bg-slate-900 text-white' 
                         : 'bg-slate-200 text-slate-400'
                       }
                     `}>
@@ -615,8 +613,8 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                     </div>
                     {index < FORM_STEPS.length - 1 && (
                       <div className={`
-                        w-8 h-0.5 mx-2 transition-all duration-200
-                        ${index < currentStep ? 'bg-blue-500' : 'bg-slate-200'}
+                        w-8 h-0.5 mx-2 rounded-full transition-all duration-200
+                        ${index < currentStep ? 'bg-slate-900' : 'bg-slate-200'}
                       `} />
                     )}
                   </div>
@@ -625,9 +623,9 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
             </div>
 
             {/* Contenido del formulario */}
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6 max-h-[calc(90vh-200px)] overflow-y-auto">
-              <div className="mb-6">
-                <h3 className="text-base font-medium text-slate-900 mb-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="p-6">
+              <div className="mb-8">
+                <h3 className="text-base font-medium text-slate-900 mb-6">
                   {FORM_STEPS[currentStep].title}
                 </h3>
                 
@@ -645,16 +643,16 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               </div>
 
               {/* Botones de navegación */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-between pt-6 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={prevStep}
                   disabled={currentStep === 0}
                   className={`
-                    flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200
+                    flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                     ${currentStep === 0
                       ? 'text-slate-400 cursor-not-allowed'
-                      : 'text-slate-700 hover:bg-slate-100'
+                      : 'text-slate-600 hover:bg-slate-100'
                     }
                   `}
                 >
@@ -666,20 +664,20 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg font-medium transition-colors"
+                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium transition-colors"
                   >
                     Cancelar
                   </button>
-
+                  
                   {currentStep < FORM_STEPS.length - 1 ? (
                     <button
                       type="button"
                       onClick={nextStep}
                       disabled={!isCurrentStepValid}
                       className={`
-                        flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all duration-200
+                        flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200
                         ${isCurrentStepValid
-                          ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-sm'
+                          ? 'bg-slate-900 text-white hover:bg-slate-800'
                           : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                         }
                       `}
@@ -692,9 +690,9 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                       type="submit"
                       disabled={isSubmitting || !isValid}
                       className={`
-                        flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all duration-200
+                        flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200
                         ${isValid && !isSubmitting
-                          ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm'
+                          ? 'bg-slate-900 text-white hover:bg-slate-800'
                           : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                         }
                       `}
