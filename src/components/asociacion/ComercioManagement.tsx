@@ -62,47 +62,38 @@ interface ComercioConBeneficios extends ComercioDisponible {
   beneficiosActivosReales?: number;
 }
 
-// Modern Stats Card Component with improved responsiveness
+// Modern Stats Card Component - REMOVED PERCENTAGE FUNCTIONALITY
 const ModernStatsCard: React.FC<{
   title: string;
   value: number;
   icon: React.ReactNode;
   color: 'blue' | 'green' | 'orange' | 'purple';
   trend?: number;
-  percentage?: number;
-}> = ({ title, value, icon, color, trend, percentage }) => {
+}> = ({ title, value, icon, color, trend }) => {
   const colorClasses = {
     blue: {
       bg: 'from-blue-500 to-blue-600',
       iconBg: 'bg-blue-100',
       iconColor: 'text-blue-600',
-      textColor: 'text-blue-600',
-      progressBg: 'bg-blue-200',
-      progressFill: 'bg-blue-500'
+      textColor: 'text-blue-600'
     },
     green: {
       bg: 'from-emerald-500 to-emerald-600',
       iconBg: 'bg-emerald-100',
       iconColor: 'text-emerald-600',
-      textColor: 'text-emerald-600',
-      progressBg: 'bg-emerald-200',
-      progressFill: 'bg-emerald-500'
+      textColor: 'text-emerald-600'
     },
     orange: {
       bg: 'from-orange-500 to-orange-600',
       iconBg: 'bg-orange-100',
       iconColor: 'text-orange-600',
-      textColor: 'text-orange-600',
-      progressBg: 'bg-orange-200',
-      progressFill: 'bg-orange-500'
+      textColor: 'text-orange-600'
     },
     purple: {
       bg: 'from-purple-500 to-purple-600',
       iconBg: 'bg-purple-100',
       iconColor: 'text-purple-600',
-      textColor: 'text-purple-600',
-      progressBg: 'bg-purple-200',
-      progressFill: 'bg-purple-500'
+      textColor: 'text-purple-600'
     }
   };
 
@@ -138,21 +129,6 @@ const ModernStatsCard: React.FC<{
           <p className={`text-xl lg:text-3xl font-bold ${classes.textColor}`}>
             {value.toLocaleString()}
           </p>
-          
-          {/* Progress bar for percentage */}
-          {percentage !== undefined && (
-            <div className="mt-2 lg:mt-3">
-              <div className={`w-full h-2 ${classes.progressBg} rounded-full overflow-hidden`}>
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(percentage, 100)}%` }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                  className={`h-full ${classes.progressFill} rounded-full`}
-                />
-              </div>
-              <p className="text-xs text-slate-500 mt-1">{percentage.toFixed(1)}% del total</p>
-            </div>
-          )}
         </div>
       </div>
       
@@ -524,23 +500,14 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   // Obtener categorías únicas
   const categorias = Array.from(new Set(comerciosVinculados.map(c => c.categoria)));
 
-  // Calculate improved percentages
-  const calculatePercentages = () => {
-    const total = stats.totalComercios;
-    if (total === 0) return { activosPercentage: 0, inactivosPercentage: 0, suspendidosPercentage: 0 };
-    
-    const activos = stats.comerciosActivos;
-    const inactivos = comerciosVinculados.filter(c => c.estado === 'inactivo').length;
-    const suspendidos = comerciosVinculados.filter(c => c.estado === 'suspendido').length;
-    
-    return {
-      activosPercentage: (activos / total) * 100,
-      inactivosPercentage: (inactivos / total) * 100,
-      suspendidosPercentage: (suspendidos / total) * 100
-    };
+  // Calculate real stats based on actual data - NO PERCENTAGES
+  const realStats = {
+    totalComercios: comerciosVinculados.length,
+    comerciosActivos: comerciosVinculados.filter(c => c.estado === 'activo').length,
+    comerciosInactivos: comerciosVinculados.filter(c => c.estado === 'inactivo').length,
+    comerciosSuspendidos: comerciosVinculados.filter(c => c.estado === 'suspendido').length,
+    categorias: Object.keys(stats.categorias).length
   };
-
-  const percentages = calculatePercentages();
 
   // Nueva función para manejar ver beneficios
   const handleViewBeneficios = (comercio: ComercioDisponible) => {
@@ -758,39 +725,38 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
 
   return (
     <div className="space-y-6 lg:space-y-8">
-      {/* Modern Stats Cards with improved percentages */}
+      {/* Modern Stats Cards - NO PERCENTAGES */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
         <ModernStatsCard
           title="Total Comercios"
-          value={stats.totalComercios}
+          value={realStats.totalComercios}
           icon={<Store className="w-5 h-5 lg:w-6 lg:h-6" />}
           color="blue"
           trend={5}
         />
         <ModernStatsCard
           title="Comercios Activos"
-          value={stats.comerciosActivos}
+          value={realStats.comerciosActivos}
           icon={<Zap className="w-5 h-5 lg:w-6 lg:h-6" />}
           color="green"
           trend={12}
-          percentage={percentages.activosPercentage}
         />
         <ModernStatsCard
           title="Comercios Inactivos"
-          value={comerciosVinculados.filter(c => c.estado === 'inactivo').length}
+          value={realStats.comerciosInactivos}
           icon={<PowerOff className="w-5 h-5 lg:w-6 lg:h-6" />}
           color="orange"
-          percentage={percentages.inactivosPercentage}
         />
         <ModernStatsCard
           title="Categorías"
-          value={Object.keys(stats.categorias).length}
+          value={realStats.categorias}
           icon={<Activity className="w-5 h-5 lg:w-6 lg:h-6" />}
           color="purple"
           trend={3}
         />
       </div>
 
+      {/* Rest of the component remains exactly the same... */}
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4">
         {onNavigate && (
