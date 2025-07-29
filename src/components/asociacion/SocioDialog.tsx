@@ -30,7 +30,6 @@ import {
 import { Socio, SocioFormData } from '@/types/socio';
 import { Timestamp } from 'firebase/firestore';
 import { useDebounce } from '@/hooks/useDebounce';
-import { OptimizationUtils } from '@/lib/optimization-config';
 
 // Esquema de validación mejorado
 const socioSchema = z.object({
@@ -95,8 +94,8 @@ const FORM_STEPS = [
   }
 ];
 
-// Componente de campo de formulario profesional
-const ProfessionalFormField = React.memo(({ 
+// Componente de campo de formulario simple
+const SimpleFormField = React.memo(({ 
   field, 
   register, 
   error, 
@@ -117,15 +116,15 @@ const ProfessionalFormField = React.memo(({
   };
 
   const getFieldClasses = () => {
-    const baseClasses = "w-full pl-10 pr-4 py-3 border-2 rounded-xl transition-all duration-150 bg-white/50 backdrop-blur-sm";
+    const baseClasses = "w-full pl-10 pr-4 py-3 border-2 rounded-xl transition-colors duration-100 bg-white";
     
     if (hasError) {
-      return `${baseClasses} border-red-300 focus:border-red-500 focus:ring-red-200`;
+      return `${baseClasses} border-red-300 focus:border-red-500`;
     }
     if (isValid) {
-      return `${baseClasses} border-green-300 focus:border-green-500 focus:ring-green-200`;
+      return `${baseClasses} border-green-300 focus:border-green-500`;
     }
-    return `${baseClasses} border-gray-200 focus:border-blue-500 focus:ring-blue-200`;
+    return `${baseClasses} border-gray-200 focus:border-blue-500`;
   };
 
   if (field.type === 'select') {
@@ -151,15 +150,10 @@ const ProfessionalFormField = React.memo(({
           </select>
         </div>
         {error && (
-          <motion.p
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.1 }}
-            className="text-sm text-red-600 flex items-center gap-1"
-          >
+          <p className="text-sm text-red-600 flex items-center gap-1">
             <AlertCircle className="w-3 h-3" />
             {error.message}
-          </motion.p>
+          </p>
         )}
       </div>
     );
@@ -197,21 +191,16 @@ const ProfessionalFormField = React.memo(({
         )}
       </div>
       {error && (
-        <motion.p
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.1 }}
-          className="text-sm text-red-600 flex items-center gap-1"
-        >
+        <p className="text-sm text-red-600 flex items-center gap-1">
           <AlertCircle className="w-3 h-3" />
           {error.message}
-        </motion.p>
+        </p>
       )}
     </div>
   );
 });
 
-ProfessionalFormField.displayName = 'ProfessionalFormField';
+SimpleFormField.displayName = 'SimpleFormField';
 
 interface SocioDialogProps {
   open: boolean;
@@ -235,7 +224,6 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const isEditing = !!socio;
-  const shouldUseAnimations = OptimizationUtils.shouldUseAnimations();
   const currentStepData = FORM_STEPS[currentStep];
 
   // Asegurar que el componente esté montado
@@ -427,18 +415,18 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: shouldUseAnimations ? 0.1 : 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            transition={{ duration: 0.1 }}
+            className="fixed inset-0 bg-black/50"
             onClick={onClose}
           />
 
           {/* Modal */}
           <div className="flex min-h-full items-center justify-center p-4">
             <motion.div
-              initial={shouldUseAnimations ? { opacity: 0, scale: 0.98, y: 10 } : {}}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={shouldUseAnimations ? { opacity: 0, scale: 0.98, y: 10 } : {}}
-              transition={{ duration: shouldUseAnimations ? 0.15 : 0 }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.1 }}
               className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
@@ -446,7 +434,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               <div className={`relative px-6 py-4 bg-gradient-to-r ${currentStepData.color}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <div className="p-2 bg-white/20 rounded-lg">
                       <currentStepData.icon className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -478,7 +466,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                         key={step.id}
                         type="button"
                         onClick={() => goToStep(index)}
-                        className={`relative p-3 rounded-xl transition-all duration-200 ${
+                        className={`relative p-3 rounded-xl transition-all duration-100 ${
                           isActive 
                             ? 'bg-white/30 scale-110' 
                             : isCompleted 
@@ -492,22 +480,9 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                         
                         {/* Indicador de completado */}
                         {isCompleted && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center"
-                          >
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
                             <Check className="w-2.5 h-2.5 text-white" />
-                          </motion.div>
-                        )}
-                        
-                        {/* Indicador activo */}
-                        {isActive && (
-                          <motion.div
-                            layoutId="activeStep"
-                            className="absolute inset-0 bg-white/20 rounded-xl"
-                            transition={{ duration: 0.2 }}
-                          />
+                          </div>
                         )}
                       </button>
                     );
@@ -517,17 +492,11 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
 
               {/* Content */}
               <form onSubmit={handleSubmit(onSubmit)} className="p-6">
-                <motion.div
-                  key={currentStep}
-                  initial={shouldUseAnimations ? { opacity: 0, x: 10 } : {}}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: shouldUseAnimations ? 0.15 : 0 }}
-                  className="space-y-6"
-                >
+                <div key={currentStep} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {getStepFields.map((field) => (
                       <div key={field.name} className={field.name === 'direccion' ? 'md:col-span-2' : ''}>
-                        <ProfessionalFormField
+                        <SimpleFormField
                           field={field}
                           register={register}
                           error={errors[field.name as keyof typeof errors]}
@@ -542,7 +511,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                       </div>
                     ))}
                   </div>
-                </motion.div>
+                </div>
 
                 {/* Footer */}
                 <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
