@@ -18,36 +18,15 @@ import {
   ChevronDown,
   Link,
   Users,
-  Eye
+  Eye,
+  ArrowRight,
+  Zap,
+  Target,
+  Globe
 } from 'lucide-react';
 import { ComercioDisponible } from '@/services/adhesion.service';
 import { CATEGORIAS_COMERCIO } from '@/types/comercio';
 import { useDebounce } from '@/hooks/useDebounce';
-
-// Configuración de pasos del modal
-const MODAL_STEPS = [
-  {
-    id: 'search',
-    title: 'Buscar Comercios',
-    subtitle: 'Encuentra comercios disponibles',
-    icon: Search,
-    color: 'from-blue-500 to-cyan-500',
-  },
-  {
-    id: 'filter',
-    title: 'Filtrar Resultados',
-    subtitle: 'Refina tu búsqueda',
-    icon: Filter,
-    color: 'from-purple-500 to-pink-500',
-  },
-  {
-    id: 'select',
-    title: 'Seleccionar Comercio',
-    subtitle: 'Elige el comercio a vincular',
-    icon: Link,
-    color: 'from-green-500 to-emerald-500',
-  }
-];
 
 interface VincularComercioDialogProps {
   open: boolean;
@@ -64,7 +43,6 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
   onBuscar,
   loading
 }) => {
-  const [currentStep, setCurrentStep] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoria, setSelectedCategoria] = useState('');
@@ -72,8 +50,8 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
   const [searchLoading, setSearchLoading] = useState(false);
   const [vinculando, setVinculando] = useState<string | null>(null);
   const [selectedComercio, setSelectedComercio] = useState<ComercioDisponible | null>(null);
-
-  const currentStepData = MODAL_STEPS[currentStep];
+  const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'search' | 'results' | 'detail'>('search');
 
   // Asegurar que el componente esté montado
   useEffect(() => {
@@ -85,6 +63,7 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
   const debouncedSearch = useDebounce(async (termino: string) => {
     if (!termino.trim()) {
       setComercios([]);
+      setViewMode('search');
       return;
     }
 
@@ -92,9 +71,7 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
     try {
       const resultados = await onBuscar(termino);
       setComercios(resultados);
-      if (resultados.length > 0 && currentStep === 0) {
-        setCurrentStep(1); // Avanzar automáticamente a filtros si hay resultados
-      }
+      setViewMode('results');
     } catch (error) {
       console.error('Error searching comercios:', error);
     } finally {
@@ -110,23 +87,6 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
   const comerciosFiltrados = selectedCategoria
     ? comercios.filter(comercio => comercio.categoria === selectedCategoria)
     : comercios;
-
-  // Navegación entre pasos
-  const nextStep = useCallback(() => {
-    if (currentStep < MODAL_STEPS.length - 1) {
-      setCurrentStep(prev => prev + 1);
-    }
-  }, [currentStep]);
-
-  const prevStep = useCallback(() => {
-    if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
-    }
-  }, [currentStep]);
-
-  const goToStep = useCallback((stepIndex: number) => {
-    setCurrentStep(stepIndex);
-  }, []);
 
   // Manejar vinculación
   const handleVincular = async (comercio: ComercioDisponible) => {
@@ -144,7 +104,13 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
   // Seleccionar comercio para vista detallada
   const handleSelectComercio = (comercio: ComercioDisponible) => {
     setSelectedComercio(comercio);
-    setCurrentStep(2);
+    setViewMode('detail');
+  };
+
+  // Volver a resultados
+  const backToResults = () => {
+    setSelectedComercio(null);
+    setViewMode('results');
   };
 
   // Reset al cerrar
@@ -153,7 +119,8 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
     setSelectedCategoria('');
     setComercios([]);
     setSelectedComercio(null);
-    setCurrentStep(0);
+    setViewMode('search');
+    setShowFilters(false);
     onClose();
   }, [onClose]);
 
@@ -162,406 +129,504 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
   const modalContent = (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop con efecto glassmorphism */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
-            className="fixed inset-0 bg-black/50"
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-pink-900/20 backdrop-blur-sm"
             onClick={handleClose}
           />
 
-          {/* Modal */}
+          {/* Modal con diseño único */}
           <div className="flex min-h-full items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.1 }}
-              className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.3, type: "spring", damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-6xl bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/20"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header */}
-              <div className={`relative px-6 py-4 bg-gradient-to-r ${currentStepData.color}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-white/20 rounded-lg">
-                      <currentStepData.icon className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-white">
-                        Vincular Comercio
-                      </h2>
-                      <p className="text-white/80 text-sm">
-                        {currentStepData.title} - {currentStepData.subtitle}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleClose}
-                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                  >
-                    <X className="w-5 h-5 text-white" />
-                  </button>
+              {/* Header con diseño único */}
+              <div className="relative overflow-hidden">
+                {/* Fondo animado */}
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
+                  <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="4"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
                 </div>
-
-                {/* Navegación por iconos */}
-                <div className="mt-4 flex justify-center space-x-4">
-                  {MODAL_STEPS.map((step, index) => {
-                    const StepIcon = step.icon;
-                    const isActive = index === currentStep;
-                    const isCompleted = index < currentStep;
-                    
-                    return (
-                      <button
-                        key={step.id}
-                        type="button"
-                        onClick={() => goToStep(index)}
-                        className={`relative p-3 rounded-xl transition-all duration-100 ${
-                          isActive 
-                            ? 'bg-white/30 scale-110' 
-                            : isCompleted 
-                              ? 'bg-white/20 hover:bg-white/25' 
-                              : 'bg-white/10 hover:bg-white/15'
-                        }`}
-                      >
-                        <StepIcon className={`w-5 h-5 ${
-                          isActive || isCompleted ? 'text-white' : 'text-white/60'
-                        }`} />
-                        
-                        {/* Indicador de completado */}
-                        {isCompleted && (
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                            <Check className="w-2.5 h-2.5 text-white" />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Indicador de resultados */}
-                {comerciosFiltrados.length > 0 && (
-                  <div className="mt-3 text-center">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/20 text-white">
-                      <Users className="w-3 h-3 mr-1" />
-                      {comerciosFiltrados.length} comercio(s) encontrado(s)
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <AnimatePresence mode="wait">
-                  {/* Paso 1: Búsqueda */}
-                  {currentStep === 0 && (
-                    <motion.div
-                      key="search"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.2 }}
-                      className="space-y-6"
-                    >
+                
+                <div className="relative px-8 py-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="relative">
+                        <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                          <Link className="w-7 h-7 text-white" />
+                        </div>
+                        <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                          <Zap className="w-3 h-3 text-yellow-900" />
+                        </div>
+                      </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                          Buscar Comercios Disponibles
-                        </h4>
-                        <p className="text-gray-600 text-sm mb-6">
-                          Ingresa el nombre, email o categoría del comercio que deseas vincular a tu asociación.
+                        <h2 className="text-2xl font-bold text-white">
+                          Conectar Comercio
+                        </h2>
+                        <p className="text-white/80 text-sm">
+                          Encuentra y vincula comercios a tu red de asociación
                         </p>
                       </div>
-
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Search className="w-5 h-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Buscar por nombre, email o categoría..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="w-full pl-10 pr-12 py-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 transition-colors text-lg"
-                          autoFocus
-                        />
-                        {searchLoading && (
-                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                          </div>
-                        )}
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      {/* Indicador de progreso */}
+                      <div className="hidden sm:flex items-center space-x-2 bg-white/20 rounded-full px-4 py-2 backdrop-blur-sm">
+                        <div className={`w-2 h-2 rounded-full transition-colors ${viewMode === 'search' ? 'bg-white' : 'bg-white/40'}`} />
+                        <div className={`w-2 h-2 rounded-full transition-colors ${viewMode === 'results' ? 'bg-white' : 'bg-white/40'}`} />
+                        <div className={`w-2 h-2 rounded-full transition-colors ${viewMode === 'detail' ? 'bg-white' : 'bg-white/40'}`} />
                       </div>
+                      
+                      <button
+                        onClick={handleClose}
+                        className="p-2 hover:bg-white/20 rounded-xl transition-colors backdrop-blur-sm"
+                      >
+                        <X className="w-6 h-6 text-white" />
+                      </button>
+                    </div>
+                  </div>
 
-                      {!searchTerm && (
-                        <div className="text-center py-12">
-                          <Search className="mx-auto h-16 w-16 text-gray-300" />
-                          <h3 className="mt-4 text-lg font-medium text-gray-900">
-                            Comienza tu búsqueda
-                          </h3>
-                          <p className="mt-2 text-gray-500">
-                            Escribe el nombre del comercio que quieres vincular
-                          </p>
+                  {/* Estadísticas rápidas */}
+                  {comerciosFiltrados.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-4 flex items-center justify-center space-x-6"
+                    >
+                      <div className="flex items-center space-x-2 bg-white/20 rounded-full px-4 py-2 backdrop-blur-sm">
+                        <Target className="w-4 h-4 text-white" />
+                        <span className="text-white text-sm font-medium">
+                          {comerciosFiltrados.length} encontrados
+                        </span>
+                      </div>
+                      {selectedCategoria && (
+                        <div className="flex items-center space-x-2 bg-white/20 rounded-full px-4 py-2 backdrop-blur-sm">
+                          <Filter className="w-4 h-4 text-white" />
+                          <span className="text-white text-sm font-medium">
+                            {selectedCategoria}
+                          </span>
                         </div>
                       )}
                     </motion.div>
                   )}
+                </div>
+              </div>
 
-                  {/* Paso 2: Filtros y Resultados */}
-                  {currentStep === 1 && (
+              {/* Content con transiciones únicas */}
+              <div className="p-8">
+                <AnimatePresence mode="wait">
+                  {/* Vista de búsqueda */}
+                  {viewMode === 'search' && (
                     <motion.div
-                      key="filter"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.2 }}
-                      className="space-y-6"
+                      key="search"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 1.05 }}
+                      transition={{ duration: 0.3 }}
+                      className="space-y-8"
                     >
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                          Filtrar Resultados
-                        </h4>
-                        <p className="text-gray-600 text-sm mb-6">
-                          Refina tu búsqueda usando los filtros disponibles.
+                      <div className="text-center">
+                        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-3xl mb-6">
+                          <Search className="w-10 h-10 text-indigo-600" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                          Descubre Comercios
+                        </h3>
+                        <p className="text-gray-600 max-w-md mx-auto">
+                          Busca comercios por nombre, categoría o ubicación para expandir tu red de beneficios
                         </p>
                       </div>
 
-                      {/* Filtros */}
-                      <div className="bg-gray-50 p-4 rounded-xl">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Categoría
-                            </label>
-                            <select
-                              value={selectedCategoria}
-                              onChange={(e) => setSelectedCategoria(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            >
-                              <option value="">Todas las categorías</option>
-                              {CATEGORIAS_COMERCIO.map(categoria => (
-                                <option key={categoria} value={categoria}>
-                                  {categoria}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Término de búsqueda
-                            </label>
-                            <input
-                              type="text"
-                              value={searchTerm}
-                              onChange={(e) => setSearchTerm(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="Modificar búsqueda..."
-                            />
+                      {/* Barra de búsqueda principal */}
+                      <div className="max-w-2xl mx-auto">
+                        <div className="relative group">
+                          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition-opacity"></div>
+                          <div className="relative bg-white rounded-2xl border-2 border-gray-100 overflow-hidden">
+                            <div className="flex items-center">
+                              <div className="pl-6 pr-4 py-4">
+                                <Search className="w-6 h-6 text-gray-400" />
+                              </div>
+                              <input
+                                type="text"
+                                placeholder="Buscar comercios..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="flex-1 py-4 pr-6 text-lg placeholder-gray-400 border-0 focus:ring-0 focus:outline-none"
+                                autoFocus
+                              />
+                              {searchLoading && (
+                                <div className="pr-6">
+                                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Resultados */}
-                      <div className="max-h-96 overflow-y-auto">
-                        {comerciosFiltrados.length === 0 && !searchLoading ? (
-                          <div className="text-center py-12">
-                            <Store className="mx-auto h-12 w-12 text-gray-400" />
-                            <h3 className="mt-2 text-sm font-medium text-gray-900">
-                              No se encontraron comercios
-                            </h3>
-                            <p className="mt-1 text-sm text-gray-500">
-                              Intenta con otros términos de búsqueda
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-1 gap-4">
-                            {comerciosFiltrados.map((comercio) => (
-                              <motion.div
-                                key={comercio.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="border-2 border-gray-200 rounded-xl p-4 hover:border-blue-300 transition-colors cursor-pointer"
-                                onClick={() => handleSelectComercio(comercio)}
-                              >
-                                <div className="flex items-start justify-between">
-                                  <div className="flex items-start space-x-4 flex-1">
-                                    {/* Logo */}
-                                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                      {comercio.logoUrl ? (
-                                        <Image
-                                          src={comercio.logoUrl}
-                                          alt={comercio.nombreComercio}
-                                          width={48}
-                                          height={48}
-                                          className="w-full h-full rounded-lg object-cover"
-                                        />
-                                      ) : (
-                                        <Store className="w-6 h-6 text-gray-400" />
-                                      )}
-                                    </div>
-                                    
-                                    {/* Info */}
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center space-x-2 mb-2">
-                                        <h4 className="text-lg font-semibold text-gray-900 truncate">
-                                          {comercio.nombreComercio}
-                                        </h4>
-                                        {comercio.verificado && (
-                                          <Check className="w-5 h-5 text-green-500" />
-                                        )}
-                                      </div>
-                                      
-                                      <div className="space-y-2">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {/* Sugerencias de búsqueda */}
+                      <div className="max-w-4xl mx-auto">
+                        <p className="text-sm text-gray-500 mb-4 text-center">Categorías populares:</p>
+                        <div className="flex flex-wrap justify-center gap-3">
+                          {CATEGORIAS_COMERCIO.slice(0, 8).map((categoria) => (
+                            <button
+                              key={categoria}
+                              onClick={() => setSearchTerm(categoria)}
+                              className="px-4 py-2 bg-gray-100 hover:bg-indigo-100 text-gray-700 hover:text-indigo-700 rounded-full text-sm font-medium transition-colors"
+                            >
+                              {categoria}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Vista de resultados */}
+                  {viewMode === 'results' && (
+                    <motion.div
+                      key="results"
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -50 }}
+                      transition={{ duration: 0.3 }}
+                      className="space-y-6"
+                    >
+                      {/* Header de resultados */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">
+                            Resultados de búsqueda
+                          </h3>
+                          <p className="text-gray-600">
+                            {comerciosFiltrados.length} comercios encontrados
+                          </p>
+                        </div>
+                        
+                        {/* Filtros */}
+                        <div className="flex items-center space-x-3">
+                          <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                              showFilters 
+                                ? 'bg-indigo-100 text-indigo-700' 
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            <Filter className="w-4 h-4 mr-2" />
+                            Filtros
+                            <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Panel de filtros */}
+                      <AnimatePresence>
+                        {showFilters && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="bg-gradient-to-r from-gray-50 to-indigo-50 rounded-2xl p-6 border border-gray-200"
+                          >
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Categoría
+                                </label>
+                                <select
+                                  value={selectedCategoria}
+                                  onChange={(e) => setSelectedCategoria(e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                >
+                                  <option value="">Todas las categorías</option>
+                                  {CATEGORIAS_COMERCIO.map(categoria => (
+                                    <option key={categoria} value={categoria}>
+                                      {categoria}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Búsqueda
+                                </label>
+                                <input
+                                  type="text"
+                                  value={searchTerm}
+                                  onChange={(e) => setSearchTerm(e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                  placeholder="Refinar búsqueda..."
+                                />
+                              </div>
+                              <div className="flex items-end">
+                                <button
+                                  onClick={() => {
+                                    setSelectedCategoria('');
+                                    setSearchTerm('');
+                                  }}
+                                  className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors"
+                                >
+                                  Limpiar filtros
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Lista de comercios */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-h-96 overflow-y-auto">
+                        {comerciosFiltrados.map((comercio, index) => (
+                          <motion.div
+                            key={comercio.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="group relative bg-white rounded-2xl border border-gray-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300 overflow-hidden"
+                          >
+                            {/* Efecto hover */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            
+                            <div className="relative p-6">
+                              <div className="flex items-start space-x-4">
+                                {/* Logo */}
+                                <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                                  {comercio.logoUrl ? (
+                                    <Image
+                                      src={comercio.logoUrl}
+                                      alt={comercio.nombreComercio}
+                                      width={64}
+                                      height={64}
+                                      className="w-full h-full rounded-2xl object-cover"
+                                    />
+                                  ) : (
+                                    <Store className="w-8 h-8 text-gray-400" />
+                                  )}
+                                </div>
+                                
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between mb-3">
+                                    <div>
+                                      <h4 className="text-lg font-semibold text-gray-900 truncate group-hover:text-indigo-700 transition-colors">
+                                        {comercio.nombreComercio}
+                                      </h4>
+                                      <div className="flex items-center space-x-2 mt-1">
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
                                           {comercio.categoria}
                                         </span>
-                                        
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                                          <div className="flex items-center">
-                                            <Mail className="w-4 h-4 mr-2" />
-                                            {comercio.email}
-                                          </div>
-                                          {comercio.telefono && (
-                                            <div className="flex items-center">
-                                              <Phone className="w-4 h-4 mr-2" />
-                                              {comercio.telefono}
-                                            </div>
-                                          )}
-                                        </div>
-                                        
-                                        {comercio.direccion && (
-                                          <div className="flex items-center text-sm text-gray-600">
-                                            <MapPin className="w-4 h-4 mr-2" />
-                                            {comercio.direccion}
-                                          </div>
+                                        {comercio.verificado && (
+                                          <Check className="w-4 h-4 text-green-500" />
                                         )}
                                       </div>
                                     </div>
                                   </div>
                                   
-                                  {/* Action Button */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleSelectComercio(comercio);
-                                    }}
-                                    className="ml-4 inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
-                                  >
-                                    <Eye className="w-4 h-4 mr-1" />
-                                    Ver detalles
-                                  </button>
+                                  <div className="space-y-2 text-sm text-gray-600">
+                                    <div className="flex items-center">
+                                      <Mail className="w-4 h-4 mr-2 text-gray-400" />
+                                      <span className="truncate">{comercio.email}</span>
+                                    </div>
+                                    {comercio.telefono && (
+                                      <div className="flex items-center">
+                                        <Phone className="w-4 h-4 mr-2 text-gray-400" />
+                                        <span>{comercio.telefono}</span>
+                                      </div>
+                                    )}
+                                    {comercio.direccion && (
+                                      <div className="flex items-center">
+                                        <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                                        <span className="truncate">{comercio.direccion}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Estado */}
+                                  <div className="mt-3">
+                                    {comercio.asociacionesVinculadas.length > 0 ? (
+                                      <div className="flex items-center text-amber-600 text-sm">
+                                        <AlertCircle className="w-4 h-4 mr-1" />
+                                        <span>Ya vinculado ({comercio.asociacionesVinculadas.length})</span>
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center text-green-600 text-sm">
+                                        <Check className="w-4 h-4 mr-1" />
+                                        <span>Disponible</span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                              </motion.div>
-                            ))}
-                          </div>
-                        )}
+                              </div>
+                              
+                              {/* Botón de acción */}
+                              <div className="mt-4 flex justify-end">
+                                <button
+                                  onClick={() => handleSelectComercio(comercio)}
+                                  className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors group-hover:scale-105"
+                                >
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  Ver detalles
+                                  <ArrowRight className="w-4 h-4 ml-2" />
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
                       </div>
                     </motion.div>
                   )}
 
-                  {/* Paso 3: Selección y Confirmación */}
-                  {currentStep === 2 && selectedComercio && (
+                  {/* Vista de detalle */}
+                  {viewMode === 'detail' && selectedComercio && (
                     <motion.div
-                      key="select"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.2 }}
-                      className="space-y-6"
+                      key="detail"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 1.05 }}
+                      transition={{ duration: 0.3 }}
+                      className="space-y-8"
                     >
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                          Confirmar Vinculación
-                        </h4>
-                        <p className="text-gray-600 text-sm mb-6">
-                          Revisa los detalles del comercio antes de vincularlo a tu asociación.
-                        </p>
+                      {/* Header de detalle */}
+                      <div className="flex items-center space-x-4">
+                        <button
+                          onClick={backToResults}
+                          className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                        >
+                          <ArrowRight className="w-5 h-5 text-gray-600 rotate-180" />
+                        </button>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">
+                            Detalles del Comercio
+                          </h3>
+                          <p className="text-gray-600">
+                            Revisa la información antes de vincular
+                          </p>
+                        </div>
                       </div>
 
-                      {/* Detalles del comercio seleccionado */}
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
-                        <div className="flex items-start space-x-6">
-                          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                      {/* Card de detalle */}
+                      <div className="bg-gradient-to-br from-white to-indigo-50 rounded-3xl border-2 border-indigo-100 p-8 shadow-lg">
+                        <div className="flex items-start space-x-8">
+                          {/* Logo grande */}
+                          <div className="w-32 h-32 bg-white rounded-3xl flex items-center justify-center flex-shrink-0 shadow-lg">
                             {selectedComercio.logoUrl ? (
                               <Image
                                 src={selectedComercio.logoUrl}
                                 alt={selectedComercio.nombreComercio}
-                                width={80}
-                                height={80}
-                                className="w-full h-full rounded-xl object-cover"
+                                width={128}
+                                height={128}
+                                className="w-full h-full rounded-3xl object-cover"
                               />
                             ) : (
-                              <Store className="w-10 h-10 text-gray-400" />
+                              <Store className="w-16 h-16 text-gray-400" />
                             )}
                           </div>
                           
+                          {/* Información */}
                           <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-3">
-                              <h3 className="text-2xl font-bold text-gray-900">
-                                {selectedComercio.nombreComercio}
-                              </h3>
-                              {selectedComercio.verificado && (
-                                <div className="flex items-center text-green-600">
-                                  <Check className="w-6 h-6" />
-                                  <span className="ml-1 text-sm font-medium">Verificado</span>
+                            <div className="flex items-start justify-between mb-6">
+                              <div>
+                                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                                  {selectedComercio.nombreComercio}
+                                </h2>
+                                <div className="flex items-center space-x-3">
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                                    {selectedComercio.categoria}
+                                  </span>
+                                  {selectedComercio.verificado && (
+                                    <div className="flex items-center text-green-600">
+                                      <Check className="w-5 h-5 mr-1" />
+                                      <span className="text-sm font-medium">Verificado</span>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                              </div>
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <span className="font-medium text-gray-700">Categoría:</span>
-                                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  {selectedComercio.categoria}
-                                </span>
-                              </div>
-                              
-                              <div>
-                                <span className="font-medium text-gray-700">Email:</span>
-                                <span className="ml-2 text-gray-600">{selectedComercio.email}</span>
-                              </div>
-                              
-                              {selectedComercio.telefono && (
-                                <div>
-                                  <span className="font-medium text-gray-700">Teléfono:</span>
-                                  <span className="ml-2 text-gray-600">{selectedComercio.telefono}</span>
-                                </div>
-                              )}
-                              
-                              {selectedComercio.direccion && (
-                                <div>
-                                  <span className="font-medium text-gray-700">Dirección:</span>
-                                  <span className="ml-2 text-gray-600">{selectedComercio.direccion}</span>
-                                </div>
-                              )}
-                              
-                              {selectedComercio.puntuacion > 0 && (
-                                <div>
-                                  <span className="font-medium text-gray-700">Puntuación:</span>
-                                  <div className="ml-2 inline-flex items-center">
-                                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                                    <span className="ml-1 text-gray-600">
-                                      {selectedComercio.puntuacion.toFixed(1)} ({selectedComercio.totalReviews} reseñas)
-                                    </span>
+                            {/* Grid de información */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                              <div className="space-y-4">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                                    <Mail className="w-5 h-5 text-indigo-600" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-gray-500">Email</p>
+                                    <p className="font-medium text-gray-900">{selectedComercio.email}</p>
                                   </div>
                                 </div>
-                              )}
+                                
+                                {selectedComercio.telefono && (
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                                      <Phone className="w-5 h-5 text-green-600" />
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-gray-500">Teléfono</p>
+                                      <p className="font-medium text-gray-900">{selectedComercio.telefono}</p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="space-y-4">
+                                {selectedComercio.direccion && (
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                                      <MapPin className="w-5 h-5 text-purple-600" />
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-gray-500">Dirección</p>
+                                      <p className="font-medium text-gray-900">{selectedComercio.direccion}</p>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {selectedComercio.puntuacion > 0 && (
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
+                                      <Star className="w-5 h-5 text-yellow-600" />
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-gray-500">Puntuación</p>
+                                      <p className="font-medium text-gray-900">
+                                        {selectedComercio.puntuacion.toFixed(1)} ({selectedComercio.totalReviews} reseñas)
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                             
                             {/* Estado de vinculación */}
-                            <div className="mt-4">
+                            <div className="mb-8">
                               {selectedComercio.asociacionesVinculadas.length > 0 ? (
-                                <div className="flex items-center text-amber-600">
-                                  <AlertCircle className="w-5 h-5 mr-2" />
-                                  <span className="font-medium">
-                                    Ya vinculado a {selectedComercio.asociacionesVinculadas.length} asociación(es)
-                                  </span>
+                                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                                  <div className="flex items-center text-amber-700">
+                                    <AlertCircle className="w-5 h-5 mr-2" />
+                                    <span className="font-medium">
+                                      Este comercio ya está vinculado a {selectedComercio.asociacionesVinculadas.length} asociación(es)
+                                    </span>
+                                  </div>
                                 </div>
                               ) : (
-                                <div className="flex items-center text-green-600">
-                                  <Check className="w-5 h-5 mr-2" />
-                                  <span className="font-medium">Disponible para vinculación</span>
+                                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                                  <div className="flex items-center text-green-700">
+                                    <Check className="w-5 h-5 mr-2" />
+                                    <span className="font-medium">
+                                      Este comercio está disponible para vinculación
+                                    </span>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -571,58 +636,47 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
 
                       {/* Botón de vinculación */}
                       <div className="flex justify-center">
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => handleVincular(selectedComercio)}
                           disabled={vinculando === selectedComercio.id || loading}
-                          className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg text-lg font-semibold"
                         >
                           {vinculando === selectedComercio.id ? (
                             <>
-                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
                               Vinculando comercio...
                             </>
                           ) : (
                             <>
-                              <Link className="w-5 h-5 mr-2" />
+                              <Link className="w-6 h-6 mr-3" />
                               Vincular Comercio
+                              <Zap className="w-5 h-5 ml-2" />
                             </>
                           )}
-                        </button>
+                        </motion.button>
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
-              {/* Footer */}
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
-                <button
-                  type="button"
-                  onClick={prevStep}
-                  disabled={currentStep === 0}
-                  className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <span>Anterior</span>
-                </button>
-
-                <div className="flex space-x-3">
+              {/* Footer minimalista */}
+              <div className="px-8 py-4 border-t border-gray-100 bg-gray-50/50">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-500">
+                    {viewMode === 'search' && 'Busca comercios para expandir tu red'}
+                    {viewMode === 'results' && `${comerciosFiltrados.length} comercios disponibles`}
+                    {viewMode === 'detail' && 'Revisa los detalles antes de vincular'}
+                  </div>
+                  
                   <button
-                    type="button"
                     onClick={handleClose}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-6 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors"
                   >
                     Cerrar
                   </button>
-
-                  {currentStep < MODAL_STEPS.length - 1 && comerciosFiltrados.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={nextStep}
-                      className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      <span>Siguiente</span>
-                    </button>
-                  )}
                 </div>
               </div>
             </motion.div>
