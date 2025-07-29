@@ -57,6 +57,24 @@ export const BeneficiosManagement: React.FC<BeneficiosManagementProps> = ({
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
+  // Función mejorada para manejar la creación de beneficios
+  const handleCreateBeneficioClick = () => {
+    console.log('🎯 Botón Nuevo clicked - Abriendo modal de creación');
+    
+    if (onCreateBeneficio) {
+      try {
+        onCreateBeneficio();
+        console.log('✅ Modal de creación abierto exitosamente');
+      } catch (error) {
+        console.error('❌ Error al abrir modal de creación:', error);
+        toast.error('Error al abrir el formulario de creación');
+      }
+    } else {
+      console.warn('⚠️ onCreateBeneficio no está definido');
+      toast.error('Función de creación no disponible');
+    }
+  };
+
   // Filtrar beneficios
   const filteredBeneficios = useMemo(() => {
     return beneficios.filter(beneficio => {
@@ -303,12 +321,15 @@ export const BeneficiosManagement: React.FC<BeneficiosManagementProps> = ({
               <span className="hidden sm:inline">Filtros</span>
             </button>
             
+            {/* Botón Nuevo mejorado con debugging */}
             <button
-              onClick={onCreateBeneficio}
-              className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
+              onClick={handleCreateBeneficioClick}
+              className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-medium transform hover:-translate-y-0.5 active:scale-95"
+              type="button"
             >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Nuevo</span>
+              <Plus className="w-5 h-5" />
+              <span className="hidden sm:inline">Nuevo Beneficio</span>
+              <span className="sm:hidden">Nuevo</span>
             </button>
           </div>
         </div>
@@ -399,8 +420,8 @@ export const BeneficiosManagement: React.FC<BeneficiosManagementProps> = ({
               </p>
               {beneficios.length === 0 && (
                 <button
-                  onClick={onCreateBeneficio}
-                  className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
+                  onClick={handleCreateBeneficioClick}
+                  className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-medium transform hover:-translate-y-0.5"
                 >
                   Crear Primer Beneficio
                 </button>
