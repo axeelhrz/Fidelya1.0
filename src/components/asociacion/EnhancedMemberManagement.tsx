@@ -42,9 +42,16 @@ import toast from 'react-hot-toast';
 import Image from 'next/image';
 import * as XLSX from 'xlsx';
 
+// Props interface for the component
+interface EnhancedMemberManagementProps {
+  triggerNewSocio?: boolean;
+  onNewSocioTriggered?: () => void;
+}
 
-
-export const EnhancedMemberManagement = () => {
+export const EnhancedMemberManagement = ({ 
+  triggerNewSocio = false, 
+  onNewSocioTriggered 
+}: EnhancedMemberManagementProps) => {
   const { 
     socios, 
     loading, 
@@ -96,6 +103,17 @@ export const EnhancedMemberManagement = () => {
     loadVinculados();
   }, [loadSocios, loadVinculados]);
 
+  // Handle trigger for new socio from external sources
+  useEffect(() => {
+    if (triggerNewSocio && !dialogOpen) {
+      setSelectedSocio(null);
+      setDialogOpen(true);
+      if (onNewSocioTriggered) {
+        onNewSocioTriggered();
+      }
+    }
+  }, [triggerNewSocio, dialogOpen, onNewSocioTriggered]);
+
   // Función para refrescar datos
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -109,7 +127,6 @@ export const EnhancedMemberManagement = () => {
     }
   };
 
-  // ... (keeping all the existing functions for data handling)
   // Función para convertir fechas a formato compatible
   const convertDateToTimestamp = (date: Date | Timestamp | string | undefined): Timestamp | undefined => {
     if (!date) return undefined;
@@ -218,7 +235,6 @@ export const EnhancedMemberManagement = () => {
     setSocioToUnlink(null);
   };
 
-  // ... (keeping all export/import functions as they are well implemented)
   // Función mejorada para exportar datos a Excel con diseño atractivo
   const handleExportExcel = async () => {
     if (exporting) return;
@@ -1909,3 +1925,4 @@ export const EnhancedMemberManagement = () => {
     </div>
   );
 };
+
