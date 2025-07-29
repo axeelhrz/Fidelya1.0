@@ -192,6 +192,12 @@ export const BeneficiosManagement: React.FC = () => {
 
   const selectedTipo = watch('tipo');
 
+  // Función para manejar la creación de beneficios (corrige el warning)
+  const handleCreateBeneficioClick = () => {
+    console.log('🎯 Botón Nuevo clicked - Abriendo modal de creación');
+    handleOpenDialog();
+  };
+
   const handleOpenDialog = (beneficio?: Beneficio) => {
     if (beneficio) {
       setEditingBeneficio(beneficio);
@@ -365,7 +371,7 @@ export const BeneficiosManagement: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => handleOpenDialog()}
+          onClick={handleCreateBeneficioClick}
           sx={{
             bgcolor: '#06b6d4',
             '&:hover': { bgcolor: '#0891b2' },
@@ -585,7 +591,7 @@ export const BeneficiosManagement: React.FC = () => {
               <Button
                 variant="contained"
                 startIcon={<Add />}
-                onClick={() => handleOpenDialog()}
+                onClick={handleCreateBeneficioClick}
                 sx={{
                   bgcolor: '#06b6d4',
                   '&:hover': { bgcolor: '#0891b2' },
