@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from '@/hooks/useAuth';
 import { notificationInitService } from '@/lib/notification-init';
 
 interface ClientLayoutProps {
@@ -33,7 +34,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   }, []);
 
   return (
-    <>
+    <AuthProvider>
       {children}
       <Toaster
         position="top-right"
@@ -82,6 +83,6 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
           },
         }}
       />
-    </>
+    </AuthProvider>
   );
 };
