@@ -18,21 +18,18 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
-  Shield,
-  Zap,
   Check,
   AlertCircle,
   Loader2,
   UserPlus,
-  Settings,
   Lock
 } from 'lucide-react';
 import { Socio, SocioFormData } from '@/types/socio';
 import { Timestamp } from 'firebase/firestore';
 import { useDebounce } from '@/hooks/useDebounce';
+import { OptimizationUtils } from '@/lib/optimization-config';
 
-// Esquema de validación futurista
+// Esquema de validación
 const socioSchema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   email: z.string().email('Email inválido'),
@@ -67,69 +64,36 @@ interface SocioDialogProps {
   loading?: boolean;
 }
 
-// Pasos del formulario futurista
+// Pasos del formulario
 const FORM_STEPS = [
   {
     id: 'personal',
     title: 'Información Personal',
-    subtitle: 'Datos básicos del socio',
     icon: User,
     fields: ['nombre', 'email', 'dni', 'fechaNacimiento']
   },
   {
     id: 'contact',
-    title: 'Contacto & Ubicación',
-    subtitle: 'Información de contacto',
+    title: 'Contacto',
     icon: Phone,
     fields: ['telefono', 'direccion']
   },
   {
     id: 'membership',
     title: 'Membresía',
-    subtitle: 'Configuración de membresía',
     icon: CreditCard,
     fields: ['numeroSocio', 'montoCuota', 'fechaVencimiento', 'estadoMembresia']
   },
   {
     id: 'access',
-    title: 'Acceso & Seguridad',
-    subtitle: 'Configuración de acceso',
+    title: 'Acceso',
     icon: Lock,
     fields: ['password', 'confirmPassword', 'estado']
   }
 ];
 
-// Componente de partículas de fondo
-const ParticleBackground: React.FC = () => {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(20)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-blue-400/30 rounded-full"
-          initial={{
-            x: Math.random() * 800,
-            y: Math.random() * 600,
-            opacity: 0
-          }}
-          animate={{
-            x: Math.random() * 800,
-            y: Math.random() * 600,
-            opacity: [0, 1, 0]
-          }}
-          transition={{
-            duration: Math.random() * 3 + 2,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
-// Componente de campo de formulario futurista
-const FuturisticFormField: React.FC<{
+// Componente de campo optimizado
+const FormField: React.FC<{
   name: string;
   label: string;
   type?: string;
@@ -140,38 +104,34 @@ const FuturisticFormField: React.FC<{
   register: any;
   errors: any;
   watch: any;
-}> = ({ name, label, type = 'text', icon: Icon, placeholder, required, options, register, errors, watch }) => {
+}> = React.memo(({ name, label, type = 'text', icon: Icon, placeholder, required, options, register, errors, watch }) => {
   const value = watch(name);
   const hasError = !!errors[name];
   const hasValue = value && value !== '';
 
   const fieldClasses = `
-    w-full px-4 py-3 pl-12 rounded-xl border-2 transition-all duration-300
-    bg-white/80 backdrop-blur-sm
+    w-full px-4 py-3 pl-12 rounded-lg border transition-colors duration-200
     ${hasError 
-      ? 'border-red-400 focus:border-red-500 focus:ring-red-200' 
+      ? 'border-red-400 focus:border-red-500' 
       : hasValue 
-        ? 'border-green-400 focus:border-green-500 focus:ring-green-200'
-        : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
+        ? 'border-green-400 focus:border-green-500'
+        : 'border-gray-300 focus:border-blue-500'
     }
-    focus:outline-none focus:ring-4 focus:ring-opacity-20
-    placeholder-gray-400 text-gray-900
+    focus:outline-none focus:ring-2 focus:ring-opacity-20
+    ${hasError ? 'focus:ring-red-200' : 'focus:ring-blue-200'}
   `;
 
   if (options) {
     return (
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
         <div className="relative">
-          <Icon className={`absolute left-3 top-3.5 w-5 h-5 transition-colors duration-300 ${
+          <Icon className={`absolute left-3 top-3.5 w-5 h-5 ${
             hasError ? 'text-red-400' : hasValue ? 'text-green-500' : 'text-gray-400'
           }`} />
-          <select
-            {...register(name)}
-            className={fieldClasses}
-          >
+          <select {...register(name)} className={fieldClasses}>
             <option value="">Seleccionar...</option>
             {options.map(option => (
               <option key={option.value} value={option.value}>
@@ -180,24 +140,14 @@ const FuturisticFormField: React.FC<{
             ))}
           </select>
           {hasValue && !hasError && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute right-3 top-3.5"
-            >
-              <Check className="w-5 h-5 text-green-500" />
-            </motion.div>
+            <Check className="absolute right-3 top-3.5 w-5 h-5 text-green-500" />
           )}
         </div>
         {hasError && (
-          <motion.p
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-red-500 text-sm flex items-center gap-1"
-          >
+          <p className="text-red-500 text-sm flex items-center gap-1">
             <AlertCircle className="w-4 h-4" />
             {errors[name]?.message}
-          </motion.p>
+          </p>
         )}
       </div>
     );
@@ -205,11 +155,11 @@ const FuturisticFormField: React.FC<{
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-semibold text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-gray-700">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <div className="relative">
-        <Icon className={`absolute left-3 top-3.5 w-5 h-5 transition-colors duration-300 ${
+        <Icon className={`absolute left-3 top-3.5 w-5 h-5 ${
           hasError ? 'text-red-400' : hasValue ? 'text-green-500' : 'text-gray-400'
         }`} />
         <input
@@ -219,30 +169,22 @@ const FuturisticFormField: React.FC<{
           className={fieldClasses}
         />
         {hasValue && !hasError && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute right-3 top-3.5"
-          >
-            <Check className="w-5 h-5 text-green-500" />
-          </motion.div>
+          <Check className="absolute right-3 top-3.5 w-5 h-5 text-green-500" />
         )}
       </div>
       {hasError && (
-        <motion.p
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-red-500 text-sm flex items-center gap-1"
-        >
+        <p className="text-red-500 text-sm flex items-center gap-1">
           <AlertCircle className="w-4 h-4" />
           {errors[name]?.message}
-        </motion.p>
+        </p>
       )}
     </div>
   );
-};
+});
 
-// Componente principal del diálogo
+FormField.displayName = 'FormField';
+
+// Componente principal
 export const SocioDialog: React.FC<SocioDialogProps> = ({
   open,
   onClose,
@@ -255,9 +197,9 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
   const [mounted, setMounted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
   const isEditing = !!socio;
+  const shouldUseAnimations = OptimizationUtils.shouldUseAnimations();
 
   // Asegurar que el componente esté montado
   useEffect(() => {
@@ -269,7 +211,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     register,
     handleSubmit,
     reset,
-    formState: { errors, isValid },
+    formState: { errors },
     watch,
     trigger
   } = useForm<SocioFormInputs>({
@@ -288,8 +230,8 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     }
   });
 
-  // Validación debounced ultra rápida
-  const debouncedTrigger = useDebounce(trigger, 50);
+  // Validación debounced
+  const debouncedTrigger = useDebounce(trigger, 300);
 
   // Resetear formulario
   useEffect(() => {
@@ -328,7 +270,6 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
         });
       }
       setCurrentStep(0);
-      setCompletedSteps(new Set());
     }
   }, [open, socio, reset]);
 
@@ -345,13 +286,6 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     const currentStepFields = FORM_STEPS[currentStep]?.fields || [];
     return currentStepFields.every(field => !errors[field as keyof typeof errors]);
   }, [currentStep, errors]);
-
-  // Marcar pasos como completados
-  useEffect(() => {
-    if (isCurrentStepValid && currentStep >= 0) {
-      setCompletedSteps(prev => new Set([...prev, currentStep]));
-    }
-  }, [isCurrentStepValid, currentStep]);
 
   // Función de envío
   const onSubmit = useCallback(async (data: SocioFormInputs) => {
@@ -405,8 +339,8 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     switch (step.id) {
       case 'personal':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FuturisticFormField
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
               name="nombre"
               label="Nombre Completo"
               icon={User}
@@ -416,7 +350,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               errors={errors}
               watch={watch}
             />
-            <FuturisticFormField
+            <FormField
               name="email"
               label="Correo Electrónico"
               type="email"
@@ -427,7 +361,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               errors={errors}
               watch={watch}
             />
-            <FuturisticFormField
+            <FormField
               name="dni"
               label="DNI/Documento"
               icon={CreditCard}
@@ -436,7 +370,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               errors={errors}
               watch={watch}
             />
-            <FuturisticFormField
+            <FormField
               name="fechaNacimiento"
               label="Fecha de Nacimiento"
               type="date"
@@ -450,8 +384,8 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
 
       case 'contact':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FuturisticFormField
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
               name="telefono"
               label="Teléfono"
               type="tel"
@@ -462,7 +396,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               watch={watch}
             />
             <div className="md:col-span-2">
-              <FuturisticFormField
+              <FormField
                 name="direccion"
                 label="Dirección"
                 icon={MapPin}
@@ -477,8 +411,8 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
 
       case 'membership':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FuturisticFormField
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
               name="numeroSocio"
               label="Número de Socio"
               icon={CreditCard}
@@ -487,7 +421,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               errors={errors}
               watch={watch}
             />
-            <FuturisticFormField
+            <FormField
               name="montoCuota"
               label="Monto de Cuota"
               type="number"
@@ -497,7 +431,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               errors={errors}
               watch={watch}
             />
-            <FuturisticFormField
+            <FormField
               name="fechaVencimiento"
               label="Fecha de Vencimiento"
               type="date"
@@ -506,10 +440,10 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               errors={errors}
               watch={watch}
             />
-            <FuturisticFormField
+            <FormField
               name="estadoMembresia"
               label="Estado de Membresía"
-              icon={Shield}
+              icon={CreditCard}
               options={[
                 { value: 'al_dia', label: 'Al día' },
                 { value: 'vencido', label: 'Vencido' },
@@ -524,11 +458,11 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
 
       case 'access':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {!isEditing && (
               <>
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
                     Contraseña <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -537,7 +471,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                       {...register('password')}
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Mínimo 6 caracteres"
-                      className="w-full px-4 py-3 pl-12 pr-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-200 focus:ring-opacity-20 focus:outline-none bg-white/80 backdrop-blur-sm"
+                      className="w-full px-4 py-3 pl-12 pr-12 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:ring-opacity-20 focus:outline-none"
                     />
                     <button
                       type="button"
@@ -556,7 +490,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
                     Confirmar Contraseña <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -565,7 +499,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                       {...register('confirmPassword')}
                       type={showConfirmPassword ? 'text' : 'password'}
                       placeholder="Repetir contraseña"
-                      className="w-full px-4 py-3 pl-12 pr-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-200 focus:ring-opacity-20 focus:outline-none bg-white/80 backdrop-blur-sm"
+                      className="w-full px-4 py-3 pl-12 pr-12 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:ring-opacity-20 focus:outline-none"
                     />
                     <button
                       type="button"
@@ -586,10 +520,10 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
             )}
             
             <div className={!isEditing ? "md:col-span-2" : ""}>
-              <FuturisticFormField
+              <FormField
                 name="estado"
                 label="Estado del Socio"
-                icon={Shield}
+                icon={User}
                 options={[
                   { value: 'activo', label: 'Activo' },
                   { value: 'inactivo', label: 'Inactivo' },
@@ -613,88 +547,74 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
 
   if (!mounted) return null;
 
+  // Animaciones simplificadas
+  const backdropVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 }
+  };
+
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { opacity: 1, scale: 1 }
+  };
+
   return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          variants={shouldUseAnimations ? backdropVariants : undefined}
+          initial={shouldUseAnimations ? "hidden" : undefined}
+          animate={shouldUseAnimations ? "visible" : undefined}
+          exit={shouldUseAnimations ? "hidden" : undefined}
+          transition={{ duration: 0.2 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
-          {/* Backdrop futurista */}
+          {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={shouldUseAnimations ? { opacity: 0 } : undefined}
+            animate={shouldUseAnimations ? { opacity: 1 } : undefined}
+            exit={shouldUseAnimations ? { opacity: 0 } : undefined}
             onClick={onClose}
-            className="absolute inset-0 bg-gradient-to-br from-black/60 via-blue-900/20 to-purple-900/30 backdrop-blur-md"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
           />
 
-          {/* Partículas de fondo */}
-          <ParticleBackground />
-
-          {/* Modal principal */}
+          {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden"
+            variants={shouldUseAnimations ? modalVariants : undefined}
+            initial={shouldUseAnimations ? "hidden" : undefined}
+            animate={shouldUseAnimations ? "visible" : undefined}
+            exit={shouldUseAnimations ? "hidden" : undefined}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden"
           >
-            {/* Contenedor principal con glassmorphism */}
-            <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-              {/* Header futurista */}
-              <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 p-6">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20" />
-                <div className="relative flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <motion.div
-                      initial={{ scale: 0, rotate: -180 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ delay: 0.2 }}
-                      className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"
-                    >
-                      <UserPlus className="w-6 h-6 text-white" />
-                    </motion.div>
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                      <UserPlus className="w-5 h-5 text-white" />
+                    </div>
                     <div>
-                      <motion.h2
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="text-2xl font-bold text-white"
-                      >
+                      <h2 className="text-xl font-bold text-white">
                         {isEditing ? 'Editar Socio' : 'Nuevo Socio'}
-                      </motion.h2>
-                      <motion.p
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="text-blue-100"
-                      >
-                        {FORM_STEPS[currentStep]?.subtitle}
-                      </motion.p>
+                      </h2>
+                      <p className="text-blue-100 text-sm">
+                        {FORM_STEPS[currentStep]?.title}
+                      </p>
                     </div>
                   </div>
                   
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5 }}
+                  <button
                     onClick={onClose}
-                    className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm hover:bg-white/30 transition-colors"
+                    className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors"
                   >
-                    <X className="w-5 h-5 text-white" />
-                  </motion.button>
+                    <X className="w-4 h-4 text-white" />
+                  </button>
                 </div>
 
-                {/* Indicador de progreso */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                  className="mt-6"
-                >
+                {/* Progress */}
+                <div className="mt-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-blue-100">
                       Paso {currentStep + 1} de {FORM_STEPS.length}
@@ -704,124 +624,103 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                     </span>
                   </div>
                   <div className="w-full bg-white/20 rounded-full h-2">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${((currentStep + 1) / FORM_STEPS.length) * 100}%` }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
-                      className="bg-gradient-to-r from-yellow-400 to-orange-400 h-2 rounded-full"
+                    <div
+                      className="bg-white h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${((currentStep + 1) / FORM_STEPS.length) * 100}%` }}
                     />
                   </div>
-                </motion.div>
+                </div>
 
-                {/* Navegación de pasos */}
+                {/* Steps */}
                 <div className="flex items-center justify-center mt-4 gap-2">
                   {FORM_STEPS.map((step, index) => {
                     const StepIcon = step.icon;
-                    const isCompleted = completedSteps.has(index);
                     const isCurrent = index === currentStep;
+                    const isCompleted = index < currentStep;
                     
                     return (
-                      <motion.div
+                      <div
                         key={step.id}
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.7 + index * 0.1 }}
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
                           isCurrent
-                            ? 'bg-white text-blue-600 shadow-lg scale-110'
+                            ? 'bg-white text-blue-600 scale-110'
                             : isCompleted
                             ? 'bg-green-400 text-white'
                             : 'bg-white/20 text-white/60'
                         }`}
                       >
                         {isCompleted ? (
-                          <Check className="w-5 h-5" />
+                          <Check className="w-4 h-4" />
                         ) : (
-                          <StepIcon className="w-5 h-5" />
+                          <StepIcon className="w-4 h-4" />
                         )}
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Contenido del formulario */}
-              <form onSubmit={handleSubmit(onSubmit)} className="p-8">
-                <motion.div
-                  key={currentStep}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="min-h-[400px]"
-                >
-                  <div className="mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {FORM_STEPS[currentStep]?.title}
-                    </h3>
-                    <p className="text-gray-600">
-                      {FORM_STEPS[currentStep]?.subtitle}
-                    </p>
-                  </div>
+              {/* Content */}
+              <form onSubmit={handleSubmit(onSubmit)} className="p-6">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {FORM_STEPS[currentStep]?.title}
+                  </h3>
+                </div>
 
+                <div className="min-h-[300px]">
                   {renderStepContent()}
-                </motion.div>
+                </div>
 
-                {/* Navegación inferior */}
+                {/* Navigation */}
                 <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-                  <motion.button
+                  <button
                     type="button"
                     onClick={prevStep}
                     disabled={currentStep === 0}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                       currentStep === 0
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
-                    whileHover={currentStep > 0 ? { scale: 1.05 } : {}}
-                    whileTap={currentStep > 0 ? { scale: 0.95 } : {}}
                   >
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="w-4 h-4" />
                     Anterior
-                  </motion.button>
+                  </button>
 
                   <div className="flex items-center gap-3">
                     {currentStep === FORM_STEPS.length - 1 ? (
-                      <motion.button
+                      <button
                         type="submit"
                         disabled={isSubmitting || loading}
-                        className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSubmitting || loading ? (
                           <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin" />
                             Guardando...
                           </>
                         ) : (
                           <>
-                            <Sparkles className="w-5 h-5" />
+                            <Check className="w-4 h-4" />
                             {isEditing ? 'Actualizar' : 'Crear Socio'}
                           </>
                         )}
-                      </motion.button>
+                      </button>
                     ) : (
-                      <motion.button
+                      <button
                         type="button"
                         onClick={nextStep}
                         disabled={!isCurrentStepValid}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                           isCurrentStepValid
                             ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
                             : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         }`}
-                        whileHover={isCurrentStepValid ? { scale: 1.05 } : {}}
-                        whileTap={isCurrentStepValid ? { scale: 0.95 } : {}}
                       >
                         Siguiente
-                        <ChevronRight className="w-5 h-5" />
-                      </motion.button>
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
                     )}
                   </div>
                 </div>
