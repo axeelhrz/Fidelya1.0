@@ -1686,14 +1686,6 @@ export const EnhancedMemberManagement = ({
                             socio.estado === 'suspendido' ? 'bg-red-500' : 'bg-yellow-500'
                           }`} />
                         </div>
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-lg ${
-                          socio.estadoMembresia === 'al_dia' ? 'bg-emerald-100 text-emerald-700' :
-                          socio.estadoMembresia === 'vencido' ? 'bg-red-100 text-red-700' :
-                          'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {socio.estadoMembresia === 'al_dia' ? 'Al día' :
-                           socio.estadoMembresia === 'vencido' ? 'Vencido' : 'Pendiente'}
-                        </span>
                       </div>
 
                       {/* Member Info */}
