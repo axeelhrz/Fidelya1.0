@@ -1218,88 +1218,20 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                             <div className="flex items-center">
                               <Gift className="w-3 h-3 lg:w-4 lg:h-4 text-purple-500 mr-2" />
                               <span className="text-xs lg:text-sm font-semibold text-slate-900">
-                                {comercio.beneficiosActivosReales || 0}
+                                Beneficios
                               </span>
                               <span className="text-xs text-slate-500 ml-1">activos</span>
                             </div>
-                            {comercio.beneficios && comercio.beneficios.length > 0 && (
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => toggleBeneficios(comercio.id)}
-                                className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition-all duration-200"
-                              >
-                                {comercio.showBeneficios ? (
-                                  <ChevronUp className="w-3 h-3" />
-                                ) : (
-                                  <ChevronDown className="w-3 h-3" />
-                                )}
-                              </motion.button>
-                            )}
                           </div>
-                          
-                          {comercio.loadingBeneficios ? (
-                            <div className="flex items-center py-2">
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-600"></div>
-                              <span className="ml-2 text-xs text-slate-500">Cargando...</span>
-                            </div>
-                          ) : comercio.beneficios && comercio.beneficios.length > 0 ? (
-                            <AnimatePresence>
-                              {comercio.showBeneficios && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: 'auto' }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  className="space-y-2"
-                                >
-                                  {comercio.beneficios.slice(0, 2).map((beneficio) => (
-                                    <div key={beneficio.id} className="text-xs bg-slate-50 p-2 rounded-lg border border-slate-200">
-                                      <div className="font-medium text-slate-900 truncate">
-                                        {beneficio.titulo}
-                                      </div>
-                                      <div className="text-emerald-600 font-bold">
-                                        {beneficio.tipo === 'porcentaje' ? `${beneficio.descuento}%` :
-                                         beneficio.tipo === 'monto_fijo' ? formatCurrency(beneficio.descuento) :
-                                         'Gratis'}
-                                      </div>
-                                    </div>
-                                  ))}
-                                  {(comercio.beneficiosActivosReales || 0) > 2 && (
-                                    <motion.button
-                                      whileHover={{ scale: 1.02 }}
-                                      whileTap={{ scale: 0.98 }}
-                                      onClick={() => handleViewBeneficios(comercio)}
-                                      className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                                    >
-                                      +{(comercio.beneficiosActivosReales || 0) - 2} más
-                                    </motion.button>
-                                  )}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          ) : (
-                            <span className="text-xs text-slate-400">Sin beneficios</span>
-                          )}
                         </div>
                       </th>
-                      <th className="hidden xl:table-cell px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
-                        {comercio.puntuacion > 0 ? (
-                          <div className="flex items-center">
-                            <Star className="w-4 h-4 text-amber-400 fill-current mr-1" />
-                            <span className="text-sm text-slate-900 font-medium">
-                              {comercio.puntuacion.toFixed(1)}
-                            </span>
-                            <span className="text-sm text-slate-500 ml-1">
-                              ({comercio.totalReviews})
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-slate-500">Sin calificar</span>
-                        )}
+                      <th className="hidden xl:table-cell px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        Calificación
                       </th>
                       <th className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center space-x-1">
-                          <motion.button
+                          {/* Table header actions should not reference 'comercio' */}
+                          {/* <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleViewBeneficios(comercio)}
@@ -1307,9 +1239,10 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                             title="Ver todos los beneficios"
                           >
                             <Eye size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button>
+                          </motion.button> */}
 
-                          <motion.button
+                          {/* Table header actions should not reference 'comercio' */}
+                          {/* <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleViewValidations(comercio)}
@@ -1379,7 +1312,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                             title="Eliminar"
                           >
                             <Trash2 size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button>
+                          </motion.button> */}
                         </div>
                       </th>
                     </tr>

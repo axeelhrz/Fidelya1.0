@@ -17,7 +17,8 @@ import {
   Building,
   AlertCircle,
   CheckCircle,
-  Sparkles
+  Sparkles,
+  Settings
 } from 'lucide-react';
 import type { Comercio } from '@/services/comercio.service';
 
