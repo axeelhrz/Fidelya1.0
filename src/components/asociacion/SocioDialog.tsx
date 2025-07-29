@@ -25,7 +25,6 @@ import {
   Lock,
   Building,
   Shield,
-  Sparkles,
   DollarSign
 } from 'lucide-react';
 import { Socio, SocioFormData } from '@/types/socio';
@@ -118,7 +117,7 @@ const ProfessionalFormField = React.memo(({
   };
 
   const getFieldClasses = () => {
-    const baseClasses = "w-full pl-10 pr-4 py-3 border-2 rounded-xl transition-all duration-200 bg-white/50 backdrop-blur-sm";
+    const baseClasses = "w-full pl-10 pr-4 py-3 border-2 rounded-xl transition-all duration-150 bg-white/50 backdrop-blur-sm";
     
     if (hasError) {
       return `${baseClasses} border-red-300 focus:border-red-500 focus:ring-red-200`;
@@ -153,8 +152,9 @@ const ProfessionalFormField = React.memo(({
         </div>
         {error && (
           <motion.p
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.1 }}
             className="text-sm text-red-600 flex items-center gap-1"
           >
             <AlertCircle className="w-3 h-3" />
@@ -198,8 +198,9 @@ const ProfessionalFormField = React.memo(({
       </div>
       {error && (
         <motion.p
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.1 }}
           className="text-sm text-red-600 flex items-center gap-1"
         >
           <AlertCircle className="w-3 h-3" />
@@ -339,6 +340,10 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     }
   }, [currentStep]);
 
+  const goToStep = useCallback((stepIndex: number) => {
+    setCurrentStep(stepIndex);
+  }, []);
+
   // Envío del formulario
   const onSubmit = useCallback(async (data: SocioFormInputs) => {
     try {
@@ -422,7 +427,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: shouldUseAnimations ? 0.2 : 0 }}
+            transition={{ duration: shouldUseAnimations ? 0.1 : 0 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm"
             onClick={onClose}
           />
@@ -430,10 +435,10 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
           {/* Modal */}
           <div className="flex min-h-full items-center justify-center p-4">
             <motion.div
-              initial={shouldUseAnimations ? { opacity: 0, scale: 0.95, y: 20 } : {}}
+              initial={shouldUseAnimations ? { opacity: 0, scale: 0.98, y: 10 } : {}}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={shouldUseAnimations ? { opacity: 0, scale: 0.95, y: 20 } : {}}
-              transition={{ duration: shouldUseAnimations ? 0.2 : 0 }}
+              exit={shouldUseAnimations ? { opacity: 0, scale: 0.98, y: 10 } : {}}
+              transition={{ duration: shouldUseAnimations ? 0.15 : 0 }}
               className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
@@ -461,20 +466,52 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                   </button>
                 </div>
 
-                {/* Progress bar */}
-                <div className="mt-4">
-                  <div className="flex justify-between text-xs text-white/80 mb-2">
-                    <span>Paso {currentStep + 1} de {FORM_STEPS.length}</span>
-                    <span>{Math.round(((currentStep + 1) / FORM_STEPS.length) * 100)}%</span>
-                  </div>
-                  <div className="w-full bg-white/20 rounded-full h-2">
-                    <motion.div
-                      className="bg-white rounded-full h-2"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${((currentStep + 1) / FORM_STEPS.length) * 100}%` }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </div>
+                {/* Navegación por iconos */}
+                <div className="mt-4 flex justify-center space-x-4">
+                  {FORM_STEPS.map((step, index) => {
+                    const StepIcon = step.icon;
+                    const isActive = index === currentStep;
+                    const isCompleted = index < currentStep;
+                    
+                    return (
+                      <button
+                        key={step.id}
+                        type="button"
+                        onClick={() => goToStep(index)}
+                        className={`relative p-3 rounded-xl transition-all duration-200 ${
+                          isActive 
+                            ? 'bg-white/30 scale-110' 
+                            : isCompleted 
+                              ? 'bg-white/20 hover:bg-white/25' 
+                              : 'bg-white/10 hover:bg-white/15'
+                        }`}
+                      >
+                        <StepIcon className={`w-5 h-5 ${
+                          isActive || isCompleted ? 'text-white' : 'text-white/60'
+                        }`} />
+                        
+                        {/* Indicador de completado */}
+                        {isCompleted && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center"
+                          >
+                            <Check className="w-2.5 h-2.5 text-white" />
+                          </motion.div>
+                        )}
+                        
+                        {/* Indicador activo */}
+                        {isActive && (
+                          <motion.div
+                            layoutId="activeStep"
+                            className="absolute inset-0 bg-white/20 rounded-xl"
+                            transition={{ duration: 0.2 }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -482,9 +519,9 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               <form onSubmit={handleSubmit(onSubmit)} className="p-6">
                 <motion.div
                   key={currentStep}
-                  initial={shouldUseAnimations ? { opacity: 0, x: 20 } : {}}
+                  initial={shouldUseAnimations ? { opacity: 0, x: 10 } : {}}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: shouldUseAnimations ? 0.2 : 0 }}
+                  transition={{ duration: shouldUseAnimations ? 0.15 : 0 }}
                   className="space-y-6"
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
