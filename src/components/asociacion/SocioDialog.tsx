@@ -22,14 +22,15 @@ import {
   AlertCircle,
   Loader2,
   Lock,
-  Shield
+  Shield,
+  Save
 } from 'lucide-react';
 import { Socio, SocioFormData } from '@/types/socio';
 import { Timestamp } from 'firebase/firestore';
 import { useDebounce } from '@/hooks/useDebounce';
 
-// Esquema de validación mejorado
-const socioSchema = z.object({
+// Esquema de validación para creación (más estricto)
+const createSocioSchema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   email: z.string().email('Email inválido'),
   estado: z.enum(['activo', 'inactivo', 'suspendido', 'pendiente', 'vencido']),
@@ -49,7 +50,28 @@ const socioSchema = z.object({
   path: ['confirmPassword'],
 });
 
-type SocioFormInputs = z.infer<typeof socioSchema>;
+// Esquema de validación para edición (más flexible)
+const editSocioSchema = z.object({
+  nombre: z.string().min(1, 'El nombre es requerido').optional(),
+  email: z.string().email('Email inválido').optional(),
+  estado: z.enum(['activo', 'inactivo', 'suspendido', 'pendiente', 'vencido']).optional(),
+  telefono: z.string().optional(),
+  dni: z.string().optional(),
+  direccion: z.string().optional(),
+  fechaNacimiento: z.string().optional(),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional(),
+  confirmPassword: z.string().optional(),
+}).refine((data) => {
+  if (data.password && data.confirmPassword) {
+    return data.password === data.confirmPassword;
+  }
+  return true;
+}, {
+  message: 'Las contraseñas no coinciden',
+  path: ['confirmPassword'],
+});
+
+type SocioFormInputs = z.infer<typeof createSocioSchema>;
 
 // Configuración de pasos del formulario
 const FORM_STEPS = [
@@ -223,9 +245,10 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     reset,
     formState: { errors },
     watch,
-    trigger
+    trigger,
+    getValues
   } = useForm<SocioFormInputs>({
-    resolver: zodResolver(socioSchema),
+    resolver: zodResolver(isEditing ? editSocioSchema : createSocioSchema),
     mode: 'onChange',
     defaultValues: {
       nombre: '',
@@ -287,13 +310,22 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
 
   // Navegación entre pasos
   const nextStep = useCallback(async () => {
+    // En modo edición, permitir navegar sin validación estricta
+    if (isEditing) {
+      if (currentStep < FORM_STEPS.length - 1) {
+        setCurrentStep(prev => prev + 1);
+      }
+      return;
+    }
+
+    // En modo creación, validar antes de continuar
     const currentFields = FORM_STEPS[currentStep].fields;
     const isValid = await trigger(currentFields as any);
     
     if (isValid && currentStep < FORM_STEPS.length - 1) {
       setCurrentStep(prev => prev + 1);
     }
-  }, [currentStep, trigger]);
+  }, [currentStep, trigger, isEditing]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
@@ -305,7 +337,35 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     setCurrentStep(stepIndex);
   }, []);
 
-  // Envío del formulario
+  // Función para guardar cambios en modo edición sin validación completa
+  const handleQuickSave = useCallback(async () => {
+    if (!isEditing) return;
+
+    try {
+      setIsSubmitting(true);
+      
+      const currentValues = getValues();
+      const formData: SocioFormData = {
+        nombre: currentValues.nombre || socio?.nombre || '',
+        email: currentValues.email || socio?.email || '',
+        estado: currentValues.estado || socio?.estado || 'activo',
+        telefono: currentValues.telefono || '',
+        dni: currentValues.dni || '',
+        direccion: currentValues.direccion || '',
+        fechaNacimiento: currentValues.fechaNacimiento ? new Date(currentValues.fechaNacimiento) : undefined,
+        password: currentValues.password || '',
+      };
+
+      await onSave(formData);
+      onClose();
+    } catch (error) {
+      console.error('Error al guardar socio:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [isEditing, getValues, socio, onSave, onClose]);
+
+  // Envío del formulario completo
   const onSubmit = useCallback(async (data: SocioFormInputs) => {
     try {
       setIsSubmitting(true);
@@ -401,12 +461,31 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={onClose}
-                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                  >
-                    <X className="w-5 h-5 text-white" />
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    {/* Botón de guardado rápido para edición */}
+                    {isEditing && (
+                      <button
+                        type="button"
+                        onClick={handleQuickSave}
+                        disabled={isSubmitting || loading}
+                        className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors disabled:opacity-50"
+                        title="Guardar cambios actuales"
+                      >
+                        {isSubmitting || loading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                        <span className="hidden sm:inline">Guardar</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={onClose}
+                      className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5 text-white" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Navegación por iconos */}
@@ -488,6 +567,28 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                     >
                       Cancelar
                     </button>
+
+                    {/* En modo edición, mostrar botón de guardado rápido también aquí */}
+                    {isEditing && (
+                      <button
+                        type="button"
+                        onClick={handleQuickSave}
+                        disabled={isSubmitting || loading}
+                        className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {isSubmitting || loading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Guardando...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4" />
+                            <span>Guardar Cambios</span>
+                          </>
+                        )}
+                      </button>
+                    )}
 
                     {currentStep < FORM_STEPS.length - 1 ? (
                       <button
