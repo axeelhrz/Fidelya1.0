@@ -1,34 +1,45 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  X,
-  User,
-  Mail,
-  Phone,
-  CreditCard,
+import { 
+  X, 
+  User, 
+  Mail, 
+  Phone, 
+  CreditCard, 
+  MapPin, 
   Calendar,
-  Hash,
-  Shield,
-  Save,
-  UserPlus,
-  CheckCircle2,
+  Eye,
+  EyeOff,
+  CheckCircle,
   AlertCircle,
   ArrowRight,
   ArrowLeft,
-  Lock,
-  Eye,
-  EyeOff,
-  Key
+  Sparkles
 } from 'lucide-react';
-import { socioSchema } from '@/lib/validations/socio';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Socio } from '@/types/socio';
+import { Socio, SocioFormData } from '@/types/socio';
+import { Timestamp } from 'firebase/firestore';
 
-type SocioFormData = z.infer<typeof socioSchema>;
+// Schema de validación
+const socioSchema = z.object({
+  nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  confirmPassword: z.string().min(6, 'Confirma tu contraseña'),
+  estado: z.enum(['activo', 'inactivo', 'suspendido', 'pendiente', 'vencido']),
+  telefono: z.string().optional(),
+  dni: z.string().optional(),
+  numeroSocio: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Las contraseñas no coinciden",
+  path: ["confirmPassword"],
+});
+
+type SocioFormInputs = z.infer<typeof socioSchema>;
 
 interface SocioDialogProps {
   open: boolean;
@@ -37,51 +48,27 @@ interface SocioDialogProps {
   socio?: Socio | null;
 }
 
-const STEPS = [
-  {
-    id: 1,
-    title: 'Información Personal',
-    description: 'Datos básicos del socio',
-    icon: User,
-    color: 'bg-blue-500'
-  },
-  {
-    id: 2,
-    title: 'Acceso al Sistema',
-    description: 'Credenciales de acceso',
-    icon: Key,
-    color: 'bg-purple-500'
-  },
-  {
-    id: 3,
-    title: 'Configuración',
-    description: 'Estado y configuración final',
-    icon: Shield,
-    color: 'bg-emerald-500'
-  }
-];
-
 export const SocioDialog: React.FC<SocioDialogProps> = ({
   open,
   onClose,
   onSave,
-  socio,
+  socio
 }) => {
-  const isEditing = !!socio;
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const isEditing = !!socio;
 
   const {
     register,
     handleSubmit,
     reset,
-    watch,
+    formState: { errors, isSubmitting },
     trigger,
-    formState: { errors, isSubmitting, isValid, touchedFields },
-  } = useForm<SocioFormData>({
+    watch
+  } = useForm<SocioFormInputs>({
     resolver: zodResolver(socioSchema),
-    mode: 'onChange',
     defaultValues: {
       nombre: '',
       email: '',
@@ -94,44 +81,23 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     }
   });
 
-  const watchedFields = watch();
-
+  // Resetear formulario cuando se abre/cierra o cambia el socio
   useEffect(() => {
     if (open) {
-      setCurrentStep(1);
       if (socio) {
-        // Convert Timestamp to Date if needed
-        function toDateOrUndefined(value: unknown): Date | undefined {
-          if (!value) return undefined;
-          if (value instanceof Date) return value;
-          if (typeof value === 'object' && value !== null && typeof (value as { toDate?: () => Date }).toDate === 'function') {
-            return (value as { toDate: () => Date }).toDate();
-          }
-          if (typeof value === 'string' || typeof value === 'number') {
-            const d = new Date(value);
-            return isNaN(d.getTime()) ? undefined : d;
-          }
-          return undefined;
-        }
-        
-        const fechaNacimiento = toDateOrUndefined(socio.fechaNacimiento) ?? new Date();
-        const fechaVencimiento = toDateOrUndefined(socio.fechaVencimiento);
-        
+        // Modo edición
         reset({
-          nombre: socio.nombre,
-          email: socio.email,
-          password: '', // No pre-fill password for security
+          nombre: socio.nombre || '',
+          email: socio.email || '',
+          password: '',
           confirmPassword: '',
-          estado: socio.estado === 'activo' || socio.estado === 'vencido' || socio.estado === 'inactivo' || socio.estado === 'suspendido' || socio.estado === 'pendiente' 
-            ? socio.estado 
-            : 'activo',
+          estado: socio.estado || 'activo',
           telefono: socio.telefono || '',
           dni: socio.dni || '',
-          fechaNacimiento,
           numeroSocio: socio.numeroSocio || '',
-          fechaVencimiento,
         });
       } else {
+        // Modo creación
         reset({
           nombre: '',
           email: '',
@@ -140,505 +106,307 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
           estado: 'activo',
           telefono: '',
           dni: '',
-          fechaNacimiento: new Date(),
           numeroSocio: '',
-          fechaVencimiento: undefined,
         });
       }
+      setCurrentStep(0);
     }
   }, [open, socio, reset]);
 
-  const onSubmit = async (data: SocioFormData) => {
+  const onSubmit: SubmitHandler<SocioFormInputs> = async (data) => {
     try {
-      await onSave(data);
-      onClose();
+      const socioData: SocioFormData = {
+        nombre: data.nombre,
+        email: data.email,
+        estado: data.estado,
+        telefono: data.telefono,
+        dni: data.dni,
+        numeroSocio: data.numeroSocio,
+        ...(data.password && { password: data.password }),
+      };
+
+      await onSave(socioData);
     } catch (error) {
       console.error('Error saving socio:', error);
     }
   };
 
-  const handleClose = () => {
-    if (!isSubmitting) {
-      onClose();
+  const steps = [
+    {
+      title: 'Información Personal',
+      fields: ['nombre', 'email', 'telefono', 'dni']
+    },
+    {
+      title: 'Acceso al Sistema',
+      fields: ['password', 'confirmPassword']
+    },
+    {
+      title: 'Configuración',
+      fields: ['estado', 'numeroSocio']
     }
-  };
+  ];
 
   const nextStep = async () => {
-    const fieldsToValidate = getFieldsForStep(currentStep);
-    const isStepValid = await trigger(fieldsToValidate);
+    const fieldsToValidate = steps[currentStep].fields as (keyof SocioFormInputs)[];
+    const isValid = await trigger(fieldsToValidate);
     
-    if (isStepValid && currentStep < STEPS.length) {
+    if (isValid && currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
   };
 
   const prevStep = () => {
-    if (currentStep > 1) {
+    if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
 
-  const getFieldsForStep = (step: number): (keyof SocioFormData)[] => {
-    switch (step) {
-      case 1:
-        return ['nombre', 'email', 'dni', 'telefono', 'fechaNacimiento'];
-      case 2:
-        return ['password', 'confirmPassword'];
-      case 3:
-        return ['estado', 'numeroSocio', 'fechaVencimiento'];
-      default:
-        return [];
-    }
+  const isStepValid = (stepIndex: number) => {
+    const fieldsToCheck = steps[stepIndex].fields as (keyof SocioFormInputs)[];
+    return fieldsToCheck.every(field => !errors[field]);
   };
 
-  const getFieldValidationState = (fieldName: keyof SocioFormData) => {
-    const hasError = !!errors[fieldName];
-    const isTouched = !!touchedFields[fieldName];
-    const hasValue = !!watchedFields[fieldName];
-    
-    if (hasError) return 'error';
-    if (isTouched && hasValue) return 'success';
+  const getFieldValidationState = (fieldName: keyof SocioFormInputs) => {
+    if (errors[fieldName]) return 'error';
+    const value = watch(fieldName);
+    if (value && value.toString().length > 0) return 'success';
     return 'default';
   };
 
-  const getFieldIcon = (state: string) => {
-    switch (state) {
-      case 'success':
-        return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
-      case 'error':
-        return <AlertCircle className="w-5 h-5 text-red-500" />;
-      default:
-        return null;
-    }
+  const getFieldIcon = (fieldName: keyof SocioFormInputs) => {
+    const state = getFieldValidationState(fieldName);
+    if (state === 'error') return <AlertCircle className="w-5 h-5 text-red-500" />;
+    if (state === 'success') return <CheckCircle className="w-5 h-5 text-green-500" />;
+    return null;
   };
 
-  const getFieldClasses = (state: string) => {
-    const baseClasses = "w-full pl-12 pr-12 py-3.5 border-2 rounded-xl transition-all duration-200 placeholder-gray-400 focus:outline-none focus:ring-0";
+  const getFieldClasses = (fieldName: keyof SocioFormInputs) => {
+    const state = getFieldValidationState(fieldName);
+    const baseClasses = "w-full px-4 py-3 pl-12 pr-12 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200";
     
     switch (state) {
-      case 'success':
-        return `${baseClasses} border-emerald-200 bg-emerald-50/50 focus:border-emerald-400 focus:bg-emerald-50`;
       case 'error':
-        return `${baseClasses} border-red-200 bg-red-50/50 focus:border-red-400 focus:bg-red-50`;
+        return `${baseClasses} border-red-300 focus:border-red-500 focus:ring-red-200 bg-red-50`;
+      case 'success':
+        return `${baseClasses} border-green-300 focus:border-green-500 focus:ring-green-200 bg-green-50`;
       default:
-        return `${baseClasses} border-gray-200 bg-white focus:border-indigo-400 focus:bg-indigo-50/30 hover:border-gray-300`;
+        return `${baseClasses} border-gray-300 focus:border-blue-500 focus:ring-blue-200 bg-white`;
     }
-  };
-
-  const statusOptions = [
-    { value: 'activo', label: 'Activo', color: 'bg-emerald-500', description: 'Socio con acceso completo' },
-    { value: 'pendiente', label: 'Pendiente', color: 'bg-amber-500', description: 'Esperando activación' },
-    { value: 'inactivo', label: 'Inactivo', color: 'bg-gray-500', description: 'Sin acceso temporal' },
-    { value: 'suspendido', label: 'Suspendido', color: 'bg-red-500', description: 'Acceso bloqueado' },
-    { value: 'vencido', label: 'Vencido', color: 'bg-orange-500', description: 'Membresía expirada' },
-  ];
-
-  const isStepValid = (step: number) => {
-    const fieldsToCheck = getFieldsForStep(step);
-    return fieldsToCheck.every(field => !errors[field] && watchedFields[field]);
   };
 
   const renderStepContent = () => {
     switch (currentStep) {
-      case 1:
+      case 0:
         return (
-          <motion.div
-            key="step1"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
-            {/* Nombre */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Nombre completo <span className="text-red-500">*</span>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nombre Completo *
               </label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   {...register('nombre')}
-                  type="text"
+                  className={getFieldClasses('nombre')}
                   placeholder="Ingresa el nombre completo"
-                  className={getFieldClasses(getFieldValidationState('nombre'))}
                 />
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  {getFieldIcon(getFieldValidationState('nombre'))}
+                  {getFieldIcon('nombre')}
                 </div>
               </div>
               {errors.nombre && (
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-red-600 flex items-center space-x-1"
+                  className="mt-1 text-sm text-red-600"
                 >
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{errors.nombre.message}</span>
+                  {errors.nombre.message}
                 </motion.p>
               )}
             </div>
 
-            {/* Email */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Correo electrónico <span className="text-red-500">*</span>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Correo Electrónico *
               </label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   {...register('email')}
                   type="email"
-                  placeholder="socio@ejemplo.com"
-                  className={getFieldClasses(getFieldValidationState('email'))}
+                  className={getFieldClasses('email')}
+                  placeholder="correo@ejemplo.com"
                 />
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  {getFieldIcon(getFieldValidationState('email'))}
+                  {getFieldIcon('email')}
                 </div>
               </div>
               {errors.email && (
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-red-600 flex items-center space-x-1"
+                  className="mt-1 text-sm text-red-600"
                 >
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{errors.email.message}</span>
+                  {errors.email.message}
                 </motion.p>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* DNI */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  DNI / Documento
-                </label>
-                <div className="relative">
-                  <CreditCard className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    {...register('dni')}
-                    type="text"
-                    placeholder="Número de documento"
-                    className={getFieldClasses(getFieldValidationState('dni'))}
-                  />
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                    {getFieldIcon(getFieldValidationState('dni'))}
-                  </div>
-                </div>
-                {errors.dni && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-sm text-red-600 flex items-center space-x-1"
-                  >
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{errors.dni.message}</span>
-                  </motion.p>
-                )}
-              </div>
-
-              {/* Teléfono */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Teléfono
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    {...register('telefono')}
-                    type="text"
-                    placeholder="+54 11 1234-5678"
-                    className={getFieldClasses(getFieldValidationState('telefono'))}
-                  />
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                    {getFieldIcon(getFieldValidationState('telefono'))}
-                  </div>
-                </div>
-                {errors.telefono && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-sm text-red-600 flex items-center space-x-1"
-                  >
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{errors.telefono.message}</span>
-                  </motion.p>
-                )}
-              </div>
-            </div>
-
-            {/* Fecha de Nacimiento */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Fecha de nacimiento
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Teléfono
               </label>
               <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
-                  {...register('fechaNacimiento', {
-                    valueAsDate: true,
-                  })}
-                  type="date"
-                  className={getFieldClasses(getFieldValidationState('fechaNacimiento'))}
+                  {...register('telefono')}
+                  className={getFieldClasses('telefono')}
+                  placeholder="+54 9 11 1234-5678"
                 />
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  {getFieldIcon(getFieldValidationState('fechaNacimiento'))}
+                  {getFieldIcon('telefono')}
                 </div>
               </div>
-              {errors.fechaNacimiento && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-red-600 flex items-center space-x-1"
-                >
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{errors.fechaNacimiento.message}</span>
-                </motion.p>
-              )}
             </div>
-          </motion.div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                DNI/Documento
+              </label>
+              <div className="relative">
+                <CreditCard className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  {...register('dni')}
+                  className={getFieldClasses('dni')}
+                  placeholder="12345678"
+                />
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                  {getFieldIcon('dni')}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 1:
+        return (
+          <div className="space-y-6">
+            {!isEditing && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Contraseña *
+                  </label>
+                  <div className="relative">
+                    <input
+                      {...register('password')}
+                      type={showPassword ? 'text' : 'password'}
+                      className={getFieldClasses('password')}
+                      placeholder="Mínimo 6 caracteres"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-1 text-sm text-red-600"
+                    >
+                      {errors.password.message}
+                    </motion.p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Confirmar Contraseña *
+                  </label>
+                  <div className="relative">
+                    <input
+                      {...register('confirmPassword')}
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      className={getFieldClasses('confirmPassword')}
+                      placeholder="Repite la contraseña"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-1 text-sm text-red-600"
+                    >
+                      {errors.confirmPassword.message}
+                    </motion.p>
+                  )}
+                </div>
+              </>
+            )}
+
+            {isEditing && (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-8 h-8 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Modo Edición
+                </h3>
+                <p className="text-gray-600">
+                  La contraseña se mantiene sin cambios. Para modificarla, el socio debe usar la opción de recuperación de contraseña.
+                </p>
+              </div>
+            )}
+          </div>
         );
 
       case 2:
         return (
-          <motion.div
-            key="step2"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Key className="w-8 h-8 text-purple-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Credenciales de Acceso</h3>
-              <p className="text-gray-600 text-sm">
-                Estas credenciales permitirán al socio acceder a su cuenta personal
-              </p>
-            </div>
-
-            {/* Contraseña */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Contraseña <span className="text-red-500">*</span>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Estado del Socio
               </label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  {...register('password')}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Mínimo 6 caracteres"
-                  className={getFieldClasses(getFieldValidationState('password'))}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-              {errors.password && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-red-600 flex items-center space-x-1"
-                >
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{errors.password.message}</span>
-                </motion.p>
-              )}
-            </div>
-
-            {/* Confirmar Contraseña */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Confirmar contraseña <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  {...register('confirmPassword')}
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Repite la contraseña"
-                  className={getFieldClasses(getFieldValidationState('confirmPassword'))}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-red-600 flex items-center space-x-1"
-                >
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{errors.confirmPassword.message}</span>
-                </motion.p>
-              )}
-            </div>
-
-            {/* Password Strength Indicator */}
-            {watchedFields.password && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="p-4 bg-gray-50 rounded-xl border border-gray-200"
+              <select
+                {...register('estado')}
+                className={getFieldClasses('estado')}
               >
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Seguridad de la contraseña</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${watchedFields.password.length >= 6 ? 'bg-emerald-500' : 'bg-gray-300'}`}></div>
-                    <span className={`text-xs ${watchedFields.password.length >= 6 ? 'text-emerald-600' : 'text-gray-500'}`}>
-                      Mínimo 6 caracteres
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${/[A-Z]/.test(watchedFields.password) ? 'bg-emerald-500' : 'bg-gray-300'}`}></div>
-                    <span className={`text-xs ${/[A-Z]/.test(watchedFields.password) ? 'text-emerald-600' : 'text-gray-500'}`}>
-                      Al menos una mayúscula
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${/[0-9]/.test(watchedFields.password) ? 'bg-emerald-500' : 'bg-gray-300'}`}></div>
-                    <span className={`text-xs ${/[0-9]/.test(watchedFields.password) ? 'text-emerald-600' : 'text-gray-500'}`}>
-                      Al menos un número
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </motion.div>
-        );
-
-      case 3:
-        return (
-          <motion.div
-            key="step3"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
-            {/* Estado */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Estado del socio <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Shield className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <select
-                  {...register('estado')}
-                  className={getFieldClasses(getFieldValidationState('estado'))}
-                >
-                  {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label} - {option.description}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  {getFieldIcon(getFieldValidationState('estado'))}
-                </div>
-              </div>
-              {errors.estado && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-red-600 flex items-center space-x-1"
-                >
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{errors.estado.message}</span>
-                </motion.p>
-              )}
+                <option value="activo">Activo - Puede acceder a todos los beneficios</option>
+                <option value="inactivo">Inactivo - Sin acceso temporal</option>
+                <option value="suspendido">Suspendido - Acceso bloqueado</option>
+                <option value="pendiente">Pendiente - Esperando activación</option>
+                <option value="vencido">Vencido - Membresía expirada</option>
+              </select>
             </div>
 
-            {/* Número de Socio */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Número de socio
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Número de Socio
               </label>
               <div className="relative">
-                <Hash className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <CreditCard className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   {...register('numeroSocio')}
-                  type="text"
-                  placeholder="Se genera automáticamente si se deja vacío"
-                  className={getFieldClasses(getFieldValidationState('numeroSocio'))}
+                  className={getFieldClasses('numeroSocio')}
+                  placeholder="SOC001 (opcional)"
                 />
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  {getFieldIcon(getFieldValidationState('numeroSocio'))}
+                  {getFieldIcon('numeroSocio')}
                 </div>
               </div>
-              {errors.numeroSocio && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-red-600 flex items-center space-x-1"
-                >
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{errors.numeroSocio.message}</span>
-                </motion.p>
-              )}
             </div>
-
-            {/* Fecha de Vencimiento */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Fecha de vencimiento
-              </label>
-              <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  {...register('fechaVencimiento', {
-                    valueAsDate: true,
-                  })}
-                  type="date"
-                  className={getFieldClasses(getFieldValidationState('fechaVencimiento'))}
-                />
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  {getFieldIcon(getFieldValidationState('fechaVencimiento'))}
-                </div>
-              </div>
-              {errors.fechaVencimiento && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-red-600 flex items-center space-x-1"
-                >
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{errors.fechaVencimiento.message}</span>
-                </motion.p>
-              )}
-            </div>
-
-            {/* Status Preview */}
-            {watchedFields.estado && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="p-4 bg-gray-50 rounded-xl border border-gray-200"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${statusOptions.find(s => s.value === watchedFields.estado)?.color}`}></div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {statusOptions.find(s => s.value === watchedFields.estado)?.label}
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      {statusOptions.find(s => s.value === watchedFields.estado)?.description}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </motion.div>
+          </div>
         );
 
       default:
@@ -646,190 +414,147 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     }
   };
 
+  if (!open) return null;
+
   return (
     <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={handleClose}
-          />
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        />
 
-          {/* Dialog Container */}
-          <div className="flex items-center justify-center min-h-screen p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", duration: 0.5 }}
-              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden"
-            >
-              {/* Header */}
-              <div className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 px-8 py-8">
-                <div className="absolute inset-0 bg-black/10"></div>
-                <div className="relative flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.2, type: "spring" }}
-                      className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30"
-                    >
-                      {isEditing ? (
-                        <User className="w-8 h-8 text-white" />
-                      ) : (
-                        <UserPlus className="w-8 h-8 text-white" />
-                      )}
-                    </motion.div>
-                    <div>
-                      <motion.h2
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="text-2xl font-bold text-white"
-                      >
-                        {isEditing ? 'Editar Socio' : 'Nuevo Socio'}
-                      </motion.h2>
-                      <motion.p
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-white/80 text-sm mt-1"
-                      >
-                        Paso {currentStep} de {STEPS.length}: {STEPS[currentStep - 1]?.description}
-                      </motion.p>
-                    </div>
-                  </div>
-                  
-                  <motion.button
-                    initial={{ opacity: 0, rotate: -90 }}
-                    animate={{ opacity: 1, rotate: 0 }}
-                    transition={{ delay: 0.3 }}
-                    onClick={handleClose}
-                    disabled={isSubmitting}
-                    className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 text-white hover:bg-white/30 transition-all duration-200 disabled:opacity-50"
+        {/* Modal */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ type: "spring", duration: 0.5 }}
+          className="relative w-full max-w-2xl mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden"
+        >
+          {/* Header */}
+          <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    {isEditing ? 'Editar Socio' : 'Nuevo Socio'}
+                  </h2>
+                  <p className="text-blue-100 text-sm">
+                    {steps[currentStep].title}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mt-6">
+              <div className="flex justify-between mb-2">
+                {steps.map((step, index) => (
+                  <span
+                    key={index}
+                    className={`text-xs font-medium ${
+                      index <= currentStep ? 'text-white' : 'text-blue-200'
+                    }`}
                   >
-                    <X className="w-5 h-5" />
-                  </motion.button>
-                </div>
-                
-                {/* Decorative elements */}
-                <div className="absolute top-4 right-20 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
-                <div className="absolute bottom-4 left-20 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
+                    {step.title}
+                  </span>
+                ))}
               </div>
-
-              {/* Step Indicator */}
-              <div className="px-8 py-6 bg-gray-50 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  {STEPS.map((step, index) => (
-                    <div key={step.id} className="flex items-center">
-                      <div className="flex items-center">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                          currentStep === step.id
-                            ? `${step.color} text-white shadow-lg`
-                            : currentStep > step.id
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-gray-200 text-gray-500'
-                        }`}>
-                          {currentStep > step.id ? (
-                            <CheckCircle2 className="w-5 h-5" />
-                          ) : (
-                            <step.icon className="w-5 h-5" />
-                          )}
-                        </div>
-                        <div className="ml-3">
-                          <p className={`text-sm font-medium ${
-                            currentStep === step.id ? 'text-gray-900' : 'text-gray-500'
-                          }`}>
-                            {step.title}
-                          </p>
-                        </div>
-                      </div>
-                      {index < STEPS.length - 1 && (
-                        <div className={`w-12 h-0.5 mx-4 transition-all duration-200 ${
-                          currentStep > step.id ? 'bg-emerald-500' : 'bg-gray-200'
-                        }`} />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Form */}
-              <form onSubmit={handleSubmit(onSubmit)} className="p-8">
-                <AnimatePresence mode="wait">
-                  {renderStepContent()}
-                </AnimatePresence>
-
-                {/* Actions */}
+              <div className="w-full bg-white/20 rounded-full h-2">
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="flex flex-col sm:flex-row gap-4 mt-8 pt-6 border-t border-gray-200"
-                >
-                  <div className="flex gap-4 flex-1">
-                    {currentStep > 1 && (
-                      <button
-                        type="button"
-                        onClick={prevStep}
-                        disabled={isSubmitting}
-                        className="flex items-center justify-center px-6 py-3 border-2 border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 disabled:opacity-50"
-                      >
-                        <ArrowLeft className="w-5 h-5 mr-2" />
-                        Anterior
-                      </button>
-                    )}
-                    
-                    <button
-                      type="button"
-                      onClick={handleClose}
-                      disabled={isSubmitting}
-                      className="flex-1 px-6 py-3 border-2 border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 disabled:opacity-50"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                  
-                  {currentStep < STEPS.length ? (
-                    <button
-                      type="button"
-                      onClick={nextStep}
-                      disabled={!isStepValid(currentStep)}
-                      className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-                    >
-                      Siguiente
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </button>
-                  ) : (
-                    <button
-                      type="submit"
-                      disabled={isSubmitting || !isValid}
-                      className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-medium rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
-                          Guardando...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-5 h-5 mr-2" />
-                          {isEditing ? 'Actualizar' : 'Crear'} Socio
-                        </>
-                      )}
-                    </button>
-                  )}
-                </motion.div>
-              </form>
-            </motion.div>
+                  className="bg-white rounded-full h-2"
+                  initial={{ width: '0%' }}
+                  animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+
+          {/* Content */}
+          <form onSubmit={handleSubmit(onSubmit)} className="p-8">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {renderStepContent()}
+            </motion.div>
+
+            {/* Footer */}
+            <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={prevStep}
+                disabled={currentStep === 0}
+                className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all ${
+                  currentStep === 0
+                    ? 'text-gray-400 cursor-not-allowed'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Anterior</span>
+              </button>
+
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+
+                {currentStep < steps.length - 1 ? (
+                  <button
+                    type="button"
+                    onClick={nextStep}
+                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 font-medium transition-all"
+                  >
+                    <span>Siguiente</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Guardando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        <span>{isEditing ? 'Actualizar' : 'Crear'} Socio</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          </form>
+        </motion.div>
+      </div>
     </AnimatePresence>
   );
 };
