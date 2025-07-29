@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Inter, Plus_Jakarta_Sans, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { ClientLayout } from './ClientLayout';
-import { initializeNotificationSystem } from '@/lib/notification-init';
 
 // Configuración optimizada de fuentes
 const inter = Inter({ 
@@ -48,9 +47,6 @@ export const metadata: Metadata = {
     description: 'La plataforma que conecta asociaciones, socios y comercios en un ecosistema inteligente de beneficios y fidelización.',
   }
 };
-
-// Inicializar sistema de notificaciones en el servidor
-initializeNotificationSystem();
 
 export default function RootLayout({
   children,
