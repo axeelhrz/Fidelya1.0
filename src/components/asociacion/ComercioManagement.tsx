@@ -62,14 +62,13 @@ interface ComercioConBeneficios extends ComercioDisponible {
   beneficiosActivosReales?: number;
 }
 
-// Modern Stats Card Component - REMOVED PERCENTAGE FUNCTIONALITY
+// Modern Stats Card Component - REMOVED ALL PERCENTAGES AND TRENDS
 const ModernStatsCard: React.FC<{
   title: string;
   value: number;
   icon: React.ReactNode;
   color: 'blue' | 'green' | 'orange' | 'purple';
-  trend?: number;
-}> = ({ title, value, icon, color, trend }) => {
+}> = ({ title, value, icon, color }) => {
   const colorClasses = {
     blue: {
       bg: 'from-blue-500 to-blue-600',
@@ -116,12 +115,6 @@ const ModernStatsCard: React.FC<{
               {icon}
             </div>
           </div>
-          {trend && (
-            <div className={`flex items-center space-x-1 ${trend > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-              <TrendingUp className={`w-3 h-3 lg:w-4 lg:h-4 ${trend < 0 ? 'rotate-180' : ''}`} />
-              <span className="text-xs lg:text-sm font-semibold">{Math.abs(trend)}%</span>
-            </div>
-          )}
         </div>
         
         <div className="space-y-1 lg:space-y-2">
@@ -500,7 +493,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   // Obtener categorías únicas
   const categorias = Array.from(new Set(comerciosVinculados.map(c => c.categoria)));
 
-  // Calculate real stats based on actual data - NO PERCENTAGES
+  // Calculate real stats based on actual data - NO TRENDS OR PERCENTAGES
   const realStats = {
     totalComercios: comerciosVinculados.length,
     comerciosActivos: comerciosVinculados.filter(c => c.estado === 'activo').length,
@@ -725,21 +718,19 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
 
   return (
     <div className="space-y-6 lg:space-y-8">
-      {/* Modern Stats Cards - NO PERCENTAGES */}
+      {/* Modern Stats Cards - NO TRENDS OR PERCENTAGES */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
         <ModernStatsCard
           title="Total Comercios"
           value={realStats.totalComercios}
           icon={<Store className="w-5 h-5 lg:w-6 lg:h-6" />}
           color="blue"
-          trend={5}
         />
         <ModernStatsCard
           title="Comercios Activos"
           value={realStats.comerciosActivos}
           icon={<Zap className="w-5 h-5 lg:w-6 lg:h-6" />}
           color="green"
-          trend={12}
         />
         <ModernStatsCard
           title="Comercios Inactivos"
@@ -752,11 +743,9 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
           value={realStats.categorias}
           icon={<Activity className="w-5 h-5 lg:w-6 lg:h-6" />}
           color="purple"
-          trend={3}
         />
       </div>
 
-      {/* Rest of the component remains exactly the same... */}
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4">
         {onNavigate && (
@@ -1223,14 +1212,175 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                       <th className="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                         Estado
                       </th>
-                      <th className="hidden sm:table-cell px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Beneficios
+                      <th className="hidden sm:table-cell px-3 lg:px-6 py-3 lg:py-4">
+                        <div className="max-w-xs">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center">
+                              <Gift className="w-3 h-3 lg:w-4 lg:h-4 text-purple-500 mr-2" />
+                              <span className="text-xs lg:text-sm font-semibold text-slate-900">
+                                {comercio.beneficiosActivosReales || 0}
+                              </span>
+                              <span className="text-xs text-slate-500 ml-1">activos</span>
+                            </div>
+                            {comercio.beneficios && comercio.beneficios.length > 0 && (
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => toggleBeneficios(comercio.id)}
+                                className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition-all duration-200"
+                              >
+                                {comercio.showBeneficios ? (
+                                  <ChevronUp className="w-3 h-3" />
+                                ) : (
+                                  <ChevronDown className="w-3 h-3" />
+                                )}
+                              </motion.button>
+                            )}
+                          </div>
+                          
+                          {comercio.loadingBeneficios ? (
+                            <div className="flex items-center py-2">
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-600"></div>
+                              <span className="ml-2 text-xs text-slate-500">Cargando...</span>
+                            </div>
+                          ) : comercio.beneficios && comercio.beneficios.length > 0 ? (
+                            <AnimatePresence>
+                              {comercio.showBeneficios && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="space-y-2"
+                                >
+                                  {comercio.beneficios.slice(0, 2).map((beneficio) => (
+                                    <div key={beneficio.id} className="text-xs bg-slate-50 p-2 rounded-lg border border-slate-200">
+                                      <div className="font-medium text-slate-900 truncate">
+                                        {beneficio.titulo}
+                                      </div>
+                                      <div className="text-emerald-600 font-bold">
+                                        {beneficio.tipo === 'porcentaje' ? `${beneficio.descuento}%` :
+                                         beneficio.tipo === 'monto_fijo' ? formatCurrency(beneficio.descuento) :
+                                         'Gratis'}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {(comercio.beneficiosActivosReales || 0) > 2 && (
+                                    <motion.button
+                                      whileHover={{ scale: 1.02 }}
+                                      whileTap={{ scale: 0.98 }}
+                                      onClick={() => handleViewBeneficios(comercio)}
+                                      className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                    >
+                                      +{(comercio.beneficiosActivosReales || 0) - 2} más
+                                    </motion.button>
+                                  )}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          ) : (
+                            <span className="text-xs text-slate-400">Sin beneficios</span>
+                          )}
+                        </div>
                       </th>
-                      <th className="hidden xl:table-cell px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Puntuación
+                      <th className="hidden xl:table-cell px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
+                        {comercio.puntuacion > 0 ? (
+                          <div className="flex items-center">
+                            <Star className="w-4 h-4 text-amber-400 fill-current mr-1" />
+                            <span className="text-sm text-slate-900 font-medium">
+                              {comercio.puntuacion.toFixed(1)}
+                            </span>
+                            <span className="text-sm text-slate-500 ml-1">
+                              ({comercio.totalReviews})
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-slate-500">Sin calificar</span>
+                        )}
                       </th>
-                      <th className="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Acciones
+                      <th className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center space-x-1">
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleViewBeneficios(comercio)}
+                            className="p-1.5 lg:p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-all duration-200"
+                            title="Ver todos los beneficios"
+                          >
+                            <Eye size={14} className="lg:w-4 lg:h-4" />
+                          </motion.button>
+
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleViewValidations(comercio)}
+                            className="p-1.5 lg:p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                            title="Ver validaciones"
+                          >
+                            <FileText size={14} className="lg:w-4 lg:h-4" />
+                          </motion.button>
+
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleGenerateQR(comercio)}
+                            className="p-1.5 lg:p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+                            title="Generar QR"
+                          >
+                            <QrCode size={14} className="lg:w-4 lg:h-4" />
+                          </motion.button>
+                          
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleEdit(comercio)}
+                            className="p-1.5 lg:p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all duration-200"
+                            title="Editar"
+                          >
+                            <Edit size={14} className="lg:w-4 lg:h-4" />
+                          </motion.button>
+
+                          {comercio.estado === 'activo' ? (
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => handleStatusChange(comercio, 'inactivo')}
+                              className="p-1.5 lg:p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-all duration-200"
+                              title="Desactivar"
+                            >
+                              <PowerOff size={14} className="lg:w-4 lg:h-4" />
+                            </motion.button>
+                          ) : (
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => handleStatusChange(comercio, 'activo')}
+                              className="p-1.5 lg:p-2 text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 rounded-lg transition-all duration-200"
+                              title="Activar"
+                            >
+                              <Power size={14} className="lg:w-4 lg:h-4" />
+                            </motion.button>
+                          )}
+                          
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setComercioToUnlink(comercio)}
+                            className="p-1.5 lg:p-2 text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-lg transition-all duration-200"
+                            title="Desvincular"
+                          >
+                            <Unlink size={14} className="lg:w-4 lg:h-4" />
+                          </motion.button>
+
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setComercioToDelete(comercio)}
+                            className="p-1.5 lg:p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-all duration-200"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={14} className="lg:w-4 lg:h-4" />
+                          </motion.button>
+                        </div>
                       </th>
                     </tr>
                   </thead>
