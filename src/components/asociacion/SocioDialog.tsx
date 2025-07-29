@@ -6,40 +6,37 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  User,
-  Mail,
-  Phone,
-  CreditCard,
-  MapPin,
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  CreditCard, 
+  MapPin, 
   Calendar,
   Eye,
   EyeOff,
-  Check,
   X,
-  ArrowLeft,
-  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   Sparkles,
   Shield,
+  Zap,
+  Check,
   AlertCircle,
-  CheckCircle2,
   Loader2,
-  Crown,
-  DollarSign,
-  Clock,
-  Users,
-  Award
+  UserPlus,
+  Settings,
+  Lock
 } from 'lucide-react';
+import { Socio, SocioFormData } from '@/types/socio';
 import { Timestamp } from 'firebase/firestore';
-import { SocioFormData, Socio } from '@/types/socio';
-import { OptimizationUtils } from '@/lib/optimization-config';
 import { useDebounce } from '@/hooks/useDebounce';
 
-// Schema ultra optimizado
+// Esquema de validación futurista
 const socioSchema = z.object({
-  nombre: z.string().min(2, 'Mínimo 2 caracteres').max(50, 'Máximo 50 caracteres'),
-  email: z.string().email('Email inválido').max(100, 'Email muy largo'),
-  password: z.string().min(6, 'Mínimo 6 caracteres').optional(),
+  nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional(),
   confirmPassword: z.string().optional(),
   estado: z.enum(['activo', 'inactivo', 'suspendido', 'pendiente', 'vencido']),
   estadoMembresia: z.enum(['al_dia', 'vencido', 'pendiente']).optional(),
@@ -56,8 +53,8 @@ const socioSchema = z.object({
   }
   return true;
 }, {
-  message: 'Las contraseñas no coinciden',
-  path: ['confirmPassword']
+  message: "Las contraseñas no coinciden",
+  path: ["confirmPassword"],
 });
 
 type SocioFormInputs = z.infer<typeof socioSchema>;
@@ -70,47 +67,182 @@ interface SocioDialogProps {
   loading?: boolean;
 }
 
-// Configuración de pasos minimalista
+// Pasos del formulario futurista
 const FORM_STEPS = [
   {
     id: 'personal',
     title: 'Información Personal',
     subtitle: 'Datos básicos del socio',
     icon: User,
-    fields: ['nombre', 'dni', 'fechaNacimiento']
+    fields: ['nombre', 'email', 'dni', 'fechaNacimiento']
   },
   {
     id: 'contact',
-    title: 'Contacto',
+    title: 'Contacto & Ubicación',
     subtitle: 'Información de contacto',
-    icon: Mail,
-    fields: ['email', 'telefono', 'direccion']
+    icon: Phone,
+    fields: ['telefono', 'direccion']
   },
   {
     id: 'membership',
     title: 'Membresía',
     subtitle: 'Configuración de membresía',
-    icon: Crown,
-    fields: ['estado', 'estadoMembresia', 'numeroSocio', 'montoCuota', 'fechaVencimiento']
+    icon: CreditCard,
+    fields: ['numeroSocio', 'montoCuota', 'fechaVencimiento', 'estadoMembresia']
   },
   {
     id: 'access',
-    title: 'Acceso',
-    subtitle: 'Credenciales de acceso',
-    icon: Shield,
-    fields: ['password', 'confirmPassword']
+    title: 'Acceso & Seguridad',
+    subtitle: 'Configuración de acceso',
+    icon: Lock,
+    fields: ['password', 'confirmPassword', 'estado']
   }
 ];
 
-// Función helper para convertir Timestamp a Date
-const timestampToDate = (timestamp: Timestamp | Date | undefined): Date | undefined => {
-  if (!timestamp) return undefined;
-  if (timestamp instanceof Timestamp) {
-    return timestamp.toDate();
-  }
-  return timestamp;
+// Componente de partículas de fondo
+const ParticleBackground: React.FC = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {[...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1 h-1 bg-blue-400/30 rounded-full"
+          initial={{
+            x: Math.random() * 800,
+            y: Math.random() * 600,
+            opacity: 0
+          }}
+          animate={{
+            x: Math.random() * 800,
+            y: Math.random() * 600,
+            opacity: [0, 1, 0]
+          }}
+          transition={{
+            duration: Math.random() * 3 + 2,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+      ))}
+    </div>
+  );
 };
 
+// Componente de campo de formulario futurista
+const FuturisticFormField: React.FC<{
+  name: string;
+  label: string;
+  type?: string;
+  icon: React.ElementType;
+  placeholder?: string;
+  required?: boolean;
+  options?: { value: string; label: string }[];
+  register: any;
+  errors: any;
+  watch: any;
+}> = ({ name, label, type = 'text', icon: Icon, placeholder, required, options, register, errors, watch }) => {
+  const value = watch(name);
+  const hasError = !!errors[name];
+  const hasValue = value && value !== '';
+
+  const fieldClasses = `
+    w-full px-4 py-3 pl-12 rounded-xl border-2 transition-all duration-300
+    bg-white/80 backdrop-blur-sm
+    ${hasError 
+      ? 'border-red-400 focus:border-red-500 focus:ring-red-200' 
+      : hasValue 
+        ? 'border-green-400 focus:border-green-500 focus:ring-green-200'
+        : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
+    }
+    focus:outline-none focus:ring-4 focus:ring-opacity-20
+    placeholder-gray-400 text-gray-900
+  `;
+
+  if (options) {
+    return (
+      <div className="space-y-2">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+        <div className="relative">
+          <Icon className={`absolute left-3 top-3.5 w-5 h-5 transition-colors duration-300 ${
+            hasError ? 'text-red-400' : hasValue ? 'text-green-500' : 'text-gray-400'
+          }`} />
+          <select
+            {...register(name)}
+            className={fieldClasses}
+          >
+            <option value="">Seleccionar...</option>
+            {options.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {hasValue && !hasError && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute right-3 top-3.5"
+            >
+              <Check className="w-5 h-5 text-green-500" />
+            </motion.div>
+          )}
+        </div>
+        {hasError && (
+          <motion.p
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-red-500 text-sm flex items-center gap-1"
+          >
+            <AlertCircle className="w-4 h-4" />
+            {errors[name]?.message}
+          </motion.p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative">
+        <Icon className={`absolute left-3 top-3.5 w-5 h-5 transition-colors duration-300 ${
+          hasError ? 'text-red-400' : hasValue ? 'text-green-500' : 'text-gray-400'
+        }`} />
+        <input
+          {...register(name, { valueAsNumber: type === 'number' })}
+          type={type}
+          placeholder={placeholder}
+          className={fieldClasses}
+        />
+        {hasValue && !hasError && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute right-3 top-3.5"
+          >
+            <Check className="w-5 h-5 text-green-500" />
+          </motion.div>
+        )}
+      </div>
+      {hasError && (
+        <motion.p
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-red-500 text-sm flex items-center gap-1"
+        >
+          <AlertCircle className="w-4 h-4" />
+          {errors[name]?.message}
+        </motion.p>
+      )}
+    </div>
+  );
+};
+
+// Componente principal del diálogo
 export const SocioDialog: React.FC<SocioDialogProps> = ({
   open,
   onClose,
@@ -126,7 +258,6 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
   const isEditing = !!socio;
-  const shouldUseAnimations = OptimizationUtils.shouldUseAnimations();
 
   // Asegurar que el componente esté montado
   useEffect(() => {
@@ -157,18 +288,24 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     }
   });
 
-  // Debounced validation ultra rápida
+  // Validación debounced ultra rápida
   const debouncedTrigger = useDebounce(trigger, 50);
 
   // Resetear formulario
   useEffect(() => {
     if (open) {
       if (socio) {
+        const timestampToDate = (timestamp: Timestamp | Date | undefined): Date | undefined => {
+          if (!timestamp) return undefined;
+          if (timestamp instanceof Timestamp) return timestamp.toDate();
+          return timestamp;
+        };
+
         reset({
           nombre: socio.nombre || '',
           email: socio.email || '',
           estado: socio.estado || 'activo',
-          estadoMembresia: socio.estadoMembresia as 'al_dia' | 'vencido' | 'pendiente' | undefined || 'al_dia',
+          estadoMembresia: socio.estadoMembresia || 'al_dia',
           telefono: socio.telefono || '',
           dni: socio.dni || '',
           numeroSocio: socio.numeroSocio || '',
@@ -188,8 +325,6 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
           numeroSocio: '',
           montoCuota: 0,
           direccion: '',
-          fechaNacimiento: undefined,
-          fechaVencimiento: undefined,
         });
       }
       setCurrentStep(0);
@@ -197,7 +332,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     }
   }, [open, socio, reset]);
 
-  // Validación en tiempo real ultra optimizada
+  // Validación en tiempo real
   const watchedFields = watch();
   useEffect(() => {
     if (open) {
@@ -207,33 +342,32 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
 
   // Verificar si el paso actual es válido
   const isCurrentStepValid = useMemo(() => {
-    const currentStepFields = FORM_STEPS[currentStep].fields as (keyof SocioFormInputs)[];
-    return currentStepFields.every(field => !errors[field]);
+    const currentStepFields = FORM_STEPS[currentStep]?.fields || [];
+    return currentStepFields.every(field => !errors[field as keyof typeof errors]);
   }, [currentStep, errors]);
 
   // Marcar pasos como completados
   useEffect(() => {
-    if (isCurrentStepValid) {
+    if (isCurrentStepValid && currentStep >= 0) {
       setCompletedSteps(prev => new Set([...prev, currentStep]));
     }
   }, [isCurrentStepValid, currentStep]);
 
-  // Manejar envío del formulario
+  // Función de envío
   const onSubmit = useCallback(async (data: SocioFormInputs) => {
-    if (isSubmitting) return;
-
-    setIsSubmitting(true);
     try {
+      setIsSubmitting(true);
+      
       const formData: SocioFormData = {
         nombre: data.nombre,
         email: data.email,
         estado: data.estado,
         estadoMembresia: data.estadoMembresia,
-        telefono: data.telefono,
-        dni: data.dni,
-        numeroSocio: data.numeroSocio,
-        montoCuota: data.montoCuota,
-        direccion: data.direccion,
+        telefono: data.telefono || '',
+        dni: data.dni || '',
+        numeroSocio: data.numeroSocio || '',
+        montoCuota: data.montoCuota || 0,
+        direccion: data.direccion || '',
         fechaNacimiento: data.fechaNacimiento,
         fechaVencimiento: data.fechaVencimiento,
         password: !isEditing ? data.password : undefined,
@@ -246,14 +380,14 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [isSubmitting, onSave, onClose, isEditing]);
+  }, [onSave, onClose, isEditing]);
 
   // Navegación entre pasos
   const nextStep = useCallback(async () => {
-    const fieldsToValidate = FORM_STEPS[currentStep].fields as (keyof SocioFormInputs)[];
-    const isStepValid = await trigger(fieldsToValidate);
+    const currentStepFields = FORM_STEPS[currentStep]?.fields || [];
+    const isValid = await trigger(currentStepFields as any);
     
-    if (isStepValid && currentStep < FORM_STEPS.length - 1) {
+    if (isValid && currentStep < FORM_STEPS.length - 1) {
       setCurrentStep(prev => prev + 1);
     }
   }, [currentStep, trigger]);
@@ -264,178 +398,198 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     }
   }, [currentStep]);
 
-  // Componente de campo ultra optimizado y FUNCIONAL
-  const FormField = React.memo(({ 
-    name, 
-    label, 
-    type = 'text', 
-    icon: Icon, 
-    placeholder,
-    required = false,
-    options,
-    ...props 
-  }: {
-    name: keyof SocioFormInputs;
-    label: string;
-    type?: string;
-    icon?: React.ComponentType<any>;
-    placeholder?: string;
-    required?: boolean;
-    options?: { value: string; label: string }[];
-    [key: string]: any;
-  }) => {
-    const error = errors[name];
-    const hasError = !!error;
-    const value = watch(name);
-    const hasValue = value !== undefined && value !== '' && value !== 0;
-
-    return (
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-slate-700">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-        
-        <div className="relative">
-          {Icon && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Icon className={`h-4 w-4 transition-colors duration-200 ${
-                hasError ? 'text-red-400' : hasValue ? 'text-emerald-400' : 'text-slate-400'
-              }`} />
-            </div>
-          )}
-          
-          {options ? (
-            <select
-              {...register(name)}
-              className={`
-                block w-full rounded-lg border py-2.5 px-3 text-sm transition-all duration-200
-                ${Icon ? 'pl-10' : 'pl-3'} pr-8
-                ${hasError 
-                  ? 'border-red-300 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-500' 
-                  : hasValue
-                  ? 'border-emerald-300 bg-emerald-50 text-emerald-900 focus:border-emerald-500 focus:ring-emerald-500'
-                  : 'border-slate-300 bg-white text-slate-900 focus:border-blue-500 focus:ring-blue-500'
-                }
-                focus:outline-none focus:ring-2 focus:ring-opacity-50
-                appearance-none cursor-pointer
-              `}
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                backgroundPosition: 'right 0.5rem center',
-                backgroundSize: '1.25em 1.25em',
-                backgroundRepeat: 'no-repeat'
-              }}
-            >
-              {options.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              {...register(name)}
-              type={type}
-              placeholder={placeholder}
-              className={`
-                block w-full rounded-lg border py-2.5 px-3 text-sm transition-all duration-200
-                ${Icon ? 'pl-10' : 'pl-3'} pr-10
-                ${hasError 
-                  ? 'border-red-300 bg-red-50 text-red-900 placeholder:text-red-400 focus:border-red-500 focus:ring-red-500' 
-                  : hasValue
-                  ? 'border-emerald-300 bg-emerald-50 text-emerald-900 placeholder:text-emerald-400 focus:border-emerald-500 focus:ring-emerald-500'
-                  : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500'
-                }
-                focus:outline-none focus:ring-2 focus:ring-opacity-50
-              `}
-              {...props}
-            />
-          )}
-          
-          {hasValue && !hasError && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-            </div>
-          )}
-        </div>
-        
-        {hasError && (
-          <p className="text-xs text-red-600 flex items-center gap-1.5">
-            <AlertCircle className="h-3 w-3 flex-shrink-0" />
-            {error?.message}
-          </p>
-        )}
-      </div>
-    );
-  });
-
-  // Renderizar contenido del paso actual
+  // Renderizar contenido del paso
   const renderStepContent = () => {
-    switch (currentStep) {
-      case 0: // Información Personal
+    const step = FORM_STEPS[currentStep];
+    
+    switch (step.id) {
+      case 'personal':
         return (
-          <div className="space-y-6">
-            <FormField
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FuturisticFormField
               name="nombre"
               label="Nombre Completo"
               icon={User}
               placeholder="Ingresa el nombre completo"
               required
+              register={register}
+              errors={errors}
+              watch={watch}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                name="dni"
-                label="DNI"
-                icon={CreditCard}
-                placeholder="Número de documento"
-              />
-              <FormField
-                name="fechaNacimiento"
-                label="Fecha de Nacimiento"
-                type="date"
-                icon={Calendar}
-              />
-            </div>
-          </div>
-        );
-
-      case 1: // Contacto
-        return (
-          <div className="space-y-6">
-            <FormField
+            <FuturisticFormField
               name="email"
-              label="Email"
+              label="Correo Electrónico"
               type="email"
               icon={Mail}
               placeholder="correo@ejemplo.com"
               required
+              register={register}
+              errors={errors}
+              watch={watch}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                name="telefono"
-                label="Teléfono"
-                icon={Phone}
-                placeholder="+54 9 11 1234-5678"
-              />
-              <FormField
+            <FuturisticFormField
+              name="dni"
+              label="DNI/Documento"
+              icon={CreditCard}
+              placeholder="12345678"
+              register={register}
+              errors={errors}
+              watch={watch}
+            />
+            <FuturisticFormField
+              name="fechaNacimiento"
+              label="Fecha de Nacimiento"
+              type="date"
+              icon={Calendar}
+              register={register}
+              errors={errors}
+              watch={watch}
+            />
+          </div>
+        );
+
+      case 'contact':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FuturisticFormField
+              name="telefono"
+              label="Teléfono"
+              type="tel"
+              icon={Phone}
+              placeholder="+54 9 11 1234-5678"
+              register={register}
+              errors={errors}
+              watch={watch}
+            />
+            <div className="md:col-span-2">
+              <FuturisticFormField
                 name="direccion"
                 label="Dirección"
                 icon={MapPin}
-                placeholder="Dirección completa"
+                placeholder="Calle, número, ciudad, provincia"
+                register={register}
+                errors={errors}
+                watch={watch}
               />
             </div>
           </div>
         );
 
-      case 2: // Membresía
+      case 'membership':
         return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FuturisticFormField
+              name="numeroSocio"
+              label="Número de Socio"
+              icon={CreditCard}
+              placeholder="SOC-001"
+              register={register}
+              errors={errors}
+              watch={watch}
+            />
+            <FuturisticFormField
+              name="montoCuota"
+              label="Monto de Cuota"
+              type="number"
+              icon={CreditCard}
+              placeholder="0"
+              register={register}
+              errors={errors}
+              watch={watch}
+            />
+            <FuturisticFormField
+              name="fechaVencimiento"
+              label="Fecha de Vencimiento"
+              type="date"
+              icon={Calendar}
+              register={register}
+              errors={errors}
+              watch={watch}
+            />
+            <FuturisticFormField
+              name="estadoMembresia"
+              label="Estado de Membresía"
+              icon={Shield}
+              options={[
+                { value: 'al_dia', label: 'Al día' },
+                { value: 'vencido', label: 'Vencido' },
+                { value: 'pendiente', label: 'Pendiente' }
+              ]}
+              register={register}
+              errors={errors}
+              watch={watch}
+            />
+          </div>
+        );
+
+      case 'access':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {!isEditing && (
+              <>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Contraseña <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                    <input
+                      {...register('password')}
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Mínimo 6 caracteres"
+                      className="w-full px-4 py-3 pl-12 pr-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-200 focus:ring-opacity-20 focus:outline-none bg-white/80 backdrop-blur-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="text-red-500 text-sm flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Confirmar Contraseña <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                    <input
+                      {...register('confirmPassword')}
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="Repetir contraseña"
+                      className="w-full px-4 py-3 pl-12 pr-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-200 focus:ring-opacity-20 focus:outline-none bg-white/80 backdrop-blur-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="text-red-500 text-sm flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.confirmPassword.message}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+            
+            <div className={!isEditing ? "md:col-span-2" : ""}>
+              <FuturisticFormField
                 name="estado"
-                label="Estado"
-                icon={Users}
-                required
+                label="Estado del Socio"
+                icon={Shield}
                 options={[
                   { value: 'activo', label: 'Activo' },
                   { value: 'inactivo', label: 'Inactivo' },
@@ -443,96 +597,11 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                   { value: 'pendiente', label: 'Pendiente' },
                   { value: 'vencido', label: 'Vencido' }
                 ]}
-              />
-              <FormField
-                name="estadoMembresia"
-                label="Estado Membresía"
-                icon={Crown}
-                options={[
-                  { value: 'al_dia', label: 'Al día' },
-                  { value: 'vencido', label: 'Vencido' },
-                  { value: 'pendiente', label: 'Pendiente' }
-                ]}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                name="numeroSocio"
-                label="Número de Socio"
-                icon={Award}
-                placeholder="Número único"
-              />
-              <FormField
-                name="montoCuota"
-                label="Monto Cuota"
-                type="number"
-                icon={DollarSign}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-              />
-              <FormField
-                name="fechaVencimiento"
-                label="Vencimiento"
-                type="date"
-                icon={Clock}
-              />
-            </div>
-          </div>
-        );
-
-      case 3: // Acceso al Sistema
-        if (isEditing) {
-          return (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="w-8 h-8 text-slate-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-3">
-                Modo Edición
-              </h3>
-              <p className="text-slate-600 max-w-md mx-auto text-sm leading-relaxed">
-                La contraseña se mantiene sin cambios. Para modificarla, el socio debe usar la opción de recuperación de contraseña.
-              </p>
-            </div>
-          );
-        }
-
-        return (
-          <div className="space-y-6">
-            <div className="relative">
-              <FormField
-                name="password"
-                label="Contraseña"
-                type={showPassword ? 'text' : 'password'}
-                icon={Shield}
-                placeholder="Mínimo 6 caracteres"
                 required
+                register={register}
+                errors={errors}
+                watch={watch}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-8 text-slate-400 hover:text-slate-600 transition-colors z-10"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-            <div className="relative">
-              <FormField
-                name="confirmPassword"
-                label="Confirmar Contraseña"
-                type={showConfirmPassword ? 'text' : 'password'}
-                icon={Shield}
-                placeholder="Repite la contraseña"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-8 text-slate-400 hover:text-slate-600 transition-colors z-10"
-              >
-                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
             </div>
           </div>
         );
@@ -547,176 +616,223 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          {/* Backdrop futurista */}
           <motion.div
-            initial={shouldUseAnimations ? { opacity: 0 } : false}
-            animate={shouldUseAnimations ? { opacity: 1 } : false}
-            exit={shouldUseAnimations ? { opacity: 0 } : false}
-            transition={{ duration: 0.15 }}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={onClose}
+            className="absolute inset-0 bg-gradient-to-br from-black/60 via-blue-900/20 to-purple-900/30 backdrop-blur-md"
           />
 
-          {/* Modal */}
+          {/* Partículas de fondo */}
+          <ParticleBackground />
+
+          {/* Modal principal */}
           <motion.div
-            initial={shouldUseAnimations ? { opacity: 0, scale: 0.98, y: 8 } : false}
-            animate={shouldUseAnimations ? { opacity: 1, scale: 1, y: 0 } : false}
-            exit={shouldUseAnimations ? { opacity: 0, scale: 0.98, y: 8 } : false}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 z-[10000]"
-            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden"
           >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-slate-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200">
-                    {React.createElement(FORM_STEPS[currentStep].icon, { 
-                      className: "w-5 h-5 text-slate-600" 
-                    })}
+            {/* Contenedor principal con glassmorphism */}
+            <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+              {/* Header futurista */}
+              <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 p-6">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20" />
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"
+                    >
+                      <UserPlus className="w-6 h-6 text-white" />
+                    </motion.div>
+                    <div>
+                      <motion.h2
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-2xl font-bold text-white"
+                      >
+                        {isEditing ? 'Editar Socio' : 'Nuevo Socio'}
+                      </motion.h2>
+                      <motion.p
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="text-blue-100"
+                      >
+                        {FORM_STEPS[currentStep]?.subtitle}
+                      </motion.p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-slate-900">
-                      {isEditing ? 'Editar Socio' : 'Nuevo Socio'}
-                    </h2>
-                    <p className="text-sm text-slate-500">
-                      {FORM_STEPS[currentStep].subtitle}
+                  
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5 }}
+                    onClick={onClose}
+                    className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm hover:bg-white/30 transition-colors"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </motion.button>
+                </div>
+
+                {/* Indicador de progreso */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="mt-6"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-blue-100">
+                      Paso {currentStep + 1} de {FORM_STEPS.length}
+                    </span>
+                    <span className="text-sm text-blue-100">
+                      {Math.round(((currentStep + 1) / FORM_STEPS.length) * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-white/20 rounded-full h-2">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${((currentStep + 1) / FORM_STEPS.length) * 100}%` }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                      className="bg-gradient-to-r from-yellow-400 to-orange-400 h-2 rounded-full"
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Navegación de pasos */}
+                <div className="flex items-center justify-center mt-4 gap-2">
+                  {FORM_STEPS.map((step, index) => {
+                    const StepIcon = step.icon;
+                    const isCompleted = completedSteps.has(index);
+                    const isCurrent = index === currentStep;
+                    
+                    return (
+                      <motion.div
+                        key={step.id}
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.7 + index * 0.1 }}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                          isCurrent
+                            ? 'bg-white text-blue-600 shadow-lg scale-110'
+                            : isCompleted
+                            ? 'bg-green-400 text-white'
+                            : 'bg-white/20 text-white/60'
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <Check className="w-5 h-5" />
+                        ) : (
+                          <StepIcon className="w-5 h-5" />
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Contenido del formulario */}
+              <form onSubmit={handleSubmit(onSubmit)} className="p-8">
+                <motion.div
+                  key={currentStep}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="min-h-[400px]"
+                >
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      {FORM_STEPS[currentStep]?.title}
+                    </h3>
+                    <p className="text-gray-600">
+                      {FORM_STEPS[currentStep]?.subtitle}
                     </p>
                   </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-slate-400" />
-                </button>
-              </div>
 
-              {/* Indicador de progreso */}
-              <div className="flex items-center gap-2 mt-4">
-                {FORM_STEPS.map((step, index) => (
-                  <div key={step.id} className="flex items-center">
-                    <div className={`
-                      w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200
-                      ${index <= currentStep 
-                        ? 'bg-slate-900 text-white' 
-                        : 'bg-slate-200 text-slate-400'
-                      }
-                    `}>
-                      {completedSteps.has(index) ? (
-                        <Check className="w-4 h-4" />
-                      ) : (
-                        index + 1
-                      )}
-                    </div>
-                    {index < FORM_STEPS.length - 1 && (
-                      <div className={`
-                        w-8 h-0.5 mx-2 rounded-full transition-all duration-200
-                        ${index < currentStep ? 'bg-slate-900' : 'bg-slate-200'}
-                      `} />
+                  {renderStepContent()}
+                </motion.div>
+
+                {/* Navegación inferior */}
+                <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                  <motion.button
+                    type="button"
+                    onClick={prevStep}
+                    disabled={currentStep === 0}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                      currentStep === 0
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
+                    }`}
+                    whileHover={currentStep > 0 ? { scale: 1.05 } : {}}
+                    whileTap={currentStep > 0 ? { scale: 0.95 } : {}}
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                    Anterior
+                  </motion.button>
+
+                  <div className="flex items-center gap-3">
+                    {currentStep === FORM_STEPS.length - 1 ? (
+                      <motion.button
+                        type="submit"
+                        disabled={isSubmitting || loading}
+                        className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {isSubmitting || loading ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Guardando...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-5 h-5" />
+                            {isEditing ? 'Actualizar' : 'Crear Socio'}
+                          </>
+                        )}
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        type="button"
+                        onClick={nextStep}
+                        disabled={!isCurrentStepValid}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                          isCurrentStepValid
+                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        }`}
+                        whileHover={isCurrentStepValid ? { scale: 1.05 } : {}}
+                        whileTap={isCurrentStepValid ? { scale: 0.95 } : {}}
+                      >
+                        Siguiente
+                        <ChevronRight className="w-5 h-5" />
+                      </motion.button>
                     )}
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Contenido del formulario */}
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6">
-              <div className="mb-8">
-                <h3 className="text-base font-medium text-slate-900 mb-6">
-                  {FORM_STEPS[currentStep].title}
-                </h3>
-                
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentStep}
-                    initial={shouldUseAnimations ? { opacity: 0, x: 10 } : false}
-                    animate={shouldUseAnimations ? { opacity: 1, x: 0 } : false}
-                    exit={shouldUseAnimations ? { opacity: 0, x: -10 } : false}
-                    transition={{ duration: 0.15 }}
-                  >
-                    {renderStepContent()}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-
-              {/* Botones de navegación */}
-              <div className="flex items-center justify-between pt-6 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={prevStep}
-                  disabled={currentStep === 0}
-                  className={`
-                    flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                    ${currentStep === 0
-                      ? 'text-slate-400 cursor-not-allowed'
-                      : 'text-slate-600 hover:bg-slate-100'
-                    }
-                  `}
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Anterior
-                </button>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  
-                  {currentStep < FORM_STEPS.length - 1 ? (
-                    <button
-                      type="button"
-                      onClick={nextStep}
-                      disabled={!isCurrentStepValid}
-                      className={`
-                        flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                        ${isCurrentStepValid
-                          ? 'bg-slate-900 text-white hover:bg-slate-800'
-                          : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                        }
-                      `}
-                    >
-                      Siguiente
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  ) : (
-                    <button
-                      type="submit"
-                      disabled={isSubmitting || !isValid}
-                      className={`
-                        flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                        ${isValid && !isSubmitting
-                          ? 'bg-slate-900 text-white hover:bg-slate-800'
-                          : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                        }
-                      `}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          {isEditing ? 'Actualizando...' : 'Creando...'}
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" />
-                          {isEditing ? 'Actualizar' : 'Crear Socio'}
-                        </>
-                      )}
-                    </button>
-                  )}
                 </div>
-              </div>
-            </form>
+              </form>
+            </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>,
     document.body
   );
 };
+
+export default SocioDialog;
