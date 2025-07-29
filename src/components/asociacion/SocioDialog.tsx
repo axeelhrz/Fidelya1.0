@@ -22,16 +22,19 @@ import {
   AlertCircle,
   Loader2,
   UserPlus,
-  Lock
+  Lock,
+  Building,
+  Shield,
+  Sparkles
 } from 'lucide-react';
 import { Socio, SocioFormData } from '@/types/socio';
 import { Timestamp } from 'firebase/firestore';
 import { useDebounce } from '@/hooks/useDebounce';
 import { OptimizationUtils } from '@/lib/optimization-config';
 
-// Esquema de validación
+// Esquema de validación mejorado
 const socioSchema = z.object({
-  nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+  nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100, 'El nombre no puede exceder 100 caracteres'),
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional(),
   confirmPassword: z.string().optional(),
@@ -40,10 +43,10 @@ const socioSchema = z.object({
   telefono: z.string().optional(),
   dni: z.string().optional(),
   numeroSocio: z.string().optional(),
-  montoCuota: z.number().min(0).optional(),
+  montoCuota: z.number().min(0, 'El monto debe ser mayor o igual a 0').optional(),
   direccion: z.string().optional(),
-  fechaNacimiento: z.date().optional(),
-  fechaVencimiento: z.date().optional(),
+  fechaNacimiento: z.string().optional(),
+  fechaVencimiento: z.string().optional(),
 }).refine((data) => {
   if (data.password && data.confirmPassword) {
     return data.password === data.confirmPassword;
@@ -64,36 +67,44 @@ interface SocioDialogProps {
   loading?: boolean;
 }
 
-// Pasos del formulario
+// Pasos del formulario con mejor organización
 const FORM_STEPS = [
   {
     id: 'personal',
     title: 'Información Personal',
+    subtitle: 'Datos básicos del socio',
     icon: User,
+    color: 'from-blue-500 to-cyan-500',
     fields: ['nombre', 'email', 'dni', 'fechaNacimiento']
   },
   {
     id: 'contact',
-    title: 'Contacto',
+    title: 'Contacto & Ubicación',
+    subtitle: 'Información de contacto',
     icon: Phone,
+    color: 'from-green-500 to-emerald-500',
     fields: ['telefono', 'direccion']
   },
   {
     id: 'membership',
     title: 'Membresía',
-    icon: CreditCard,
+    subtitle: 'Configuración de membresía',
+    icon: Building,
+    color: 'from-purple-500 to-violet-500',
     fields: ['numeroSocio', 'montoCuota', 'fechaVencimiento', 'estadoMembresia']
   },
   {
     id: 'access',
-    title: 'Acceso',
-    icon: Lock,
+    title: 'Acceso & Seguridad',
+    subtitle: 'Configuración de acceso',
+    icon: Shield,
+    color: 'from-orange-500 to-red-500',
     fields: ['password', 'confirmPassword', 'estado']
   }
 ];
 
-// Componente de campo optimizado
-const FormField: React.FC<{
+// Componente de campo mejorado y profesional
+const ProfessionalFormField: React.FC<{
   name: string;
   label: string;
   type?: string;
@@ -104,32 +115,38 @@ const FormField: React.FC<{
   register: any;
   errors: any;
   watch: any;
-}> = React.memo(({ name, label, type = 'text', icon: Icon, placeholder, required, options, register, errors, watch }) => {
+  description?: string;
+}> = React.memo(({ name, label, type = 'text', icon: Icon, placeholder, required, options, register, errors, watch, description }) => {
   const value = watch(name);
   const hasError = !!errors[name];
   const hasValue = value && value !== '';
 
-  const fieldClasses = `
-    w-full px-4 py-3 pl-12 rounded-lg border transition-colors duration-200
-    ${hasError 
-      ? 'border-red-400 focus:border-red-500' 
-      : hasValue 
-        ? 'border-green-400 focus:border-green-500'
-        : 'border-gray-300 focus:border-blue-500'
-    }
-    focus:outline-none focus:ring-2 focus:ring-opacity-20
-    ${hasError ? 'focus:ring-red-200' : 'focus:ring-blue-200'}
+  const baseClasses = `
+    w-full px-4 py-3.5 pl-12 rounded-xl border-2 transition-all duration-300
+    bg-white/80 backdrop-blur-sm font-medium text-gray-900 placeholder-gray-500
+    focus:outline-none focus:ring-4 focus:ring-opacity-20
   `;
+
+  const stateClasses = hasError 
+    ? 'border-red-400 focus:border-red-500 focus:ring-red-200' 
+    : hasValue 
+      ? 'border-emerald-400 focus:border-emerald-500 focus:ring-emerald-200'
+      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200 hover:border-gray-400';
+
+  const fieldClasses = `${baseClasses} ${stateClasses}`;
 
   if (options) {
     return (
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          {label} {required && <span className="text-red-500">*</span>}
+        <label className="block text-sm font-semibold text-gray-800 mb-2">
+          {label} {required && <span className="text-red-500 ml-1">*</span>}
         </label>
-        <div className="relative">
-          <Icon className={`absolute left-3 top-3.5 w-5 h-5 ${
-            hasError ? 'text-red-400' : hasValue ? 'text-green-500' : 'text-gray-400'
+        {description && (
+          <p className="text-xs text-gray-600 mb-2">{description}</p>
+        )}
+        <div className="relative group">
+          <Icon className={`absolute left-3.5 top-4 w-5 h-5 transition-colors duration-300 ${
+            hasError ? 'text-red-500' : hasValue ? 'text-emerald-500' : 'text-gray-400 group-hover:text-gray-600'
           }`} />
           <select {...register(name)} className={fieldClasses}>
             <option value="">Seleccionar...</option>
@@ -140,14 +157,26 @@ const FormField: React.FC<{
             ))}
           </select>
           {hasValue && !hasError && (
-            <Check className="absolute right-3 top-3.5 w-5 h-5 text-green-500" />
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="absolute right-3.5 top-4"
+            >
+              <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                <Check className="w-3 h-3 text-white" />
+              </div>
+            </motion.div>
           )}
         </div>
         {hasError && (
-          <p className="text-red-500 text-sm flex items-center gap-1">
-            <AlertCircle className="w-4 h-4" />
-            {errors[name]?.message}
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg border border-red-200"
+          >
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{errors[name]?.message}</span>
+          </motion.div>
         )}
       </div>
     );
@@ -155,36 +184,57 @@ const FormField: React.FC<{
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
-        {label} {required && <span className="text-red-500">*</span>}
+      <label className="block text-sm font-semibold text-gray-800 mb-2">
+        {label} {required && <span className="text-red-500 ml-1">*</span>}
       </label>
-      <div className="relative">
-        <Icon className={`absolute left-3 top-3.5 w-5 h-5 ${
-          hasError ? 'text-red-400' : hasValue ? 'text-green-500' : 'text-gray-400'
+      {description && (
+        <p className="text-xs text-gray-600 mb-2">{description}</p>
+      )}
+      <div className="relative group">
+        <Icon className={`absolute left-3.5 top-4 w-5 h-5 transition-colors duration-300 ${
+          hasError ? 'text-red-500' : hasValue ? 'text-emerald-500' : 'text-gray-400 group-hover:text-gray-600'
         }`} />
         <input
-          {...register(name, { valueAsNumber: type === 'number' })}
+          {...register(name, { 
+            valueAsNumber: type === 'number',
+            setValueAs: (value) => {
+              if (type === 'number') return value === '' ? 0 : Number(value);
+              return value;
+            }
+          })}
           type={type}
           placeholder={placeholder}
           className={fieldClasses}
         />
         {hasValue && !hasError && (
-          <Check className="absolute right-3 top-3.5 w-5 h-5 text-green-500" />
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="absolute right-3.5 top-4"
+          >
+            <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+              <Check className="w-3 h-3 text-white" />
+            </div>
+          </motion.div>
         )}
       </div>
       {hasError && (
-        <p className="text-red-500 text-sm flex items-center gap-1">
-          <AlertCircle className="w-4 h-4" />
-          {errors[name]?.message}
-        </p>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg border border-red-200"
+        >
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>{errors[name]?.message}</span>
+        </motion.div>
       )}
     </div>
   );
 });
 
-FormField.displayName = 'FormField';
+ProfessionalFormField.displayName = 'ProfessionalFormField';
 
-// Componente principal
+// Componente principal mejorado
 export const SocioDialog: React.FC<SocioDialogProps> = ({
   open,
   onClose,
@@ -200,6 +250,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
 
   const isEditing = !!socio;
   const shouldUseAnimations = OptimizationUtils.shouldUseAnimations();
+  const currentStepData = FORM_STEPS[currentStep];
 
   // Asegurar que el componente esté montado
   useEffect(() => {
@@ -227,22 +278,34 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
       numeroSocio: '',
       montoCuota: 0,
       direccion: '',
+      fechaNacimiento: '',
+      fechaVencimiento: '',
     }
   });
 
   // Validación debounced
   const debouncedTrigger = useDebounce(trigger, 300);
 
+  // Función para convertir Date/Timestamp a string para input date
+  const formatDateForInput = (date: Date | Timestamp | undefined): string => {
+    if (!date) return '';
+    
+    let jsDate: Date;
+    if (date instanceof Timestamp) {
+      jsDate = date.toDate();
+    } else if (date instanceof Date) {
+      jsDate = date;
+    } else {
+      return '';
+    }
+    
+    return jsDate.toISOString().split('T')[0];
+  };
+
   // Resetear formulario
   useEffect(() => {
     if (open) {
       if (socio) {
-        const timestampToDate = (timestamp: Timestamp | Date | undefined): Date | undefined => {
-          if (!timestamp) return undefined;
-          if (timestamp instanceof Timestamp) return timestamp.toDate();
-          return timestamp;
-        };
-
         reset({
           nombre: socio.nombre || '',
           email: socio.email || '',
@@ -253,8 +316,8 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
           numeroSocio: socio.numeroSocio || '',
           montoCuota: socio.montoCuota || 0,
           direccion: socio.direccion || '',
-          fechaNacimiento: timestampToDate(socio.fechaNacimiento),
-          fechaVencimiento: timestampToDate(socio.fechaVencimiento),
+          fechaNacimiento: formatDateForInput(socio.fechaNacimiento),
+          fechaVencimiento: formatDateForInput(socio.fechaVencimiento),
         });
       } else {
         reset({
@@ -267,6 +330,8 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
           numeroSocio: '',
           montoCuota: 0,
           direccion: '',
+          fechaNacimiento: '',
+          fechaVencimiento: '',
         });
       }
       setCurrentStep(0);
@@ -302,8 +367,8 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
         numeroSocio: data.numeroSocio || '',
         montoCuota: data.montoCuota || 0,
         direccion: data.direccion || '',
-        fechaNacimiento: data.fechaNacimiento,
-        fechaVencimiento: data.fechaVencimiento,
+        fechaNacimiento: data.fechaNacimiento ? new Date(data.fechaNacimiento) : undefined,
+        fechaVencimiento: data.fechaVencimiento ? new Date(data.fechaVencimiento) : undefined,
         password: !isEditing ? data.password : undefined,
       };
 
@@ -339,18 +404,19 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     switch (step.id) {
       case 'personal':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ProfessionalFormField
               name="nombre"
               label="Nombre Completo"
               icon={User}
-              placeholder="Ingresa el nombre completo"
+              placeholder="Ej: Juan Carlos Pérez"
               required
               register={register}
               errors={errors}
               watch={watch}
+              description="Nombre y apellido del socio"
             />
-            <FormField
+            <ProfessionalFormField
               name="email"
               label="Correo Electrónico"
               type="email"
@@ -360,17 +426,19 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               register={register}
               errors={errors}
               watch={watch}
+              description="Email para acceso al sistema"
             />
-            <FormField
+            <ProfessionalFormField
               name="dni"
               label="DNI/Documento"
               icon={CreditCard}
-              placeholder="12345678"
+              placeholder="12.345.678"
               register={register}
               errors={errors}
               watch={watch}
+              description="Documento de identidad"
             />
-            <FormField
+            <ProfessionalFormField
               name="fechaNacimiento"
               label="Fecha de Nacimiento"
               type="date"
@@ -378,14 +446,15 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               register={register}
               errors={errors}
               watch={watch}
+              description="Fecha de nacimiento del socio"
             />
           </div>
         );
 
       case 'contact':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ProfessionalFormField
               name="telefono"
               label="Teléfono"
               type="tel"
@@ -394,9 +463,10 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               register={register}
               errors={errors}
               watch={watch}
+              description="Número de contacto principal"
             />
             <div className="md:col-span-2">
-              <FormField
+              <ProfessionalFormField
                 name="direccion"
                 label="Dirección"
                 icon={MapPin}
@@ -404,6 +474,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                 register={register}
                 errors={errors}
                 watch={watch}
+                description="Dirección completa del socio"
               />
             </div>
           </div>
@@ -411,8 +482,8 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
 
       case 'membership':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ProfessionalFormField
               name="numeroSocio"
               label="Número de Socio"
               icon={CreditCard}
@@ -420,8 +491,9 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               register={register}
               errors={errors}
               watch={watch}
+              description="Identificador único del socio"
             />
-            <FormField
+            <ProfessionalFormField
               name="montoCuota"
               label="Monto de Cuota"
               type="number"
@@ -430,8 +502,9 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               register={register}
               errors={errors}
               watch={watch}
+              description="Cuota mensual en pesos"
             />
-            <FormField
+            <ProfessionalFormField
               name="fechaVencimiento"
               label="Fecha de Vencimiento"
               type="date"
@@ -439,11 +512,12 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               register={register}
               errors={errors}
               watch={watch}
+              description="Fecha de vencimiento de la membresía"
             />
-            <FormField
+            <ProfessionalFormField
               name="estadoMembresia"
               label="Estado de Membresía"
-              icon={CreditCard}
+              icon={Building}
               options={[
                 { value: 'al_dia', label: 'Al día' },
                 { value: 'vencido', label: 'Vencido' },
@@ -452,78 +526,89 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
               register={register}
               errors={errors}
               watch={watch}
+              description="Estado actual de la membresía"
             />
           </div>
         );
 
       case 'access':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {!isEditing && (
               <>
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Contraseña <span className="text-red-500">*</span>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                    Contraseña <span className="text-red-500 ml-1">*</span>
                   </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                  <p className="text-xs text-gray-600 mb-2">Contraseña para acceso al sistema</p>
+                  <div className="relative group">
+                    <Lock className="absolute left-3.5 top-4 w-5 h-5 text-gray-400 group-hover:text-gray-600" />
                     <input
                       {...register('password')}
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Mínimo 6 caracteres"
-                      className="w-full px-4 py-3 pl-12 pr-12 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:ring-opacity-20 focus:outline-none"
+                      className="w-full px-4 py-3.5 pl-12 pr-12 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-200 focus:ring-opacity-20 focus:outline-none bg-white/80 backdrop-blur-sm font-medium text-gray-900 placeholder-gray-500 hover:border-gray-400 transition-all duration-300"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3.5 top-4 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                   {errors.password && (
-                    <p className="text-red-500 text-sm flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.password.message}
-                    </p>
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg border border-red-200"
+                    >
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <span>{errors.password.message}</span>
+                    </motion.div>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Confirmar Contraseña <span className="text-red-500">*</span>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                    Confirmar Contraseña <span className="text-red-500 ml-1">*</span>
                   </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                  <p className="text-xs text-gray-600 mb-2">Repetir la contraseña anterior</p>
+                  <div className="relative group">
+                    <Lock className="absolute left-3.5 top-4 w-5 h-5 text-gray-400 group-hover:text-gray-600" />
                     <input
                       {...register('confirmPassword')}
                       type={showConfirmPassword ? 'text' : 'password'}
                       placeholder="Repetir contraseña"
-                      className="w-full px-4 py-3 pl-12 pr-12 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:ring-opacity-20 focus:outline-none"
+                      className="w-full px-4 py-3.5 pl-12 pr-12 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-200 focus:ring-opacity-20 focus:outline-none bg-white/80 backdrop-blur-sm font-medium text-gray-900 placeholder-gray-500 hover:border-gray-400 transition-all duration-300"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3.5 top-4 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                   {errors.confirmPassword && (
-                    <p className="text-red-500 text-sm flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.confirmPassword.message}
-                    </p>
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg border border-red-200"
+                    >
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <span>{errors.confirmPassword.message}</span>
+                    </motion.div>
                   )}
                 </div>
               </>
             )}
             
             <div className={!isEditing ? "md:col-span-2" : ""}>
-              <FormField
+              <ProfessionalFormField
                 name="estado"
                 label="Estado del Socio"
-                icon={User}
+                icon={Shield}
                 options={[
                   { value: 'activo', label: 'Activo' },
                   { value: 'inactivo', label: 'Inactivo' },
@@ -535,6 +620,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                 register={register}
                 errors={errors}
                 watch={watch}
+                description="Estado actual del socio en el sistema"
               />
             </div>
           </div>
@@ -547,15 +633,15 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
 
   if (!mounted) return null;
 
-  // Animaciones simplificadas
+  // Animaciones optimizadas
   const backdropVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 }
   };
 
   const modalVariants = {
-    hidden: { opacity: 0, scale: 0.95 },
-    visible: { opacity: 1, scale: 1 }
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    visible: { opacity: 1, scale: 1, y: 0 }
   };
 
   return createPortal(
@@ -569,158 +655,216 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
-          {/* Backdrop */}
+          {/* Backdrop profesional */}
           <motion.div
             initial={shouldUseAnimations ? { opacity: 0 } : undefined}
             animate={shouldUseAnimations ? { opacity: 1 } : undefined}
             exit={shouldUseAnimations ? { opacity: 0 } : undefined}
             onClick={onClose}
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-gradient-to-br from-gray-900/60 via-blue-900/40 to-purple-900/60 backdrop-blur-md"
           />
 
-          {/* Modal */}
+          {/* Modal principal */}
           <motion.div
             variants={shouldUseAnimations ? modalVariants : undefined}
             initial={shouldUseAnimations ? "hidden" : undefined}
             animate={shouldUseAnimations ? "visible" : undefined}
             exit={shouldUseAnimations ? "hidden" : undefined}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden"
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="relative w-full max-w-4xl max-h-[95vh] overflow-hidden"
           >
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                      <UserPlus className="w-5 h-5 text-white" />
-                    </div>
+            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200/50">
+              {/* Header profesional con gradiente dinámico */}
+              <div className={`bg-gradient-to-r ${currentStepData?.color || 'from-blue-600 to-purple-600'} p-8 relative overflow-hidden`}>
+                {/* Patrón de fondo sutil */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                  <div className="absolute top-0 left-0 w-32 h-32 bg-white/10 rounded-full -translate-x-16 -translate-y-16" />
+                  <div className="absolute bottom-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-x-12 translate-y-12" />
+                </div>
+
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                      className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/30"
+                    >
+                      <UserPlus className="w-7 h-7 text-white" />
+                    </motion.div>
                     <div>
-                      <h2 className="text-xl font-bold text-white">
+                      <motion.h2
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-2xl font-bold text-white"
+                      >
                         {isEditing ? 'Editar Socio' : 'Nuevo Socio'}
-                      </h2>
-                      <p className="text-blue-100 text-sm">
-                        {FORM_STEPS[currentStep]?.title}
-                      </p>
+                      </motion.h2>
+                      <motion.p
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="text-white/90 font-medium"
+                      >
+                        {currentStepData?.subtitle}
+                      </motion.p>
                     </div>
                   </div>
                   
-                  <button
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5 }}
                     onClick={onClose}
-                    className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors"
+                    className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm hover:bg-white/30 transition-all duration-200 border border-white/30"
                   >
-                    <X className="w-4 h-4 text-white" />
-                  </button>
+                    <X className="w-5 h-5 text-white" />
+                  </motion.button>
                 </div>
 
-                {/* Progress */}
-                <div className="mt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-blue-100">
+                {/* Progress bar mejorado */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="mt-6"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-white/90">
                       Paso {currentStep + 1} de {FORM_STEPS.length}
                     </span>
-                    <span className="text-sm text-blue-100">
+                    <span className="text-sm font-medium text-white/90">
                       {Math.round(((currentStep + 1) / FORM_STEPS.length) * 100)}%
                     </span>
                   </div>
-                  <div className="w-full bg-white/20 rounded-full h-2">
-                    <div
-                      className="bg-white h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${((currentStep + 1) / FORM_STEPS.length) * 100}%` }}
+                  <div className="w-full bg-white/20 rounded-full h-2 backdrop-blur-sm">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${((currentStep + 1) / FORM_STEPS.length) * 100}%` }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                      className="bg-white h-2 rounded-full shadow-lg"
                     />
                   </div>
-                </div>
+                </motion.div>
 
-                {/* Steps */}
-                <div className="flex items-center justify-center mt-4 gap-2">
+                {/* Navegación de pasos mejorada */}
+                <div className="flex items-center justify-center mt-6 gap-3">
                   {FORM_STEPS.map((step, index) => {
                     const StepIcon = step.icon;
                     const isCurrent = index === currentStep;
                     const isCompleted = index < currentStep;
                     
                     return (
-                      <div
+                      <motion.div
                         key={step.id}
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.7 + index * 0.1 }}
+                        className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 border-2 ${
                           isCurrent
-                            ? 'bg-white text-blue-600 scale-110'
+                            ? 'bg-white text-blue-600 scale-110 shadow-lg border-white'
                             : isCompleted
-                            ? 'bg-green-400 text-white'
-                            : 'bg-white/20 text-white/60'
+                            ? 'bg-emerald-500 text-white border-emerald-400 shadow-md'
+                            : 'bg-white/20 text-white/60 border-white/30 backdrop-blur-sm'
                         }`}
                       >
                         {isCompleted ? (
-                          <Check className="w-4 h-4" />
+                          <Check className="w-5 h-5" />
                         ) : (
-                          <StepIcon className="w-4 h-4" />
+                          <StepIcon className="w-5 h-5" />
                         )}
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Content */}
-              <form onSubmit={handleSubmit(onSubmit)} className="p-6">
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {FORM_STEPS[currentStep]?.title}
-                  </h3>
-                </div>
+              {/* Contenido del formulario */}
+              <form onSubmit={handleSubmit(onSubmit)} className="p-8">
+                <motion.div
+                  key={currentStep}
+                  initial={shouldUseAnimations ? { opacity: 0, x: 20 } : undefined}
+                  animate={shouldUseAnimations ? { opacity: 1, x: 0 } : undefined}
+                  exit={shouldUseAnimations ? { opacity: 0, x: -20 } : undefined}
+                  transition={{ duration: 0.3 }}
+                  className="min-h-[400px]"
+                >
+                  <div className="mb-8">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-r ${currentStepData?.color} flex items-center justify-center`}>
+                        <currentStepData.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">
+                          {currentStepData?.title}
+                        </h3>
+                        <p className="text-gray-600 text-sm">
+                          {currentStepData?.subtitle}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-                <div className="min-h-[300px]">
                   {renderStepContent()}
-                </div>
+                </motion.div>
 
-                {/* Navigation */}
-                <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-                  <button
+                {/* Navegación inferior mejorada */}
+                <div className="flex items-center justify-between pt-8 border-t border-gray-200">
+                  <motion.button
                     type="button"
                     onClick={prevStep}
                     disabled={currentStep === 0}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                       currentStep === 0
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105 shadow-sm'
                     }`}
+                    whileHover={currentStep > 0 ? { scale: 1.02 } : {}}
+                    whileTap={currentStep > 0 ? { scale: 0.98 } : {}}
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-5 h-5" />
                     Anterior
-                  </button>
+                  </motion.button>
 
                   <div className="flex items-center gap-3">
                     {currentStep === FORM_STEPS.length - 1 ? (
-                      <button
+                      <motion.button
                         type="submit"
                         disabled={isSubmitting || loading}
-                        className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-3 px-8 py-3 bg-gradient-to-r from-emerald-600 to-blue-600 text-white rounded-xl font-semibold hover:from-emerald-700 hover:to-blue-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                       >
                         {isSubmitting || loading ? (
                           <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <Loader2 className="w-5 h-5 animate-spin" />
                             Guardando...
                           </>
                         ) : (
                           <>
-                            <Check className="w-4 h-4" />
-                            {isEditing ? 'Actualizar' : 'Crear Socio'}
+                            <Sparkles className="w-5 h-5" />
+                            {isEditing ? 'Actualizar Socio' : 'Crear Socio'}
                           </>
                         )}
-                      </button>
+                      </motion.button>
                     ) : (
-                      <button
+                      <motion.button
                         type="button"
                         onClick={nextStep}
                         disabled={!isCurrentStepValid}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
                           isCurrentStepValid
-                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+                            ? `bg-gradient-to-r ${currentStepData?.color} text-white hover:shadow-xl hover:scale-105`
                             : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         }`}
+                        whileHover={isCurrentStepValid ? { scale: 1.02 } : {}}
+                        whileTap={isCurrentStepValid ? { scale: 0.98 } : {}}
                       >
                         Siguiente
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
+                        <ChevronRight className="w-5 h-5" />
+                      </motion.button>
                     )}
                   </div>
                 </div>
