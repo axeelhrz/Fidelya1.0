@@ -1814,16 +1814,6 @@ export const EnhancedMemberManagement = ({
                           }`}>
                             {socio.estado.charAt(0).toUpperCase() + socio.estado.slice(1)}
                           </span>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            socio.estadoMembresia === 'al_dia'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : socio.estadoMembresia === 'vencido'
-                              ? 'bg-red-50 text-red-700 border border-red-200'
-                              : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                          }`}>
-                            {socio.estadoMembresia === 'al_dia' ? 'Al día' :
-                             socio.estadoMembresia === 'vencido' ? 'Vencido' : 'Pendiente'}
-                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 hidden lg:table-cell">
@@ -1925,4 +1915,3 @@ export const EnhancedMemberManagement = ({
     </div>
   );
 };
-
