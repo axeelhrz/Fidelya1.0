@@ -21,11 +21,8 @@ import {
   Check,
   AlertCircle,
   Loader2,
-  UserPlus,
   Lock,
-  Building,
-  Shield,
-  DollarSign
+  Shield
 } from 'lucide-react';
 import { Socio, SocioFormData } from '@/types/socio';
 import { Timestamp } from 'firebase/firestore';
@@ -36,14 +33,10 @@ const socioSchema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   email: z.string().email('Email inválido'),
   estado: z.enum(['activo', 'inactivo', 'suspendido', 'pendiente', 'vencido']),
-  estadoMembresia: z.enum(['al_dia', 'vencido', 'pendiente']).optional(),
   telefono: z.string().optional(),
   dni: z.string().optional(),
-  numeroSocio: z.string().optional(),
-  montoCuota: z.number().min(0, 'El monto debe ser mayor o igual a 0').optional(),
   direccion: z.string().optional(),
   fechaNacimiento: z.string().optional(),
-  fechaVencimiento: z.string().optional(),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional(),
   confirmPassword: z.string().optional(),
 }).refine((data) => {
@@ -74,15 +67,7 @@ const FORM_STEPS = [
     subtitle: 'Información de contacto',
     icon: Phone,
     color: 'from-green-500 to-emerald-500',
-    fields: ['telefono', 'direccion']
-  },
-  {
-    id: 'membership',
-    title: 'Membresía',
-    subtitle: 'Configuración de membresía',
-    icon: CreditCard,
-    color: 'from-purple-500 to-pink-500',
-    fields: ['numeroSocio', 'montoCuota', 'fechaVencimiento', 'estado', 'estadoMembresia']
+    fields: ['telefono', 'direccion', 'estado']
   },
   {
     id: 'access',
@@ -246,14 +231,10 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
       nombre: '',
       email: '',
       estado: 'activo',
-      estadoMembresia: 'al_dia',
       telefono: '',
       dni: '',
-      numeroSocio: '',
-      montoCuota: 0,
       direccion: '',
       fechaNacimiento: '',
-      fechaVencimiento: '',
     }
   });
 
@@ -284,28 +265,20 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
           nombre: socio.nombre || '',
           email: socio.email || '',
           estado: socio.estado || 'activo',
-          estadoMembresia: socio.estadoMembresia || 'al_dia',
           telefono: socio.telefono || '',
           dni: socio.dni || '',
-          numeroSocio: socio.numeroSocio || '',
-          montoCuota: socio.montoCuota || 0,
           direccion: socio.direccion || '',
           fechaNacimiento: formatDateForInput(socio.fechaNacimiento),
-          fechaVencimiento: formatDateForInput(socio.fechaVencimiento),
         });
       } else {
         reset({
           nombre: '',
           email: '',
           estado: 'activo',
-          estadoMembresia: 'al_dia',
           telefono: '',
           dni: '',
-          numeroSocio: '',
-          montoCuota: 0,
           direccion: '',
           fechaNacimiento: '',
-          fechaVencimiento: '',
         });
       }
       setCurrentStep(0);
@@ -341,14 +314,10 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
         nombre: data.nombre,
         email: data.email,
         estado: data.estado,
-        estadoMembresia: data.estadoMembresia,
         telefono: data.telefono || '',
         dni: data.dni || '',
-        numeroSocio: data.numeroSocio || '',
-        montoCuota: data.montoCuota || 0,
         direccion: data.direccion || '',
         fechaNacimiento: data.fechaNacimiento ? new Date(data.fechaNacimiento) : undefined,
-        fechaVencimiento: data.fechaVencimiento ? new Date(data.fechaVencimiento) : undefined,
         password: data.password || '',
       };
 
@@ -370,9 +339,6 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
       fechaNacimiento: { name: 'fechaNacimiento', label: 'Fecha de nacimiento', type: 'date', icon: Calendar },
       telefono: { name: 'telefono', label: 'Teléfono', type: 'tel', icon: Phone, placeholder: '+54 9 11 1234-5678' },
       direccion: { name: 'direccion', label: 'Dirección', type: 'text', icon: MapPin, placeholder: 'Calle 123, Ciudad' },
-      numeroSocio: { name: 'numeroSocio', label: 'Número de socio', type: 'text', icon: CreditCard, placeholder: 'SOC-001' },
-      montoCuota: { name: 'montoCuota', label: 'Monto de cuota', type: 'number', icon: DollarSign, placeholder: '0' },
-      fechaVencimiento: { name: 'fechaVencimiento', label: 'Fecha de vencimiento', type: 'date', icon: Calendar },
       estado: { 
         name: 'estado', 
         label: 'Estado', 
@@ -384,17 +350,6 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
           { value: 'suspendido', label: 'Suspendido' },
           { value: 'pendiente', label: 'Pendiente' },
           { value: 'vencido', label: 'Vencido' }
-        ]
-      },
-      estadoMembresia: { 
-        name: 'estadoMembresia', 
-        label: 'Estado de membresía', 
-        type: 'select', 
-        icon: Building,
-        options: [
-          { value: 'al_dia', label: 'Al día' },
-          { value: 'vencido', label: 'Vencido' },
-          { value: 'pendiente', label: 'Pendiente' }
         ]
       },
       password: { name: 'password', label: 'Contraseña', type: 'password', icon: Lock, placeholder: 'Mínimo 6 caracteres' },
