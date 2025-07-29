@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 
 // Lazy load heavy components for optimal performance
+// Note: For named exports, we need to destructure the component from the module
 const OptimizedOverviewDashboard = lazy(() => import('@/components/asociacion/OptimizedOverviewDashboard'));
 const EnhancedMemberManagement = lazy(() => 
   import('@/components/asociacion/EnhancedMemberManagement').then(module => ({ 
