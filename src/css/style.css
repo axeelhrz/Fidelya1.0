@@ -506,7 +506,6 @@ transition:all 0.2s ease;
 
 /* Botón hamburguesa flotante con transiciones mejoradas */
 .nav__toggle{position:fixed;top:var(--space-lg);right:var(--space-lg);z-index:1002;display:flex;flex-direction:column;justify-content:center;align-items:center;width:56px;height:56px;background:rgba(21, 25, 34, 0.95);backdrop-filter:blur(20px);border:1px solid rgba(255, 255, 255, 0.1);border-radius:20px;cursor:pointer;overflow:hidden;flex-shrink:0;min-width:56px;min-height:56px;touch-action:manipulation;box-shadow:0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 69, 105, 0.1);transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
-
 .nav__toggle:active{transform:translateY(-1px) scale(0.95);background:rgba(21, 25, 34, 0.98);border-color:rgba(255, 69, 105, 0.3);box-shadow:0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 69, 105, 0.2)}
 
 /* Líneas del hamburguesa con animación suave */
@@ -606,7 +605,7 @@ transition:all 0.2s ease;
 .nav__language-option:hover{color:var(--text-primary);background:linear-gradient(135deg, var(--glass-bg-light) 0%, var(--glass-bg-medium) 100%);transform:translateX(3px)}
 }
 
-/* MOBILE DRAWER CON TRANSICIONES MEJORADAS */
+/* ===== MOBILE DRAWER CON TRANSICIONES MEJORADAS ===== */
 .nav__drawer{position:fixed;top:0;right:-100%;width:min(90%, 350px);height:100vh;background:rgba(15, 18, 25, 0.98);backdrop-filter:blur(20px);border-left:1px solid var(--border-subtle);box-shadow:-10px 0 50px rgba(0, 0, 0, 0.5);z-index:999;overflow:hidden;padding-top:calc(var(--space-6xl) + var(--space-lg));display:flex;flex-direction:column;transition:right 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
 
 .nav__drawer.active{right:0}
@@ -670,6 +669,202 @@ transition:all 0.2s ease;
 .nav__drawer{width:min(95%, 320px)}
 .nav__drawer-language{padding:var(--space-md) var(--space-lg)}
 .nav__drawer-navigation{padding:0 var(--space-lg);padding-top:var(--space-md)}
+}
+
+/* ===== BOTÓN CTA DEL DRAWER MÓVIL ===== */
+.nav__drawer-cta {
+    padding: var(--space-lg) var(--space-xl);
+    border-top: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+    order: 1; /* Cambiado de -1 a 1 para que aparezca después de las opciones de navegación */
+}
+
+.nav__drawer-cta-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    padding: var(--space-lg) var(--space-xl);
+    font-family: var(--font-primary);
+    font-weight: 700;
+    color: #ffffff !important;
+    text-decoration: none;
+    background: linear-gradient(135deg, var(--neon-red-base) 0%, var(--neon-red-soft) 100%);
+    border: 1px solid var(--neon-red-soft);
+    border-radius: 16px;
+    box-shadow: 0 0 15px var(--neon-red-shadow-soft), 0 0 30px var(--neon-red-glow-soft), 0 4px 12px rgba(0, 0, 0, 0.25);
+    text-shadow: 0 0 8px var(--neon-red-glow-soft);
+    min-height: 44px;
+    touch-action: manipulation;
+    margin: 0 auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+}
+
+/* EFECTO DE BRILLO SUTIL PARA EL BOTÓN CTA DEL DRAWER */
+.nav__drawer-cta-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, var(--neon-red-glow-soft) 40%, var(--neon-red-glow-medium) 50%, var(--neon-red-glow-soft) 60%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border-radius: 14px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.nav__drawer-cta-content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    flex: 1;
+    position: relative;
+    z-index: 2;
+}
+
+.nav__drawer-cta-main {
+    font-size: 1.1rem !important;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-align: left !important;
+    color: #ffffff !important;
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.nav__drawer-cta-trial {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    opacity: 0.9;
+    color: #ffffff !important;
+    text-align: left !important;
+}
+
+.nav__drawer-cta-icon {
+    width: 24px !important;
+    height: 24px !important;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    opacity: 0.9;
+    transition: all var(--transition);
+}
+
+.nav__drawer-cta-icon svg {
+    width: 100% !important;
+    height: 100% !important;
+    color: #ffffff !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* EFECTOS TÁCTILES PARA MÓVIL */
+.nav__drawer-cta-btn:active {
+    transform: translateY(-1px) scale(0.98) !important;
+    transition: all 0.1s ease !important;
+    box-shadow: 0 0 20px var(--neon-red-shadow-medium), 0 0 40px var(--neon-red-glow-medium), 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+
+.nav__drawer-cta-btn:active .nav__drawer-cta-icon {
+    transform: scale(0.95);
+}
+
+/* EFECTOS HOVER PARA DESKTOP */
+@media (min-width: 1024px) {
+    .nav__drawer-cta-btn:hover {
+        transform: translateY(-2px) scale(1.01);
+        background: linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);
+        box-shadow: 0 0 25px var(--neon-red-shadow-bright), 0 0 50px var(--neon-red-glow-bright), 0 8px 20px rgba(0, 0, 0, 0.35);
+        text-shadow: 0 0 12px var(--neon-red-glow-medium), 0 0 24px var(--neon-red-shadow-medium);
+        border-color: var(--neon-red-medium);
+        color: #ffffff !important;
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .nav__drawer-cta-btn:hover::before {
+        opacity: 0.6;
+    }
+
+    .nav__drawer-cta-btn:hover .nav__drawer-cta-icon {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    .nav__drawer-cta-btn:hover .nav__drawer-cta-main,
+    .nav__drawer-cta-btn:hover .nav__drawer-cta-trial {
+        color: #ffffff !important;
+    }
+}
+
+/* RESPONSIVE PARA PANTALLAS PEQUEÑAS */
+@media (max-width: 480px) {
+    .nav__drawer-cta {
+        padding: var(--space-md) var(--space-lg);
+    }
+
+    .nav__drawer-cta-btn {
+        padding: var(--space-md) var(--space-lg);
+    }
+
+    .nav__drawer-cta-main {
+        font-size: 1rem !important;
+    }
+
+    .nav__drawer-cta-trial {
+        font-size: 0.8rem;
+    }
+
+    .nav__drawer-cta-icon {
+        width: 20px !important;
+        height: 20px !important;
+    }
+}
+
+/* MODO RENDIMIENTO - DESHABILITAR ANIMACIONES COMPLEJAS */
+.performance-mode .nav__drawer-cta-btn {
+    transition: all 0.2s ease !important;
+    animation: none !important;
+}
+
+.performance-mode .nav__drawer-cta-btn::before {
+    display: none !important;
+}
+
+/* MODO REDUCIDO DE MOVIMIENTO */
+@media (prefers-reduced-motion: reduce) {
+    .nav__drawer-cta-btn {
+        transition: all 0.2s ease !important;
+        animation: none !important;
+    }
+
+    .nav__drawer-cta-btn::before {
+        display: none !important;
+    }
+
+    .nav__drawer-cta-btn:hover {
+        transform: none !important;
+    }
+
+    .nav__drawer-cta-btn:active {
+        transform: scale(0.98) !important;
+    }
+}
+
+/* MODO ALTO CONTRASTE */
+@media (prefers-contrast: high) {
+    .nav__drawer-cta-btn {
+        border-width: 2px;
+        box-shadow: 0 0 20px var(--neon-red-shadow-bright), 0 0 40px var(--neon-red-glow-bright);
+    }
 }
 
 /* ===== HERO MÓVIL OPTIMIZADO ===== */
@@ -871,458 +1066,6 @@ transition:all 0.2s ease;
 .feature[data-feature="log"] .phone__app-image{background-image:url('../../assets/phones/Log.webp');transition-delay:0.5s}
 .feature[data-feature="notifications"] .phone__app-image{background-image:url('../../assets/phones/Notifications.webp');transition-delay:0.6s}
 .feature[data-feature="referrals"] .phone__app-image{background-image:url('../../assets/phones/Referrals.webp');transition-delay:0.7s}
-
-/* ===== FAQ MÓVIL OPTIMIZADO CON TRANSICIONES ===== */
-.faq{position:relative;width:100%;padding:clamp(2rem, 6vh, 4rem) var(--section-padding-x) clamp(1.5rem, 4vh, 3rem);overflow:hidden;background:var(--primary-bg)}
-
-.faq__header{position:relative;z-index:3;max-width:1000px;margin:0 auto var(--space-4xl);text-align:center}
-
-.faq__title{position:relative;margin-bottom:var(--space-2xl);font:800 clamp(2.2rem, 8vw, 3.5rem)/1.2 var(--font-primary);letter-spacing:-0.02em;color:var(--text-primary)}
-
-.faq__title::after{position:absolute;bottom:-12px;left:50%;width:100px;height:3px;content:'';background:var(--starflex-red);border-radius:2px;transform:translateX(-50%)}
-
-.faq__subtitle{max-width:800px;margin:0 auto var(--space-3xl);font:400 1.1rem/1.6 var(--font-primary);color:var(--text-secondary)}
-
-.faq__search-container{position:relative;max-width:700px;margin:0 auto var(--space-3xl)}
-
-.faq__search{width:100%;padding:var(--space-md) var(--space-lg) var(--space-md) 50px;font:500 1rem var(--font-primary);color:var(--text-primary);background:rgba(21, 25, 34, 0.95);border:1px solid rgba(255, 69, 105, 0.15);border-radius:25px;box-shadow:var(--shadow-lg);outline:none;transition:all var(--transition)}
-
-.faq__search::placeholder{font-style:italic;color:var(--text-muted);opacity:0.7}
-
-.faq__search:focus{border-color:rgba(255, 69, 105, 0.4);box-shadow:var(--shadow-xl), 0 0 0 2px rgba(255, 69, 105, 0.15)}
-
-.faq__search-icon{position:absolute;top:50%;left:18px;display:flex;align-items:center;justify-content:center;width:20px;height:20px;font:bold 12px var(--font-primary);color:white;background:var(--starflex-red);border-radius:50%;transform:translateY(-50%)}
-
-.faq__search-icon::before{content:'⌕'}
-
-.faq__container{position:relative;z-index:3;width:100%;max-width:1200px;margin:0 auto}
-
-.faq__list{display:grid;gap:var(--space-lg)}
-
-.faq__item{position:relative;background:rgba(21, 25, 34, 0.6);border:1px solid rgba(255, 255, 255, 0.08);border-radius:20px;transition:all var(--transition)}
-
-.faq__item.active{border-color:rgba(255, 69, 105, 0.3);background:rgba(21, 25, 34, 0.8);box-shadow:var(--shadow-xl)}
-
-.faq__question{position:relative;display:flex;gap:var(--space-lg);align-items:center;justify-content:space-between;width:100%;padding:var(--space-lg) var(--space-xl);font:700 1.1rem var(--font-primary);color:var(--text-primary);text-align:left;cursor:pointer;background:transparent;border:none;border-radius:20px;min-height:44px;touch-action:manipulation;transition:all var(--transition)}
-
-.faq__question:active{transform:scale(0.98);transition:all 0.1s ease}
-
-.faq__question-text{flex:1;line-height:1.4;text-align:left}
-
-.faq__icon{position:relative;display:flex;flex-shrink:0;align-items:center;justify-content:center;width:35px;height:35px;background:var(--starflex-red);border-radius:50%;box-shadow:var(--shadow-md);transition:transform var(--transition-slow)}
-
-.faq__icon::before,.faq__icon::after{position:absolute;content:'';background:white;border-radius:1px;transition:all var(--transition-slow)}
-.faq__icon::before{width:14px;height:2.5px}
-.faq__icon::after{width:2.5px;height:14px}
-
-.faq__item.active .faq__icon{transform:rotate(45deg);background:var(--starflex-crimson-bright)}
-.faq__item.active .faq__icon::after{opacity:0;transform:scale(0)}
-
-.faq__answer{max-height:0;overflow:hidden;transition:max-height var(--transition-slow), padding var(--transition-slow)}
-.faq__answer.active{max-height:600px;padding:0 var(--space-xl) var(--space-xl)}
-
-.faq__answer-content{position:relative;padding-top:var(--space-lg);border-top:1px solid rgba(255, 69, 105, 0.15)}
-
-.faq__answer-content::before{position:absolute;top:0;left:0;width:40px;height:2px;content:'';background:var(--starflex-red);border-radius:1px}
-
-.faq__answer-text{margin:0;font:500 1rem/1.7 var(--font-primary);color:var(--text-secondary)}
-
-.faq__answer-highlight{padding:3px 10px;font-weight:700;color:var(--starflex-red);background:rgba(255, 69, 105, 0.1);border-radius:8px}
-
-.faq__no-results{display:none;padding:var(--space-2xl);text-align:center;background:rgba(255, 45, 85, 0.05);border:1px solid rgba(255, 45, 85, 0.2);border-radius:20px}
-.faq__no-results.show{display:block}
-
-.faq__no-results-text{margin-bottom:var(--space-lg);font:700 1.1rem var(--font-primary);color:var(--starflex-red)}
-.faq__no-results-suggestion{font:400 1rem var(--font-primary);color:var(--text-secondary)}
-
-@media (max-width: 480px){
-.faq__search{padding:var(--space-sm) var(--space-md) var(--space-sm) 45px;font-size:0.9rem}
-.faq__search-icon{left:15px;width:18px;height:18px;font-size:11px}
-.faq__question{padding:var(--space-md) var(--space-lg);font-size:1rem;gap:var(--space-lg)}
-.faq__icon{width:30px;height:30px}
-.faq__icon::before{width:12px;height:2px}
-.faq__icon::after{width:2px;height:12px}
-.faq__answer.active{padding:0 var(--space-lg) var(--space-lg)}
-.faq__answer-text{font-size:0.95rem}
-}
-
-/* DESKTOP FAQ COMPLETO */
-@media (min-width: 1024px) {
-.faq{padding:clamp(4rem, 12vh, 8rem) var(--section-padding-x) clamp(3rem, 8vh, 6rem)}
-.faq::before{position:absolute;inset:0;z-index:1;content:'';pointer-events:none;background:radial-gradient(ellipse at 25% 25%, var(--secondary-bg) 0%, transparent 70%);opacity:0.5}
-.faq__title{font-size:clamp(3rem, 7vw, 5rem);line-height:1.1}
-.faq__subtitle{font-size:1.3rem;margin:0 auto var(--space-4xl)}
-.faq__search{padding:var(--space-lg) var(--space-xl) var(--space-lg) 60px;font-size:1.1rem;transition:border-color 0.2s ease, box-shadow 0.2s ease}
-.faq__search:focus{border-color:rgba(255, 69, 105, 0.4);box-shadow:var(--shadow-xl), 0 0 0 2px rgba(255, 69, 105, 0.15)}
-.faq__search-icon{left:22px;width:24px;height:24px;font-size:14px}
-.faq__item{transition:border-color 0.2s ease, box-shadow 0.2s ease}
-.faq__item:hover{border-color:rgba(255, 69, 105, 0.2);box-shadow:var(--shadow-lg)}
-.faq__question{padding:var(--space-xl) var(--space-2xl);font-size:1.2rem;gap:var(--space-xl);transition:color 0.2s ease}
-.faq__question:hover{color:var(--starflex-red)}
-.faq__icon{width:40px;height:40px;transition:transform 0.2s ease}
-.faq__icon::before{width:16px;height:3px}
-.faq__icon::after{width:3px;height:16px;transition:opacity 0.2s ease}
-.faq__item.active .faq__icon{transform:rotate(45deg)}
-.faq__answer{transition:max-height 0.2s ease, padding 0.2s ease}
-.faq__answer.active{padding:0 var(--space-2xl) var(--space-2xl)}
-.faq__answer-text{font-size:1.1rem}
-.faq__list{gap:var(--space-xl)}
-.faq__question:focus,.faq__search:focus{outline:2px solid var(--starflex-red);outline-offset:3px;border-radius:8px}
-}
-
-/* ===== CONTACT MÓVIL OPTIMIZADO CON TRANSICIONES ===== */
-.contact{position:relative;width:100%;padding:var(--section-padding-y) var(--section-padding-x);background:var(--primary-bg);overflow:hidden}
-
-.contact__header{margin-bottom:var(--space-4xl);text-align:center}
-
-.contact__badge{display:inline-flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-lg);margin-bottom:var(--space-xl);font-size:0.8rem;font-weight:600;color:var(--starflex-red);text-transform:uppercase;letter-spacing:1px;background:rgba(255, 45, 85, 0.1);border:1px solid rgba(255, 45, 85, 0.2);border-radius:20px}
-
-.contact__title{margin-bottom:var(--space-xl);font-size:clamp(2.5rem, 8vw, 5rem);font-weight:800;line-height:0.9;letter-spacing:-0.02em}
-
-.contact__title--main{display:block;margin-bottom:var(--space-sm);color:var(--text-primary)}
-.contact__title--highlight{display:block;background:linear-gradient(135deg, var(--starflex-red) 0%, var(--starflex-crimson-glow) 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-
-.contact__subtitle{font-size:1.1rem;line-height:1.6;color:var(--text-secondary);max-width:600px;margin:0 auto}
-
-/* GRID MEJORADO PARA CARDS MÁS ANCHAS EN MOBILE CON TRANSICIONES */
-.contact__grid{display:grid!important;gap:var(--space-lg)!important;grid-template-columns:1fr!important;width:100%;max-width:420px!important;margin:0 auto var(--space-4xl)!important;justify-items:center!important;visibility:visible!important;opacity:1!important}
-
-.contact__channel{display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important;padding:var(--space-xl) var(--space-lg);background:rgba(255, 255, 255, 0.02);border:1px solid rgba(255, 255, 255, 0.05);border-radius:16px;width:100%!important;max-width:100%!important;margin:0 auto!important;visibility:visible!important;opacity:1!important;transform:none!important;transition:all var(--transition)}
-
-.contact__channel:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease}
-
-.contact__channel-icon{display:flex!important;align-items:center!important;justify-content:center!important;width:60px!important;height:60px!important;margin:0 auto var(--space-md) auto!important;border-radius:20px!important;box-shadow:var(--shadow-lg)!important;flex-shrink:0!important;position:relative!important;visibility:visible!important;opacity:1!important;transform:none!important;transition:all var(--transition)}
-
-.contact__channel:active .contact__channel-icon{transform:scale(0.95);transition:all 0.1s ease}
-
-.contact__channel-icon svg{display:block!important;visibility:visible!important;opacity:1!important;width:28px!important;height:28px!important;color:white!important;filter:drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))!important;margin:0 auto!important;position:relative!important;z-index:2!important;transition:all var(--transition)}
-
-.contact__channel:active .contact__channel-icon svg{transform:scale(0.95)}
-
-.contact__channel-content{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;width:100%!important;flex:1;visibility:visible!important;opacity:1!important;transform:none!important}
-
-.contact__channel-title{margin-bottom:var(--space-md);font-size:1.2rem;font-weight:700;color:var(--text-primary);text-align:center!important;width:100%!important;visibility:visible!important;opacity:1!important;transform:none!important;transition:all var(--transition)}
-
-.contact__channel-description{margin-bottom:var(--space-xl);font-size:0.95rem;line-height:1.5;color:var(--text-muted);text-align:center!important;width:100%!important;visibility:visible!important;opacity:1!important;transform:none!important;transition:all var(--transition)}
-
-.contact__channel-btn{display:inline-flex!important;align-items:center!important;gap:var(--space-sm)!important;padding:var(--space-md) var(--space-lg);font-size:0.9rem;font-weight:600;color:var(--text-primary);text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;background:rgba(255, 255, 255, 0.05);border:1px solid rgba(255, 255, 255, 0.1);border-radius:20px;min-height:44px;touch-action:manipulation;margin:0 auto!important;justify-content:center!important;visibility:visible!important;opacity:1!important;transform:none!important;transition:all var(--transition)}
-
-.contact__channel-btn:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease}
-
-.contact__channel-arrow{font-weight:bold;visibility:visible!important;opacity:1!important;transform:none!important;transition:all var(--transition)}
-
-.contact__channel[data-channel="whatsapp"] .contact__channel-icon{background:linear-gradient(135deg, #25d366 0%, #128c7e 100%)}
-.contact__channel[data-channel="instagram"] .contact__channel-icon{background:linear-gradient(135deg, #e1306c 0%, #fd1d1d 50%, #fcb045 100%)}
-.contact__channel[data-channel="facebook"] .contact__channel-icon{background:linear-gradient(135deg, #1877f2 0%, #42a5f5 100%)}
-.contact__channel[data-channel="tiktok"] .contact__channel-icon{background:linear-gradient(135deg, #ff0050 0%, #000 100%)}
-.contact__channel[data-channel="telegram"] .contact__channel-icon{background:linear-gradient(135deg, #0088cc 0%, #229ed9 100%)}
-.contact__channel[data-channel="email"] .contact__channel-icon{background:linear-gradient(135deg, var(--starflex-crimson) 0%, var(--starflex-crimson-bright) 100%)}
-
-.contact__footer{display:block!important;padding:var(--space-xl) var(--section-padding-x)!important;border-top:1px solid rgba(255, 255, 255, 0.05);margin-top:var(--space-xl)!important;min-height:120px!important;padding-bottom:max(var(--space-2xl), calc(env(safe-area-inset-bottom, 0px) + var(--space-xl)))!important;visibility:visible!important;opacity:1!important;transform:none!important;position:relative!important;z-index:10!important}
-
-.contact__footer-content{display:flex!important;flex-direction:column!important;gap:var(--space-lg)!important;align-items:center!important;text-align:center!important;max-width:1200px;margin:0 auto;visibility:visible!important;opacity:1!important;transform:none!important;justify-content:center!important}
-
-.contact__footer-text{display:block!important;visibility:visible!important;opacity:1!important;transform:none!important;text-align:center!important}
-
-.contact__footer-text h3{margin-bottom:var(--space-xs);font-size:1rem!important;font-weight:600;color:var(--text-primary);display:block!important;visibility:visible!important;opacity:1!important;text-align:center!important}
-
-.contact__footer-text p{font-size:0.9rem!important;color:var(--text-muted);display:block!important;visibility:visible!important;opacity:1!important;text-align:center!important}
-
-/* BOTÓN FOOTER CON ANIMACIONES SUTILES ROJIZAS */
-.btn--footer{
-display:flex!important;
-flex-direction:column!important;
-align-items:center!important;
-gap:var(--space-xs);
-width:100%!important;
-max-width:100%!important;
-padding:var(--space-lg) var(--space-4xl)!important;
-font-weight:700;
-color:#ffffff!important;
-text-decoration:none;
-background:linear-gradient(135deg, var(--neon-red-base) 0%, var(--neon-red-soft) 100%);
-border:1px solid var(--neon-red-soft);
-border-radius:16px;
-box-shadow:0 0 15px var(--neon-red-shadow-soft), 0 0 30px var(--neon-red-glow-soft);
-min-height:44px;
-touch-action:manipulation;
-margin:0 auto!important;
-justify-content:center!important;
-visibility:visible!important;
-opacity:1!important;
-transform:none!important;
-transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-position:relative;
-overflow:hidden;
-}
-
-/* EFECTO DE BRILLO SUTIL PARA FOOTER */
-.btn--footer::before{
-content:'';
-position:absolute;
-top:0;
-left:0;
-right:0;
-bottom:0;
-background:linear-gradient(45deg, transparent 30%, var(--neon-red-glow-soft) 40%, var(--neon-red-glow-medium) 50%, var(--neon-red-glow-soft) 60%, transparent 70%);
-opacity:0;
-transition:opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-border-radius:14px;
-pointer-events:none;
-z-index:1;
-}
-
-.btn--footer:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease}
-
-.btn--footer span{position:relative;z-index:2;font-size:1.1rem!important;font-weight:800;letter-spacing:1px;text-align:center!important;color:#ffffff!important}
-.btn--footer small{position:relative;z-index:2;font-size:0.9rem;text-transform:uppercase;letter-spacing:1.5px;opacity:0.9;text-align:center!important;color:#ffffff!important}
-
-/* MEDIA QUERIES PARA CONTACT CARDS */
-@media (min-width: 768px){
-.contact__grid{grid-template-columns:repeat(2, 1fr)!important;max-width:900px!important}
-.contact__subtitle{font-size:1.2rem;max-width:700px}
-.contact__channel{padding:var(--space-xl) var(--space-lg)}
-.contact__channel-icon{width:70px!important;height:70px!important}
-.contact__channel-icon svg{width:32px!important;height:32px!important}
-.contact__channel-title{font-size:1.3rem}
-.contact__channel-description{font-size:1rem}
-}
-
-@media (max-width: 480px){
-.contact__grid{max-width:380px!important}
-.contact__channel{padding:var(--space-lg) var(--space-md)}
-.contact__channel-icon{width:60px!important;height:60px!important;margin:0 auto var(--space-md) auto!important}
-.contact__channel-icon svg{width:28px!important;height:28px!important}
-.contact__footer{padding:var(--space-lg) var(--space-md)!important;margin-top:var(--space-lg)!important}
-.contact__footer-content{gap:var(--space-md)!important;padding:0!important}
-.btn--footer{max-width:100%!important;font-size:1rem!important;padding:var(--space-xl) var(--space-5xl)!important}
-.btn--footer span{font-size:1.2rem!important}
-.btn--footer small{font-size:1rem!important}
-}
-
-/* DESKTOP CONTACT COMPLETO - HOVER DEL BOTÓN FOOTER CON ANIMACIONES SUTILES */
-@media (min-width: 1024px) {
-.contact{background:linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 100%)}
-.contact::before{position:absolute;inset:0;content:'';background:radial-gradient(ellipse at 30% 20%, rgba(255, 69, 105, 0.02) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(184, 0, 46, 0.015) 0%, transparent 60%);pointer-events:none}
-.contact__grid{grid-template-columns:repeat(3, 1fr)!important;gap:var(--space-2xl)!important;max-width:1200px!important}
-.contact__subtitle{font-size:1.25rem;max-width:800px}
-.contact__channel{padding:var(--space-2xl);cursor:pointer;transition:all 0.2s ease}
-.contact__channel:hover{background:rgba(255, 255, 255, 0.04);border-color:rgba(255, 255, 255, 0.1);box-shadow:var(--shadow-xl);transform:translateY(-3px)}
-.contact__channel-icon{width:75px!important;height:75px!important}
-.contact__channel-icon svg{width:34px!important;height:34px!important}
-.contact__channel:hover .contact__channel-icon{box-shadow:var(--shadow-2xl);transform:scale(1.05)}
-.contact__channel-title{font-size:1.4rem}
-.contact__channel:hover .contact__channel-title{color:var(--starflex-crimson)}
-.contact__channel:hover .contact__channel-description{color:var(--text-secondary)}
-.contact__channel-btn{transition:all 0.2s ease}
-.contact__channel-btn:hover{color:white;background:var(--starflex-crimson);border-color:var(--starflex-crimson);box-shadow:var(--shadow-md);transform:translateY(-1px)}
-.contact__channel-btn:hover .contact__channel-arrow{transform:translateX(2px)}
-.contact__channel-arrow{transition:transform 0.2s ease}
-.contact__footer-content{flex-direction:row!important;justify-content:space-between!important;text-align:left!important}
-
-/* BOTÓN FOOTER DESKTOP - HOVER CON ANIMACIONES SUTILES ROJIZAS */
-.btn--footer{
-width:auto!important;
-min-width:200px!important;
-transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.btn--footer:hover{
-box-shadow:0 0 25px var(--neon-red-shadow-bright), 0 0 50px var(--neon-red-glow-bright), 0 6px 20px rgba(0, 0, 0, 0.3);
-transform:translateY(-2px);
-background:linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);
-border-color:var(--neon-red-medium);
-color:#ffffff!important;
-transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.btn--footer:hover::before{opacity:0.6}
-.btn--footer span, .btn--footer small{position:relative;z-index:2;color:#ffffff!important}
-.btn--footer:hover span, .btn--footer:hover small{color:#ffffff!important}
-}
-
-/* ===== MOBILE FIXES CRÍTICOS CON TRANSICIONES MEJORADAS ===== */
-.features,.faq,.contact{display:block!important;visibility:visible!important;opacity:1!important;position:relative;z-index:auto}
-
-.features *,.faq *,.contact *{visibility:visible!important}
-
-html,body{overflow-x:hidden}
-
-/* PERFORMANCE OPTIMIZATIONS MÓVIL - ACTUALIZADO CON TRANSICIONES SUTILES */
-@media (max-width: 1023px) {
-/* Permitir transiciones sutiles en móvil para elementos interactivos */
-.nav__toggle, .nav__toggle-line, .nav__drawer, .nav__drawer-overlay, .nav__drawer-link, .nav__drawer-language-option{transition-duration:var(--transition)!important}
-.btn--cta, .btn--footer{transition-duration:0.8s!important}
-.floating-widget, .floating-widget__menu, .floating-widget__main-btn, .floating-widget__menu-item{transition-duration:var(--transition)!important}
-.faq__question, .faq__icon, .faq__answer, .faq__search{transition-duration:var(--transition)!important}
-.contact__channel, .contact__channel-btn, .contact__channel-icon{transition-duration:var(--transition)!important}
-.download-btn{transition-duration:var(--transition)!important}
-
-/* Deshabilitar animaciones complejas pero mantener transiciones sutiles */
-*:not(.nav__toggle):not(.nav__toggle-line):not(.btn--cta):not(.btn--footer):not(.floating-widget):not(.floating-widget__menu):not(.floating-widget__main-btn):not(.floating-widget__menu-item):not(.faq__question):not(.faq__icon):not(.faq__answer):not(.faq__search):not(.contact__channel):not(.contact__channel-btn):not(.contact__channel-icon):not(.download-btn):not(.nav__drawer):not(.nav__drawer-overlay):not(.nav__drawer-link):not(.nav__drawer-language-option){animation:none!important}
-
-/* EXCEPCIÓN: Permitir animación del botón hamburguesa */
-.nav__toggle.active .nav__toggle-line:nth-child(1){transform:rotate(45deg) translate(7px, 7px)!important}
-.nav__toggle.active .nav__toggle-line:nth-child(1)::before{transform:scaleX(1.1);background:var(--neon-primary-bright)}
-.nav__toggle.active .nav__toggle-line:nth-child(2){opacity:0!important;transform:scale(0) rotate(180deg)!important}
-.nav__toggle.active .nav__toggle-line:nth-child(3){transform:rotate(-45deg) translate(7px, -7px)!important}
-
-/* EXCEPCIÓN: Permitir efectos sutiles en botones CTA y FOOTER */
-.btn--cta::before{animation:none!important}
-.btn--cta:active, .btn--footer:active{transform:translateY(-1px) scale(0.98)!important;transition:all 0.1s ease!important;color:#ffffff!important}
-
-/* Efectos táctiles sutiles para móvil */
-.nav__toggle:active{transform:translateY(-1px) scale(0.95)!important}
-.nav__drawer-link:active{transform:scale(0.98)!important}
-.nav__drawer-language-option:active{transform:scale(0.95)!important}
-.floating-widget__main-btn:active{transform:scale(0.95)!important}
-.floating-widget__menu-item:active{transform:scale(0.95)!important}
-.faq__question:active{transform:scale(0.98)!important}
-.contact__channel:active{transform:translateY(-1px) scale(0.98)!important}
-.contact__channel-btn:active{transform:translateY(-1px) scale(0.98)!important}
-.download-btn:active{transform:translateY(-1px) scale(0.98)!important}
-
-.hero__phone,.hero__phone-container,.hero__phone-screen,.hero__phone-content,.hero__phone-video,.hero__phone-app-image{display:none!important;visibility:hidden!important;opacity:0!important}
-.hero__mobile-video{display:block!important;visibility:visible!important;opacity:1!important}
-.hero__mobile-video-player{display:block!important;visibility:visible!important;opacity:1!important}
-.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important;background-image:none!important}
-}
-
-.performance-mode *{animation:none!important;transition:none!important;transform:none!important;will-change:auto!important}
-
-/* EXCEPCIÓN PARA PERFORMANCE MODE - Permitir hamburguesa y CTA con animaciones sutiles */
-.performance-mode .nav__toggle, .performance-mode .nav__toggle-line{transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)!important}
-.performance-mode .btn--cta, .performance-mode .btn--footer{transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)!important}
-
-@media (prefers-reduced-motion: reduce){
-*{animation:none!important;transition:none!important;scroll-behavior:auto!important}
-/* Mantener hamburguesa y CTA incluso con reduced motion pero con transición más rápida */
-.nav__toggle, .nav__toggle-line{transition:all 0.2s ease!important}
-.btn--cta, .btn--footer{transition:all 0.4s ease!important}
-}
-
-/* CRITICAL FOCUS STYLES */
-.contact__channel:focus,.contact__channel-btn:focus,.btn--footer:focus,.faq__question:focus,.faq__search:focus,.nav__toggle:focus,.nav__link:focus,.nav__language-btn:focus,.nav__drawer-link:focus{outline:2px solid var(--starflex-red);outline-offset:2px}
-
-/* ACCESSIBILITY IMPROVEMENTS */
-@media (prefers-contrast: high){
-.floating-widget__main-btn,.floating-widget__menu-item{border-width:2px;border-color:#fff}
-.floating-widget__tooltip{background:#000;border-color:#fff;color:#fff}
-.btn--cta, .btn--footer{border-width:2px;box-shadow:0 0 20px var(--neon-red-shadow-bright), 0 0 40px var(--neon-red-glow-bright)}
-}
-
-/* CRITICAL LOADING OPTIMIZATIONS */
-.hero__phone-video.loading{filter:brightness(0.8) contrast(0.9);opacity:0.7}
-.hero__phone-video.loaded{filter:brightness(1.02) contrast(1.05) saturate(1.08);opacity:1}
-.hero__phone-video.error{display:none}
-.hero__phone-video.error + .hero__phone-app-image{z-index:2;display:block}
-
-/* DESKTOP PREFERS REDUCED MOTION */
-@media (prefers-reduced-motion: reduce) {
-.contact__channel:hover,.contact__channel-btn:hover{transform:none}
-.btn--cta:hover, .btn--footer:hover{transform:translateY(-1px)!important;animation:none!important;color:#ffffff!important;transition:all 0.4s ease!important}
-.btn--footer:hover span, .btn--footer:hover small{color:#ffffff!important}
-}
-
-/* DESKTOP PERFORMANCE MODE */
-.performance-mode .nav__link,.performance-mode .nav__language-btn,.performance-mode .nav__language-option,.performance-mode .nav__drawer-link,.performance-mode .nav__drawer-language-option{transition:none}
-.performance-mode .header.scrolled{box-shadow:var(--shadow-lg)}
-.performance-mode .btn{transition:none}
-.performance-mode .btn:hover{transform:none}
-.performance-mode .contact::before{display:none}
-.performance-mode .contact__channel:hover{transform:none}
-.performance-mode .faq::before{display:none}
-.performance-mode .faq__item:hover{transform:none}
-
-/* FINAL MOBILE OVERRIDES CRÍTICOS - ACTUALIZADO CON TRANSICIONES SUTILES */
-@media (max-width: 1023px){
-/* Permitir transiciones específicas para elementos interactivos */
-.nav__toggle, .nav__toggle *, .nav__toggle-line{transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)!important}
-.nav__drawer{transition:right 0.4s cubic-bezier(0.4, 0, 0.2, 1)!important}
-.nav__drawer-overlay{transition:all var(--transition-slow)!important}
-.nav__drawer-link, .nav__drawer-language-option{transition:all var(--transition)!important}
-
-.btn--cta, .btn--footer{transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)!important}
-
-.floating-widget{transition:all var(--transition-slow)!important}
-.floating-widget__menu{transition:all var(--transition-slow)!important}
-.floating-widget__main-btn, .floating-widget__menu-item{transition:all var(--transition)!important}
-
-.faq__item, .faq__question, .faq__icon, .faq__answer, .faq__search{transition:all var(--transition)!important}
-
-.contact__channel, .contact__channel-btn, .contact__channel-icon{transition:all var(--transition)!important}
-
-.download-btn{transition:all var(--transition)!important}
-
-.nav__toggle.active{background:rgba(21, 25, 34, 0.98)!important;border-color:var(--neon-primary)!important;box-shadow:0 8px 32px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 69, 105, 0.3)!important}
-
-.hero__phone,.hero__phone-container,.hero__phone-screen,.hero__phone-content,.hero__phone-video,.hero__phone-app-image{display:none!important;visibility:hidden!important;opacity:0!important}
-.hero__mobile-video{display:block!important;visibility:visible!important;opacity:1!important}
-.hero__mobile-video-player{display:block!important;visibility:visible!important;opacity:1!important}
-.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important;background-image:none!important}
-}
-
-/* CORRECCIÓN IMÁGENES CARACTERÍSTICAS DESKTOP */
-@media (min-width: 1024px) {
-.feature[data-feature="schedule"] .phone__app-image{background-image:url('../../assets/phones/Schedule.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
-.feature[data-feature="stations"] .phone__app-image{background-image:url('../../assets/phones/Stations.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
-.feature[data-feature="calendar"] .phone__app-image{background-image:url('../../assets/phones/Calendar.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
-.feature[data-feature="log"] .phone__app-image{background-image:url('../../assets/phones/Log.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
-.feature[data-feature="notifications"] .phone__app-image{background-image:url('../../assets/phones/Notifications.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
-.feature[data-feature="referrals"] .phone__app-image{background-image:url('../../assets/phones/Referrals.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
-
-/* Asegurar que las imágenes estén visibles desde el inicio */
-.phone__app-image{opacity:1!important;transform:scale(1)!important;transition:none!important}
-.feature.in-view .phone__app-image{opacity:1!important;transform:scale(1)!important}
-.phone__screen{opacity:1!important}
-.feature__phone{opacity:1!important;transform:translateY(0) scale(1)!important}
-}
-
-/* OPTIMIZACIONES CRÍTICAS FINALES CON TRANSICIONES SUTILES */
-@media (max-width: 1023px) {
-/* Forzar visibilidad de elementos críticos */
-.features,.faq,.contact,.hero{display:block!important;visibility:visible!important;opacity:1!important}
-
-/* Optimizar rendimiento de imágenes */
-img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;transform:translateZ(0);backface-visibility:hidden}
-
-/* Reducir repaints y reflows */
-.container,.hero__container,.features__grid,.faq__container,.contact__grid{contain:layout style}
-}
-
-/* TOUCH OPTIMIZATIONS CON TRANSICIONES SUTILES */
-@media (hover: none) and (pointer: coarse) {
-.btn,.nav__toggle,.nav__drawer-link,.faq__question,.contact__channel-btn,.btn--cta,.btn--footer{-webkit-tap-highlight-color:rgba(255, 69, 105, 0.2);}
-}
-
-/* SAFE AREA INSETS */
-@supports (padding: max(0px)) {
-.contact__footer{padding-bottom:max(var(--space-2xl), calc(env(safe-area-inset-bottom, 0px) + var(--space-xl)))!important}
-.floating-widget{bottom:max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px))}
-}
-
-/* FINAL CRITICAL OVERRIDES CON TRANSICIONES SUTILES */
-@media (max-width: 1023px) {
-/* Asegurar que no hay elementos ocultos por error */
-.hero__mobile-video,.hero__mobile-video-player,.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important}
-
-/* Eliminar cualquier transform que pueda causar problemas EXCEPTO elementos con transiciones permitidas */
-.hero__content,.hero__media,.feature,.feature__phone,.phone__app-image{transform:none!important}
-}
-
-/* ÚLTIMO OVERRIDE PARA GARANTIZAR FUNCIONAMIENTO */
-.features *,.faq *,.contact *,.hero *{visibility:visible!important;opacity:1!important}
-
-/* FINAL SELECTION STYLES */
-::selection {
-  color: var(--text-primary);
-  background: var(--starflex-crimson);
-}
-
-::-moz-selection {
-  color: var(--text-primary);
-  background: var(--starflex-crimson);
-}
 
 /* ===== SECCIÓN DE VIDEOS MINIMALISTA Y ESTÉTICA ===== */
 .videos {
@@ -1651,6 +1394,465 @@ background: rgba(0, 0, 0, 0.8);
 border-color: rgba(255, 255, 255, 0.2);
 background: rgba(0, 0, 0, 0.8);
 }
+}
+
+/* ===== FAQ MÓVIL OPTIMIZADO CON TRANSICIONES ===== */
+.faq{position:relative;width:100%;padding:clamp(2rem, 6vh, 4rem) var(--section-padding-x) clamp(1.5rem, 4vh, 3rem);overflow:hidden;background:var(--primary-bg)}
+
+.faq__header{position:relative;z-index:3;max-width:1000px;margin:0 auto var(--space-4xl);text-align:center}
+
+.faq__title{position:relative;margin-bottom:var(--space-2xl);font:800 clamp(2.2rem, 8vw, 3.5rem)/1.2 var(--font-primary);letter-spacing:-0.02em;color:var(--text-primary)}
+
+.faq__title::after{position:absolute;bottom:-12px;left:50%;width:100px;height:3px;content:'';background:var(--starflex-red);border-radius:2px;transform:translateX(-50%)}
+
+.faq__subtitle{max-width:800px;margin:0 auto var(--space-3xl);font:400 1.1rem/1.6 var(--font-primary);color:var(--text-secondary)}
+
+.faq__search-container{position:relative;max-width:700px;margin:0 auto var(--space-3xl)}
+
+.faq__search{width:100%;padding:var(--space-md) var(--space-lg) var(--space-md) 50px;font:500 1rem var(--font-primary);color:var(--text-primary);background:rgba(21, 25, 34, 0.95);border:1px solid rgba(255, 69, 105, 0.15);border-radius:25px;box-shadow:var(--shadow-lg);outline:none;transition:all var(--transition)}
+
+.faq__search::placeholder{font-style:italic;color:var(--text-muted);opacity:0.7}
+
+.faq__search:focus{border-color:rgba(255, 69, 105, 0.4);box-shadow:var(--shadow-xl), 0 0 0 2px rgba(255, 69, 105, 0.15)}
+
+.faq__search-icon{position:absolute;top:50%;left:18px;display:flex;align-items:center;justify-content:center;width:20px;height:20px;font:bold 12px var(--font-primary);color:white;background:var(--starflex-red);border-radius:50%;transform:translateY(-50%)}
+
+.faq__search-icon::before{content:'⌕'}
+
+.faq__container{position:relative;z-index:3;width:100%;max-width:1200px;margin:0 auto}
+
+.faq__list{display:grid;gap:var(--space-lg)}
+
+.faq__item{position:relative;background:rgba(21, 25, 34, 0.6);border:1px solid rgba(255, 255, 255, 0.08);border-radius:20px;transition:all var(--transition)}
+
+.faq__item.active{border-color:rgba(255, 69, 105, 0.3);background:rgba(21, 25, 34, 0.8);box-shadow:var(--shadow-xl)}
+
+.faq__question{position:relative;display:flex;gap:var(--space-lg);align-items:center;justify-content:space-between;width:100%;padding:var(--space-lg) var(--space-xl);font:700 1.1rem var(--font-primary);color:var(--text-primary);text-align:left;cursor:pointer;background:transparent;border:none;border-radius:20px;min-height:44px;touch-action:manipulation;transition:all var(--transition)}
+
+.faq__question:active{transform:scale(0.98);transition:all 0.1s ease}
+
+.faq__question-text{flex:1;line-height:1.4;text-align:left}
+
+.faq__icon{position:relative;display:flex;flex-shrink:0;align-items:center;justify-content:center;width:35px;height:35px;background:var(--starflex-red);border-radius:50%;box-shadow:var(--shadow-md);transition:transform var(--transition-slow)}
+
+.faq__icon::before,.faq__icon::after{position:absolute;content:'';background:white;border-radius:1px;transition:all var(--transition-slow)}
+.faq__icon::before{width:14px;height:2.5px}
+.faq__icon::after{width:2.5px;height:14px}
+
+.faq__item.active .faq__icon{transform:rotate(45deg);background:var(--starflex-crimson-bright)}
+.faq__item.active .faq__icon::after{opacity:0;transform:scale(0)}
+
+.faq__answer{max-height:0;overflow:hidden;transition:max-height var(--transition-slow), padding var(--transition-slow)}
+.faq__answer.active{max-height:600px;padding:0 var(--space-xl) var(--space-xl)}
+
+.faq__answer-content{position:relative;padding-top:var(--space-lg);border-top:1px solid rgba(255, 69, 105, 0.15)}
+
+.faq__answer-content::before{position:absolute;top:0;left:0;width:40px;height:2px;content:'';background:var(--starflex-red);border-radius:1px}
+
+.faq__answer-text{margin:0;font:500 1rem/1.7 var(--font-primary);color:var(--text-secondary)}
+
+.faq__answer-highlight{padding:3px 10px;font-weight:700;color:var(--starflex-red);background:rgba(255, 69, 105, 0.1);border-radius:8px}
+
+.faq__no-results{display:none;padding:var(--space-2xl);text-align:center;background:rgba(255, 45, 85, 0.05);border:1px solid rgba(255, 45, 85, 0.2);border-radius:20px}
+.faq__no-results.show{display:block}
+
+.faq__no-results-text{margin-bottom:var(--space-lg);font:700 1.1rem var(--font-primary);color:var(--starflex-red)}
+.faq__no-results-suggestion{font:400 1rem var(--font-primary);color:var(--text-secondary)}
+
+@media (max-width: 480px){
+.faq__search{padding:var(--space-sm) var(--space-md) var(--space-sm) 45px;font-size:0.9rem}
+.faq__search-icon{left:15px;width:18px;height:18px;font-size:11px}
+.faq__question{padding:var(--space-md) var(--space-lg);font-size:1rem;gap:var(--space-lg)}
+.faq__icon{width:30px;height:30px}
+.faq__icon::before{width:12px;height:2px}
+.faq__icon::after{width:2px;height:12px}
+.faq__answer.active{padding:0 var(--space-lg) var(--space-lg)}
+.faq__answer-text{font-size:0.95rem}
+}
+
+/* DESKTOP FAQ COMPLETO */
+@media (min-width: 1024px) {
+.faq{padding:clamp(4rem, 12vh, 8rem) var(--section-padding-x) clamp(3rem, 8vh, 6rem)}
+.faq::before{position:absolute;inset:0;z-index:1;content:'';pointer-events:none;background:radial-gradient(ellipse at 25% 25%, var(--secondary-bg) 0%, transparent 70%);opacity:0.5}
+.faq__title{font-size:clamp(3rem, 7vw, 5rem);line-height:1.1}
+.faq__subtitle{font-size:1.3rem;margin:0 auto var(--space-4xl)}
+.faq__search{padding:var(--space-lg) var(--space-xl) var(--space-lg) 60px;font-size:1.1rem;transition:border-color 0.2s ease, box-shadow 0.2s ease}
+.faq__search:focus{border-color:rgba(255, 69, 105, 0.4);box-shadow:var(--shadow-xl), 0 0 0 2px rgba(255, 69, 105, 0.15)}
+.faq__search-icon{left:22px;width:24px;height:24px;font-size:14px}
+.faq__item{transition:border-color 0.2s ease, box-shadow 0.2s ease}
+.faq__item:hover{border-color:rgba(255, 69, 105, 0.2);box-shadow:var(--shadow-lg)}
+.faq__question{padding:var(--space-xl) var(--space-2xl);font-size:1.2rem;gap:var(--space-xl);transition:color 0.2s ease}
+.faq__question:hover{color:var(--starflex-red)}
+.faq__icon{width:40px;height:40px;transition:transform 0.2s ease}
+.faq__icon::before{width:16px;height:3px}
+.faq__icon::after{width:3px;height:16px;transition:opacity 0.2s ease}
+.faq__item.active .faq__icon{transform:rotate(45deg)}
+.faq__answer{transition:max-height 0.2s ease, padding 0.2s ease}
+.faq__answer.active{padding:0 var(--space-2xl) var(--space-2xl)}
+.faq__answer-text{font-size:1.1rem}
+.faq__list{gap:var(--space-xl)}
+.faq__question:focus,.faq__search:focus{outline:2px solid var(--starflex-red);outline-offset:3px;border-radius:8px}
+}
+
+/* ===== CONTACT MÓVIL OPTIMIZADO CON TRANSICIONES ===== */
+.contact{position:relative;width:100%;padding:var(--section-padding-y) var(--section-padding-x);background:var(--primary-bg);overflow:hidden}
+
+.contact__bg-effects{position:absolute;inset:0;z-index:1;pointer-events:none}
+
+.contact__orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:0.3}
+.contact__orb--1{top:20%;left:10%;width:200px;height:200px;background:radial-gradient(circle, var(--starflex-crimson) 0%, transparent 70%)}
+.contact__orb--2{bottom:30%;right:15%;width:150px;height:150px;background:radial-gradient(circle, var(--starflex-red) 0%, transparent 70%)}
+.contact__orb--3{top:60%;left:50%;width:100px;height:100px;background:radial-gradient(circle, var(--starflex-orange) 0%, transparent 70%)}
+
+.contact__header{position:relative;z-index:3;margin-bottom:var(--space-4xl);text-align:center}
+
+.contact__badge{display:inline-flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-lg);margin-bottom:var(--space-xl);font-size:0.8rem;font-weight:600;color:var(--starflex-red);text-transform:uppercase;letter-spacing:1px;background:rgba(255, 45, 85, 0.1);border:1px solid rgba(255, 45, 85, 0.2);border-radius:20px}
+
+.contact__title{margin-bottom:var(--space-xl);font-size:clamp(2.5rem, 8vw, 5rem);font-weight:800;line-height:0.9;letter-spacing:-0.02em}
+
+.contact__title--main{display:block;margin-bottom:var(--space-sm);color:var(--text-primary)}
+.contact__title--highlight{display:block;background:linear-gradient(135deg, var(--starflex-red) 0%, var(--starflex-crimson-glow) 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+.contact__subtitle{font-size:1.1rem;line-height:1.6;color:var(--text-secondary);max-width:600px;margin:0 auto}
+
+/* GRID MEJORADO PARA CARDS MÁS ANCHAS EN MOBILE CON TRANSICIONES */
+.contact__grid{position:relative;z-index:3;display:grid!important;gap:var(--space-lg)!important;grid-template-columns:1fr!important;width:100%;max-width:420px!important;margin:0 auto var(--space-4xl)!important;justify-items:center!important;visibility:visible!important;opacity:1!important}
+
+.contact__channel{display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important;padding:var(--space-xl) var(--space-lg);background:rgba(255, 255, 255, 0.02);border:1px solid rgba(255, 255, 255, 0.05);border-radius:16px;width:100%!important;max-width:100%!important;margin:0 auto!important;visibility:visible!important;opacity:1!important;transform:none!important;transition:all var(--transition)}
+
+.contact__channel:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease}
+
+.contact__channel-icon{display:flex!important;align-items:center!important;justify-content:center!important;width:60px!important;height:60px!important;margin:0 auto var(--space-md) auto!important;border-radius:20px!important;box-shadow:var(--shadow-lg)!important;flex-shrink:0!important;position:relative!important;visibility:visible!important;opacity:1!important;transform:none!important;transition:all var(--transition)}
+
+.contact__channel:active .contact__channel-icon{transform:scale(0.95);transition:all 0.1s ease}
+
+.contact__channel-icon svg{display:block!important;visibility:visible!important;opacity:1!important;width:28px!important;height:28px!important;color:white!important;filter:drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))!important;margin:0 auto!important;position:relative!important;z-index:2!important;transition:all var(--transition)}
+
+.contact__channel:active .contact__channel-icon svg{transform:scale(0.95)}
+
+.contact__channel-content{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;width:100%!important;flex:1;visibility:visible!important;opacity:1!important;transform:none!important}
+
+.contact__channel-title{margin-bottom:var(--space-md);font-size:1.2rem;font-weight:700;color:var(--text-primary);text-align:center!important;width:100%!important;visibility:visible!important;opacity:1!important;transform:none!important;transition:all var(--transition)}
+
+.contact__channel-description{margin-bottom:var(--space-xl);font-size:0.95rem;line-height:1.5;color:var(--text-muted);text-align:center!important;width:100%!important;visibility:visible!important;opacity:1!important;transform:none!important;transition:all var(--transition)}
+
+.contact__channel-btn{display:inline-flex!important;align-items:center!important;gap:var(--space-sm)!important;padding:var(--space-md) var(--space-lg);font-size:0.9rem;font-weight:600;color:var(--text-primary);text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;background:rgba(255, 255, 255, 0.05);border:1px solid rgba(255, 255, 255, 0.1);border-radius:20px;min-height:44px;touch-action:manipulation;margin:0 auto!important;justify-content:center!important;visibility:visible!important;opacity:1!important;transform:none!important;transition:all var(--transition)}
+
+.contact__channel-btn:active{transform:translateY(-1px) scale(0.98);transition:all 0.1s ease}
+
+.contact__channel-arrow{font-weight:bold;visibility:visible!important;opacity:1!important;transform:none!important;transition:all var(--transition)}
+
+.contact__channel[data-channel="whatsapp"] .contact__channel-icon{background:linear-gradient(135deg, #25d366 0%, #128c7e 100%)}
+.contact__channel[data-channel="instagram"] .contact__channel-icon{background:linear-gradient(135deg, #e1306c 0%, #fd1d1d 50%, #fcb045 100%)}
+.contact__channel[data-channel="facebook"] .contact__channel-icon{background:linear-gradient(135deg, #1877f2 0%, #42a5f5 100%)}
+.contact__channel[data-channel="tiktok"] .contact__channel-icon{background:linear-gradient(135deg, #ff0050 0%, #000 100%)}
+.contact__channel[data-channel="telegram"] .contact__channel-icon{background:linear-gradient(135deg, #0088cc 0%, #229ed9 100%)}
+.contact__channel[data-channel="email"] .contact__channel-icon{background:linear-gradient(135deg, var(--starflex-crimson) 0%, var(--starflex-crimson-bright) 100%)}
+
+.contact__footer{display:block!important;padding:var(--space-xl) var(--section-padding-x)!important;border-top:1px solid rgba(255, 255, 255, 0.05);margin-top:var(--space-xl)!important;min-height:120px!important;padding-bottom:max(var(--space-2xl), calc(env(safe-area-inset-bottom, 0px) + var(--space-xl)))!important;visibility:visible!important;opacity:1!important;transform:none!important;position:relative!important;z-index:10!important}
+
+.contact__footer-content{display:flex!important;flex-direction:column!important;gap:var(--space-lg)!important;align-items:center!important;text-align:center!important;max-width:1200px;margin:0 auto;visibility:visible!important;opacity:1!important;transform:none!important;justify-content:center!important}
+
+.contact__footer-text{display:block!important;visibility:visible!important;opacity:1!important;transform:none!important;text-align:center!important}
+
+.contact__footer-text h3{margin-bottom:var(--space-xs);font-size:1rem!important;font-weight:600;color:var(--text-primary);display:block!important;visibility:visible!important;opacity:1!important;text-align:center!important}
+
+.contact__footer-text p{font-size:0.9rem!important;color:var(--text-muted);display:block!important;visibility:visible!important;opacity:1!important;text-align:center!important}
+
+/* BOTÓN FOOTER CON ANIMACIONES SUTILES ROJIZAS */
+.btn--footer{
+display:flex!important;
+flex-direction:column!important;
+align-items:center!important;
+gap:var(--space-xs);
+width:100%!important;
+max-width:100%!important;
+padding:var(--space-lg) var(--space-4xl)!important;
+font-weight:700;
+color:#ffffff!important;
+text-decoration:none;
+background:linear-gradient(135deg, var(--neon-red-base) 0%, var(--neon-red-soft) 100%);
+border:1px solid var(--neon-red-soft);
+border-radius:16px;
+box-shadow:0 0 15px var(--neon-red-shadow-soft), 0 0 30px var(--neon-red-glow-soft);
+min-height:44px;
+touch-action:manipulation;
+margin:0 auto!important;
+justify-content:center!important;
+visibility:visible!important;
+opacity:1!important;
+transform:none!important;
+transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+position:relative;
+overflow:hidden;
+}
+
+/* EFECTO DE BRILLO SUTIL PARA FOOTER */
+.btn--footer::before{
+content:'';
+position:absolute;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:linear-gradient(45deg, transparent 30%, var(--neon-red-glow-soft) 40%, var(--neon-red-glow-medium) 50%, var(--neon-red-glow-soft) 60%, transparent 70%);
+opacity:0;
+transition:opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+border-radius:14px;
+pointer-events:none;
+z-index:1;
+}
+
+.btn--footer:active{transform:translateY(0) scale(0.98);transition:all 0.1s ease}
+
+.btn--footer span{position:relative;z-index:2;font-size:1.1rem!important;font-weight:800;letter-spacing:1px;text-align:center!important;color:#ffffff!important;line-height:1.2;margin-bottom:2px}
+.btn--footer small{position:relative;z-index:2;font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;opacity:0.9;text-align:center!important;color:#ffffff!important}
+
+/* MEDIA QUERIES PARA CONTACT CARDS */
+@media (min-width: 768px){
+.contact__grid{grid-template-columns:repeat(2, 1fr)!important;max-width:900px!important}
+.contact__subtitle{font-size:1.2rem;max-width:700px}
+.contact__channel{padding:var(--space-xl) var(--space-lg)}
+.contact__channel-icon{width:70px!important;height:70px!important}
+.contact__channel-icon svg{width:32px!important;height:32px!important}
+.contact__channel-title{font-size:1.3rem}
+.contact__channel-description{font-size:1rem}
+}
+
+@media (max-width: 480px){
+.contact__grid{max-width:380px!important}
+.contact__channel{padding:var(--space-lg) var(--space-md)}
+.contact__channel-icon{width:60px!important;height:60px!important;margin:0 auto var(--space-md) auto!important}
+.contact__channel-icon svg{width:28px!important;height:28px!important}
+.contact__footer{padding:var(--space-lg) var(--space-md)!important;margin-top:var(--space-lg)!important}
+.contact__footer-content{gap:var(--space-md)!important;padding:0!important}
+.btn--footer{max-width:100%!important;font-size:1rem!important;padding:var(--space-xl) var(--space-5xl)!important}
+.btn--footer span{font-size:1.2rem!important}
+.btn--footer small{font-size:1rem!important}
+}
+
+/* DESKTOP CONTACT COMPLETO - HOVER DEL BOTÓN FOOTER CON ANIMACIONES SUTILES */
+@media (min-width: 1024px) {
+.contact{background:linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 100%)}
+.contact::before{position:absolute;inset:0;content:'';background:radial-gradient(ellipse at 30% 20%, rgba(255, 69, 105, 0.02) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(184, 0, 46, 0.015) 0%, transparent 60%);pointer-events:none}
+.contact__grid{grid-template-columns:repeat(3, 1fr)!important;gap:var(--space-2xl)!important;max-width:1200px!important}
+.contact__subtitle{font-size:1.25rem;max-width:800px}
+.contact__channel{padding:var(--space-2xl);cursor:pointer;transition:all 0.2s ease}
+.contact__channel:hover{background:rgba(255, 255, 255, 0.04);border-color:rgba(255, 255, 255, 0.1);box-shadow:var(--shadow-xl);transform:translateY(-3px)}
+.contact__channel-icon{width:75px!important;height:75px!important}
+.contact__channel-icon svg{width:34px!important;height:34px!important}
+.contact__channel:hover .contact__channel-icon{box-shadow:var(--shadow-2xl);transform:scale(1.05)}
+.contact__channel-title{font-size:1.4rem}
+.contact__channel:hover .contact__channel-title{color:var(--starflex-crimson)}
+.contact__channel:hover .contact__channel-description{color:var(--text-secondary)}
+.contact__channel-btn{transition:all 0.2s ease}
+.contact__channel-btn:hover{color:white;background:var(--starflex-crimson);border-color:var(--starflex-crimson);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.contact__channel-btn:hover .contact__channel-arrow{transform:translateX(2px)}
+.contact__channel-arrow{transition:transform 0.2s ease}
+.contact__footer-content{flex-direction:row!important;justify-content:space-between!important;text-align:left!important}
+
+/* BOTÓN FOOTER DESKTOP - HOVER CON ANIMACIONES SUTILES ROJIZAS */
+.btn--footer{
+width:auto!important;
+min-width:200px!important;
+transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn--footer:hover{
+box-shadow:0 0 25px var(--neon-red-shadow-bright), 0 0 50px var(--neon-red-glow-bright), 0 6px 20px rgba(0, 0, 0, 0.3);
+transform:translateY(-2px);
+background:linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);
+border-color:var(--neon-red-medium);
+color:#ffffff!important;
+transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn--footer:hover::before{opacity:0.6}
+.btn--footer span, .btn--footer small{position:relative;z-index:2;color:#ffffff!important}
+.btn--footer:hover span, .btn--footer:hover small{color:#ffffff!important}
+}
+
+/* ===== MOBILE FIXES CRÍTICOS CON TRANSICIONES MEJORADAS ===== */
+.features,.faq,.contact{display:block!important;visibility:visible!important;opacity:1!important;position:relative;z-index:auto}
+
+.features *,.faq *,.contact *{visibility:visible!important}
+
+html,body{overflow-x:hidden}
+
+/* PERFORMANCE OPTIMIZATIONS MÓVIL - ACTUALIZADO CON TRANSICIONES SUTILES */
+@media (max-width: 1023px) {
+/* Permitir transiciones sutiles en móvil para elementos interactivos */
+.nav__toggle, .nav__toggle-line, .nav__drawer, .nav__drawer-overlay, .nav__drawer-link, .nav__drawer-language-option{transition-duration:var(--transition)!important}
+.btn--cta, .btn--footer{transition-duration:0.8s!important}
+.floating-widget, .floating-widget__menu, .floating-widget__main-btn, .floating-widget__menu-item{transition-duration:var(--transition)!important}
+.faq__question, .faq__icon, .faq__answer, .faq__search{transition-duration:var(--transition)!important}
+.contact__channel, .contact__channel-btn, .contact__channel-icon{transition-duration:var(--transition)!important}
+.download-btn{transition-duration:var(--transition)!important}
+
+/* Deshabilitar animaciones complejas pero mantener transiciones sutiles */
+*:not(.nav__toggle):not(.nav__toggle-line):not(.btn--cta):not(.btn--footer):not(.floating-widget):not(.floating-widget__menu):not(.floating-widget__main-btn):not(.floating-widget__menu-item):not(.faq__question):not(.faq__icon):not(.faq__answer):not(.faq__search):not(.contact__channel):not(.contact__channel-btn):not(.contact__channel-icon):not(.download-btn):not(.nav__drawer):not(.nav__drawer-overlay):not(.nav__drawer-link):not(.nav__drawer-language-option){animation:none!important}
+
+/* EXCEPCIÓN: Permitir animación del botón hamburguesa */
+.nav__toggle.active .nav__toggle-line:nth-child(1){transform:rotate(45deg) translate(7px, 7px)!important}
+.nav__toggle.active .nav__toggle-line:nth-child(1)::before{transform:scaleX(1.1);background:var(--neon-primary-bright)}
+.nav__toggle.active .nav__toggle-line:nth-child(2){opacity:0!important;transform:scale(0) rotate(180deg)!important}
+.nav__toggle.active .nav__toggle-line:nth-child(3){transform:rotate(-45deg) translate(7px, -7px)!important}
+
+/* EXCEPCIÓN: Permitir efectos sutiles en botones CTA y FOOTER */
+.btn--cta::before{animation:none!important}
+.btn--cta:active, .btn--footer:active{transform:translateY(-1px) scale(0.98)!important;transition:all 0.1s ease!important;color:#ffffff!important}
+
+/* Efectos táctiles sutiles para móvil */
+.nav__toggle:active{transform:translateY(-1px) scale(0.95)!important}
+.nav__drawer-link:active{transform:scale(0.98)!important}
+.nav__drawer-language-option:active{transform:scale(0.95)!important}
+.floating-widget__main-btn:active{transform:scale(0.95)!important}
+.floating-widget__menu-item:active{transform:scale(0.95)!important}
+.faq__question:active{transform:scale(0.98)!important}
+.contact__channel:active{transform:translateY(-1px) scale(0.98)!important}
+.contact__channel-btn:active{transform:translateY(-1px) scale(0.98)!important}
+.download-btn:active{transform:translateY(-1px) scale(0.98)!important}
+
+.hero__phone,.hero__phone-container,.hero__phone-screen,.hero__phone-content,.hero__phone-video,.hero__phone-app-image{display:none!important;visibility:hidden!important;opacity:0!important}
+.hero__mobile-video{display:block!important;visibility:visible!important;opacity:1!important}
+.hero__mobile-video-player{display:block!important;visibility:visible!important;opacity:1!important}
+.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important;background-image:none!important}
+}
+
+.performance-mode *{animation:none!important;transition:none!important;transform:none!important;will-change:auto!important}
+
+/* EXCEPCIÓN PARA PERFORMANCE MODE - Permitir hamburguesa y CTA con animaciones sutiles */
+.performance-mode .nav__toggle, .performance-mode .nav__toggle-line{transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)!important}
+.performance-mode .btn--cta, .performance-mode .btn--footer{transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)!important}
+
+@media (prefers-reduced-motion: reduce){
+*{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+/* Mantener hamburguesa y CTA incluso con reduced motion pero con transición más rápida */
+.nav__toggle, .nav__toggle-line{transition:all 0.2s ease!important}
+.btn--cta, .btn--footer{transition:all 0.4s ease!important}
+}
+
+/* CRITICAL FOCUS STYLES */
+.contact__channel:focus,.contact__channel-btn:focus,.btn--footer:focus,.faq__question:focus,.faq__search:focus,.nav__toggle:focus,.nav__link:focus,.nav__language-btn:focus,.nav__drawer-link:focus{outline:2px solid var(--starflex-red);outline-offset:2px}
+
+/* ACCESSIBILITY IMPROVEMENTS */
+@media (prefers-contrast: high){
+.floating-widget__main-btn,.floating-widget__menu-item{border-width:2px;border-color:#fff}
+.floating-widget__tooltip{background:#000;border-color:#fff;color:#fff}
+.btn--cta, .btn--footer{border-width:2px;box-shadow:0 0 20px var(--neon-red-shadow-bright), 0 0 40px var(--neon-red-glow-bright)}
+}
+
+/* CRITICAL LOADING OPTIMIZATIONS */
+.hero__phone-video.loading{filter:brightness(0.8) contrast(0.9);opacity:0.7}
+.hero__phone-video.loaded{filter:brightness(1.02) contrast(1.05) saturate(1.08);opacity:1}
+.hero__phone-video.error{display:none}
+.hero__phone-video.error + .hero__phone-app-image{z-index:2;display:block}
+
+/* DESKTOP PREFERS REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+.contact__channel:hover,.contact__channel-btn:hover{transform:none}
+.btn--cta:hover, .btn--footer:hover{transform:translateY(-1px)!important;animation:none!important;color:#ffffff!important;transition:all 0.4s ease!important}
+.btn--footer:hover span, .btn--footer:hover small{color:#ffffff!important}
+}
+
+/* DESKTOP PERFORMANCE MODE */
+.performance-mode .nav__link,.performance-mode .nav__language-btn,.performance-mode .nav__language-option,.performance-mode .nav__drawer-link,.performance-mode .nav__drawer-language-option{transition:none}
+.performance-mode .header.scrolled{box-shadow:var(--shadow-lg)}
+.performance-mode .btn{transition:none}
+.performance-mode .btn:hover{transform:none}
+.performance-mode .contact::before{display:none}
+.performance-mode .contact__channel:hover{transform:none}
+.performance-mode .faq::before{display:none}
+.performance-mode .faq__item:hover{transform:none}
+
+/* FINAL MOBILE OVERRIDES CRÍTICOS - ACTUALIZADO CON TRANSICIONES SUTILES */
+@media (max-width: 1023px){
+/* Permitir transiciones específicas para elementos interactivos */
+.nav__toggle, .nav__toggle *, .nav__toggle-line{transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)!important}
+.nav__drawer{transition:right 0.4s cubic-bezier(0.4, 0, 0.2, 1)!important}
+.nav__drawer-overlay{transition:all var(--transition-slow)!important}
+.nav__drawer-link, .nav__drawer-language-option{transition:all var(--transition)!important}
+
+.btn--cta, .btn--footer{transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)!important}
+
+.floating-widget{transition:all var(--transition-slow)!important}
+.floating-widget__menu{transition:all var(--transition-slow)!important}
+.floating-widget__main-btn, .floating-widget__menu-item{transition:all var(--transition)!important}
+
+.faq__item, .faq__question, .faq__icon, .faq__answer, .faq__search{transition:all var(--transition)!important}
+
+.contact__channel, .contact__channel-btn, .contact__channel-icon{transition:all var(--transition)!important}
+
+.download-btn{transition:all var(--transition)!important}
+
+.nav__toggle.active{background:rgba(21, 25, 34, 0.98)!important;border-color:var(--neon-primary)!important;box-shadow:0 8px 32px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 69, 105, 0.3)!important}
+
+.hero__phone,.hero__phone-container,.hero__phone-screen,.hero__phone-content,.hero__phone-video,.hero__phone-app-image{display:none!important;visibility:hidden!important;opacity:0!important}
+.hero__mobile-video{display:block!important;visibility:visible!important;opacity:1!important}
+.hero__mobile-video-player{display:block!important;visibility:visible!important;opacity:1!important}
+.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important;background-image:none!important}
+}
+
+/* CORRECCIÓN IMÁGENES CARACTERÍSTICAS DESKTOP */
+@media (min-width: 1024px) {
+.feature[data-feature="schedule"] .phone__app-image{background-image:url('../../assets/phones/Schedule.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
+.feature[data-feature="stations"] .phone__app-image{background-image:url('../../assets/phones/Stations.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
+.feature[data-feature="calendar"] .phone__app-image{background-image:url('../../assets/phones/Calendar.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
+.feature[data-feature="log"] .phone__app-image{background-image:url('../../assets/phones/Log.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
+.feature[data-feature="notifications"] .phone__app-image{background-image:url('../../assets/phones/Notifications.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
+.feature[data-feature="referrals"] .phone__app-image{background-image:url('../../assets/phones/Referrals.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
+
+/* Asegurar que las imágenes estén visibles desde el inicio */
+.phone__app-image{opacity:1!important;transform:scale(1)!important;transition:none!important}
+.feature.in-view .phone__app-image{opacity:1!important;transform:scale(1)!important}
+.phone__screen{opacity:1!important}
+.feature__phone{opacity:1!important;transform:translateY(0) scale(1)!important}
+}
+
+/* OPTIMIZACIONES CRÍTICAS FINALES CON TRANSICIONES SUTILES */
+@media (max-width: 1023px) {
+/* Forzar visibilidad de elementos críticos */
+.features,.faq,.contact,.hero{display:block!important;visibility:visible!important;opacity:1!important}
+
+/* Optimizar rendimiento de imágenes */
+img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;transform:translateZ(0);backface-visibility:hidden}
+
+/* Reducir repaints y reflows */
+.container,.hero__container,.features__grid,.faq__container,.contact__grid{contain:layout style}
+}
+
+/* TOUCH OPTIMIZATIONS CON TRANSICIONES SUTILES */
+@media (hover: none) and (pointer: coarse) {
+.btn,.nav__toggle,.nav__drawer-link,.faq__question,.contact__channel-btn,.btn--cta,.btn--footer{-webkit-tap-highlight-color:rgba(255, 69, 105, 0.2);}
+}
+
+/* SAFE AREA INSETS */
+@supports (padding: max(0px)) {
+.contact__footer{padding-bottom:max(var(--space-2xl), calc(env(safe-area-inset-bottom, 0px) + var(--space-xl)))!important}
+.floating-widget{bottom:max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px))}
+}
+
+/* FINAL CRITICAL OVERRIDES CON TRANSICIONES SUTILES */
+@media (max-width: 1023px) {
+/* Asegurar que no hay elementos ocultos por error */
+.hero__mobile-video,.hero__mobile-video-player,.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important}
+
+/* Eliminar cualquier transform que pueda causar problemas EXCEPTO elementos con transiciones permitidas */
+.hero__content,.hero__media,.feature,.feature__phone,.phone__app-image{transform:none!important}
+}
+
+/* ÚLTIMO OVERRIDE PARA GARANTIZAR FUNCIONAMIENTO */
+.features *,.faq *,.contact *,.hero *{visibility:visible!important;opacity:1!important}
+
+/* FINAL SELECTION STYLES */
+::selection {
+  color: var(--text-primary);
+  background: var(--starflex-crimson);
+}
+
+::-moz-selection {
+  color: var(--text-primary);
+  background: var(--starflex-crimson);
 }
 
 /* ===== ESTILOS PARA ENLACES LEGALES DEL FOOTER ===== */
@@ -2016,201 +2218,6 @@ background: rgba(0, 0, 0, 0.8);
     background: linear-gradient(135deg, #ff3399 0%, #ff6666 100%);
 }
 
-/* ===== BOTÓN CTA DEL DRAWER MÓVIL ===== */
-.nav__drawer-cta {
-    padding: var(--space-lg) var(--space-xl);
-    border-bottom: 1px solid var(--border-subtle);
-    flex-shrink: 0;
-    order: -1; /* Aparece después del selector de idioma */
-}
-
-.nav__drawer-cta-btn {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    width: 100% !important;
-    padding: var(--space-lg) var(--space-xl);
-    font-family: var(--font-primary);
-    font-weight: 700;
-    color: #ffffff !important;
-    text-decoration: none;
-    background: linear-gradient(135deg, var(--neon-red-base) 0%, var(--neon-red-soft) 100%);
-    border: 1px solid var(--neon-red-soft);
-    border-radius: 16px;
-    box-shadow: 0 0 15px var(--neon-red-shadow-soft), 0 0 30px var(--neon-red-glow-soft), 0 4px 12px rgba(0, 0, 0, 0.25);
-    text-shadow: 0 0 8px var(--neon-red-glow-soft);
-    min-height: 44px;
-    touch-action: manipulation;
-    margin: 0 auto !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    transform: none !important;
-    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    position: relative;
-    overflow: hidden;
-}
-
-/* EFECTO DE BRILLO SUTIL PARA EL BOTÓN CTA DEL DRAWER */
-.nav__drawer-cta-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, transparent 30%, var(--neon-red-glow-soft) 40%, var(--neon-red-glow-medium) 50%, var(--neon-red-glow-soft) 60%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    border-radius: 14px;
-    pointer-events: none;
-    z-index: 1;
-}
-
-.nav__drawer-cta-content {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    flex: 1;
-    position: relative;
-    z-index: 2;
-}
-
-.nav__drawer-cta-main {
-    font-size: 1.1rem !important;
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-align: left !important;
-    color: #ffffff !important;
-    line-height: 1.2;
-    margin-bottom: 2px;
-}
-
-.nav__drawer-cta-trial {
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    opacity: 0.9;
-    color: #ffffff !important;
-    text-align: left !important;
-}
-
-.nav__drawer-cta-icon {
-    width: 24px !important;
-    height: 24px !important;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 2;
-    opacity: 0.9;
-    transition: all var(--transition);
-}
-
-.nav__drawer-cta-icon svg {
-    width: 100% !important;
-    height: 100% !important;
-    color: #ffffff !important;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-/* EFECTOS TÁCTILES PARA MÓVIL */
-.nav__drawer-cta-btn:active {
-    transform: translateY(-1px) scale(0.98) !important;
-    transition: all 0.1s ease !important;
-    box-shadow: 0 0 20px var(--neon-red-shadow-medium), 0 0 40px var(--neon-red-glow-medium), 0 6px 18px rgba(0, 0, 0, 0.3);
-}
-
-.nav__drawer-cta-btn:active .nav__drawer-cta-icon {
-    transform: scale(0.95);
-}
-
-/* EFECTOS HOVER PARA DESKTOP */
-@media (min-width: 1024px) {
-    .nav__drawer-cta-btn:hover {
-        transform: translateY(-2px) scale(1.01);
-        background: linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);
-        box-shadow: 0 0 25px var(--neon-red-shadow-bright), 0 0 50px var(--neon-red-glow-bright), 0 8px 20px rgba(0, 0, 0, 0.35);
-        text-shadow: 0 0 12px var(--neon-red-glow-medium), 0 0 24px var(--neon-red-shadow-medium);
-        border-color: var(--neon-red-medium);
-        color: #ffffff !important;
-        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-
-    .nav__drawer-cta-btn:hover::before {
-        opacity: 0.6;
-    }
-
-    .nav__drawer-cta-btn:hover .nav__drawer-cta-icon {
-        transform: scale(1.1);
-        opacity: 1;
-    }
-
-    .nav__drawer-cta-btn:hover .nav__drawer-cta-main,
-    .nav__drawer-cta-btn:hover .nav__drawer-cta-trial {
-        color: #ffffff !important;
-    }
-}
-
-/* RESPONSIVE PARA PANTALLAS PEQUEÑAS */
-@media (max-width: 480px) {
-    .nav__drawer-cta {
-        padding: var(--space-md) var(--space-lg);
-    }
-
-    .nav__drawer-cta-btn {
-        padding: var(--space-md) var(--space-lg);
-    }
-
-    .nav__drawer-cta-main {
-        font-size: 1rem !important;
-    }
-
-    .nav__drawer-cta-trial {
-        font-size: 0.8rem;
-    }
-
-    .nav__drawer-cta-icon {
-        width: 20px !important;
-        height: 20px !important;
-    }
-}
-
-/* MODO RENDIMIENTO - DESHABILITAR ANIMACIONES COMPLEJAS */
-.performance-mode .nav__drawer-cta-btn {
-    transition: all 0.2s ease !important;
-    animation: none !important;
-}
-
-.performance-mode .nav__drawer-cta-btn::before {
-    display: none !important;
-}
-
-/* MODO REDUCIDO DE MOVIMIENTO */
-@media (prefers-reduced-motion: reduce) {
-    .nav__drawer-cta-btn {
-        transition: all 0.2s ease !important;
-        animation: none !important;
-    }
-
-    .nav__drawer-cta-btn::before {
-        display: none !important;
-    }
-
-    .nav__drawer-cta-btn:hover {
-        transform: none !important;
-    }
-
-    .nav__drawer-cta-btn:active {
-        transform: scale(0.98) !important;
-    }
-}
-
-/* MODO ALTO CONTRASTE */
-@media (prefers-contrast: high) {
-    .nav__drawer-cta-btn {
-        border-width: 2px;
-        box-shadow: 0 0 20px var(--neon-red-shadow-bright), 0 0 40px var(--neon-red-glow-bright);
-    }
-}
 /* ===== MEJORAS PARA EL LOGO EN MÓVIL - EVENTOS TÁCTILES OPTIMIZADOS ===== */
 
 /* Logo del header principal - Mejoras táctiles */
@@ -2425,6 +2432,5 @@ background: rgba(0, 0, 0, 0.8);
         transform: scale(0.98) !important;
     }
 }
-
 
 
