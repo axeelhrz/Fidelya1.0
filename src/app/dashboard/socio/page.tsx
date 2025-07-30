@@ -158,6 +158,7 @@ export default function OptimizedSocioDashboard() {
             stats={consolidatedStats}
             onQuickScan={handleQuickScan}
             onViewProfile={handleViewProfile}
+            onLogout={handleLogoutClick}
           />
 
           {/* Ultra Optimized Tab System */}

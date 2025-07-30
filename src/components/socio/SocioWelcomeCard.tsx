@@ -12,7 +12,8 @@ import {
   Star,
   Activity,
   QrCode,
-  Eye
+  Eye,
+  LogOut
 } from 'lucide-react';
 
 interface SocioWelcomeCardProps {
@@ -35,6 +36,7 @@ interface SocioWelcomeCardProps {
   };
   onQuickScan: () => void;
   onViewProfile: () => void;
+  onLogout: () => void;
 }
 
 const SocioWelcomeCard = memo<SocioWelcomeCardProps>(({ 
@@ -42,7 +44,8 @@ const SocioWelcomeCard = memo<SocioWelcomeCardProps>(({
   socio, 
   stats, 
   onQuickScan, 
-  onViewProfile 
+  onViewProfile,
+  onLogout
 }) => {
   const getEstadoColor = (estado?: string) => {
     switch (estado) {
@@ -138,7 +141,7 @@ const SocioWelcomeCard = memo<SocioWelcomeCardProps>(({
               </span>
             </div>
             
-            {/* Settings and Profile buttons */}
+            {/* Action buttons */}
             <div className="flex items-center gap-2">
               <motion.button
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -163,6 +166,19 @@ const SocioWelcomeCard = memo<SocioWelcomeCardProps>(({
                 title="Ver perfil"
               >
                 <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+              </motion.button>
+
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.7 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onLogout}
+                className="p-2.5 sm:p-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl sm:rounded-2xl transition-all duration-200"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
               </motion.button>
             </div>
           </div>
@@ -200,7 +216,7 @@ const SocioWelcomeCard = memo<SocioWelcomeCardProps>(({
           </div>
         </div>
         
-        <div className="text-center bg-gradient-to-br from-purple-50 to-purple-100 p-4 sm:p-6 rounded-2xl border border-purple-200">
+        <div className="text-center bg-gradient-to-br from-purple-50 to-purple-100 p-4 sm:p-6 rounded-2xl border border-emerald-200">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
             <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
