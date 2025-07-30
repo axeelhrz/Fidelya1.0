@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    
+    <!-- SEO -->
+    <title data-translate="terms-page-title">Terms and Conditions - StarFlex</title>
+    <meta name="description" data-translate="terms-page-description" content="Terms and Conditions of StarFlex - Intelligent automation for Amazon Flex drivers">
+    <meta name="keywords" content="StarFlex, terms and conditions, Amazon Flex, automation, legal terms">
+    <meta name="author" content="Starflex">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://starflexapp.com/terms" id="canonical-link">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" data-translate="terms-og-title" content="Terms and Conditions - StarFlex">
+    <meta property="og:description" data-translate="terms-og-description" content="Terms and Conditions of StarFlex - Intelligent automation for Amazon Flex drivers">
+    <meta property="og:image" content="https://starflexapp.com/assets/og-starflex-hero.jpg">
+    <meta property="og:url" content="https://starflexapp.com/terms" id="og-url">
+    <meta property="og:type" content="website">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" href="./assets/icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/icon.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Mobile optimizations -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    
+    <style>
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Variables CSS con tonos rojizos reducidos */
+        :root {
+            --primary-color: #e91e63;
+            --primary-light: #f06292;
+            --primary-dark: #c2185b;
+            --secondary-color: #9c27b0;
+            --accent-color: #ff4081;
+            --background-dark: #0a0a0a;
+            --background-darker: #050505;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --text-muted: #808080;
+            --border-color: #333333;
+            --card-background: #1a1a1a;
+            --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            --gradient-accent: linear-gradient(135deg, var(--primary-light) 0%, var(--accent-color) 100%);
+        }
+
+        /* Estilos base */
+        body {
+            font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Efectos de fondo */
+        .bg-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .bg-effects::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 20%, rgba(233, 30, 99, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(156, 39, 176, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 60%, rgba(240, 98, 146, 0.05) 0%, transparent 50%);
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+            padding: 1rem 0;
+        }
+
+        .header__container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--gradient-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(233, 30, 99, 0.3);
+        }
+
+        .back-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Contenido principal */
+        .main-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 3rem;
+            padding: 1rem;
+            background: var(--card-background);
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* Secciones */
+        .section {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--card-background);
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--gradient-primary);
+        }
+
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .section-content {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .section-content p {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-content ul {
+            margin: 1.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .section-content li {
+            margin-bottom: 0.75rem;
+            position: relative;
+        }
+
+        .section-content li::marker {
+            color: var(--primary-color);
+        }
+
+        .highlight {
+            color: var(--primary-light);
+            font-weight: 600;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 4rem;
+            padding: 2rem;
+            text-align: center;
+            background: var(--card-background);
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .contact-info {
+            color: var(--text-secondary);
+        }
+
+        .contact-email {
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .contact-email:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            background: var(--gradient-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(233, 30, 99, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header__container {
+                padding: 0 1rem;
+            }
+
+            .main-content {
+                padding: 2rem 1rem;
+            }
+
+            .section {
+                padding: 1.5rem;
+            }
+
+            .back-btn {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.8rem;
+            }
+
+            .section-title {
+                font-size: 1.3rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .footer-content {
+                gap: 1rem;
+            }
+        }
+
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .section:nth-child(even) {
+            animation-delay: 0.1s;
+        }
+
+        .section:nth-child(odd) {
+            animation-delay: 0.2s;
+        }
+
+        /* Modo performance para dispositivos de baja potencia */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Efectos de fondo -->
+    <div class="bg-effects"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header__container">
+            <button class="back-btn" onclick="goToHome()" data-translate="back-to-home" aria-label="Back to Home">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                </svg>
+                Back to Home
+            </button>
+            
+            <div class="logo" onclick="goToHome()">StarFlex</div>
+        </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+        <h1 class="page-title" data-translate="terms-title">Terms and Conditions</h1>
+        <p class="page-subtitle" data-translate="terms-subtitle">StarFlex Terms of Service and User Agreement</p>
+        
+
+        
+        <!-- Sección 1 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">1</span>
+                <span data-translate="terms-section-1-title">Acceptance of Terms</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="terms-section-1-p1">
+                    By accessing and using <span class="highlight">StarFlex</span>, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+                </p>
+                <p data-translate="terms-section-1-p2">
+                    These terms apply to:
+                </p>
+                <ul>
+                    <li data-translate="terms-section-1-item-1">All users of the StarFlex application</li>
+                    <li data-translate="terms-section-1-item-2">All services provided by StarFlex</li>
+                    <li data-translate="terms-section-1-item-3">All content and features within the application</li>
+                    <li data-translate="terms-section-1-item-4">All communications between users and StarFlex</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 2 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">2</span>
+                <span data-translate="terms-section-2-title">Service Description</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="terms-section-2-p1">
+                    StarFlex provides <span class="highlight">automation services for Amazon Flex drivers</span> to help optimize their block selection and delivery experience. Our service includes intelligent automation, schedule optimization, and notification systems.
+                </p>
+                <p data-translate="terms-section-2-p2">
+                    Our services include:
+                </p>
+                <ul>
+                    <li data-translate="terms-section-2-item-1">Automated block selection based on user preferences</li>
+                    <li data-translate="terms-section-2-item-2">Schedule optimization and management</li>
+                    <li data-translate="terms-section-2-item-3">Real-time notifications and alerts</li>
+                    <li data-translate="terms-section-2-item-4">Performance analytics and reporting</li>
+                    <li data-translate="terms-section-2-item-5">Customer support and technical assistance</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 3 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">3</span>
+                <span data-translate="terms-section-3-title">User Responsibilities</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="terms-section-3-p1">
+                    Users are responsible for maintaining the <span class="highlight">confidentiality of their account information</span> and for all activities that occur under their account. Users must provide accurate and complete information when using our services.
+                </p>
+                <p data-translate="terms-section-3-p2">
+                    User responsibilities include:
+                </p>
+                <ul>
+                    <li data-translate="terms-section-3-item-1">Maintaining accurate account information</li>
+                    <li data-translate="terms-section-3-item-2">Protecting account credentials and login information</li>
+                    <li data-translate="terms-section-3-item-3">Using the service in compliance with Amazon Flex terms</li>
+                    <li data-translate="terms-section-3-item-4">Reporting any unauthorized use of their account</li>
+                    <li data-translate="terms-section-3-item-5">Following all applicable laws and regulations</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 4 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">4</span>
+                <span data-translate="terms-section-4-title">Service Availability</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="terms-section-4-p1">
+                    While we strive to provide <span class="highlight">continuous service availability</span>, we cannot guarantee uninterrupted access to our services. Maintenance, updates, and technical issues may occasionally affect service availability.
+                </p>
+                <p data-translate="terms-section-4-p2">
+                    Service availability considerations:
+                </p>
+                <ul>
+                    <li data-translate="terms-section-4-item-1">Scheduled maintenance windows</li>
+                    <li data-translate="terms-section-4-item-2">Emergency system updates</li>
+                    <li data-translate="terms-section-4-item-3">Third-party service dependencies</li>
+                    <li data-translate="terms-section-4-item-4">Network connectivity issues</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 5 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">5</span>
+                <span data-translate="terms-section-5-title">Payment and Billing</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="terms-section-5-p1">
+                    StarFlex operates on a <span class="highlight">subscription-based model</span> with various pricing tiers. All fees are charged in advance and are non-refundable except as required by law or as specifically stated in our refund policy.
+                </p>
+                <p data-translate="terms-section-5-p2">
+                    Billing terms include:
+                </p>
+                <ul>
+                    <li data-translate="terms-section-5-item-1">Monthly or annual subscription options</li>
+                    <li data-translate="terms-section-5-item-2">Automatic renewal unless cancelled</li>
+                    <li data-translate="terms-section-5-item-3">Price changes with 30-day notice</li>
+                    <li data-translate="terms-section-5-item-4">Secure payment processing</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 6 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">6</span>
+                <span data-translate="terms-section-6-title">Limitation of Liability</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="terms-section-6-p1">
+                    StarFlex shall not be liable for any <span class="highlight">indirect, incidental, special, or consequential damages</span> resulting from the use or inability to use our services, even if we have been advised of the possibility of such damages.
+                </p>
+                <p data-translate="terms-section-6-p2">
+                    Limitations include:
+                </p>
+                <ul>
+                    <li data-translate="terms-section-6-item-1">Loss of earnings or income</li>
+                    <li data-translate="terms-section-6-item-2">Business interruption</li>
+                    <li data-translate="terms-section-6-item-3">Data loss or corruption</li>
+                    <li data-translate="terms-section-6-item-4">Third-party service failures</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 7 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">7</span>
+                <span data-translate="terms-section-7-title">Termination</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="terms-section-7-p1">
+                    Either party may terminate this agreement at any time. StarFlex reserves the right to <span class="highlight">suspend or terminate accounts</span> that violate these terms or engage in prohibited activities.
+                </p>
+                <p data-translate="terms-section-7-p2">
+                    Termination conditions:
+                </p>
+                <ul>
+                    <li data-translate="terms-section-7-item-1">Immediate termination for terms violations</li>
+                    <li data-translate="terms-section-7-item-2">30-day notice for service changes</li>
+                    <li data-translate="terms-section-7-item-3">Data retention for legal compliance</li>
+                    <li data-translate="terms-section-7-item-4">Refund eligibility based on circumstances</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sección 8 -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">8</span>
+                <span data-translate="terms-section-8-title">Changes to Terms</span>
+            </h2>
+            <div class="section-content">
+                <p data-translate="terms-section-8-p1">
+                    We reserve the right to modify these terms at any time. Users will be notified of significant changes through the application or via email. Continued use of the service constitutes acceptance of the modified terms.
+                </p>
+                <p data-translate="terms-section-8-p2">
+                    Change notification process:
+                </p>
+                <ul>
+                    <li data-translate="terms-section-8-item-1">Email notification to active users</li>
+                    <li data-translate="terms-section-8-item-2">In-app notifications for major changes</li>
+                    <li data-translate="terms-section-8-item-3">Updated terms posted on website</li>
+                    <li data-translate="terms-section-8-item-4">30-day grace period for objections</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="contact-info">
+                    <p data-translate="terms-contact-info">For questions about these Terms and Conditions, you can contact us at:</p>
+                    <a href="mailto:support@starflexapp.com" class="contact-email">support@starflexapp.com</a>
+                </div>
+                
+                <a href="https://starflex.web.app/" class="cta-button">
+                    <span data-translate="terms-cta-button">Start with StarFlex</span>
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </a>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        // Variables globales para el sistema de idiomas
+        let currentLanguage = 'en';
+        
+        // Traducciones completas
+        const translations = {
+            en: {
+                // Meta tags
+                'terms-page-title': 'Terms and Conditions - StarFlex',
+                'terms-page-description': 'Terms and Conditions of StarFlex - Intelligent automation for Amazon Flex drivers',
+                'terms-og-title': 'Terms and Conditions - StarFlex',
+                'terms-og-description': 'Terms and Conditions of StarFlex - Intelligent automation for Amazon Flex drivers',
+                
+                // Header y navegación
+                'back-to-home': 'Back to Home',
+                
+                // Contenido principal
+                'terms-title': 'Terms and Conditions',
+                'terms-subtitle': 'StarFlex Terms of Service and User Agreement',
+                'last-updated-label': 'Last updated:',
+                'last-updated-date': 'December 15, 2024',
+                
+                // Sección 1
+                'terms-section-1-title': 'Acceptance of Terms',
+                'terms-section-1-p1': 'By accessing and using <span class="highlight">StarFlex</span>, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.',
+                'terms-section-1-p2': 'These terms apply to:',
+                'terms-section-1-item-1': 'All users of the StarFlex application',
+                'terms-section-1-item-2': 'All services provided by StarFlex',
+                'terms-section-1-item-3': 'All content and features within the application',
+                'terms-section-1-item-4': 'All communications between users and StarFlex',
+                
+                // Sección 2
+                'terms-section-2-title': 'Service Description',
+                'terms-section-2-p1': 'StarFlex provides <span class="highlight">automation services for Amazon Flex drivers</span> to help optimize their block selection and delivery experience. Our service includes intelligent automation, schedule optimization, and notification systems.',
+                'terms-section-2-p2': 'Our services include:',
+                'terms-section-2-item-1': 'Automated block selection based on user preferences',
+                'terms-section-2-item-2': 'Schedule optimization and management',
+                'terms-section-2-item-3': 'Real-time notifications and alerts',
+                'terms-section-2-item-4': 'Performance analytics and reporting',
+                'terms-section-2-item-5': 'Customer support and technical assistance',
+                
+                // Sección 3
+                'terms-section-3-title': 'User Responsibilities',
+                'terms-section-3-p1': 'Users are responsible for maintaining the <span class="highlight">confidentiality of their account information</span> and for all activities that occur under their account. Users must provide accurate and complete information when using our services.',
+                'terms-section-3-p2': 'User responsibilities include:',
+                'terms-section-3-item-1': 'Maintaining accurate account information',
+                'terms-section-3-item-2': 'Protecting account credentials and login information',
+                'terms-section-3-item-3': 'Using the service in compliance with Amazon Flex terms',
+                'terms-section-3-item-4': 'Reporting any unauthorized use of their account',
+                'terms-section-3-item-5': 'Following all applicable laws and regulations',
+                
+                // Sección 4
+                'terms-section-4-title': 'Service Availability',
+                'terms-section-4-p1': 'While we strive to provide <span class="highlight">continuous service availability</span>, we cannot guarantee uninterrupted access to our services. Maintenance, updates, and technical issues may occasionally affect service availability.',
+                'terms-section-4-p2': 'Service availability considerations:',
+                'terms-section-4-item-1': 'Scheduled maintenance windows',
+                'terms-section-4-item-2': 'Emergency system updates',
+                'terms-section-4-item-3': 'Third-party service dependencies',
+                'terms-section-4-item-4': 'Network connectivity issues',
+                
+                // Sección 5
+                'terms-section-5-title': 'Payment and Billing',
+                'terms-section-5-p1': 'StarFlex operates on a <span class="highlight">subscription-based model</span> with various pricing tiers. All fees are charged in advance and are non-refundable except as required by law or as specifically stated in our refund policy.',
+                'terms-section-5-p2': 'Billing terms include:',
+                'terms-section-5-item-1': 'Monthly or annual subscription options',
+                'terms-section-5-item-2': 'Automatic renewal unless cancelled',
+                'terms-section-5-item-3': 'Price changes with 30-day notice',
+                'terms-section-5-item-4': 'Secure payment processing',
+                
+                // Sección 6
+                'terms-section-6-title': 'Limitation of Liability',
+                'terms-section-6-p1': 'StarFlex shall not be liable for any <span class="highlight">indirect, incidental, special, or consequential damages</span> resulting from the use or inability to use our services, even if we have been advised of the possibility of such damages.',
+                'terms-section-6-p2': 'Limitations include:',
+                'terms-section-6-item-1': 'Loss of earnings or income',
+                'terms-section-6-item-2': 'Business interruption',
+                'terms-section-6-item-3': 'Data loss or corruption',
+                'terms-section-6-item-4': 'Third-party service failures',
+                
+                // Sección 7
+                'terms-section-7-title': 'Termination',
+                'terms-section-7-p1': 'Either party may terminate this agreement at any time. StarFlex reserves the right to <span class="highlight">suspend or terminate accounts</span> that violate these terms or engage in prohibited activities.',
+                'terms-section-7-p2': 'Termination conditions:',
+                'terms-section-7-item-1': 'Immediate termination for terms violations',
+                'terms-section-7-item-2': '30-day notice for service changes',
+                'terms-section-7-item-3': 'Data retention for legal compliance',
+                'terms-section-7-item-4': 'Refund eligibility based on circumstances',
+                
+                // Sección 8
+                'terms-section-8-title': 'Changes to Terms',
+                'terms-section-8-p1': 'We reserve the right to modify these terms at any time. Users will be notified of significant changes through the application or via email. Continued use of the service constitutes acceptance of the modified terms.',
+                'terms-section-8-p2': 'Change notification process:',
+                'terms-section-8-item-1': 'Email notification to active users',
+                'terms-section-8-item-2': 'In-app notifications for major changes',
+                'terms-section-8-item-3': 'Updated terms posted on website',
+                'terms-section-8-item-4': '30-day grace period for objections',
+                
+                // Footer
+                'terms-contact-info': 'For questions about these Terms and Conditions, you can contact us at:',
+                'terms-cta-button': 'Start with StarFlex'
+            },
+            es: {
+                // Meta tags
+                'terms-page-title': 'Términos y Condiciones - StarFlex',
+                'terms-page-description': 'Términos y Condiciones de StarFlex - Automatización inteligente para conductores de Amazon Flex',
+                'terms-og-title': 'Términos y Condiciones - StarFlex',
+                'terms-og-description': 'Términos y Condiciones de StarFlex - Automatización inteligente para conductores de Amazon Flex',
+                
+                // Header y navegación
+                'back-to-home': 'Volver al Inicio',
+                
+                // Contenido principal
+                'terms-title': 'Términos y Condiciones',
+                'terms-subtitle': 'Términos de Servicio y Acuerdo de Usuario de StarFlex',
+                'last-updated-label': 'Última actualización:',
+                'last-updated-date': '15 de diciembre de 2024',
+                
+                // Sección 1
+                'terms-section-1-title': 'Aceptación de Términos',
+                'terms-section-1-p1': 'Al acceder y usar <span class="highlight">StarFlex</span>, usted acepta y se compromete a cumplir con los términos y disposiciones de este acuerdo. Si no está de acuerdo con lo anterior, por favor no use este servicio.',
+                'terms-section-1-p2': 'Estos términos se aplican a:',
+                'terms-section-1-item-1': 'Todos los usuarios de la aplicación StarFlex',
+                'terms-section-1-item-2': 'Todos los servicios proporcionados por StarFlex',
+                'terms-section-1-item-3': 'Todo el contenido y características dentro de la aplicación',
+                'terms-section-1-item-4': 'Todas las comunicaciones entre usuarios y StarFlex',
+                
+                // Sección 2
+                'terms-section-2-title': 'Descripción del Servicio',
+                'terms-section-2-p1': 'StarFlex proporciona <span class="highlight">servicios de automatización para conductores de Amazon Flex</span> para ayudar a optimizar su selección de bloques y experiencia de entrega. Nuestro servicio incluye automatización inteligente, optimización de horarios y sistemas de notificación.',
+                'terms-section-2-p2': 'Nuestros servicios incluyen:',
+                'terms-section-2-item-1': 'Selección automática de bloques basada en preferencias del usuario',
+                'terms-section-2-item-2': 'Optimización y gestión de horarios',
+                'terms-section-2-item-3': 'Notificaciones y alertas en tiempo real',
+                'terms-section-2-item-4': 'Análisis de rendimiento e informes',
+                'terms-section-2-item-5': 'Soporte al cliente y asistencia técnica',
+                
+                // Sección 3
+                'terms-section-3-title': 'Responsabilidades del Usuario',
+                'terms-section-3-p1': 'Los usuarios son responsables de mantener la <span class="highlight">confidencialidad de la información de su cuenta</span> y de todas las actividades que ocurran bajo su cuenta. Los usuarios deben proporcionar información precisa y completa al usar nuestros servicios.',
+                'terms-section-3-p2': 'Las responsabilidades del usuario incluyen:',
+                'terms-section-3-item-1': 'Mantener información precisa de la cuenta',
+                'terms-section-3-item-2': 'Proteger las credenciales de la cuenta e información de inicio de sesión',
+                'terms-section-3-item-3': 'Usar el servicio en cumplimiento con los términos de Amazon Flex',
+                'terms-section-3-item-4': 'Reportar cualquier uso no autorizado de su cuenta',
+                'terms-section-3-item-5': 'Seguir todas las leyes y regulaciones aplicables',
+                
+                // Sección 4
+                'terms-section-4-title': 'Disponibilidad del Servicio',
+                'terms-section-4-p1': 'Aunque nos esforzamos por proporcionar <span class="highlight">disponibilidad continua del servicio</span>, no podemos garantizar acceso ininterrumpido a nuestros servicios. El mantenimiento, actualizaciones y problemas técnicos pueden afectar ocasionalmente la disponibilidad del servicio.',
+                'terms-section-4-p2': 'Consideraciones de disponibilidad del servicio:',
+                'terms-section-4-item-1': 'Ventanas de mantenimiento programado',
+                'terms-section-4-item-2': 'Actualizaciones de emergencia del sistema',
+                'terms-section-4-item-3': 'Dependencias de servicios de terceros',
+                'terms-section-4-item-4': 'Problemas de conectividad de red',
+                
+                // Sección 5
+                'terms-section-5-title': 'Pago y Facturación',
+                'terms-section-5-p1': 'StarFlex opera con un <span class="highlight">modelo basado en suscripción</span> con varios niveles de precios. Todas las tarifas se cobran por adelantado y no son reembolsables excepto según lo requiera la ley o como se establezca específicamente en nuestra política de reembolso.',
+                'terms-section-5-p2': 'Los términos de facturación incluyen:',
+                'terms-section-5-item-1': 'Opciones de suscripción mensual o anual',
+                'terms-section-5-item-2': 'Renovación automática a menos que se cancele',
+                'terms-section-5-item-3': 'Cambios de precio con aviso de 30 días',
+                'terms-section-5-item-4': 'Procesamiento seguro de pagos',
+                
+                // Sección 6
+                'terms-section-6-title': 'Limitación de Responsabilidad',
+                'terms-section-6-p1': 'StarFlex no será responsable de ningún <span class="highlight">daño indirecto, incidental, especial o consecuencial</span> resultante del uso o la incapacidad de usar nuestros servicios, incluso si hemos sido advertidos de la posibilidad de tales daños.',
+                'terms-section-6-p2': 'Las limitaciones incluyen:',
+                'terms-section-6-item-1': 'Pérdida de ganancias o ingresos',
+                'terms-section-6-item-2': 'Interrupción del negocio',
+                'terms-section-6-item-3': 'Pérdida o corrupción de datos',
+                'terms-section-6-item-4': 'Fallas de servicios de terceros',
+                
+                // Sección 7
+                'terms-section-7-title': 'Terminación',
+                'terms-section-7-p1': 'Cualquiera de las partes puede terminar este acuerdo en cualquier momento. StarFlex se reserva el derecho de <span class="highlight">suspender o terminar cuentas</span> que violen estos términos o participen en actividades prohibidas.',
+                'terms-section-7-p2': 'Condiciones de terminación:',
+                'terms-section-7-item-1': 'Terminación inmediata por violaciones de términos',
+                'terms-section-7-item-2': '30-day notice for service changes',
+                'terms-section-7-item-3': 'Data retention for legal compliance',
+                'terms-section-7-item-4': 'Refund eligibility based on circumstances',
+                
+                // Sección 8
+                'terms-section-8-title': 'Cambios a los Términos',
+                'terms-section-8-p1': 'Nos reservamos el derecho de modificar estos términos en cualquier momento. Los usuarios serán notificados de cambios significativos a través de la aplicación o por correo electrónico. El uso continuado del servicio constituye aceptación de los términos modificados.',
+                'terms-section-8-p2': 'Proceso de notificación de cambios:',
+                'terms-section-8-item-1': 'Email notification to active users',
+                'terms-section-8-item-2': 'In-app notifications for major changes',
+                'terms-section-8-item-3': 'Updated terms posted on website',
+                'terms-section-8-item-4': '30-day grace period for objections',
+                
+                // Footer
+                'terms-contact-info': 'Para preguntas sobre estos Términos y Condiciones, puede contactarnos en:',
+                'terms-cta-button': 'Comenzar con StarFlex'
+            }
+        };
+
+        // Detectar idioma desde URL parameter
+function detectLanguageFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const langParam = urlParams.get('lang');
+    
+    if (langParam === 'es') {
+        return 'es';
+    }
+    
+    // También detectar desde la URL actual si viene de /es
+    const referrer = document.referrer;
+    if (referrer.includes('/es') || referrer.endsWith('/es')) {
+        return 'es';
+    }
+    
+    return 'en';
+}
+
+// Actualizar la función de detección inicial
+function detectInitialLanguage() {
+    // Primero intentar detectar desde URL parameter
+    const langFromURL = detectLanguageFromURL();
+    if (langFromURL) {
+        return langFromURL;
+    }
+    
+    // Fallback a detección por pathname
+    const pathname = window.location.pathname;
+    const href = window.location.href;
+    
+    if (pathname.includes('/es/') || pathname.startsWith('/es/') || 
+        href.includes('/es/') || pathname === '/es') {
+        return 'es';
+    }
+    
+    return 'en';
+}
+
+
+        // Función para detectar idioma inicial
+        function detectInitialLanguage() {
+            const pathname = window.location.pathname;
+            
+            // Detectar si la URL contiene /es/ para español
+            if (pathname.includes('/es/') || pathname.startsWith('/es/')) {
+                return 'es';
+            }
+            
+            // Por defecto, inglés para todas las demás rutas
+            return 'en';
+        }
+
+        // Función para aplicar traducciones
+        function applyTranslations() {
+            const currentTranslations = translations[currentLanguage];
+            
+            if (!currentTranslations) {
+                console.warn(`Translations for ${currentLanguage} not found`);
+                return;
+            }
+            
+            // Aplicar traducciones a elementos con data-translate
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                const translation = currentTranslations[key];
+                
+                if (translation) {
+                    if (element.tagName === 'INPUT' && element.type === 'text') {
+                        element.placeholder = translation;
+                    } else if (element.tagName === 'META') {
+                        element.content = translation;
+                    } else if (element.tagName === 'TITLE') {
+                        element.textContent = translation;
+                    } else {
+                        element.innerHTML = translation;
+                    }
+                }
+            });
+            
+            // Actualizar meta tags específicos
+            updateMetaTags();
+        }
+
+        // Función para actualizar meta tags
+        function updateMetaTags() {
+            const canonicalLink = document.getElementById('canonical-link');
+            const ogUrl = document.getElementById('og-url');
+            
+            if (currentLanguage === 'es') {
+                if (canonicalLink) canonicalLink.href = 'https://starflexapp.com/es/terms';
+                if (ogUrl) ogUrl.content = 'https://starflexapp.com/es/terms';
+            } else {
+                if (canonicalLink) canonicalLink.href = 'https://starflexapp.com/terms';
+                if (ogUrl) ogUrl.content = 'https://starflexapp.com/terms';
+            }
+        }
+
+        // Función para navegar al inicio
+        function goToHome() {
+            const targetUrl = currentLanguage === 'es' ? '/es' : '/';
+            window.location.href = targetUrl;
+        }
+
+        // Detección de dispositivo móvil
+        const isMobile = window.innerWidth <= 768;
+        
+        // Optimizaciones para dispositivos de baja potencia
+        const isLowEndDevice = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
+        const isSlowConnection = navigator.connection && (
+            navigator.connection.effectiveType === 'slow-2g' || 
+            navigator.connection.effectiveType === '2g'
+        );
+        
+        if (isMobile && (isLowEndDevice || isSlowConnection)) {
+            document.body.classList.add('performance-mode');
+            
+            // Deshabilitar animaciones en dispositivos de baja potencia
+            const style = document.createElement('style');
+            style.textContent = `
+                .performance-mode * {
+                    animation-duration: 0.01ms !important;
+                    animation-iteration-count: 1 !important;
+                    transition-duration: 0.1s !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Smooth scroll para navegación interna
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Mejorar accesibilidad con navegación por teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                document.body.classList.add('keyboard-navigation');
+            }
+        });
+        
+        document.addEventListener('mousedown', () => {
+            document.body.classList.remove('keyboard-navigation');
+        });
+        
+        // Lazy loading para imágenes si las hubiera
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.classList.remove('lazy');
+                            imageObserver.unobserve(img);
+                        }
+                    }
+                });
+            });
+            
+            document.querySelectorAll('img[data-src]').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            // Detectar idioma inicial
+            currentLanguage = detectInitialLanguage();
+            
+            // Aplicar traducciones
+            applyTranslations();
+            
+            // Actualizar atributo lang del HTML
+            document.documentElement.lang = currentLanguage;
+            
+            console.log('✅ Página de Términos y Condiciones cargada correctamente en idioma:', currentLanguage);
+        });
+    </script>
+</body>
+</html>
