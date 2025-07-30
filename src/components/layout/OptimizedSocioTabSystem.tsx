@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useMemo, memo, Suspense, lazy, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { 
   Home, 
   User, 
@@ -108,7 +108,7 @@ const TabButton = memo<{
   isActive: boolean;
   onClick: () => void;
   index: number;
-}>(({ tab, isActive, onClick, index }) => {
+}>(({ tab, isActive, onClick }) => {
   return (
     <motion.button
       onClick={onClick}
@@ -186,16 +186,21 @@ interface OptimizedSocioTabSystemProps {
   };
 }
 
-export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({ 
+// Extend Window interface to include navigateToSocioTab
+declare global {
+  interface Window {
+    navigateToSocioTab?: (tabId: string) => void;
+  }
+}
+
+const OptimizedSocioTabSystemComponent: React.FC<OptimizedSocioTabSystemProps> = ({ 
   onNavigate, 
   onQuickScan,
   initialTab = 'dashboard',
   stats
 }) => {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Check for URL parameters to set initial tab
   useEffect(() => {
@@ -211,7 +216,7 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
       id: 'dashboard',
       label: 'Dashboard',
       icon: Home,
-      component: SocioOverviewDashboard as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: SocioOverviewDashboard as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-blue-500 to-blue-600',
       description: 'Vista general de beneficios'
     },
@@ -219,7 +224,7 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
       id: 'perfil',
       label: 'Mi Perfil',
       icon: User,
-      component: SocioProfile as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: SocioProfile as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-emerald-500 to-emerald-600',
       description: 'Información personal'
     },
@@ -227,7 +232,7 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
       id: 'beneficios',
       label: 'Beneficios',
       icon: Gift,
-      component: SocioBeneficios as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: SocioBeneficios as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-purple-500 to-purple-600',
       description: 'Ofertas disponibles',
       badge: stats?.totalBeneficios || 0
@@ -236,7 +241,7 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
       id: 'asociaciones',
       label: 'Asociaciones',
       icon: Building2,
-      component: SocioAsociacionesList as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: SocioAsociacionesList as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-orange-500 to-orange-600',
       description: 'Organizaciones disponibles',
       badge: stats?.asociacionesActivas || 0
@@ -245,7 +250,7 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
       id: 'validar',
       label: 'Validar QR',
       icon: QrCode,
-      component: SocioValidar as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: SocioValidar as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-indigo-500 to-indigo-600',
       description: 'Escanear código',
       isNew: true
@@ -254,7 +259,7 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
       id: 'historial',
       label: 'Historial',
       icon: History,
-      component: SocioHistorial as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: SocioHistorial as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-red-500 to-red-600',
       description: 'Beneficios utilizados',
       badge: stats?.beneficiosUsados || 0
@@ -263,7 +268,7 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
 
   // Optimized tab change handler with URL update
   const handleTabChange = useCallback((tabId: string) => {
-    if (tabId === activeTab || isTransitioning) return;
+    if (tabId === activeTab) return;
 
     setActiveTab(tabId);
     
@@ -275,20 +280,15 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
     if (onNavigate) {
       onNavigate(tabId);
     }
-  }, [activeTab, isTransitioning, onNavigate]);
+  }, [activeTab, onNavigate]);
 
-  // Public method to change tab (can be called from other components)
-  const navigateToTab = useCallback((tabId: string) => {
-    handleTabChange(tabId);
-  }, [handleTabChange]);
+  // Store navigation function globally so other components can use it
+  const navigateToTab = handleTabChange;
 
-  // Expose navigation method globally
   useEffect(() => {
-    // Store navigation function globally so other components can use it
-    (window as any).navigateToSocioTab = navigateToTab;
-    
+    window.navigateToSocioTab = navigateToTab;
     return () => {
-      delete (window as any).navigateToSocioTab;
+      delete window.navigateToSocioTab;
     };
   }, [navigateToTab]);
 
@@ -379,7 +379,9 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
       </div>
     </div>
   );
-});
+};
+
+export const OptimizedSocioTabSystem = memo(OptimizedSocioTabSystemComponent);
 
 OptimizedSocioTabSystem.displayName = 'OptimizedSocioTabSystem';
 

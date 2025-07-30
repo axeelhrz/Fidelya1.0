@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   TrendingUp,
-  TrendingDown,
   Users,
   CheckCircle,
   AlertCircle,
@@ -187,7 +186,7 @@ const ActivityTimeline: React.FC<{
   activities: ActivityLog[];
   loading: boolean;
   onViewAll?: () => void;
-}> = ({ activities, loading, onViewAll }) => {
+}> = ({ activities, loading }) => {
   const getActivityIcon = (type: ActivityLog['type']) => {
     const icons = {
       validation_completed: <CheckCircle className="w-4 h-4" />,

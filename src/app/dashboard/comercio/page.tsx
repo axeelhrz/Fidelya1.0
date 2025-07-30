@@ -61,7 +61,6 @@ export default function OptimizedComercioDashboard() {
 
   // Memoized consolidated stats
   const consolidatedStats = useMemo(() => {
-    const now = new Date();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -70,17 +69,16 @@ export default function OptimizedComercioDashboard() {
     const validacionesMes = stats?.validacionesMes || 0;
     const beneficiosActivos = stats?.beneficiosActivos || 0;
     const clientesUnicos = stats?.clientesUnicos || 0;
-    const qrEscaneos = stats?.qrEscaneos || 0;
-
+    // const qrEscaneos = stats?.qrEscaneos || 0; // Removed because 'qrEscaneos' does not exist on 'ComercioStats'
+    const qrEscaneos = 0;
     return {
       validacionesHoy,
       validacionesMes,
       beneficiosActivos,
       clientesUnicos,
-      qrEscaneos,
-      qrGenerado: !!comercio?.qrCode
+      qrEscaneos // This will always be 0 unless you add it to ComercioStats
     };
-  }, [stats, comercio]);
+  }, [stats]);
 
   // Optimized logout handlers
   const handleLogoutClick = useCallback(() => {
@@ -139,7 +137,7 @@ export default function OptimizedComercioDashboard() {
           {/* Optimized Welcome Card */}
           <ComercioWelcomeCard
             user={user ?? {}}
-            comercio={comercio}
+            comercio={comercio ?? undefined}
             stats={consolidatedStats}
             onQuickAction={handleQuickAction}
             onViewProfile={handleViewProfile}

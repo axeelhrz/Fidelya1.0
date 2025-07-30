@@ -26,7 +26,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { ComercioFormData } from '@/services/comercio.service';
-import { useDebounce } from '@/hooks/useDebounce';
 
 const CATEGORIAS_COMERCIO = [
   'Alimentación',
@@ -90,15 +89,31 @@ const FORM_STEPS = [
 ];
 
 // Componente de campo de formulario
-const FormField = React.memo(({ 
-  field, 
-  register, 
-  error, 
+interface FormFieldProps {
+  field: {
+    name: string;
+    label: string;
+    type: string;
+    icon?: React.ElementType;
+    placeholder?: string;
+    options?: { value: string; label: string }[];
+  };
+  register: ReturnType<typeof useForm<ComercioFormInputs>>['register'];
+  error?: { message?: string };
+  watch: ReturnType<typeof useForm<ComercioFormInputs>>['watch'];
+  formData: ComercioFormData;
+  handleConfigChange: (field: string, value: boolean) => void;
+}
+
+const FormField = React.memo(({
+  field,
+  register,
+  error,
   watch,
   formData,
   handleConfigChange
-}: any) => {
-  const fieldValue = watch(field.name);
+}: FormFieldProps) => {
+  const fieldValue = watch(field.name as keyof ComercioFormInputs);
   const hasError = !!error;
   const hasValue = fieldValue && fieldValue.length > 0;
   const isValid = hasValue && !hasError;
@@ -132,11 +147,11 @@ const FormField = React.memo(({
             {getFieldIcon()}
           </div>
           <select
-            {...register(field.name)}
+            {...register(field.name as keyof ComercioFormInputs)}
             className={getFieldClasses()}
           >
             <option value="">Seleccionar...</option>
-            {field.options?.map((option: any) => (
+            {field.options?.map((option: { value: string; label: string }) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -170,7 +185,7 @@ const FormField = React.memo(({
             {getFieldIcon()}
           </div>
           <textarea
-            {...register(field.name)}
+            {...register(field.name as keyof ComercioFormInputs)}
             rows={3}
             placeholder={field.placeholder}
             className={`${getFieldClasses()} resize-none`}
@@ -269,7 +284,7 @@ const FormField = React.memo(({
           {getFieldIcon()}
         </div>
         <input
-          {...register(field.name)}
+          {...register(field.name as keyof ComercioFormInputs)}
           type={field.type}
           placeholder={field.placeholder}
           className={getFieldClasses()}
@@ -342,7 +357,6 @@ export const CreateComercioDialog: React.FC<CreateComercioDialogProps> = ({
     formState: { errors },
     watch,
     trigger,
-    getValues
   } = useForm<ComercioFormInputs>({
     resolver: zodResolver(comercioSchema),
     mode: 'onChange',
@@ -360,7 +374,6 @@ export const CreateComercioDialog: React.FC<CreateComercioDialogProps> = ({
   });
 
   // Validación debounced
-  const debouncedTrigger = useDebounce(trigger, 300);
 
   // Resetear formulario
   useEffect(() => {
@@ -400,7 +413,7 @@ export const CreateComercioDialog: React.FC<CreateComercioDialogProps> = ({
   // Navegación entre pasos
   const nextStep = useCallback(async () => {
     const currentFields = FORM_STEPS[currentStep].fields.filter(field => field !== 'configuracion');
-    const isValid = await trigger(currentFields as any);
+    const isValid = await trigger(currentFields as Array<keyof ComercioFormInputs>);
     
     if (isValid && currentStep < FORM_STEPS.length - 1) {
       setCurrentStep(prev => prev + 1);
@@ -422,7 +435,10 @@ export const CreateComercioDialog: React.FC<CreateComercioDialogProps> = ({
     setFormData(prev => ({
       ...prev,
       configuracion: {
-        ...prev.configuracion,
+        notificacionesEmail: prev.configuracion?.notificacionesEmail ?? true,
+        notificacionesWhatsApp: prev.configuracion?.notificacionesWhatsApp ?? false,
+        autoValidacion: prev.configuracion?.autoValidacion ?? false,
+        requiereAprobacion: prev.configuracion?.requiereAprobacion ?? true,
         [field]: value
       }
     }));

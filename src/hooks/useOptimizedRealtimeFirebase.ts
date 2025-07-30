@@ -48,7 +48,7 @@ interface UseOptimizedRealtimeReturn<T> {
 }
 
 // Cache global para datos
-const dataCache = new Map<string, CacheEntry<any>>();
+const dataCache = new Map<string, CacheEntry<unknown>>();
 
 // Función para limpiar cache expirado
 const cleanExpiredCache = (timeout: number) => {
@@ -65,7 +65,6 @@ export function useOptimizedRealtimeDocument<T>(
   config: OptimizedRealtimeConfig = {}
 ): UseOptimizedRealtimeReturn<T> {
   const {
-    enableToasts = false, // Deshabilitado por defecto para reducir ruido
     enableRetry = true,
     retryDelay = 3000,
     maxRetries = 3,
@@ -92,29 +91,33 @@ export function useOptimizedRealtimeDocument<T>(
   const lastUpdateRef = useRef<number>(0);
 
   // Debounced update function
-  const debouncedUpdate = useDebounce((newData: T, source: 'cache' | 'server') => {
-    if (!mountedRef.current) return;
-    
-    const now = Date.now();
-    
-    // Evitar actualizaciones muy frecuentes
-    if (now - lastUpdateRef.current < debounceMs && source === 'cache') {
-      return;
-    }
-    
-    lastUpdateRef.current = now;
-    setData(newData);
-    setIsFromCache(source === 'cache');
-    
-    // Actualizar cache
-    if (path) {
-      dataCache.set(path, {
-        data: newData,
-        timestamp: now,
-        source
-      });
-    }
-  }, debounceMs);
+  const debouncedUpdate = useDebounce(
+    (...args: unknown[]) => {
+      if (!mountedRef.current) return;
+
+      const { newData, source } = args[0] as { newData: T; source: 'cache' | 'server' };
+      const now = Date.now();
+
+      // Evitar actualizaciones muy frecuentes
+      if (now - lastUpdateRef.current < debounceMs && source === 'cache') {
+        return;
+      }
+
+      lastUpdateRef.current = now;
+      setData(newData);
+      setIsFromCache(source === 'cache');
+
+      // Actualizar cache
+      if (path) {
+        dataCache.set(path, {
+          data: newData,
+          timestamp: now,
+          source
+        });
+      }
+    },
+    debounceMs
+  );
 
   // Función para obtener datos del cache
   const getCachedData = useCallback((): T | null => {
@@ -122,7 +125,7 @@ export function useOptimizedRealtimeDocument<T>(
     
     const cached = dataCache.get(path);
     if (cached && Date.now() - cached.timestamp < cacheTimeout) {
-      return cached.data;
+      return cached.data as T;
     }
     
     return null;
@@ -167,9 +170,9 @@ export function useOptimizedRealtimeDocument<T>(
             // Solo actualizar si los datos han cambiado realmente
             const currentDataStr = JSON.stringify(data);
             const newDataStr = JSON.stringify(docData);
-            
+
             if (currentDataStr !== newDataStr || source === 'server') {
-              debouncedUpdate(docData, source);
+              debouncedUpdate({ newData: docData, source });
             }
             
             setError(null);
@@ -310,7 +313,6 @@ export function useOptimizedRealtimeCollection<T>(
   config: OptimizedRealtimeConfig = {}
 ): UseOptimizedRealtimeReturn<T[]> {
   const {
-    enableToasts = false,
     enableRetry = true,
     retryDelay = 3000,
     maxRetries = 3,
@@ -318,7 +320,6 @@ export function useOptimizedRealtimeCollection<T>(
     cacheTimeout = 60000, // 1 minuto para colecciones
     enableOfflineSupport = true
   } = config;
-
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -343,20 +344,21 @@ export function useOptimizedRealtimeCollection<T>(
   }, [collectionPath, queryConstraints]);
 
   // Debounced update function
-  const debouncedUpdate = useDebounce((newData: T[], source: 'cache' | 'server') => {
+  const debouncedUpdate = useDebounce((...args: unknown[]) => {
     if (!mountedRef.current) return;
-    
+
+    const { newData, source } = args[0] as { newData: T[]; source: 'cache' | 'server' };
     const now = Date.now();
-    
+
     // Evitar actualizaciones muy frecuentes
     if (now - lastUpdateRef.current < debounceMs && source === 'cache') {
       return;
     }
-    
+
     lastUpdateRef.current = now;
     setData(newData);
     setIsFromCache(source === 'cache');
-    
+
     // Actualizar cache
     dataCache.set(cacheKey, {
       data: newData,
@@ -368,7 +370,7 @@ export function useOptimizedRealtimeCollection<T>(
   const getCachedData = useCallback((): T[] | null => {
     const cached = dataCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < cacheTimeout) {
-      return cached.data;
+      return cached.data as T[];
     }
     return null;
   }, [cacheKey, cacheTimeout]);

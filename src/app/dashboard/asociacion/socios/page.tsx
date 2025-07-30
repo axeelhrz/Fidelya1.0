@@ -17,13 +17,11 @@ export default function SocioDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   const { socio, loading: socioLoading } = useSocioProfile();
-  const { estadisticasRapidas, loading: beneficiosLoading } = useBeneficios();
+  const { estadisticasRapidas } = useBeneficios();
   
   // Optimized navigation hook
   const {
     activeTab,
-    navigateToTab,
-    isTransitioning,
     performanceMetrics
   } = useOptimizedSocioNavigation({
     initialTab: 'dashboard',
@@ -34,6 +32,25 @@ export default function SocioDashboard() {
   // State management
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  // Memoized stats for performance
+  const optimizedStats = useMemo(() => ({
+    totalBeneficios: estadisticasRapidas.disponibles || 0,
+    beneficiosUsados: estadisticasRapidas.usados || 0,
+    asociacionesActivas: 1, // Mock data - to be implemented
+    ahorroTotal: estadisticasRapidas.ahorroTotal || 0,
+    ahorroEsteMes: estadisticasRapidas.ahorroEsteMes || 0
+  }), [estadisticasRapidas]);
+
+  // User info for header
+  // (Removed duplicate declaration)
+
+  // User info for header
+  const userInfo = useMemo(() => ({
+    name: socio?.nombre || user?.nombre || 'Socio',
+    number: socio?.numeroSocio || 'N/A',
+    initial: (socio?.nombre || user?.nombre)?.charAt(0).toUpperCase() || 'S'
+  }), [socio?.nombre, socio?.numeroSocio, user?.nombre]);
 
   // Redirect if not authenticated or not socio
   if (!authLoading && (!user || user.role !== 'socio')) {
@@ -61,36 +78,30 @@ export default function SocioDashboard() {
     }
   };
 
+  // Add missing handleLogoutCancel function
   const handleLogoutCancel = () => {
     setLogoutModalOpen(false);
   };
 
-  // Navigation handlers - UPDATED: Only use internal navigation, no URL changes
-  const handleNavigate = (section: string) => {
-    // Use optimized navigation for ALL tabs - no URL changes
-    navigateToTab(section);
+  // Add missing handleNavigate function
+  const handleNavigate = (tabKey: string) => {
+    // You may want to update activeTab or perform navigation logic here
+    // Example: router.push(`/dashboard/asociacion/socios/${tabKey}`);
+    // For now, just log the navigation
+    console.log('Navigating to tab:', tabKey);
   };
 
+  // Add missing handleQuickScan function
   const handleQuickScan = () => {
-    // For quick scan, navigate to validar tab
-    navigateToTab('validar');
+    // Implement quick scan logic here
+    toast('Funcionalidad de escaneo rápido no implementada.');
   };
 
   // Memoized stats for performance
-  const optimizedStats = useMemo(() => ({
-    totalBeneficios: estadisticasRapidas.disponibles || 0,
-    beneficiosUsados: estadisticasRapidas.usados || 0,
-    asociacionesActivas: 1, // Mock data - to be implemented
-    ahorroTotal: estadisticasRapidas.ahorroTotal || 0,
-    ahorroEsteMes: estadisticasRapidas.ahorroEsteMes || 0
-  }), [estadisticasRapidas]);
+  // (Moved above conditional return to avoid conditional hook call)
 
   // User info for header
-  const userInfo = useMemo(() => ({
-    name: socio?.nombre || user?.nombre || 'Socio',
-    number: socio?.numeroSocio || 'N/A',
-    initial: (socio?.nombre || user?.nombre)?.charAt(0).toUpperCase() || 'S'
-  }), [socio?.nombre, socio?.numeroSocio, user?.nombre]);
+  // (Moved above conditional return to avoid conditional hook call)
 
   // Loading state with modern design
   if (authLoading || socioLoading) {

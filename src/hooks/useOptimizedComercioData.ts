@@ -8,11 +8,11 @@ interface CacheEntry<T> {
   expiry: number;
 }
 
-class ComercioDataCache {
-  private cache = new Map<string, CacheEntry<any>>();
+class ComercioDataCache<T = unknown> {
+  private cache = new Map<string, CacheEntry<T>>();
   private readonly DEFAULT_EXPIRY = 5 * 60 * 1000; // 5 minutes
 
-  set<T>(key: string, data: T, expiry = this.DEFAULT_EXPIRY): void {
+  set(key: string, data: T, expiry = this.DEFAULT_EXPIRY): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -20,7 +20,7 @@ class ComercioDataCache {
     });
   }
 
-  get<T>(key: string): T | null {
+  get(key: string): T | null {
     const entry = this.cache.get(key);
     if (!entry) return null;
 
@@ -29,7 +29,7 @@ class ComercioDataCache {
       return null;
     }
 
-    return entry.data;
+    return entry.data as T | null;
   }
 
   invalidate(pattern?: string): void {
@@ -58,7 +58,7 @@ class ComercioDataCache {
   }
 }
 
-const comercioCache = new ComercioDataCache();
+const comercioCache = new ComercioDataCache<AdhesionStats>();
 
 interface UseOptimizedComercioDataReturn {
   stats: AdhesionStats;
@@ -96,7 +96,7 @@ export function useOptimizedComercioData(): UseOptimizedComercioDataReturn {
 
     // Check cache first
     if (!forceRefresh && comercioCache.has(cacheKey)) {
-      const cachedStats = comercioCache.get<AdhesionStats>(cacheKey);
+      const cachedStats = comercioCache.get(cacheKey);
       if (cachedStats) {
         setStats(cachedStats);
         return;

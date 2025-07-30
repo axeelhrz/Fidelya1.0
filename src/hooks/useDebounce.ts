@@ -3,11 +3,11 @@ import { useCallback, useRef, useEffect } from 'react';
 /**
  * Hook optimizado para debounce que evita actualizaciones innecesarias
  */
-export function useDebounce<T extends (...args: any[]) => any>(
+export function useDebounce<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T {
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const callbackRef = useRef(callback);
   const mountedRef = useRef(true);
 
@@ -50,7 +50,7 @@ export function useDebounce<T extends (...args: any[]) => any>(
 /**
  * Hook para throttle (limitar frecuencia de ejecución)
  */
-export function useThrottle<T extends (...args: any[]) => any>(
+export function useThrottle<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T {
@@ -87,12 +87,12 @@ export function useThrottle<T extends (...args: any[]) => any>(
 /**
  * Hook combinado que permite tanto debounce como throttle
  */
-export function useDebouncedThrottle<T extends (...args: any[]) => any>(
+export function useDebouncedThrottle<T extends (...args: unknown[]) => unknown>(
   callback: T,
   debounceDelay: number,
   throttleDelay: number
 ): T {
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const lastCallRef = useRef<number>(0);
   const callbackRef = useRef(callback);
   const mountedRef = useRef(true);

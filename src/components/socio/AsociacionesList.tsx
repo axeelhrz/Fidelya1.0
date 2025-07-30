@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import {
   Building2,
   Users,
@@ -15,8 +14,6 @@ import {
   Calendar,
   Star,
   Eye,
-  Search,
-  Filter,
   RefreshCw,
   AlertCircle,
   CheckCircle,
@@ -24,10 +21,8 @@ import {
   XCircle,
   ArrowUpRight,
   Shield,
-  Target,
   Info,
   ExternalLink,
-  Activity,
 } from 'lucide-react';
 import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -36,7 +31,6 @@ import { Button } from '@/components/ui/Button';
 import { AsociacionDetailsModal } from './AsociacionDetailsModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { navigateToBeneficios } from '@/utils/navigation';
 
@@ -340,7 +334,6 @@ const CompactAsociacionCard: React.FC<{
 
 export const AsociacionesList: React.FC = () => {
   const { user } = useAuth();
-  const router = useRouter();
   const [asociaciones, setAsociaciones] = useState<Asociacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

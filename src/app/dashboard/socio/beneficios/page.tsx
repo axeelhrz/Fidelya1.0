@@ -10,7 +10,6 @@ import {
   Building2, 
   Users, 
   Info,
-  TrendingUp,
   Calendar,
   DollarSign,
   Sparkles,

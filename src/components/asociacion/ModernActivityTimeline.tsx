@@ -57,7 +57,6 @@ const ModernActivityTimelineComponent: React.FC<ModernActivityTimelineProps> = (
     }
   }, []);
 
-
   const getActivityGradient = useMemo(() => (type: ActivityLog['type']) => {
     const gradients = {
       member_added: 'from-emerald-500 to-teal-500',

@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useMemo, memo, Suspense, lazy, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { 
   Home, 
   Store, 
@@ -117,7 +117,7 @@ const TabButton = memo<{
   isActive: boolean;
   onClick: () => void;
   index: number;
-}>(({ tab, isActive, onClick, index }) => {
+}>(({ tab, isActive, onClick }) => {
   return (
     <motion.button
       onClick={onClick}
@@ -202,15 +202,13 @@ interface OptimizedComercioTabSystemProps {
   };
 }
 
-export const OptimizedComercioTabSystem = memo<OptimizedComercioTabSystemProps>(({ 
+export const OptimizedComercioTabSystem: React.FC<OptimizedComercioTabSystemProps> = memo(({ 
   onNavigate,
   initialTab = 'dashboard',
   stats
 }) => {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Check for URL parameters to set initial tab
   useEffect(() => {
@@ -233,7 +231,7 @@ export const OptimizedComercioTabSystem = memo<OptimizedComercioTabSystemProps>(
       id: 'dashboard',
       label: 'Dashboard',
       icon: Home,
-      component: ComercioOverviewDashboard as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: ComercioOverviewDashboard as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-blue-500 to-blue-600',
       description: 'Vista general del negocio'
     },
@@ -241,7 +239,7 @@ export const OptimizedComercioTabSystem = memo<OptimizedComercioTabSystemProps>(
       id: 'perfil',
       label: 'Mi Perfil',
       icon: Store,
-      component: ComercioProfile as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: ComercioProfile as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-emerald-500 to-emerald-600',
       description: 'Información del comercio'
     },
@@ -249,7 +247,7 @@ export const OptimizedComercioTabSystem = memo<OptimizedComercioTabSystemProps>(
       id: 'beneficios',
       label: 'Beneficios',
       icon: Gift,
-      component: BeneficiosManagement as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: BeneficiosManagement as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-purple-500 to-purple-600',
       description: 'Gestionar ofertas',
       badge: stats?.beneficiosActivos || 0
@@ -258,7 +256,7 @@ export const OptimizedComercioTabSystem = memo<OptimizedComercioTabSystemProps>(
       id: 'qr',
       label: 'Código QR',
       icon: QrCode,
-      component: QRManagement as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: QRManagement as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-orange-500 to-orange-600',
       description: 'Gestión de códigos QR',
       badge: stats?.qrEscaneos || 0
@@ -267,7 +265,7 @@ export const OptimizedComercioTabSystem = memo<OptimizedComercioTabSystemProps>(
       id: 'validaciones',
       label: 'Validaciones',
       icon: UserCheck,
-      component: ValidacionesHistory as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: ValidacionesHistory as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-indigo-500 to-indigo-600',
       description: 'Historial de validaciones',
       badge: stats?.validacionesHoy || 0
@@ -276,7 +274,7 @@ export const OptimizedComercioTabSystem = memo<OptimizedComercioTabSystemProps>(
       id: 'clientes',
       label: 'Clientes',
       icon: Users,
-      component: ClienteAnalytics as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: ClienteAnalytics as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-pink-500 to-pink-600',
       description: 'Gestión de clientes',
       badge: stats?.clientesUnicos || 0
@@ -285,7 +283,7 @@ export const OptimizedComercioTabSystem = memo<OptimizedComercioTabSystemProps>(
       id: 'notificaciones',
       label: 'Notificaciones',
       icon: Bell,
-      component: ComercioNotifications as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: ComercioNotifications as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-amber-500 to-amber-600',
       description: 'Centro de notificaciones'
     }
@@ -293,7 +291,7 @@ export const OptimizedComercioTabSystem = memo<OptimizedComercioTabSystemProps>(
 
   // Optimized tab change handler with URL update
   const handleTabChange = useCallback((tabId: string) => {
-    if (tabId === activeTab || isTransitioning) return;
+    if (tabId === activeTab) return;
 
     setActiveTab(tabId);
     
@@ -305,8 +303,7 @@ export const OptimizedComercioTabSystem = memo<OptimizedComercioTabSystemProps>(
     if (onNavigate) {
       onNavigate(tabId);
     }
-  }, [activeTab, isTransitioning, onNavigate]);
-
+  }, [activeTab, onNavigate]);
   // Public method to change tab (can be called from other components)
   const navigateToTab = useCallback((tabId: string) => {
     handleTabChange(tabId);
@@ -315,10 +312,10 @@ export const OptimizedComercioTabSystem = memo<OptimizedComercioTabSystemProps>(
   // Expose navigation method globally
   useEffect(() => {
     // Store navigation function globally so other components can use it
-    (window as any).navigateToComercioTab = navigateToTab;
+    (window as Window & { navigateToComercioTab?: (tabId: string) => void }).navigateToComercioTab = navigateToTab;
     
     return () => {
-      delete (window as any).navigateToComercioTab;
+      delete (window as Window & { navigateToComercioTab?: (tabId: string) => void }).navigateToComercioTab;
     };
   }, [navigateToTab]);
 

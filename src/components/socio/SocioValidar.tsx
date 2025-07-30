@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { 
   QrCode,
@@ -54,7 +53,6 @@ const itemVariants = {
 };
 
 export const SocioValidar: React.FC = () => {
-  const router = useRouter();
   const { user } = useAuth();
   
   // Estados para validación

@@ -9,8 +9,8 @@ interface CacheOptions {
   maxSize?: number;
 }
 
-class CacheManager {
-  private cache = new Map<string, CacheEntry<any>>();
+class CacheManager<T = unknown> {
+  private cache = new Map<string, CacheEntry<T>>();
   private defaultTTL = 5 * 60 * 1000; // 5 minutes
   private maxSize = 100;
 
@@ -19,7 +19,7 @@ class CacheManager {
     this.maxSize = options.maxSize || this.maxSize;
   }
 
-  set<T>(key: string, data: T, ttl?: number): void {
+  set(key: string, data: T, ttl?: number): void {
     // Clean expired entries if cache is getting full
     if (this.cache.size >= this.maxSize) {
       this.cleanExpired();
@@ -28,7 +28,9 @@ class CacheManager {
     // If still full, remove oldest entry
     if (this.cache.size >= this.maxSize) {
       const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey);
+      if (typeof oldestKey === 'string') {
+        this.cache.delete(oldestKey);
+      }
     }
 
     this.cache.set(key, {
@@ -38,7 +40,7 @@ class CacheManager {
     });
   }
 
-  get<T>(key: string): T | null {
+  get(key: string): T | null {
     const entry = this.cache.get(key);
     
     if (!entry) {
@@ -107,17 +109,17 @@ class CacheManager {
 }
 
 // Global cache instances
-export const statsCache = new CacheManager({ 
+export const statsCache = new CacheManager<unknown>({ 
   ttl: 2 * 60 * 1000, // 2 minutes for stats
   maxSize: 50 
 });
 
-export const dataCache = new CacheManager({ 
+export const dataCache = new CacheManager<unknown>({ 
   ttl: 5 * 60 * 1000, // 5 minutes for data
   maxSize: 100 
 });
 
-export const navigationCache = new CacheManager({ 
+export const navigationCache = new CacheManager<unknown>({ 
   ttl: 10 * 60 * 1000, // 10 minutes for navigation data
   maxSize: 20 
 });

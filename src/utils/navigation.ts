@@ -6,10 +6,15 @@
  * Navigate to a specific tab in the socio dashboard
  * @param tabId - The ID of the tab to navigate to
  */
+type WindowWithNavigate = Window & {
+  navigateToSocioTab?: (tabId: string) => void;
+};
+
 export const navigateToSocioTab = (tabId: string) => {
   // Check if the global navigation function is available
-  if (typeof window !== 'undefined' && (window as any).navigateToSocioTab) {
-    (window as any).navigateToSocioTab(tabId);
+  const win = window as WindowWithNavigate;
+  if (typeof window !== 'undefined' && win.navigateToSocioTab) {
+    win.navigateToSocioTab(tabId);
   } else {
     // Fallback: update URL manually
     const newUrl = new URL(window.location.href);

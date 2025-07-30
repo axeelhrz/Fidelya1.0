@@ -12,15 +12,6 @@ import {
   Avatar,
   Button,
   Alert,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
 import {
   TrendingUp,
@@ -28,14 +19,11 @@ import {
   Sms,
   PhoneAndroid,
   CheckCircle,
-  Error,
-  Warning,
   Refresh,
-  Analytics,
   Speed,
   Schedule,
 } from '@mui/icons-material';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -49,7 +37,6 @@ import {
   Legend,
 } from 'chart.js';
 import { notificationQueueService } from '@/services/notification-queue.service';
-import { enhancedNotificationService } from '@/services/enhanced-notifications.service';
 
 ChartJS.register(
   CategoryScale,
@@ -83,7 +70,19 @@ interface DashboardStats {
 
 export const NotificationDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [queueHealth, setQueueHealth] = useState<any>(null);
+  interface QueueHealth {
+    status: 'healthy' | 'warning' | 'critical';
+    issues: string[];
+    recommendations: string[];
+    metrics: {
+      avgProcessingTime: string;
+      successRate: string;
+      throughput: string;
+      oldestPending: string;
+    };
+  }
+
+  const [queueHealth, setQueueHealth] = useState<QueueHealth | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 

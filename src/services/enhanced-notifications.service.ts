@@ -14,8 +14,7 @@ import {
   NotificationFormData, 
   NotificationDelivery, 
   NotificationSettings,
-  NotificationType,
-  NotificationPriority 
+  NotificationType
 } from '@/types/notification';
 
 // Enhanced Email service using SendGrid with real implementation
@@ -360,7 +359,7 @@ class EnhancedPushNotificationService {
         const result = await response.json();
         const errors: string[] = [];
         
-        result.results?.forEach((res: any, index: number) => {
+        result.results?.forEach((res: { error?: string }, index: number) => {
           if (res.error) {
             errors.push(`Token ${index}: ${res.error}`);
           }
@@ -459,7 +458,7 @@ export class EnhancedNotificationService {
         updatedAt: serverTimestamp()
       });
 
-      return { ...defaultSettings, id: docRef.id };
+      return { ...(defaultSettings as NotificationSettings), id: docRef.id } as NotificationSettings & { id: string };
     } catch (error) {
       console.error('Error getting user settings:', error);
       return null;
@@ -702,7 +701,11 @@ Si no deseas recibir estas notificaciones, puedes cambiar tus preferencias en: $
             trackingId
           );
 
-          results.email = emailResult;
+          results.email = {
+            success: emailResult.success,
+            error: emailResult.error ?? '',
+            messageId: emailResult.messageId
+          };
           
           await updateDoc(doc(db, 'notificationDeliveries', deliveryId), {
             status: emailResult.success ? 'sent' : 'failed',

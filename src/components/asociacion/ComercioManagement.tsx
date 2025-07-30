@@ -31,7 +31,6 @@ import {
   Eye,
   ChevronDown,
   ChevronUp,
-  TrendingUp,
   Activity,
   Zap,
   Grid3X3,

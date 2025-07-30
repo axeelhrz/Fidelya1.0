@@ -46,6 +46,22 @@ export const usePushNotifications = () => {
     }
   }, [isSupported]);
 
+  // Guardar token en Firestore
+  const saveTokenToFirestore = useCallback(async (fcmToken: string) => {
+    if (!user?.uid) return;
+
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        pushTokens: arrayUnion(fcmToken),
+        lastTokenUpdate: new Date()
+      });
+      console.log('✅ FCM token saved to Firestore');
+    } catch (error) {
+      console.error('❌ Error saving FCM token:', error);
+    }
+  }, [user?.uid]);
+
   // Solicitar permisos y obtener token FCM
   const requestPermission = useCallback(async (): Promise<string | null> => {
     if (!isSupported) {
@@ -111,23 +127,7 @@ export const usePushNotifications = () => {
     } finally {
       setIsRegistering(false);
     }
-  }, [isSupported, user?.uid, registerServiceWorker]);
-
-  // Guardar token en Firestore
-  const saveTokenToFirestore = useCallback(async (fcmToken: string) => {
-    if (!user?.uid) return;
-
-    try {
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        pushTokens: arrayUnion(fcmToken),
-        lastTokenUpdate: new Date()
-      });
-      console.log('✅ FCM token saved to Firestore');
-    } catch (error) {
-      console.error('❌ Error saving FCM token:', error);
-    }
-  }, [user?.uid]);
+  }, [isSupported, user?.uid, registerServiceWorker, saveTokenToFirestore]);
 
   // Remover token de Firestore
   const removeTokenFromFirestore = useCallback(async (fcmToken: string) => {

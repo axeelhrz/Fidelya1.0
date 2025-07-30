@@ -76,9 +76,9 @@ class OptimizedNotificationManager {
     // Mostrar notificaciones agrupadas
     Object.entries(grouped).forEach(([type, messages]) => {
       if (messages.length === 1) {
-        this.showSingleNotification(messages[0], type as any);
+        this.showSingleNotification(messages[0], type as 'success' | 'error' | 'info');
       } else {
-        this.showBatchNotification(messages, type as any);
+        this.showBatchNotification(messages, type as 'success' | 'error' | 'info');
       }
     });
 

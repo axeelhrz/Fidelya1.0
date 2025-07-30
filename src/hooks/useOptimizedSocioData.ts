@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { socioService, SocioFilters } from '@/services/socio.service';
-import { Socio, SocioStats } from '@/types/socio';
+import { socioService } from '@/services/socio.service';
+import { SocioStats } from '@/types/socio';
 import { useAuth } from './useAuth';
-import { useDebounce } from './useDebounce';
 
 interface CacheEntry<T> {
   data: T;
@@ -10,11 +9,11 @@ interface CacheEntry<T> {
   expiry: number;
 }
 
-class DataCache {
-  private cache = new Map<string, CacheEntry<any>>();
+class DataCache<T = unknown> {
+  private cache = new Map<string, CacheEntry<T>>();
   private readonly DEFAULT_EXPIRY = 5 * 60 * 1000; // 5 minutes
 
-  set<T>(key: string, data: T, expiry = this.DEFAULT_EXPIRY): void {
+  set(key: string, data: T, expiry = this.DEFAULT_EXPIRY): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -22,7 +21,7 @@ class DataCache {
     });
   }
 
-  get<T>(key: string): T | null {
+  get(key: string): T | null {
     const entry = this.cache.get(key);
     if (!entry) return null;
 
@@ -60,7 +59,7 @@ class DataCache {
   }
 }
 
-const dataCache = new DataCache();
+const dataCache = new DataCache<SocioStats>();
 
 interface UseOptimizedSocioDataReturn {
   stats: SocioStats;
@@ -96,7 +95,7 @@ export function useOptimizedSocioData(): UseOptimizedSocioDataReturn {
 
     // Check cache first
     if (!forceRefresh && dataCache.has(cacheKey)) {
-      const cachedStats = dataCache.get<SocioStats>(cacheKey);
+      const cachedStats = dataCache.get(cacheKey);
       if (cachedStats) {
         setStats(cachedStats);
         return;

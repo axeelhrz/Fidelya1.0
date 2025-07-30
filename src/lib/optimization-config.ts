@@ -118,7 +118,7 @@ export const OptimizationUtils = {
   /**
    * Log de performance para desarrollo
    */
-  logPerformance(operation: string, startTime: number, data?: any) {
+  logPerformance(operation: string, startTime: number, data?: unknown) {
     if (!OPTIMIZATION_CONFIG.DEV.ENABLE_PERFORMANCE_MONITORING) return;
     
     const duration = performance.now() - startTime;
@@ -128,7 +128,7 @@ export const OptimizationUtils = {
   /**
    * Log de cache para desarrollo
    */
-  logCacheEvent(event: 'hit' | 'miss' | 'set' | 'invalidate', key: string, data?: any) {
+  logCacheEvent(event: 'hit' | 'miss' | 'set' | 'invalidate', key: string, data?: unknown) {
     if (!OPTIMIZATION_CONFIG.DEV.LOG_CACHE_HITS) return;
     
     const emoji = {

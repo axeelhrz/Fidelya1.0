@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
-import { useAuth } from '@/hooks/useAuth';
 
 interface SocioOverviewDashboardProps {
   onNavigate?: (section: string) => void;
@@ -34,10 +33,8 @@ interface SocioOverviewDashboardProps {
 const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({ 
   onNavigate, 
   onQuickScan, 
-  stats 
 }) => {
-  const { user } = useAuth();
-  const { socio, estadisticas } = useSocioProfile();
+  const { estadisticas } = useSocioProfile();
   const { beneficios, estadisticasRapidas } = useBeneficios();
 
   // Memoizar estadísticas consolidadas
@@ -60,7 +57,12 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
       ahorroTotal: estadisticas?.ahorroTotal || 0,
       beneficiosVencenProximamente: beneficios.filter(b => {
         if (!b.fechaFin) return false;
-        const fechaFin = b.fechaFin.toDate ? b.fechaFin.toDate() : new Date(b.fechaFin);
+        let fechaFin: Date;
+        if (b.fechaFin && typeof b.fechaFin === 'object' && typeof b.fechaFin.toDate === 'function') {
+          fechaFin = b.fechaFin.toDate();
+        } else {
+          fechaFin = new Date(b.fechaFin);
+        }
         const diasRestantes = Math.ceil((fechaFin.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         return diasRestantes <= 7 && diasRestantes > 0;
       }).length
@@ -77,8 +79,14 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
         if (b.estado !== 'activo') return false;
         
         // Verificar fechas de vigencia
-        const fechaInicio = b.fechaInicio?.toDate ? b.fechaInicio.toDate() : new Date(b.fechaInicio);
-        const fechaFin = b.fechaFin?.toDate ? b.fechaFin.toDate() : new Date(b.fechaFin);
+        const fechaInicio = (b.fechaInicio && typeof b.fechaInicio === 'object' && typeof b.fechaInicio.toDate === 'function')
+          ? b.fechaInicio.toDate()
+          : typeof b.fechaInicio === 'string' || typeof b.fechaInicio === 'number'
+            ? new Date(b.fechaInicio)
+            : null;
+        const fechaFin = (b.fechaFin && typeof b.fechaFin === 'object' && typeof b.fechaFin.toDate === 'function')
+          ? b.fechaFin.toDate()
+          : new Date(b.fechaFin);
         
         if (fechaInicio > now || fechaFin <= now) return false;
         

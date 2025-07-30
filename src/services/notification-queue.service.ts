@@ -1,7 +1,6 @@
 import { 
   collection, 
   doc, 
-  addDoc, 
   updateDoc, 
   getDocs, 
   query, 
@@ -10,7 +9,6 @@ import {
   limit,
   serverTimestamp,
   Timestamp,
-  deleteDoc,
   writeBatch,
   runTransaction
 } from 'firebase/firestore';
@@ -101,7 +99,6 @@ class NotificationQueueService {
     try {
       // Use batch for better performance
       const batch = writeBatch(db);
-      const promises: Promise<string>[] = [];
 
       for (const recipientId of recipientIds) {
         const queueRef = doc(collection(db, this.COLLECTION_NAME));

@@ -7,7 +7,6 @@ import type {
   NotificationFormData,
   NotificationFilters,
   NotificationStats,
-  NotificationTemplate,
 } from '@/types/notification';
 import {
   subscribeToNotifications,
@@ -65,7 +64,7 @@ export const useNotifications = () => {
   const initAudioContext = useCallback(() => {
     if (!audioContext && typeof window !== 'undefined') {
       try {
-        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        audioContext = new (window.AudioContext || (window as Window & typeof globalThis).webkitAudioContext)();
       } catch (error) {
         console.warn('Audio context not supported:', error);
       }
@@ -115,7 +114,7 @@ export const useNotifications = () => {
           }, index * 150);
         });
       }
-    } catch (error) {
+    } catch {
       // Fallback to simple audio
       try {
         const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
@@ -135,7 +134,6 @@ export const useNotifications = () => {
         tag: notification.id,
         requireInteraction: notification.priority === 'urgent',
         silent: false,
-        timestamp: new Date(notification.createdAt).getTime(),
         data: {
           notificationId: notification.id,
           actionUrl: notification.actionUrl,
@@ -144,21 +142,7 @@ export const useNotifications = () => {
         },
       };
 
-      // Add action buttons for supported browsers
-      if ('actions' in Notification.prototype && notification.actionUrl) {
-        options.actions = [
-          {
-            action: 'view',
-            title: notification.actionLabel || 'Ver más',
-            icon: '/favicon.ico',
-          },
-          {
-            action: 'dismiss',
-            title: 'Descartar',
-            icon: '/favicon.ico',
-          }
-        ];
-      }
+      // Action buttons are not supported in NotificationOptions type in most browsers, so skip adding them.
 
       const browserNotification = new Notification(notification.title, options);
 
@@ -180,8 +164,10 @@ export const useNotifications = () => {
 
       // Handle action clicks (if supported)
       if ('addEventListener' in browserNotification) {
-        browserNotification.addEventListener('notificationclick', (event: any) => {
-          if (event.action === 'view' && notification.actionUrl) {
+        browserNotification.addEventListener('notificationclick', (event: Event) => {
+          // Type assertion for NotificationEvent if available
+          const notificationEvent = event as unknown as { action?: string };
+          if (notificationEvent.action === 'view' && notification.actionUrl) {
             window.open(notification.actionUrl, '_blank');
           }
           browserNotification.close();
@@ -481,7 +467,11 @@ export const useNotifications = () => {
             if (successMessage.length > 0) {
               toast.success(`Notificación enviada: ${successMessage.join(', ')}`);
             } else {
-              toast.warning('Notificación creada pero no se pudieron enviar notificaciones externas');
+              toast('Notificación creada pero no se pudieron enviar notificaciones externas', {
+                icon: '⚠️',
+                duration: 5000,
+                position: 'top-right',
+              });
             }
             
           } catch (externalError) {

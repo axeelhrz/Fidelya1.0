@@ -8,7 +8,6 @@ import {
   Gift, 
   DollarSign, 
   Users, 
-  Calendar,
   Award,
   Target,
   BarChart3,

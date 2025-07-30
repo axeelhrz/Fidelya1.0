@@ -16,7 +16,6 @@ import {
   Grid,
   TextField,
   MenuItem,
-  IconButton,
   Avatar,
   LinearProgress,
   Accordion,
@@ -28,14 +27,12 @@ import {
   Email,
   Sms,
   PhoneAndroid,
-  Schedule,
   VolumeOff,
   Settings,
   CheckCircle,
-  Warning,
   ExpandMore,
   Refresh,
-  TestTube,
+  Science,
 } from '@mui/icons-material';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -73,11 +70,8 @@ export const EnhancedNotificationSettings: React.FC = () => {
   const { user } = useAuth();
   const { 
     isSupported: pushSupported, 
-    permission: pushPermission, 
-    token: pushToken,
     isRegistering,
     requestPermission,
-    unsubscribe,
     isEnabled: pushEnabled
   } = usePushNotifications();
 
@@ -521,7 +515,7 @@ export const EnhancedNotificationSettings: React.FC = () => {
           variant="outlined"
           onClick={sendTestNotification}
           disabled={testing || !user?.uid}
-          startIcon={testing ? <LinearProgress /> : <TestTube />}
+          startIcon={testing ? <LinearProgress /> : <Science />}
         >
           {testing ? 'Enviando...' : 'Enviar Prueba'}
         </Button>

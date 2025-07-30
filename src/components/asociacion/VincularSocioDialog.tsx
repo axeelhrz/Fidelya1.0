@@ -196,7 +196,7 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
                         Vincular Socio Existente
                       </h2>
                       <p className="text-white/80 text-sm">
-                        Busca usuarios con role "socio" para vincular a la asociación
+                        Busca usuarios con role &quot;socio&quot; para vincular a la asociación
                       </p>
                     </div>
                   </div>
@@ -248,7 +248,7 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
                           <span className="font-medium">{error}</span>
                         </div>
                         <div className="mt-2 text-xs text-red-600">
-                          💡 Tip: Asegúrate de que existan usuarios registrados con role "socio" en Firebase
+                          💡 Tip: Asegúrate de que existan usuarios registrados con role &quot;socio&quot; en Firebase
                         </div>
                       </div>
                     )}
@@ -331,7 +331,7 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
                         </div>
                         <p className="text-gray-500 font-medium">No se encontraron usuarios</p>
                         <p className="text-sm text-gray-400 mt-1">
-                          Busca usuarios con role "socio" registrados en el sistema
+                          Busca usuarios con role &quot;socio&quot; registrados en el sistema
                         </p>
                       </div>
                     )}

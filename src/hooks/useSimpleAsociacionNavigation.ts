@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
 interface UseSimpleAsociacionNavigationOptions {
-  autoCloseOnMobile?: boolean;
   debounceMs?: number;
 }
 
@@ -12,10 +11,8 @@ export const useSimpleAsociacionNavigation = (
   options: UseSimpleAsociacionNavigationOptions = {}
 ) => {
   const { 
-    autoCloseOnMobile = true, 
     debounceMs = 200
   } = options;
-  
   const router = useRouter();
   const pathname = usePathname();
   
@@ -24,28 +21,28 @@ export const useSimpleAsociacionNavigation = (
   const [isMobile, setIsMobile] = useState(false);
 
   // Route mapping
-  const routeMap: Record<string, string> = {
+  const routeMap: Record<string, string> = useMemo(() => ({
     'dashboard': '/dashboard/asociacion',
     'socios': '/dashboard/asociacion/socios',
     'comercios': '/dashboard/asociacion/comercios',
     'beneficios': '/dashboard/asociacion/beneficios',
     'analytics': '/dashboard/asociacion/analytics',
     'notificaciones': '/dashboard/asociacion/notificaciones'
-  };
+  }), []);
 
-  const reverseRouteMap: Record<string, string> = {
+  const reverseRouteMap: Record<string, string> = useMemo(() => ({
     '/dashboard/asociacion': 'dashboard',
     '/dashboard/asociacion/socios': 'socios',
     '/dashboard/asociacion/comercios': 'comercios',
     '/dashboard/asociacion/beneficios': 'beneficios',
     '/dashboard/asociacion/analytics': 'analytics',
     '/dashboard/asociacion/notificaciones': 'notificaciones'
-  };
+  }), []);
 
   // Helper function to get active section from pathname
-  const getActiveSectionFromPath = (path: string): string => {
+  const getActiveSectionFromPath = useCallback((path: string): string => {
     return reverseRouteMap[path] || 'dashboard';
-  };
+  }, [reverseRouteMap]);
 
   // Detect mobile/desktop
   useEffect(() => {
@@ -63,7 +60,7 @@ export const useSimpleAsociacionNavigation = (
     const newActiveSection = getActiveSectionFromPath(pathname);
     setActiveSection(newActiveSection);
     setIsNavigating(false);
-  }, [pathname]);
+  }, [pathname, getActiveSectionFromPath]);
 
   // Navigation function
   const navigateToSection = useCallback((section: string) => {

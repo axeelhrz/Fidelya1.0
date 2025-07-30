@@ -27,7 +27,6 @@ import {
 } from 'lucide-react';
 import { Socio, SocioFormData } from '@/types/socio';
 import { Timestamp } from 'firebase/firestore';
-import { useDebounce } from '@/hooks/useDebounce';
 
 // Esquema de validación para creación (más estricto)
 const createSocioSchema = z.object({
@@ -72,6 +71,7 @@ const editSocioSchema = z.object({
 });
 
 type SocioFormInputs = z.infer<typeof createSocioSchema>;
+type EditSocioFormInputs = z.infer<typeof editSocioSchema>;
 
 // Configuración de pasos del formulario
 const FORM_STEPS = [
@@ -102,15 +102,31 @@ const FORM_STEPS = [
 ];
 
 // Componente de campo de formulario simple
-const SimpleFormField = React.memo(({ 
-  field, 
-  register, 
-  error, 
-  watch, 
-  showPassword, 
+interface SimpleFormFieldProps {
+  field: {
+    name: string;
+    label: string;
+    type: string;
+    icon?: React.ComponentType<{ className?: string }>;
+    placeholder?: string;
+    options?: { value: string; label: string }[];
+  };
+  register: ReturnType<typeof useForm>['register'];
+  error?: { message?: string };
+  watch: (name: string) => string;
+  showPassword: boolean;
+  onTogglePassword: () => void;
+  isEditing?: boolean;
+}
+
+const SimpleFormField = React.memo(({
+  field,
+  register,
+  error,
+  watch,
+  showPassword,
   onTogglePassword,
-  isEditing 
-}: any) => {
+}: SimpleFormFieldProps) => {
   const fieldValue = watch(field.name);
   const hasError = !!error;
   const hasValue = fieldValue && fieldValue.length > 0;
@@ -149,7 +165,7 @@ const SimpleFormField = React.memo(({
             className={getFieldClasses()}
           >
             <option value="">Seleccionar...</option>
-            {field.options?.map((option: any) => (
+            {field.options?.map((option: { value: string; label: string }) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -239,31 +255,6 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     return () => setMounted(false);
   }, []);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-    watch,
-    trigger,
-    getValues
-  } = useForm<SocioFormInputs>({
-    resolver: zodResolver(isEditing ? editSocioSchema : createSocioSchema),
-    mode: 'onChange',
-    defaultValues: {
-      nombre: '',
-      email: '',
-      estado: 'activo',
-      telefono: '',
-      dni: '',
-      direccion: '',
-      fechaNacimiento: '',
-    }
-  });
-
-  // Validación debounced
-  const debouncedTrigger = useDebounce(trigger, 300);
-
   // Función para convertir Date/Timestamp a string para input date
   const formatDateForInput = useCallback((date: Date | Timestamp | undefined): string => {
     if (!date) return '';
@@ -279,6 +270,46 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     
     return jsDate.toISOString().split('T')[0];
   }, []);
+  type SocioFormType = SocioFormInputs | EditSocioFormInputs;
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+    watch,
+    trigger,
+    getValues
+  } = useForm<SocioFormType>({
+    resolver: isEditing
+      ? (zodResolver(editSocioSchema) as import('react-hook-form').Resolver<SocioFormType>)
+      : (zodResolver(createSocioSchema) as import('react-hook-form').Resolver<SocioFormType>),
+    mode: 'onChange',
+    defaultValues: isEditing
+      ? {
+          nombre: socio?.nombre ?? '',
+          email: socio?.email ?? '',
+          estado: socio?.estado ?? 'activo',
+          telefono: socio?.telefono ?? '',
+          dni: socio?.dni ?? '',
+          direccion: socio?.direccion ?? '',
+          fechaNacimiento: socio?.fechaNacimiento
+            ? formatDateForInput(socio.fechaNacimiento)
+            : '',
+        }
+      : {
+          nombre: '',
+          email: '',
+          estado: 'activo',
+          telefono: '',
+          dni: '',
+          direccion: '',
+          fechaNacimiento: '',
+        }
+  });
+
+  // Validación debounced
+  // const debouncedTrigger = useDebounce(trigger, 300);
 
   // Resetear formulario
   useEffect(() => {
@@ -319,8 +350,10 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     }
 
     // En modo creación, validar antes de continuar
-    const currentFields = FORM_STEPS[currentStep].fields;
-    const isValid = await trigger(currentFields as any);
+    const currentFields = FORM_STEPS[currentStep].fields as Array<
+      "nombre" | "email" | "estado" | "telefono" | "dni" | "direccion" | "fechaNacimiento" | "password" | "confirmPassword"
+    >;
+    const isValid = await trigger(currentFields);
     
     if (isValid && currentStep < FORM_STEPS.length - 1) {
       setCurrentStep(prev => prev + 1);
@@ -366,14 +399,16 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
   }, [isEditing, getValues, socio, onSave, onClose]);
 
   // Envío del formulario completo
-  const onSubmit = useCallback(async (data: SocioFormInputs) => {
+  const onSubmit = useCallback(async (
+    data: SocioFormInputs | EditSocioFormInputs
+  ) => {
     try {
       setIsSubmitting(true);
-      
+
       const formData: SocioFormData = {
-        nombre: data.nombre,
-        email: data.email,
-        estado: data.estado,
+        nombre: data.nombre || '',
+        email: data.email || '',
+        estado: data.estado || 'activo',
         telefono: data.telefono || '',
         dni: data.dni || '',
         direccion: data.direccion || '',
@@ -390,7 +425,7 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
     }
   }, [onSave, onClose]);
 
-  // Campos del formulario por paso
+  // Configuración de campos para cada paso
   const getStepFields = useMemo(() => {
     const fieldConfigs = {
       nombre: { name: 'nombre', label: 'Nombre completo', type: 'text', icon: User, placeholder: 'Ingrese el nombre completo' },

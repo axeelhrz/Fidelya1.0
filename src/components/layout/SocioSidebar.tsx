@@ -16,7 +16,6 @@ import {
   Menu,
   Sparkles,
   Building2,
-  Activity
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
@@ -54,7 +53,7 @@ interface MenuItem {
 interface Validacion {
   id: string;
   socioId: string;
-  fechaValidacion: any;
+  fechaValidacion: Date | { toDate: () => Date };
   estado: string;
 }
 
@@ -240,7 +239,7 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
-  const { socio, estadisticas, loading: socioLoading } = useSocioProfile();
+  const { socio, loading: socioLoading } = useSocioProfile();
   const { estadisticasRapidas } = useBeneficios();
   
   // Estado optimizado con referencias estables - NO SE ACTUALIZA CON CAMBIOS DE PESTAÑA
@@ -254,11 +253,11 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
 
   // Referencias para evitar re-renders innecesarios
   const lastStatsRef = useRef<OptimizedStats>(optimizedStats);
-  const updateTimeoutRef = useRef<NodeJS.Timeout>();
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Hook optimizado para validaciones en tiempo real
   const {
-    data: validaciones = [],
+    data: validaciones,
     loading: validacionesLoading
   } = useOptimizedRealtimeCollection<Validacion>(
     'validaciones',
@@ -275,31 +274,31 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
       enableOfflineSupport: true
     }
   );
-
   // Memoizar estadísticas derivadas con dependencias estables
   const derivedStats = useMemo(() => {
+    const validacionesArray = validaciones ?? [];
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    // Calcular beneficios del mes actual
-    const beneficiosEstesMes = validaciones.filter(v => {
+    const beneficiosEstesMes = validacionesArray.filter(v => {
       if (!v.fechaValidacion) return false;
-      const fecha = v.fechaValidacion.toDate ? v.fechaValidacion.toDate() : new Date(v.fechaValidacion);
+      const fecha = typeof v.fechaValidacion === 'object' && 'toDate' in v.fechaValidacion
+        ? v.fechaValidacion.toDate()
+        : new Date(v.fechaValidacion);
       return fecha.getMonth() === currentMonth && fecha.getFullYear() === currentYear;
     }).length;
 
     return {
       totalBeneficios: estadisticasRapidas.disponibles || 0,
       beneficiosUsados: estadisticasRapidas.usados || 0,
-      estadoMembresia: socio?.estadoMembresia || 'pendiente',
-      actividadReciente: validaciones.length,
-      beneficiosEstesMes
+      actividadReciente: validacionesArray.length,
+      beneficiosEstesMes,
+      estadoMembresia: socio?.estadoMembresia || 'pendiente'
     };
   }, [
     estadisticasRapidas.disponibles,
     estadisticasRapidas.usados,
-    validaciones.length,
     socio?.estadoMembresia,
     validaciones
   ]);

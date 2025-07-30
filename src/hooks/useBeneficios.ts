@@ -50,9 +50,9 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
   });
 
   // Debounced update functions para evitar actualizaciones muy frecuentes
-  const debouncedSetBeneficios = useDebounce((newBeneficios: Beneficio[]) => {
+  const debouncedSetBeneficios = useDebounce((...args: unknown[]) => {
     if (!mountedRef.current) return;
-    
+    const newBeneficios = args[0] as Beneficio[];
     // Solo actualizar si realmente cambió
     const currentStr = JSON.stringify(lastDataRef.current.beneficios);
     const newStr = JSON.stringify(newBeneficios);
@@ -63,9 +63,9 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
     }
   }, 500);
 
-  const debouncedSetBeneficiosUsados = useDebounce((newUsados: BeneficioUso[]) => {
+  const debouncedSetBeneficiosUsados = useDebounce((...args: unknown[]) => {
     if (!mountedRef.current) return;
-    
+    const newUsados = args[0] as BeneficioUso[];
     const currentStr = JSON.stringify(lastDataRef.current.beneficiosUsados);
     const newStr = JSON.stringify(newUsados);
     
@@ -75,9 +75,9 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
     }
   }, 500);
 
-  const debouncedSetStats = useDebounce((newStats: BeneficioStats | null) => {
+  const debouncedSetStats = useDebounce((...args: unknown[]) => {
     if (!mountedRef.current) return;
-    
+    const newStats = args[0] as BeneficioStats | null;
     const currentStr = JSON.stringify(lastDataRef.current.stats);
     const newStr = JSON.stringify(newStats);
     

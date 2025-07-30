@@ -13,8 +13,14 @@ import {
 } from 'lucide-react';
 
 interface ComercioWelcomeCardProps {
-  user: any;
-  comercio?: any;
+  user: {
+    nombre?: string;
+    // Add other user properties as needed
+  };
+  comercio?: {
+    nombreComercio?: string;
+    // Add other comercio properties as needed
+  };
   stats?: {
     validacionesHoy?: number;
     beneficiosActivos?: number;
