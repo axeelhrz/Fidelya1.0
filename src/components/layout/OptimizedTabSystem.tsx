@@ -43,11 +43,11 @@ const NotificationsCenter = lazy(() =>
 );
 
 // Tab configuration with optimized structure
-interface TabConfig<P = unknown> {
+interface TabConfig {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  component: React.LazyExoticComponent<React.ComponentType<P>>;
+  component: React.LazyExoticComponent<React.ComponentType<any>>;
   gradient: string;
   description: string;
   badge?: number;

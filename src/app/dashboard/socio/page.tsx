@@ -154,7 +154,7 @@ export default function OptimizedSocioDashboard() {
           {/* Optimized Welcome Card */}
           <SocioWelcomeCard
             user={user ?? {}}
-            socio={socio}
+            socio={socio ?? undefined}
             stats={consolidatedStats}
             onQuickScan={handleQuickScan}
             onViewProfile={handleViewProfile}
