@@ -38,7 +38,7 @@ const ModernActivityTimelineComponent: React.FC<ModernActivityTimelineProps> = (
   loading, 
   onViewAll 
 }) => {
-  const getActivityIcon = useMemo(() => (type: ActivityLog['type']) => {
+  const getActivityIcon = (type: ActivityLog['type']) => {
     switch (type) {
       case 'member_added':
         return <UserPlus className="w-6 h-6" />;
@@ -55,9 +55,9 @@ const ModernActivityTimelineComponent: React.FC<ModernActivityTimelineProps> = (
       default:
         return <Activity className="w-6 h-6" />;
     }
-  }, []);
+  };
 
-  const getActivityGradient = useMemo(() => (type: ActivityLog['type']) => {
+  const getActivityGradient = (type: ActivityLog['type']) => {
     const gradients = {
       member_added: 'from-emerald-500 to-teal-500',
       member_updated: 'from-blue-500 to-cyan-500',
@@ -67,12 +67,12 @@ const ModernActivityTimelineComponent: React.FC<ModernActivityTimelineProps> = (
       system_alert: 'from-red-500 to-pink-500',
     };
     return gradients[type] || 'from-slate-500 to-gray-500';
-  }, []);
+  };
 
-  const formatActivityTime = useMemo(() => (timestamp: Timestamp) => {
+  const formatActivityTime = (timestamp: Timestamp) => {
     const date = timestamp.toDate();
     return format(date, 'dd/MM HH:mm', { locale: es });
-  }, []);
+  };
 
   const displayActivities = useMemo(() => activities.slice(0, 5), [activities]);
 
@@ -166,10 +166,8 @@ const ModernActivityTimelineComponent: React.FC<ModernActivityTimelineProps> = (
   );
 };
 
-// Set display name before memoization
 ModernActivityTimelineComponent.displayName = 'ModernActivityTimelineComponent';
 
-// Create memoized component with explicit display name
 const ModernActivityTimeline = memo(ModernActivityTimelineComponent);
 ModernActivityTimeline.displayName = 'ModernActivityTimeline';
 
