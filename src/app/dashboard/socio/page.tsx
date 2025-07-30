@@ -4,8 +4,6 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { LogoutModal } from '@/components/ui/LogoutModal';
 import { OptimizedSocioTabSystem } from '@/components/layout/OptimizedSocioTabSystem';
 import { UltraOptimizedTransitions } from '@/components/layout/UltraOptimizedTransitions';
@@ -13,25 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useOptimizedSocioNavigation } from '@/hooks/useOptimizedSocioNavigation';
-
-// Enhanced Sidebar with logout functionality
-const SocioSidebarWithLogout: React.FC<{
-  open: boolean;
-  onToggle: () => void;
-  onMenuClick: (section: string) => void;
-  activeSection: string;
-  onLogoutClick: () => void;
-}> = (props) => {
-  return (
-    <SocioSidebar
-      open={props.open}
-      onToggle={props.onToggle}
-      onMenuClick={props.onMenuClick}
-      onLogoutClick={props.onLogoutClick}
-      activeSection={props.activeSection}
-    />
-  );
-};
+import { LogOut, User, Bell, Settings } from 'lucide-react';
 
 export default function SocioDashboard() {
   const router = useRouter();
@@ -118,6 +98,13 @@ export default function SocioDashboard() {
     ahorroEsteMes: estadisticasRapidas.ahorroEsteMes || 0
   }), [estadisticasRapidas]);
 
+  // User info for header
+  const userInfo = useMemo(() => ({
+    name: socio?.nombre || user?.nombre || 'Socio',
+    number: socio?.numeroSocio || 'N/A',
+    initial: (socio?.nombre || user?.nombre)?.charAt(0).toUpperCase() || 'S'
+  }), [socio?.nombre, socio?.numeroSocio, user?.nombre]);
+
   // Loading state with modern design
   if (authLoading || socioLoading) {
     return (
@@ -145,51 +132,100 @@ export default function SocioDashboard() {
 
   return (
     <>
-      <DashboardLayout 
-        activeSection={activeTab} 
-        onSectionChange={navigateToTab}
-        sidebarComponent={(props) => (
-          <SocioSidebarWithLogout
-            {...props}
-            onLogoutClick={handleLogoutClick}
-          />
-        )}
+      {/* Top Header Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-lg"
       >
-        <UltraOptimizedTransitions
-          activeKey={activeTab}
-          direction="horizontal"
-          duration={200}
-          className="min-h-screen"
-        >
-          {/* Modern gradient background */}
-          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-100/20">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-7xl">
-              {/* Performance Header */}
-              {process.env.NODE_ENV === 'development' && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 bg-black/80 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-lg border border-white/20 max-w-fit"
-                >
-                  <div className="flex items-center gap-4">
-                    <span>Navegaciones: {performanceMetrics.navigationCount}</span>
-                    <span>Tiempo promedio: {performanceMetrics.averageTransitionTime.toFixed(2)}ms</span>
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  </div>
-                </motion.div>
-              )}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo/Brand */}
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <User className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-black text-slate-900">Fidelya</h1>
+                <p className="text-sm text-slate-600 font-medium">Panel de Socio</p>
+              </div>
+            </div>
 
-              {/* Optimized Tab System */}
-              <OptimizedSocioTabSystem
-                onNavigate={handleNavigate}
-                onQuickScan={handleQuickScan}
-                initialTab={activeTab}
-                stats={optimizedStats}
-              />
+            {/* User Info & Actions */}
+            <div className="flex items-center space-x-4">
+              {/* User Info */}
+              <div className="hidden sm:flex items-center space-x-3 bg-gradient-to-r from-slate-50 to-slate-100 px-4 py-2 rounded-2xl border border-slate-200">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-white font-black text-sm">
+                    {userInfo.initial}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-900">
+                    {userInfo.name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Socio #{userInfo.number}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center space-x-2">
+                <button className="w-10 h-10 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-2xl flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                  <Bell className="w-5 h-5" />
+                </button>
+                
+                <button className="w-10 h-10 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-2xl flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                  <Settings className="w-5 h-5" />
+                </button>
+                
+                <button
+                  onClick={handleLogoutClick}
+                  className="w-10 h-10 bg-red-100 hover:bg-red-200 border border-red-200 rounded-2xl flex items-center justify-center text-red-600 hover:text-red-700 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
-        </UltraOptimizedTransitions>
-      </DashboardLayout>
+        </div>
+      </motion.div>
+
+      {/* Main Content */}
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-100/20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-7xl">
+          <UltraOptimizedTransitions
+            activeKey={activeTab}
+            direction="horizontal"
+            duration={200}
+            className="min-h-screen"
+          >
+            {/* Performance Header */}
+            {process.env.NODE_ENV === 'development' && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 bg-black/80 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-lg border border-white/20 max-w-fit"
+              >
+                <div className="flex items-center gap-4">
+                  <span>Navegaciones: {performanceMetrics.navigationCount}</span>
+                  <span>Tiempo promedio: {performanceMetrics.averageTransitionTime.toFixed(2)}ms</span>
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                </div>
+              </motion.div>
+            )}
+
+            {/* Optimized Tab System */}
+            <OptimizedSocioTabSystem
+              onNavigate={handleNavigate}
+              onQuickScan={handleQuickScan}
+              initialTab={activeTab}
+              stats={optimizedStats}
+            />
+          </UltraOptimizedTransitions>
+        </div>
+      </div>
 
       {/* Modern Logout Modal */}
       <LogoutModal
