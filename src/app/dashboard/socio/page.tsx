@@ -1,14 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SocioSidebar } from '@/components/layout/SocioSidebar';
 import { LogoutModal } from '@/components/ui/LogoutModal';
-import { SocioOverviewDashboard } from '@/components/socio/SocioOverviewDashboard';
+import { OptimizedSocioTabSystem } from '@/components/layout/OptimizedSocioTabSystem';
+import { UltraOptimizedTransitions } from '@/components/layout/UltraOptimizedTransitions';
 import { useAuth } from '@/hooks/useAuth';
+import { useSocioProfile } from '@/hooks/useSocioProfile';
+import { useBeneficios } from '@/hooks/useBeneficios';
+import { useOptimizedSocioNavigation } from '@/hooks/useOptimizedSocioNavigation';
 
 // Enhanced Sidebar with logout functionality
 const SocioSidebarWithLogout: React.FC<{
@@ -32,9 +36,22 @@ const SocioSidebarWithLogout: React.FC<{
 export default function SocioDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
+  const { socio, loading: socioLoading } = useSocioProfile();
+  const { estadisticasRapidas, loading: beneficiosLoading } = useBeneficios();
+  
+  // Optimized navigation hook
+  const {
+    activeTab,
+    navigateToTab,
+    isTransitioning,
+    performanceMetrics
+  } = useOptimizedSocioNavigation({
+    initialTab: 'dashboard',
+    debounceMs: 100,
+    enableTransitions: true
+  });
   
   // State management
-  const [activeSection, setActiveSection] = useState('dashboard');
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -68,7 +85,7 @@ export default function SocioDashboard() {
     setLogoutModalOpen(false);
   };
 
-  // Navigation handlers - Updated to include asociaciones route
+  // Navigation handlers - Updated to use optimized navigation
   const handleNavigate = (section: string) => {
     const sectionRoutes: Record<string, string> = {
       'dashboard': '/dashboard/socio',
@@ -83,7 +100,8 @@ export default function SocioDashboard() {
     if (route && route !== '/dashboard/socio') {
       router.push(route);
     } else {
-      setActiveSection(section);
+      // Use optimized navigation for internal tabs
+      navigateToTab(section);
     }
   };
 
@@ -91,8 +109,17 @@ export default function SocioDashboard() {
     router.push('/dashboard/socio/validar');
   };
 
+  // Memoized stats for performance
+  const optimizedStats = useMemo(() => ({
+    totalBeneficios: estadisticasRapidas.disponibles || 0,
+    beneficiosUsados: estadisticasRapidas.usados || 0,
+    asociacionesActivas: 1, // Mock data - to be implemented
+    ahorroTotal: estadisticasRapidas.ahorroTotal || 0,
+    ahorroEsteMes: estadisticasRapidas.ahorroEsteMes || 0
+  }), [estadisticasRapidas]);
+
   // Loading state with modern design
-  if (authLoading) {
+  if (authLoading || socioLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="text-center max-w-md mx-auto">
@@ -119,8 +146,8 @@ export default function SocioDashboard() {
   return (
     <>
       <DashboardLayout 
-        activeSection={activeSection} 
-        onSectionChange={setActiveSection}
+        activeSection={activeTab} 
+        onSectionChange={navigateToTab}
         sidebarComponent={(props) => (
           <SocioSidebarWithLogout
             {...props}
@@ -128,23 +155,40 @@ export default function SocioDashboard() {
           />
         )}
       >
-        <motion.div
-          key={activeSection}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
+        <UltraOptimizedTransitions
+          activeKey={activeTab}
+          direction="horizontal"
+          duration={200}
           className="min-h-screen"
         >
           {/* Modern gradient background */}
           <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-100/20">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-7xl">
-              <SocioOverviewDashboard
+              {/* Performance Header */}
+              {process.env.NODE_ENV === 'development' && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 bg-black/80 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-lg border border-white/20 max-w-fit"
+                >
+                  <div className="flex items-center gap-4">
+                    <span>Navegaciones: {performanceMetrics.navigationCount}</span>
+                    <span>Tiempo promedio: {performanceMetrics.averageTransitionTime.toFixed(2)}ms</span>
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Optimized Tab System */}
+              <OptimizedSocioTabSystem
                 onNavigate={handleNavigate}
                 onQuickScan={handleQuickScan}
+                initialTab={activeTab}
+                stats={optimizedStats}
               />
             </div>
           </div>
-        </motion.div>
+        </UltraOptimizedTransitions>
       </DashboardLayout>
 
       {/* Modern Logout Modal */}

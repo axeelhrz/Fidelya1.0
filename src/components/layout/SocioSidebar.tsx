@@ -15,11 +15,12 @@ import {
   Star,
   Menu,
   Sparkles,
-  Building2
+  Building2,
+  Activity
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
-import { useBeneficiosSocio } from '@/hooks/useBeneficios';
+import { useBeneficios } from '@/hooks/useBeneficios';
 import { useOptimizedRealtimeCollection } from '@/hooks/useOptimizedRealtimeFirebase';
 import { where, orderBy, limit } from 'firebase/firestore';
 import SocioSidebarStats from '@/components/socio/SocioSidebarStats';
@@ -240,7 +241,7 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
   const pathname = usePathname();
   const { user } = useAuth();
   const { socio, estadisticas, loading: socioLoading } = useSocioProfile();
-  const { beneficiosActivos, estadisticasRapidas } = useBeneficiosSocio();
+  const { estadisticasRapidas } = useBeneficios();
   
   // Estado optimizado con referencias estables - NO SE ACTUALIZA CON CAMBIOS DE PESTAÑA
   const [optimizedStats, setOptimizedStats] = useState<OptimizedStats>({
@@ -254,7 +255,6 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
   // Referencias para evitar re-renders innecesarios
   const lastStatsRef = useRef<OptimizedStats>(optimizedStats);
   const updateTimeoutRef = useRef<NodeJS.Timeout>();
-  const lastActiveSection = useRef<string>(activeSection);
 
   // Hook optimizado para validaciones en tiempo real
   const {
@@ -290,14 +290,15 @@ const SocioSidebar: React.FC<SocioSidebarProps> = ({
     }).length;
 
     return {
-      totalBeneficios: beneficiosActivos?.length || 0,
-      beneficiosUsados: validaciones.length,
+      totalBeneficios: estadisticasRapidas.disponibles || 0,
+      beneficiosUsados: estadisticasRapidas.usados || 0,
       estadoMembresia: socio?.estadoMembresia || 'pendiente',
       actividadReciente: validaciones.length,
       beneficiosEstesMes
     };
   }, [
-    beneficiosActivos?.length,
+    estadisticasRapidas.disponibles,
+    estadisticasRapidas.usados,
     validaciones.length,
     socio?.estadoMembresia,
     validaciones
