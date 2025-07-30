@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, memo, Suspense, lazy } from 'react';
+import React, { useState, useCallback, useMemo, memo, Suspense, lazy, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Home, 
   User, 
@@ -120,7 +121,6 @@ const TabButton = memo<{
       `}
       whileHover={{ scale: isActive ? 1.05 : 1.02 }}
       whileTap={{ scale: 0.98 }}
-      // Remove initial animation to prevent re-renders
       layout
     >
       {/* Background glow for active tab */}
@@ -192,8 +192,18 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
   initialTab = 'dashboard',
   stats
 }) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Check for URL parameters to set initial tab
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams, activeTab]);
 
   // Memoized tab configuration - STABLE reference
   const tabs = useMemo<TabConfig[]>(() => [
@@ -251,15 +261,36 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
     }
   ], [stats]);
 
-  // Optimized tab change handler - NO DEBOUNCE to prevent delays
+  // Optimized tab change handler with URL update
   const handleTabChange = useCallback((tabId: string) => {
     if (tabId === activeTab || isTransitioning) return;
 
     setActiveTab(tabId);
+    
+    // Update URL without page reload
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('tab', tabId);
+    window.history.pushState({}, '', newUrl.toString());
+    
     if (onNavigate) {
       onNavigate(tabId);
     }
   }, [activeTab, isTransitioning, onNavigate]);
+
+  // Public method to change tab (can be called from other components)
+  const navigateToTab = useCallback((tabId: string) => {
+    handleTabChange(tabId);
+  }, [handleTabChange]);
+
+  // Expose navigation method globally
+  useEffect(() => {
+    // Store navigation function globally so other components can use it
+    (window as any).navigateToSocioTab = navigateToTab;
+    
+    return () => {
+      delete (window as any).navigateToSocioTab;
+    };
+  }, [navigateToTab]);
 
   // Get current tab configuration - STABLE reference
   const currentTab = useMemo(() => 
@@ -269,10 +300,10 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
 
   // Memoized component props - STABLE reference
   const componentProps = useMemo(() => ({
-    onNavigate,
+    onNavigate: navigateToTab,
     onQuickScan,
     stats
-  }), [onNavigate, onQuickScan, stats]);
+  }), [navigateToTab, onQuickScan, stats]);
 
   return (
     <div className="space-y-6">

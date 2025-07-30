@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import {
   Building2,
   Users,
@@ -32,6 +33,7 @@ import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firesto
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
+import { AsociacionDetailsModal } from './AsociacionDetailsModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -80,160 +82,12 @@ interface Asociacion {
   sociosActivos?: number;
 }
 
-// Componente de beneficios destacados
-const BeneficiosDestacados: React.FC<{ beneficios: Beneficio[] }> = ({ beneficios }) => {
-  const beneficiosActivos = beneficios.filter(b => b.estado === 'activo').slice(0, 3);
-
-  if (beneficiosActivos.length === 0) {
-    return (
-      <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl p-6 border border-gray-200">
-        <h4 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
-          <Gift size={18} />
-          Beneficios Destacados
-        </h4>
-        <p className="text-gray-500 text-center py-4">No hay beneficios activos disponibles</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200 mb-6">
-      <h4 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
-        <Gift size={18} className="text-purple-600" />
-        Beneficios Destacados
-      </h4>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {beneficiosActivos.map((beneficio, index) => (
-          <motion.div
-            key={beneficio.id}
-            className="bg-white rounded-xl p-4 border border-purple-200 hover:shadow-lg transition-all duration-300"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <div className="flex items-start justify-between mb-3">
-              <h5 className="font-bold text-gray-900 text-sm leading-tight flex-1">
-                {beneficio.titulo}
-              </h5>
-              {beneficio.descuento && (
-                <div className="ml-2 px-2 py-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg text-xs font-black">
-                  {beneficio.tipoDescuento === 'porcentaje' ? `${beneficio.descuento}%` : `$${beneficio.descuento}`}
-                </div>
-              )}
-            </div>
-            
-            {beneficio.comercioNombre && (
-              <div className="flex items-center gap-2 mb-2">
-                <Store size={12} className="text-gray-400" />
-                <span className="text-xs text-gray-600 font-medium">{beneficio.comercioNombre}</span>
-              </div>
-            )}
-            
-            {beneficio.categoria && (
-              <div className="flex items-center gap-2 mb-3">
-                <Target size={12} className="text-gray-400" />
-                <span className="text-xs text-gray-600 font-medium">{beneficio.categoria}</span>
-              </div>
-            )}
-            
-            {beneficio.descripcion && (
-              <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2">
-                {beneficio.descripcion}
-              </p>
-            )}
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-xs text-green-600 font-bold">Activo</span>
-              </div>
-              
-              {beneficio.usosMaximos && (
-                <div className="text-xs text-gray-500">
-                  {beneficio.usosActuales || 0}/{beneficio.usosMaximos} usos
-                </div>
-              )}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Componente de comercios afiliados
-const ComerciosAfiliados: React.FC<{ comercios: Comercio[] }> = ({ comercios }) => {
-  const comerciosActivos = comercios.filter(c => c.estado === 'activo').slice(0, 6);
-
-  if (comerciosActivos.length === 0) {
-    return (
-      <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl p-6 border border-gray-200">
-        <h4 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
-          <Store size={18} />
-          Comercios Afiliados
-        </h4>
-        <p className="text-gray-500 text-center py-4">No hay comercios afiliados</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200 mb-6">
-      <h4 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
-        <Store size={18} className="text-green-600" />
-        Comercios Afiliados
-      </h4>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {comerciosActivos.map((comercio, index) => (
-          <motion.div
-            key={comercio.id}
-            className="bg-white rounded-xl p-4 border border-green-200 hover:shadow-lg transition-all duration-300 text-center"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.05 }}
-          >
-            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-              {comercio.logo ? (
-                <Image
-                  src={comercio.logo}
-                  alt={comercio.nombre}
-                  width={48}
-                  height={48}
-                  className="w-full h-full object-cover rounded-2xl"
-                  style={{ objectFit: 'cover', borderRadius: '1rem' }}
-                  unoptimized={true}
-                />
-              ) : (
-                <Store size={20} className="text-white" />
-              )}
-            </div>
-            
-            <h5 className="font-bold text-gray-900 text-sm mb-2 line-clamp-1">
-              {comercio.nombre}
-            </h5>
-            
-            {comercio.categoria && (
-              <p className="text-xs text-gray-500 mb-2">{comercio.categoria}</p>
-            )}
-            
-            {comercio.beneficiosCount && comercio.beneficiosCount > 0 && (
-              <div className="flex items-center justify-center gap-1 text-xs text-green-600 font-bold">
-                <Gift size={12} />
-                {comercio.beneficiosCount} beneficio{comercio.beneficiosCount > 1 ? 's' : ''}
-              </div>
-            )}
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 // Componente de tarjeta de asociación compacta y estética
 const CompactAsociacionCard: React.FC<{
   asociacion: Asociacion;
   onViewDetails: (asociacion: Asociacion) => void;
-}> = ({ asociacion, onViewDetails }) => {
+  onNavigateToBeneficios: () => void;
+}> = ({ asociacion, onViewDetails, onNavigateToBeneficios }) => {
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case 'activo':
@@ -472,7 +326,7 @@ const CompactAsociacionCard: React.FC<{
           <Button
             size="sm"
             leftIcon={<ArrowUpRight size={12} />}
-            onClick={() => window.location.href = '/dashboard/socio/beneficios'}
+            onClick={onNavigateToBeneficios}
             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-xs h-8"
           >
             Beneficios
@@ -485,9 +339,12 @@ const CompactAsociacionCard: React.FC<{
 
 export const AsociacionesList: React.FC = () => {
   const { user } = useAuth();
+  const router = useRouter();
   const [asociaciones, setAsociaciones] = useState<Asociacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedAsociacion, setSelectedAsociacion] = useState<Asociacion | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Función para cargar datos completos de la asociación
   interface SocioData {
@@ -649,9 +506,27 @@ export const AsociacionesList: React.FC = () => {
     loadUserAsociaciones();
   }, [user, loadCompleteAsociacionData]);
 
+  // Handlers
   const handleViewDetails = useCallback((asociacion: Asociacion) => {
-    toast.success(`Viendo detalles de ${asociacion.nombre}`);
+    setSelectedAsociacion(asociacion);
+    setIsModalOpen(true);
   }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedAsociacion(null);
+  }, []);
+
+  const handleNavigateToBeneficios = useCallback(() => {
+    // Cerrar modal si está abierto
+    if (isModalOpen) {
+      setIsModalOpen(false);
+      setSelectedAsociacion(null);
+    }
+    
+    // Navegar a la pestaña de beneficios
+    router.push('/dashboard/socio/beneficios');
+  }, [router, isModalOpen]);
 
   // Loading state
   if (loading) {
@@ -710,7 +585,7 @@ export const AsociacionesList: React.FC = () => {
           </p>
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
             <div className="flex items-center gap-2 text-blue-700 font-semibold mb-2">
-              <Info size={16} />
+                            <Info size={16} />
               ¿Cómo unirme a una asociación?
             </div>
             <p className="text-blue-600 text-sm">
@@ -724,39 +599,53 @@ export const AsociacionesList: React.FC = () => {
 
   // Content with associations
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Mis Asociaciones</h2>
-          <p className="text-gray-600">
-            {asociaciones.length} asociación{asociaciones.length !== 1 ? 'es' : ''} vinculada{asociaciones.length !== 1 ? 's' : ''}
-          </p>
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Mis Asociaciones</h2>
+            <p className="text-gray-600">
+              {asociaciones.length} asociación{asociaciones.length !== 1 ? 'es' : ''} vinculada{asociaciones.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<RefreshCw size={16} />}
+            onClick={() => window.location.reload()}
+          >
+            Actualizar
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          leftIcon={<RefreshCw size={16} />}
-          onClick={() => window.location.reload()}
-        >
-          Actualizar
-        </Button>
+
+        {/* Associations Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AnimatePresence>
+            {asociaciones.map((asociacion) => (
+              <CompactAsociacionCard
+                key={asociacion.id}
+                asociacion={asociacion}
+                onViewDetails={handleViewDetails}
+                onNavigateToBeneficios={handleNavigateToBeneficios}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
       </div>
 
-      {/* Associations Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <AnimatePresence>
-          {asociaciones.map((asociacion) => (
-            <CompactAsociacionCard
-              key={asociacion.id}
-              asociacion={asociacion}
-              onViewDetails={handleViewDetails}
-            />
-          ))}
-        </AnimatePresence>
-      </div>
-    </div>
+      {/* Modal de detalles */}
+      {selectedAsociacion && (
+        <AsociacionDetailsModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          asociacion={selectedAsociacion}
+          onNavigateToBeneficios={handleNavigateToBeneficios}
+        />
+      )}
+    </>
   );
 };
 
 export default AsociacionesList;
+
