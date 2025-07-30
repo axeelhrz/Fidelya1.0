@@ -86,7 +86,9 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
             : null;
         const fechaFin = (b.fechaFin && typeof b.fechaFin === 'object' && typeof b.fechaFin.toDate === 'function')
           ? b.fechaFin.toDate()
-          : new Date(b.fechaFin);
+          : typeof b.fechaFin === 'string' || typeof b.fechaFin === 'number'
+            ? new Date(b.fechaFin)
+            : null;
         
         if (fechaInicio > now || fechaFin <= now) return false;
         
