@@ -54,7 +54,7 @@ export default function OptimizedSocioDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   const { socio, estadisticas, loading: socioLoading } = useSocioProfile();
-  const { estadisticasRapidas, loading: beneficiosLoading } = useBeneficios();
+  const { estadisticasRapidas, beneficiosActivos, loading: beneficiosLoading } = useBeneficios();
   
   // State management - optimized to prevent unnecessary re-renders
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
@@ -73,13 +73,29 @@ export default function OptimizedSocioDashboard() {
       return year === currentYear && month === currentMonth + 1;
     })?.validaciones || 0;
 
+    // Filtrar beneficios activos y válidos (igual que en BeneficiosList)
+    const beneficiosValidos = beneficiosActivos.filter(beneficio => {
+      const fechaFin = beneficio.fechaFin.toDate();
+      const fechaInicio = beneficio.fechaInicio.toDate();
+      
+      // Verificar que esté dentro del rango de fechas válido
+      if (fechaFin <= now || fechaInicio > now) return false;
+      
+      // Verificar límite total si existe
+      if (beneficio.limiteTotal && beneficio.usosActuales >= beneficio.limiteTotal) {
+        return false;
+      }
+      
+      return true;
+    });
+
     return {
-      totalBeneficios: estadisticasRapidas.disponibles || 0, // Beneficios disponibles para usar
+      totalBeneficios: beneficiosValidos.length, // Beneficios realmente disponibles y válidos
       beneficiosUsados: estadisticasRapidas.usados || 0, // Beneficios que ya ha usado
       asociacionesActivas: 1, // Por ahora asumimos 1 asociación
       beneficiosEstesMes
     };
-  }, [estadisticasRapidas, estadisticas]);
+  }, [beneficiosActivos, estadisticasRapidas, estadisticas]);
 
   // Optimized logout handlers
   const handleLogoutClick = useCallback(() => {

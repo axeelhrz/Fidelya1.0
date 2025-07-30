@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Gift, 
@@ -49,10 +49,30 @@ export const SocioBeneficios: React.FC = () => {
     error,
     usarBeneficio,
     refrescar,
-    estadisticasRapidas
+    estadisticasRapidas,
+    beneficiosActivos
   } = useBeneficiosSocio();
 
   const [activeTab, setActiveTab] = useState<'disponibles' | 'usados' | 'info'>('disponibles');
+
+  // Calcular beneficios válidos (misma lógica que en el dashboard)
+  const beneficiosValidos = useMemo(() => {
+    const now = new Date();
+    return beneficiosActivos.filter(beneficio => {
+      const fechaFin = beneficio.fechaFin.toDate();
+      const fechaInicio = beneficio.fechaInicio.toDate();
+      
+      // Verificar que esté dentro del rango de fechas válido
+      if (fechaFin <= now || fechaInicio > now) return false;
+      
+      // Verificar límite total si existe
+      if (beneficio.limiteTotal && beneficio.usosActuales >= beneficio.limiteTotal) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [beneficiosActivos]);
 
   const handleUseBenefit = async (beneficioId: string, comercioId: string) => {
     try {
