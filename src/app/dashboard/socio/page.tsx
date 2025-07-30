@@ -65,28 +65,16 @@ export default function SocioDashboard() {
     setLogoutModalOpen(false);
   };
 
-  // Navigation handlers - Updated to use optimized navigation
+  // Navigation handlers - UPDATED: Only use internal navigation, no URL changes
   const handleNavigate = (section: string) => {
-    const sectionRoutes: Record<string, string> = {
-      'dashboard': '/dashboard/socio',
-      'perfil': '/dashboard/socio/perfil',
-      'beneficios': '/dashboard/socio/beneficios',
-      'asociaciones': '/dashboard/socio/asociaciones',
-      'validar': '/dashboard/socio/validar',
-      'historial': '/dashboard/socio/historial'
-    };
-
-    const route = sectionRoutes[section];
-    if (route && route !== '/dashboard/socio') {
-      router.push(route);
-    } else {
-      // Use optimized navigation for internal tabs
-      navigateToTab(section);
-    }
+    // Use optimized navigation for ALL tabs - no URL changes
+    navigateToTab(section);
   };
 
   const handleQuickScan = () => {
-    router.push('/dashboard/socio/validar');
+    // For quick scan, we can still navigate to the dedicated page if needed
+    // Or handle it internally as well
+    navigateToTab('validar');
   };
 
   // Memoized stats for performance
@@ -211,6 +199,7 @@ export default function SocioDashboard() {
                 <div className="flex items-center gap-4">
                   <span>Navegaciones: {performanceMetrics.navigationCount}</span>
                   <span>Tiempo promedio: {performanceMetrics.averageTransitionTime.toFixed(2)}ms</span>
+                  <span>Tab activo: {activeTab}</span>
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                 </div>
               </motion.div>

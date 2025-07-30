@@ -13,33 +13,42 @@ import {
   Activity
 } from 'lucide-react';
 
-// Lazy load heavy components for optimal performance
+// Lazy load real components from the individual pages
 const SocioOverviewDashboard = lazy(() => 
   import('@/components/socio/SocioOverviewDashboard').then(module => ({ 
     default: module.SocioOverviewDashboard 
   }))
 );
 
-// Placeholder components for other tabs (to be implemented)
-const SocioProfile = lazy(() => Promise.resolve({ 
-  default: () => <div className="p-8 text-center">Perfil del Socio - En desarrollo</div> 
-}));
+const SocioProfile = lazy(() => 
+  import('@/components/socio/SocioProfile').then(module => ({ 
+    default: module.SocioProfile 
+  }))
+);
 
-const SocioBeneficios = lazy(() => Promise.resolve({ 
-  default: () => <div className="p-8 text-center">Beneficios - En desarrollo</div> 
-}));
+const SocioBeneficios = lazy(() => 
+  import('@/components/socio/SocioBeneficios').then(module => ({ 
+    default: module.SocioBeneficios 
+  }))
+);
 
-const SocioAsociaciones = lazy(() => Promise.resolve({ 
-  default: () => <div className="p-8 text-center">Asociaciones - En desarrollo</div> 
-}));
+const SocioAsociacionesList = lazy(() => 
+  import('@/components/socio/AsociacionesList').then(module => ({ 
+    default: module.AsociacionesList 
+  }))
+);
 
-const SocioValidar = lazy(() => Promise.resolve({ 
-  default: () => <div className="p-8 text-center">Validar QR - En desarrollo</div> 
-}));
+const SocioValidar = lazy(() => 
+  import('@/components/socio/SocioValidar').then(module => ({ 
+    default: module.SocioValidar 
+  }))
+);
 
-const SocioHistorial = lazy(() => Promise.resolve({ 
-  default: () => <div className="p-8 text-center">Historial - En desarrollo</div> 
-}));
+const SocioHistorial = lazy(() => 
+  import('@/components/socio/SocioHistorial').then(module => ({ 
+    default: module.SocioHistorial 
+  }))
+);
 
 // Tab configuration with optimized structure
 interface TabConfig {
@@ -218,7 +227,7 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
       id: 'asociaciones',
       label: 'Asociaciones',
       icon: Building2,
-      component: SocioAsociaciones as React.LazyExoticComponent<React.ComponentType<any>>,
+      component: SocioAsociacionesList as React.LazyExoticComponent<React.ComponentType<any>>,
       gradient: 'from-orange-500 to-orange-600',
       description: 'Organizaciones disponibles',
       badge: stats?.asociacionesActivas || 0
