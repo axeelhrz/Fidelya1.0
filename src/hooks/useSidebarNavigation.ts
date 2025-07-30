@@ -38,7 +38,7 @@ export const useSidebarNavigation = (options: UseSidebarNavigationOptions = {}) 
 
   const [isMobile, setIsMobile] = useState(false);
   const lastPathnameRef = useRef(pathname);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout>();
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Detectar cambios de tamaño de pantalla
   useEffect(() => {
@@ -68,7 +68,7 @@ export const useSidebarNavigation = (options: UseSidebarNavigationOptions = {}) 
 
   // Toggle del sidebar
   const toggleSidebar = useCallback(() => {
-    setSidebarOpen(prev => !prev);
+    setSidebarOpen((prev: boolean) => !prev);
   }, []);
 
   // Navegación optimizada con debounce

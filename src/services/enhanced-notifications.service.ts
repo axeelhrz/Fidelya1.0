@@ -649,7 +649,11 @@ Si no deseas recibir estas notificaciones, puedes cambiar tus preferencias en: $
     sms: { success: boolean; messageId?: string; error?: string };
     push: { success: boolean; messageId?: string; error?: string };
   }> {
-    const results = {
+    const results: {
+      email: { success: boolean; messageId?: string; error?: string };
+      sms: { success: boolean; messageId?: string; error?: string };
+      push: { success: boolean; messageId?: string; error?: string };
+    } = {
       email: { success: false, error: 'Not attempted' },
       sms: { success: false, error: 'Not attempted' },
       push: { success: false, error: 'Not attempted' }
@@ -859,12 +863,22 @@ Si no deseas recibir estas notificaciones, puedes cambiar tus preferencias en: $
       );
 
       const snapshot = await getDocs(deliveriesQuery);
-      const deliveries = snapshot.docs.map(doc => ({
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        sentAt: doc.data().sentAt?.toDate(),
-        deliveredAt: doc.data().deliveredAt?.toDate(),
-      })) as NotificationDelivery[];
+      const deliveries: NotificationDelivery[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          notificationId: data.notificationId,
+          recipientId: data.recipientId,
+          channel: data.channel,
+          status: data.status,
+          retryCount: data.retryCount ?? 0,
+          metadata: data.metadata ?? {},
+          createdAt: data.createdAt?.toDate() || new Date(),
+          sentAt: data.sentAt?.toDate(),
+          deliveredAt: data.deliveredAt?.toDate(),
+          failureReason: data.failureReason,
+        };
+      });
 
       const stats = {
         total: deliveries.length,

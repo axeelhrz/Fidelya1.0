@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Plus_Jakarta_Sans, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { ClientLayout } from './ClientLayout';
@@ -30,11 +30,6 @@ export const metadata: Metadata = {
   description: 'La plataforma que conecta asociaciones, socios y comercios en un ecosistema inteligente de beneficios y fidelización.',
   keywords: ['fidelidad', 'socios', 'comercios', 'beneficios', 'gestión', 'asociaciones', 'QR', 'validación'],
   authors: [{ name: 'Fidelya Team' }],
-  viewport: 'width=device-width, initial-scale=1',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#2563eb' },
-    { media: '(prefers-color-scheme: dark)', color: '#1d4ed8' }
-  ],
   openGraph: {
     title: 'Fidelya - Sistema de Gestión de Socios y Beneficios',
     description: 'La plataforma que conecta asociaciones, socios y comercios en un ecosistema inteligente de beneficios y fidelización.',
@@ -46,6 +41,15 @@ export const metadata: Metadata = {
     title: 'Fidelya - Sistema de Gestión de Socios y Beneficios',
     description: 'La plataforma que conecta asociaciones, socios y comercios en un ecosistema inteligente de beneficios y fidelización.',
   }
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#2563eb' },
+    { media: '(prefers-color-scheme: dark)', color: '#1d4ed8' }
+  ],
 };
 
 export default function RootLayout({
