@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface OptimizedLoadingSkeletonProps {
@@ -45,14 +45,14 @@ const OptimizedLoadingSkeleton: React.FC<OptimizedLoadingSkeletonProps> = memo((
     ...(width && { width })
   };
 
-  const shimmerVariants = {
+  const shimmerVariants: Variants = {
     initial: { x: '-100%' },
     animate: { 
       x: '100%',
       transition: {
         duration: 1.5,
         repeat: Infinity,
-        ease: [0.4, 0.0, 0.2, 1],
+        ease: "easeInOut",
         delay
       }
     }
@@ -74,7 +74,7 @@ const OptimizedLoadingSkeleton: React.FC<OptimizedLoadingSkeletonProps> = memo((
             transition={{ 
               delay: delay + (index * 0.1),
               duration: 0.3,
-              ease: [0.4, 0.0, 0.2, 1]
+              ease: "easeInOut"
             }}
           >
             {animate && (
@@ -100,7 +100,7 @@ const OptimizedLoadingSkeleton: React.FC<OptimizedLoadingSkeletonProps> = memo((
       transition={{ 
         delay,
         duration: 0.3,
-        ease: [0.4, 0.0, 0.2, 1]
+        ease: "easeInOut"
       }}
     >
       {animate && (
