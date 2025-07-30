@@ -47,7 +47,7 @@ interface TabConfig {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  component: React.LazyExoticComponent<React.ComponentType<any>>;
+  component: React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>;
   gradient: string;
   description: string;
   badge?: number;
