@@ -92,7 +92,7 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
             ? new Date(b.fechaFin)
             : null;
         
-        if (fechaInicio > now || fechaFin <= now) return false;
+        if (!fechaInicio || !fechaFin || fechaInicio > now || fechaFin <= now) return false;
         
         // Verificar límites de uso
         if (b.limiteTotal && b.usosActuales >= b.limiteTotal) return false;
@@ -111,7 +111,22 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
   }, [beneficios]);
 
   // Función para formatear el descuento
-  const formatearDescuento = (beneficio: any) => {
+  interface Beneficio {
+    id: string;
+    titulo: string;
+    descripcion?: string;
+    descuento?: number;
+    tipo?: 'porcentaje' | 'monto_fijo' | 'producto_gratis' | string;
+    estado?: string;
+    fechaInicio?: Date | string | number | { toDate: () => Date } | undefined;
+    fechaFin?: Date | string | number | { toDate: () => Date } | undefined;
+    limiteTotal?: number;
+    usosActuales?: number;
+    destacado?: boolean;
+    comercioNombre?: string;
+  }
+
+  const formatearDescuento = (beneficio: Beneficio) => {
     if (!beneficio.descuento) return null;
     
     switch (beneficio.tipo) {
