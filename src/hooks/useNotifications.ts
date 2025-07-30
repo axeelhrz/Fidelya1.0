@@ -26,6 +26,13 @@ import { notificationQueueService } from '@/services/notification-queue.service'
 // Audio context for notification sounds
 let audioContext: AudioContext | null = null;
 
+// Type declaration for webkit audio context
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
+
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
   const [allNotifications, setAllNotifications] = useState<NotificationType[]>([]);
@@ -64,7 +71,7 @@ export const useNotifications = () => {
   const initAudioContext = useCallback(() => {
     if (!audioContext && typeof window !== 'undefined') {
       try {
-        audioContext = new (window.AudioContext || (window as Window & typeof globalThis).webkitAudioContext)();
+        audioContext = new (window.AudioContext || window.webkitAudioContext || AudioContext)();
       } catch (error) {
         console.warn('Audio context not supported:', error);
       }
