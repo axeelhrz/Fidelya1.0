@@ -38,6 +38,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import { navigateToBeneficios } from '@/utils/navigation';
 
 interface Beneficio {
   id: string;
@@ -524,9 +525,9 @@ export const AsociacionesList: React.FC = () => {
       setSelectedAsociacion(null);
     }
     
-    // Navegar a la pestaña de beneficios
-    router.push('/dashboard/socio/beneficios');
-  }, [router, isModalOpen]);
+    // Navegar a la pestaña de beneficios usando la función helper
+    navigateToBeneficios();
+  }, [isModalOpen]);
 
   // Loading state
   if (loading) {
@@ -648,4 +649,3 @@ export const AsociacionesList: React.FC = () => {
 };
 
 export default AsociacionesList;
-
