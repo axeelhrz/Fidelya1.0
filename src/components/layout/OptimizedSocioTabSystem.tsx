@@ -101,7 +101,7 @@ const TabLoadingState = memo<{ tabId: string }>(({ tabId }) => {
 
 TabLoadingState.displayName = 'TabLoadingState';
 
-// Optimized tab button component
+// Optimized tab button component - MEMOIZED to prevent re-renders
 const TabButton = memo<{
   tab: TabConfig;
   isActive: boolean;
@@ -110,9 +110,6 @@ const TabButton = memo<{
 }>(({ tab, isActive, onClick, index }) => {
   return (
     <motion.button
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.3 }}
       onClick={onClick}
       className={`
         group relative flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition-all duration-300
@@ -123,6 +120,8 @@ const TabButton = memo<{
       `}
       whileHover={{ scale: isActive ? 1.05 : 1.02 }}
       whileTap={{ scale: 0.98 }}
+      // Remove initial animation to prevent re-renders
+      layout
     >
       {/* Background glow for active tab */}
       {isActive && (
@@ -196,7 +195,7 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Memoized tab configuration
+  // Memoized tab configuration - STABLE reference
   const tabs = useMemo<TabConfig[]>(() => [
     {
       id: 'dashboard',
@@ -252,29 +251,23 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
     }
   ], [stats]);
 
-  // Optimized tab change handler
+  // Optimized tab change handler - NO DEBOUNCE to prevent delays
   const handleTabChange = useCallback((tabId: string) => {
     if (tabId === activeTab || isTransitioning) return;
 
-    setIsTransitioning(true);
-    
-    // Smooth transition with debouncing
-    setTimeout(() => {
-      setActiveTab(tabId);
-      if (onNavigate) {
-        onNavigate(tabId);
-      }
-      setIsTransitioning(false);
-    }, 150);
+    setActiveTab(tabId);
+    if (onNavigate) {
+      onNavigate(tabId);
+    }
   }, [activeTab, isTransitioning, onNavigate]);
 
-  // Get current tab configuration
+  // Get current tab configuration - STABLE reference
   const currentTab = useMemo(() => 
     tabs.find(tab => tab.id === activeTab) || tabs[0], 
     [tabs, activeTab]
   );
 
-  // Memoized component props
+  // Memoized component props - STABLE reference
   const componentProps = useMemo(() => ({
     onNavigate,
     onQuickScan,
@@ -283,25 +276,21 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
 
   return (
     <div className="space-y-6">
-      {/* Enhanced Tab Navigation */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl p-6"
-      >
-        {/* Header with current tab info */}
+      {/* FIXED Tab Navigation - This section will NOT re-render */}
+      <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl p-6">
+        {/* Header with current tab info - ONLY update text content */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 bg-gradient-to-r ${currentTab.gradient} rounded-2xl flex items-center justify-center shadow-lg`}>
+            <div className={`w-12 h-12 bg-gradient-to-r ${currentTab.gradient} rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300`}>
               <currentTab.icon className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">{currentTab.label}</h2>
-              <p className="text-slate-600">{currentTab.description}</p>
+              <h2 className="text-2xl font-bold text-slate-900 transition-all duration-300">{currentTab.label}</h2>
+              <p className="text-slate-600 transition-all duration-300">{currentTab.description}</p>
             </div>
           </div>
 
-          {/* Activity indicator */}
+          {/* Activity indicator - STATIC */}
           <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
             <Activity className="w-4 h-4 text-emerald-600" />
             <span className="text-sm font-medium text-emerald-700">Socio Activo</span>
@@ -309,7 +298,7 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
           </div>
         </div>
 
-        {/* Tab buttons */}
+        {/* Tab buttons - MEMOIZED to prevent re-renders */}
         <div className="flex flex-wrap gap-2">
           {tabs.map((tab, index) => (
             <TabButton
@@ -321,40 +310,32 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
             />
           ))}
         </div>
-      </motion.div>
+      </div>
 
-      {/* Enhanced Content Area */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="relative min-h-[600px]"
-      >
-        {/* Background decoration */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${currentTab.gradient} opacity-5 rounded-3xl blur-3xl`} />
+      {/* DYNAMIC Content Area - Only this section changes */}
+      <div className="relative min-h-[600px]">
+        {/* Background decoration - STATIC */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${currentTab.gradient} opacity-5 rounded-3xl blur-3xl transition-all duration-500`} />
         
-        {/* Content container */}
+        {/* Content container - ONLY content changes */}
         <div className="relative bg-white/60 backdrop-blur-sm rounded-3xl border border-white/20 shadow-xl overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
               className="p-6"
             >
-              {isTransitioning ? (
-                <TabLoadingState tabId={activeTab} />
-              ) : (
-                <Suspense fallback={<TabLoadingState tabId={activeTab} />}>
-                  <currentTab.component {...componentProps} />
-                </Suspense>
-              )}
+              <Suspense fallback={<TabLoadingState tabId={activeTab} />}>
+                <currentTab.component {...componentProps} />
+              </Suspense>
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* Performance indicator */}
+        {/* Performance indicator - STATIC */}
         {process.env.NODE_ENV === 'development' && (
           <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-sm text-white text-xs px-3 py-2 rounded-lg border border-white/20">
             <div className="flex items-center gap-2">
@@ -364,7 +345,7 @@ export const OptimizedSocioTabSystem = memo<OptimizedSocioTabSystemProps>(({
             </div>
           </div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 });
