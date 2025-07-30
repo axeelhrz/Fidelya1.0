@@ -10,12 +10,7 @@ import {
   QrCode, 
   UserCheck,
   LogOut,
-  Sparkles,
-  Activity,
-  Crown,
-  Zap,
-  ArrowRight,
-  Bell
+  Zap
 } from 'lucide-react';
 
 interface ComercioWelcomeCardProps {
@@ -32,92 +27,6 @@ interface ComercioWelcomeCardProps {
   onViewProfile?: () => void;
   onLogout?: () => void;
 }
-
-// Quick action button component
-const QuickActionButton = memo<{
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  description: string;
-  gradient: string;
-  onClick: () => void;
-  badge?: number;
-  isNew?: boolean;
-  isPro?: boolean;
-}>(({ icon: Icon, label, description, gradient, onClick, badge, isNew, isPro }) => (
-  <motion.button
-    onClick={onClick}
-    className={`
-      relative group p-4 lg:p-6 rounded-2xl text-white shadow-xl transition-all duration-300
-      bg-gradient-to-br ${gradient} hover:shadow-2xl overflow-hidden
-      border border-white/10 backdrop-blur-sm
-    `}
-    whileHover={{ scale: 1.02, y: -2 }}
-    whileTap={{ scale: 0.98 }}
-  >
-    {/* Animated background pattern */}
-    <div className="absolute inset-0 opacity-20">
-      <div className="absolute top-0 right-0 w-16 h-16 bg-white rounded-full -translate-y-8 translate-x-8 group-hover:scale-110 transition-transform duration-500" />
-      <div className="absolute bottom-0 left-0 w-12 h-12 bg-white rounded-full translate-y-6 -translate-x-6 group-hover:scale-110 transition-transform duration-500" />
-    </div>
-
-    {/* Shimmer effect */}
-    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-
-    {/* Content */}
-    <div className="relative z-10">
-      {/* Badges */}
-      <div className="absolute -top-2 -right-2 flex gap-1">
-        {isNew && (
-          <motion.div 
-            animate={{ rotate: [0, 5, -5, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold border border-white/20"
-          >
-            <Sparkles className="w-3 h-3 inline mr-1" />
-            Nuevo
-          </motion.div>
-        )}
-        {isPro && (
-          <motion.div 
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-bold border border-white/20"
-          >
-            <Crown className="w-3 h-3 inline mr-1" />
-            Pro
-          </motion.div>
-        )}
-      </div>
-
-      {/* Icon */}
-      <div className="flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl mb-3 mx-auto transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
-        <Icon className="w-6 h-6" />
-      </div>
-
-      {/* Title */}
-      <h3 className="font-bold text-lg mb-1 group-hover:scale-105 transition-transform duration-300">
-        {label}
-      </h3>
-
-      {/* Description */}
-      <p className="text-sm opacity-90 mb-3">
-        {description}
-      </p>
-
-      {/* Badge and Arrow */}
-      <div className="flex items-center justify-between">
-        {badge !== undefined && badge > 0 && (
-          <span className="text-xs font-semibold bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
-            {badge > 99 ? '99+' : badge}
-          </span>
-        )}
-        <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300 ml-auto" />
-      </div>
-    </div>
-  </motion.button>
-));
-
-QuickActionButton.displayName = 'QuickActionButton';
 
 // Stats card component
 const StatsCard = memo<{
@@ -157,42 +66,6 @@ export const ComercioWelcomeCard = memo<ComercioWelcomeCardProps>(({
   // Get current time for greeting
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? 'Buenos días' : currentHour < 18 ? 'Buenas tardes' : 'Buenas noches';
-
-  // Memoized quick actions
-  const quickActions = useMemo(() => [
-    {
-      id: 'beneficios',
-      label: 'Beneficios',
-      description: 'Gestionar ofertas',
-      icon: Gift,
-      gradient: 'from-emerald-500 to-teal-500',
-      badge: stats.beneficiosActivos
-    },
-    {
-      id: 'validaciones',
-      label: 'Validaciones',
-      description: 'Ver historial',
-      icon: UserCheck,
-      gradient: 'from-blue-500 to-indigo-500',
-      badge: stats.validacionesHoy
-    },
-    {
-      id: 'qr',
-      label: 'Código QR',
-      description: 'Gestión QR',
-      icon: QrCode,
-      gradient: 'from-orange-500 to-red-500',
-      badge: stats.qrEscaneos
-    },
-    {
-      id: 'notificaciones',
-      label: 'Notificaciones',
-      description: 'Centro de avisos',
-      icon: Bell,
-      gradient: 'from-amber-500 to-orange-500',
-      isNew: true
-    }
-  ], [stats]);
 
   // Memoized stats cards
   const statsCards = useMemo(() => [
@@ -339,41 +212,6 @@ export const ComercioWelcomeCard = memo<ComercioWelcomeCardProps>(({
               <StatsCard {...stat} />
             </motion.div>
           ))}
-        </motion.div>
-
-        {/* Quick Actions */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="space-y-4"
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-slate-900 flex items-center">
-              <Activity className="w-5 h-5 mr-2 text-blue-500" />
-              Acciones Rápidas
-            </h3>
-            <div className="flex items-center text-sm text-slate-500">
-              <Sparkles className="w-4 h-4 mr-1" />
-              Optimizado
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action, index) => (
-              <motion.div
-                key={action.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 + index * 0.1 }}
-              >
-                <QuickActionButton
-                  {...action}
-                  onClick={() => handleQuickAction(action.id)}
-                />
-              </motion.div>
-            ))}
-          </div>
         </motion.div>
       </div>
     </motion.div>
