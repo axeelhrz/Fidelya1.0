@@ -161,6 +161,9 @@ export const cleanupExpiredNotifications = functions.pubsub
 interface NotificationData {
   title: string;
   message: string;
+  type: 'info' | 'success' | 'warning' | 'error' | 'announcement';
+  actionUrl?: string;
+  actionLabel?: string;
   [key: string]: string | number | boolean | object | undefined;
 }
 
