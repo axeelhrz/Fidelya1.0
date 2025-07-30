@@ -47,7 +47,8 @@ interface TabConfig {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  component: React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  component: React.LazyExoticComponent<React.ComponentType<any>>;
   gradient: string;
   description: string;
   badge?: number;
