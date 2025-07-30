@@ -17,14 +17,12 @@ import {
   Minus,
   Calendar,
   Award,
-  Eye,
   Download,
   Sparkles,
   Star,
   Target,
   Flame,
-  ChevronRight,
-  ExternalLink
+  ChevronRight
 } from 'lucide-react';
 import {
   collection,
@@ -71,11 +69,9 @@ interface ComercioHealth {
 const KPICard: React.FC<{
   title: string;
   value: string | number;
-  change: number;
   icon: React.ReactNode;
   gradient: string;
   subtitle?: string;
-  trend?: 'up' | 'down' | 'neutral';
   onClick?: () => void;
   loading?: boolean;
   badge?: string;
@@ -83,11 +79,9 @@ const KPICard: React.FC<{
 }> = ({
   title,
   value,
-  change,
   icon,
   gradient,
   subtitle,
-  trend = 'neutral',
   onClick,
   loading = false,
   badge,
@@ -146,27 +140,7 @@ const KPICard: React.FC<{
             )}
           </motion.div>
           
-          {/* Trend Indicator */}
-          <div className="flex items-center space-x-2">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: delay + 0.3 }}
-              className="flex items-center space-x-1"
-            >
-              {trend === 'up' && <TrendingUp className="w-4 h-4 text-emerald-500" />}
-              {trend === 'down' && <TrendingDown className="w-4 h-4 text-red-500" />}
-              {trend === 'neutral' && <Minus className="w-4 h-4 text-slate-400" />}
-              <span className={`text-sm font-bold ${
-                trend === 'up' ? 'text-emerald-500' : 
-                trend === 'down' ? 'text-red-500' : 
-                'text-slate-400'
-              }`}>
-                {change > 0 ? '+' : ''}{change}%
-              </span>
-            </motion.div>
-            <ArrowUpRight className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </div>
+          <ArrowUpRight className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
 
         {/* Content */}
@@ -259,17 +233,6 @@ const ActivityTimeline: React.FC<{
             <p className="text-slate-600">Últimas validaciones y acciones</p>
           </div>
         </div>
-        {onViewAll && (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onViewAll}
-            className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-6 py-3 rounded-2xl font-semibold transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
-          >
-            <span>Ver todo</span>
-            <ExternalLink className="w-4 h-4" />
-          </motion.button>
-        )}
       </div>
 
       {/* Timeline */}
@@ -576,22 +539,19 @@ const QuickStats: React.FC<{
       label: 'Validaciones Hoy',
       value: validacionesHoy,
       icon: <Calendar className="w-5 h-5" />,
-      gradient: 'from-blue-500 to-indigo-500',
-      change: '+12%'
+      gradient: 'from-blue-500 to-indigo-500'
     },
     {
       label: 'Validaciones del Mes',
       value: validacionesMes,
       icon: <TrendingUp className="w-5 h-5" />,
-      gradient: 'from-emerald-500 to-teal-500',
-      change: '+8%'
+      gradient: 'from-emerald-500 to-teal-500'
     },
     {
       label: 'Clientes Únicos',
       value: clientesUnicos,
       icon: <Users className="w-5 h-5" />,
-      gradient: 'from-purple-500 to-pink-500',
-      change: '+15%'
+      gradient: 'from-purple-500 to-pink-500'
     }
   ];
 
@@ -615,14 +575,9 @@ const QuickStats: React.FC<{
             </motion.div>
             <div className="flex-1">
               <p className="text-sm text-slate-600 font-semibold mb-1">{stat.label}</p>
-              <div className="flex items-center space-x-2">
-                <p className="text-2xl font-bold text-slate-900">
-                  {loading ? '...' : stat.value.toLocaleString()}
-                </p>
-                <span className="text-xs font-semibold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">
-                  {stat.change}
-                </span>
-              </div>
+              <p className="text-2xl font-bold text-slate-900">
+                {loading ? '...' : stat.value.toLocaleString()}
+              </p>
             </div>
           </div>
         </motion.div>
@@ -697,33 +652,13 @@ const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps> = ({
     return () => unsubscribe();
   }, [user]);
 
-  // Calculate growth metrics
-  const growthMetrics = useMemo(() => {
-    const validacionesHoy = stats?.validacionesHoy || 0;
-    const validacionesMes = stats?.validacionesMes || 0;
-    const clientesUnicos = stats?.clientesUnicos || 0;
-    
-    // Calculate growth rates (mock data for now)
-    const dailyGrowth = validacionesHoy > 0 ? 15 : 0;
-    const monthlyGrowth = validacionesMes > 0 ? 8 : 0;
-    const clientGrowth = clientesUnicos > 0 ? 12 : 0;
-
-    return {
-      dailyGrowth,
-      monthlyGrowth,
-      clientGrowth,
-    };
-  }, [stats]);
-
   const kpiMetrics = useMemo(() => [
     {
       title: 'Validaciones Hoy',
       value: stats?.validacionesHoy?.toLocaleString() || '0',
-      change: growthMetrics.dailyGrowth,
       icon: <Calendar className="w-6 h-6 lg:w-7 lg:h-7" />,
       gradient: 'from-blue-500 to-indigo-500',
       subtitle: 'Beneficios validados',
-      trend: growthMetrics.dailyGrowth > 0 ? 'up' as const : 'neutral' as const,
       onClick: () => onNavigate?.('validaciones'),
       loading: comercioLoading,
       delay: 0.1
@@ -731,11 +666,9 @@ const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps> = ({
     {
       title: 'Validaciones del Mes',
       value: stats?.validacionesMes?.toLocaleString() || '0',
-      change: growthMetrics.monthlyGrowth,
       icon: <TrendingUp className="w-6 h-6 lg:w-7 lg:h-7" />,
       gradient: 'from-emerald-500 to-teal-500',
       subtitle: 'Total mensual',
-      trend: growthMetrics.monthlyGrowth > 0 ? 'up' as const : 'neutral' as const,
       onClick: () => onNavigate?.('analytics'),
       loading: comercioLoading,
       delay: 0.2
@@ -743,16 +676,14 @@ const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps> = ({
     {
       title: 'Clientes Únicos',
       value: stats?.clientesUnicos?.toString() || '0',
-      change: growthMetrics.clientGrowth,
       icon: <Users className="w-6 h-6 lg:w-7 lg:h-7" />,
       gradient: 'from-purple-500 to-pink-500',
       subtitle: 'Este mes',
-      trend: growthMetrics.clientGrowth > 0 ? 'up' as const : 'neutral' as const,
       onClick: () => onNavigate?.('clientes'),
       loading: comercioLoading,
       delay: 0.3
     }
-  ], [stats, growthMetrics, comercioLoading, onNavigate]);
+  ], [stats, comercioLoading, onNavigate]);
 
   const handleGenerateQR = async () => {
     await generateQRCode();
@@ -800,17 +731,6 @@ const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps> = ({
               >
                 <RefreshCw className="w-5 h-5" />
               </motion.div>
-            </motion.button>
-            
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => onNavigate?.('analytics')}
-              className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-6 py-3 rounded-2xl font-semibold transition-all duration-300 flex items-center space-x-2 shadow-xl hover:shadow-2xl"
-            >
-              <Eye className="w-5 h-5" />
-              <span className="hidden sm:inline">Ver Analytics</span>
-              <span className="sm:hidden">Analytics</span>
             </motion.button>
           </div>
         </div>
