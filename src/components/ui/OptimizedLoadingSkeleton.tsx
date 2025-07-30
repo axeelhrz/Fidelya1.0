@@ -52,7 +52,7 @@ const OptimizedLoadingSkeleton: React.FC<OptimizedLoadingSkeletonProps> = memo((
       transition: {
         duration: 1.5,
         repeat: Infinity,
-        ease: 'easeInOut',
+        ease: [0.4, 0.0, 0.2, 1],
         delay
       }
     }
@@ -74,7 +74,7 @@ const OptimizedLoadingSkeleton: React.FC<OptimizedLoadingSkeletonProps> = memo((
             transition={{ 
               delay: delay + (index * 0.1),
               duration: 0.3,
-              ease: 'easeOut'
+              ease: [0.4, 0.0, 0.2, 1]
             }}
           >
             {animate && (
@@ -100,7 +100,7 @@ const OptimizedLoadingSkeleton: React.FC<OptimizedLoadingSkeletonProps> = memo((
       transition={{ 
         delay,
         duration: 0.3,
-        ease: 'easeOut'
+        ease: [0.4, 0.0, 0.2, 1]
       }}
     >
       {animate && (
