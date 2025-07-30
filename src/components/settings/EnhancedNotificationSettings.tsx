@@ -8,12 +8,10 @@ import {
   Typography,
   Switch,
   FormControlLabel,
-  FormGroup,
   Button,
   Chip,
   Alert,
   Divider,
-  Grid,
   TextField,
   MenuItem,
   Avatar,
@@ -68,8 +66,8 @@ interface NotificationSettings {
 
 export const EnhancedNotificationSettings: React.FC = () => {
   const { user } = useAuth();
-  const { 
-    isSupported: pushSupported, 
+  const {
+    isSupported: pushSupported,
     isRegistering,
     requestPermission,
     isEnabled: pushEnabled
@@ -278,7 +276,6 @@ export const EnhancedNotificationSettings: React.FC = () => {
             </Typography>
           </Box>
         </Box>
-
         {lastSaved && (
           <Alert severity="success" sx={{ mb: 2 }}>
             Configuración guardada el {lastSaved.toLocaleString()}
@@ -293,72 +290,76 @@ export const EnhancedNotificationSettings: React.FC = () => {
             <Settings />
             Canales de Notificación
           </Typography>
-
-          <Grid container spacing={3}>
+          
+          <Box sx={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: 3,
+            '& > *': {
+              flex: '1 1 280px',
+              minWidth: '280px'
+            }
+          }}>
             {channelConfigs.map((channel) => (
-              <Grid item xs={12} md={4} key={channel.key}>
-                <Card 
-                  variant="outlined" 
-                  sx={{ 
-                    height: '100%',
-                    border: channel.enabled ? `2px solid ${channel.color}` : '1px solid #e2e8f0',
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                      <Avatar sx={{ bgcolor: channel.color, width: 40, height: 40 }}>
-                        {channel.icon}
-                      </Avatar>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                          {channel.label}
-                        </Typography>
-                        <Chip 
-                          label={channel.status} 
-                          size="small" 
-                          color={channel.enabled ? 'success' : 'default'}
-                          sx={{ mt: 0.5 }}
-                        />
-                      </Box>
-                    </Box>
-
-                    <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>
-                      {channel.description}
-                    </Typography>
-
-                    {channel.key === 'pushNotifications' && !pushSupported ? (
-                      <Alert severity="warning" sx={{ mb: 2 }}>
-                        No soportado en este navegador
-                      </Alert>
-                    ) : channel.key === 'pushNotifications' && pushSupported && !pushEnabled ? (
-                      <Button
-                        variant="outlined"
-                        onClick={requestPermission}
-                        disabled={isRegistering}
-                        startIcon={isRegistering ? <LinearProgress /> : <PhoneAndroid />}
-                        fullWidth
-                        sx={{ mb: 2 }}
-                      >
-                        {isRegistering ? 'Configurando...' : 'Activar Push'}
-                      </Button>
-                    ) : (
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={channel.enabled}
-                            onChange={handleChannelChange(channel.key)}
-                            color="primary"
-                          />
-                        }
-                        label={channel.enabled ? 'Activado' : 'Desactivado'}
+              <Card
+                key={channel.key}
+                variant="outlined"
+                sx={{
+                  border: channel.enabled ? `2px solid ${channel.color}` : '1px solid #e2e8f0',
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Avatar sx={{ bgcolor: channel.color, width: 40, height: 40 }}>
+                      {channel.icon}
+                    </Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        {channel.label}
+                      </Typography>
+                      <Chip
+                        label={channel.status}
+                        size="small"
+                        color={channel.enabled ? 'success' : 'default'}
+                        sx={{ mt: 0.5 }}
                       />
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
+                    </Box>
+                  </Box>
+                  <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>
+                    {channel.description}
+                  </Typography>
+                  {channel.key === 'pushNotifications' && !pushSupported ? (
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                      No soportado en este navegador
+                    </Alert>
+                  ) : channel.key === 'pushNotifications' && pushSupported && !pushEnabled ? (
+                    <Button
+                      variant="outlined"
+                      onClick={requestPermission}
+                      disabled={isRegistering}
+                      startIcon={isRegistering ? <LinearProgress /> : <PhoneAndroid />}
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    >
+                      {isRegistering ? 'Configurando...' : 'Activar Push'}
+                    </Button>
+                  ) : (
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={channel.enabled}
+                          onChange={handleChannelChange(channel.key)}
+                          color="primary"
+                        />
+                      }
+                      label={channel.enabled ? 'Activado' : 'Desactivado'}
+                    />
+                  )}
+                </CardContent>
+              </Card>
             ))}
-          </Grid>
+          </Box>
         </CardContent>
       </Card>
 
@@ -375,7 +376,16 @@ export const EnhancedNotificationSettings: React.FC = () => {
             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
               Categorías de Notificaciones
             </Typography>
-            <FormGroup row sx={{ mb: 3 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 2, 
+              mb: 3,
+              '& > *': {
+                flex: '1 1 200px',
+                minWidth: '200px'
+              }
+            }}>
               {categoryConfigs.map((category) => (
                 <FormControlLabel
                   key={category.key}
@@ -395,10 +405,9 @@ export const EnhancedNotificationSettings: React.FC = () => {
                       </Typography>
                     </Box>
                   }
-                  sx={{ minWidth: 200, mb: 1 }}
                 />
               ))}
-            </FormGroup>
+            </Box>
 
             <Divider sx={{ my: 3 }} />
 
@@ -406,7 +415,16 @@ export const EnhancedNotificationSettings: React.FC = () => {
             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
               Niveles de Prioridad
             </Typography>
-            <FormGroup row sx={{ mb: 3 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 2, 
+              mb: 3,
+              '& > *': {
+                flex: '1 1 200px',
+                minWidth: '200px'
+              }
+            }}>
               {priorityConfigs.map((priority) => (
                 <FormControlLabel
                   key={priority.key}
@@ -418,13 +436,13 @@ export const EnhancedNotificationSettings: React.FC = () => {
                   }
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box 
-                        sx={{ 
-                          width: 12, 
-                          height: 12, 
-                          borderRadius: '50%', 
-                          bgcolor: priority.color 
-                        }} 
+                      <Box
+                        sx={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          bgcolor: priority.color
+                        }}
                       />
                       <Box>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -436,10 +454,9 @@ export const EnhancedNotificationSettings: React.FC = () => {
                       </Box>
                     </Box>
                   }
-                  sx={{ minWidth: 200, mb: 1 }}
                 />
               ))}
-            </FormGroup>
+            </Box>
 
             <Divider sx={{ my: 3 }} />
 
@@ -448,7 +465,6 @@ export const EnhancedNotificationSettings: React.FC = () => {
               <VolumeOff />
               Horarios de Silencio
             </Typography>
-            
             <FormControlLabel
               control={
                 <Switch
@@ -462,9 +478,8 @@ export const EnhancedNotificationSettings: React.FC = () => {
               label="Activar horarios de silencio"
               sx={{ mb: 2 }}
             />
-
             {settings.quietHours.enabled && (
-              <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+              <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
                 <TextField
                   type="time"
                   label="Inicio"
@@ -474,6 +489,7 @@ export const EnhancedNotificationSettings: React.FC = () => {
                     quietHours: { ...prev.quietHours, start: e.target.value }
                   }))}
                   InputLabelProps={{ shrink: true }}
+                  sx={{ flex: '1 1 150px', minWidth: '150px' }}
                 />
                 <TextField
                   type="time"
@@ -484,6 +500,7 @@ export const EnhancedNotificationSettings: React.FC = () => {
                     quietHours: { ...prev.quietHours, end: e.target.value }
                   }))}
                   InputLabelProps={{ shrink: true }}
+                  sx={{ flex: '1 1 150px', minWidth: '150px' }}
                 />
               </Box>
             )}
@@ -510,7 +527,14 @@ export const EnhancedNotificationSettings: React.FC = () => {
       </Accordion>
 
       {/* Acciones */}
-      <Box sx={{ display: 'flex', gap: 2, mt: 4, justifyContent: 'space-between' }}>
+      <Box sx={{ 
+        display: 'flex', 
+        gap: 2, 
+        mt: 4, 
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        alignItems: 'center'
+      }}>
         <Button
           variant="outlined"
           onClick={sendTestNotification}
@@ -519,8 +543,8 @@ export const EnhancedNotificationSettings: React.FC = () => {
         >
           {testing ? 'Enviando...' : 'Enviar Prueba'}
         </Button>
-
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <Button
             variant="outlined"
             onClick={() => window.location.reload()}
