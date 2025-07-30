@@ -166,8 +166,10 @@ const ModernActivityTimelineComponent: React.FC<ModernActivityTimelineProps> = (
   );
 };
 
+// Set display name before memoization
 ModernActivityTimelineComponent.displayName = 'ModernActivityTimelineComponent';
 
+// Create memoized component with explicit display name
 const ModernActivityTimeline = memo(ModernActivityTimelineComponent);
 ModernActivityTimeline.displayName = 'ModernActivityTimeline';
 
