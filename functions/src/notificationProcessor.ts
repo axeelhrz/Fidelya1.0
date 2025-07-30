@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import { enhancedNotificationService } from './services/enhanced-notifications.service';
 
@@ -12,7 +12,7 @@ const db = admin.firestore();
 // Función para procesar notificaciones en background
 export const processNotificationQueue = functions.pubsub
   .schedule('every 1 minutes')
-  .onRun(async (context) => {
+  .onRun(async () => {
     console.log('🔄 Processing notification queue...');
     
     try {
@@ -34,7 +34,7 @@ export const processNotificationQueue = functions.pubsub
 
       // Procesar cada notificación
       const promises = snapshot.docs.map(async (doc) => {
-        const queueItem = doc.data();
+        const queueItem = doc.data() as NotificationQueueItem;
         
         try {
           // Marcar como procesando
@@ -70,7 +70,8 @@ export const processNotificationQueue = functions.pubsub
 
         } catch (error) {
           console.error(`❌ Error processing notification ${queueItem.notificationId}:`, error);
-          await scheduleRetry(doc.ref, queueItem, error.message);
+          const errorMessage = typeof error === 'object' && error !== null && 'message' in error ? (error as { message: string }).message : String(error);
+          await scheduleRetry(doc.ref, queueItem, errorMessage);
         }
       });
 
@@ -87,7 +88,7 @@ export const processNotificationQueue = functions.pubsub
 // Función para limpiar notificaciones expiradas
 export const cleanupExpiredNotifications = functions.pubsub
   .schedule('every 24 hours')
-  .onRun(async (context) => {
+  .onRun(async () => {
     console.log('🧹 Cleaning up expired notifications...');
     
     try {
@@ -157,9 +158,34 @@ export const cleanupExpiredNotifications = functions.pubsub
   });
 
 // Función auxiliar para programar reintentos
+interface NotificationData {
+  title: string;
+  message: string;
+  [key: string]: string | number | boolean | object | undefined;
+}
+
+interface NotificationQueueItem {
+  notificationId: string;
+  recipientId: string;
+  notificationData: NotificationData;
+  attempts?: number;
+  maxAttempts?: number;
+  scheduledFor?: admin.firestore.Timestamp;
+  status?: string;
+  processingStartedAt?: admin.firestore.Timestamp;
+  updatedAt?: admin.firestore.Timestamp;
+  completedAt?: admin.firestore.Timestamp;
+  result?: {
+    email: { success: boolean; [key: string]: unknown };
+    sms: { success: boolean; [key: string]: unknown };
+    push: { success: boolean; [key: string]: unknown };
+  };
+  lastError?: string;
+}
+
 async function scheduleRetry(
   docRef: admin.firestore.DocumentReference,
-  queueItem: any,
+  queueItem: NotificationQueueItem,
   errorMessage: string
 ) {
   const newAttempts = (queueItem.attempts || 0) + 1;
@@ -226,7 +252,17 @@ export const handleDeliveryWebhook = functions.https.onRequest(async (req, res) 
   }
 });
 
-async function processDeliveryEvent(event: any) {
+interface DeliveryEvent {
+  event: string;
+  tracking_id: string;
+  email?: string;
+  timestamp?: number;
+  reason?: string;
+  url?: string;
+  [key: string]: unknown;
+}
+
+async function processDeliveryEvent(event: DeliveryEvent) {
   const { event: eventType, tracking_id, email, timestamp } = event;
   
   if (!tracking_id) {
@@ -247,7 +283,7 @@ async function processDeliveryEvent(event: any) {
   }
 
   const deliveryDoc = snapshot.docs[0];
-  const updates: any = {
+  const updates: Record<string, unknown> = {
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   };
 

@@ -1,5 +1,14 @@
 import * as admin from 'firebase-admin';
 
+// Type definitions for notification data
+interface NotificationData {
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error' | 'announcement';
+  actionUrl?: string;
+  actionLabel?: string;
+}
+
 // Enhanced Email service using SendGrid with real implementation
 class EnhancedEmailService {
   private apiKey: string;
@@ -268,7 +277,32 @@ export class EnhancedNotificationService {
   }
 
   // Get user notification settings
-  async getUserSettings(userId: string): Promise<any | null> {
+  async getUserSettings(userId: string): Promise<{
+    userId: string;
+    emailNotifications: boolean;
+    pushNotifications: boolean;
+    smsNotifications: boolean;
+    categories: {
+      system: boolean;
+      membership: boolean;
+      payment: boolean;
+      event: boolean;
+      general: boolean;
+    };
+    priorities: {
+      low: boolean;
+      medium: boolean;
+      high: boolean;
+      urgent: boolean;
+    };
+    quietHours: {
+      enabled: boolean;
+      start: string;
+      end: string;
+    };
+    frequency: string;
+    id?: string;
+  } | null> {
     try {
       const settingsQuery = this.db.collection('notificationSettings')
         .where('userId', '==', userId)
@@ -278,7 +312,31 @@ export class EnhancedNotificationService {
       
       if (!snapshot.empty) {
         const doc = snapshot.docs[0];
-        return { ...doc.data(), id: doc.id };
+        return { ...(doc.data() as {
+          userId: string;
+          emailNotifications: boolean;
+          pushNotifications: boolean;
+          smsNotifications: boolean;
+          categories: {
+            system: boolean;
+            membership: boolean;
+            payment: boolean;
+            event: boolean;
+            general: boolean;
+          };
+          priorities: {
+            low: boolean;
+            medium: boolean;
+            high: boolean;
+            urgent: boolean;
+          };
+          quietHours: {
+            enabled: boolean;
+            start: string;
+            end: string;
+          };
+          frequency: string;
+        }), id: doc.id };
       }
 
       // Return default settings if none exist
@@ -458,7 +516,7 @@ Si no deseas recibir estas notificaciones, puedes cambiar tus preferencias en: $
     status: 'pending' | 'sent' | 'delivered' | 'failed',
     metadata: Record<string, unknown> = {}
   ): Promise<string> {
-    const deliveryData = {
+    const deliveryData: Record<string, unknown> = {
       notificationId,
       recipientId,
       channel,
@@ -474,7 +532,7 @@ Si no deseas recibir estas notificaciones, puedes cambiar tus preferencias en: $
     };
 
     if (status === 'sent') {
-      (deliveryData as any).sentAt = admin.firestore.FieldValue.serverTimestamp();
+      deliveryData.sentAt = admin.firestore.FieldValue.serverTimestamp();
     }
 
     const docRef = await this.db.collection('notificationDeliveries').add(deliveryData);
@@ -485,13 +543,17 @@ Si no deseas recibir estas notificaciones, puedes cambiar tus preferencias en: $
   async sendNotificationToUser(
     notificationId: string,
     userId: string,
-    notificationData: any
+    notificationData: NotificationData
   ): Promise<{
     email: { success: boolean; messageId?: string; error?: string };
     sms: { success: boolean; messageId?: string; error?: string };
     push: { success: boolean; messageId?: string; error?: string };
   }> {
-    const results = {
+    const results: {
+      email: { success: boolean; messageId?: string; error?: string };
+      sms: { success: boolean; messageId?: string; error?: string };
+      push: { success: boolean; messageId?: string; error?: string };
+    } = {
       email: { success: false, error: 'Not attempted' },
       sms: { success: false, error: 'Not attempted' },
       push: { success: false, error: 'Not attempted' }
