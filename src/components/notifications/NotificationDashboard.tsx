@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid,
   LinearProgress,
   Chip,
   Avatar,
@@ -70,6 +69,7 @@ interface DashboardStats {
 
 export const NotificationDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  
   interface QueueHealth {
     status: 'healthy' | 'warning' | 'critical';
     issues: string[];
@@ -81,7 +81,7 @@ export const NotificationDashboard: React.FC = () => {
       oldestPending: string;
     };
   }
-
+  
   const [queueHealth, setQueueHealth] = useState<QueueHealth | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -89,7 +89,6 @@ export const NotificationDashboard: React.FC = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      
       const [queueStats, healthCheck] = await Promise.all([
         notificationQueueService.getQueueStats(),
         notificationQueueService.getQueueHealth()
@@ -121,7 +120,6 @@ export const NotificationDashboard: React.FC = () => {
 
   useEffect(() => {
     loadDashboardData();
-    
     // Auto-refresh every 30 seconds
     const interval = setInterval(loadDashboardData, 30000);
     return () => clearInterval(interval);
@@ -193,7 +191,7 @@ export const NotificationDashboard: React.FC = () => {
 
       {/* Health Status */}
       {queueHealth && (
-        <Alert 
+        <Alert
           severity={queueHealth.status === 'healthy' ? 'success' : queueHealth.status === 'warning' ? 'warning' : 'error'}
           sx={{ mb: 3 }}
         >
@@ -209,136 +207,154 @@ export const NotificationDashboard: React.FC = () => {
       )}
 
       {/* KPI Cards */}
-      {/* KPI Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ bgcolor: '#3b82f6' }}>
-                  <TrendingUp />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                    {stats.totalSent.toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b' }}>
-                    Total Enviadas
-                  </Typography>
-                </Box>
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: 3, 
+        mb: 4,
+        '& > *': {
+          flex: '1 1 250px',
+          minWidth: '250px'
+        }
+      }}>
+        <Card>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar sx={{ bgcolor: '#3b82f6' }}>
+                <TrendingUp />
+              </Avatar>
+              <Box>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                  {stats.totalSent.toLocaleString()}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>
+                  Total Enviadas
+                </Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            </Box>
+          </CardContent>
+        </Card>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ bgcolor: stats.successRate >= 90 ? '#10b981' : stats.successRate >= 70 ? '#f59e0b' : '#ef4444' }}>
-                  <CheckCircle />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                    {stats.successRate.toFixed(1)}%
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b' }}>
-                    Tasa de Éxito
-                  </Typography>
-                </Box>
+        <Card>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar sx={{ bgcolor: stats.successRate >= 90 ? '#10b981' : stats.successRate >= 70 ? '#f59e0b' : '#ef4444' }}>
+                <CheckCircle />
+              </Avatar>
+              <Box>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                  {stats.successRate.toFixed(1)}%
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>
+                  Tasa de Éxito
+                </Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            </Box>
+          </CardContent>
+        </Card>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ bgcolor: '#8b5cf6' }}>
-                  <Speed />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                    {(stats.avgProcessingTime / 1000).toFixed(1)}s
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b' }}>
-                    Tiempo Promedio
-                  </Typography>
-                </Box>
+        <Card>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar sx={{ bgcolor: '#8b5cf6' }}>
+                <Speed />
+              </Avatar>
+              <Box>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                  {(stats.avgProcessingTime / 1000).toFixed(1)}s
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>
+                  Tiempo Promedio
+                </Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            </Box>
+          </CardContent>
+        </Card>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ bgcolor: '#f59e0b' }}>
-                  <Schedule />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                    {stats.throughputPerHour}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b' }}>
-                    Por Hora
-                  </Typography>
-                </Box>
+        <Card>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar sx={{ bgcolor: '#f59e0b' }}>
+                <Schedule />
+              </Avatar>
+              <Box>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                  {stats.throughputPerHour}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>
+                  Por Hora
+                </Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
 
       {/* Charts */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
-                Notificaciones por Canal
-              </Typography>
-              <Bar 
-                data={channelData} 
-                options={{
-                  responsive: true,
-                  plugins: {
-                    legend: { position: 'top' },
-                    title: { display: false },
-                  },
-                  scales: {
-                    y: { beginAtZero: true },
-                  },
-                }}
-              />
-            </CardContent>
-          </Card>
-        </Grid>
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: 3, 
+        mb: 4,
+        '& > *:first-of-type': {
+          flex: '2 1 500px',
+          minWidth: '500px'
+        },
+        '& > *:last-of-type': {
+          flex: '1 1 300px',
+          minWidth: '300px'
+        }
+      }}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
+              Notificaciones por Canal
+            </Typography>
+            <Bar
+              data={channelData}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: { position: 'top' },
+                  title: { display: false },
+                },
+                scales: {
+                  y: { beginAtZero: true },
+                },
+              }}
+            />
+          </CardContent>
+        </Card>
 
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
-                Tasa de Éxito Global
-              </Typography>
-              <Doughnut 
-                data={successRateData}
-                options={{
-                  responsive: true,
-                  plugins: {
-                    legend: { position: 'bottom' },
-                  },
-                }}
-              />
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
+              Tasa de Éxito Global
+            </Typography>
+            <Doughnut
+              data={successRateData}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: { position: 'bottom' },
+                },
+              }}
+            />
+          </CardContent>
+        </Card>
+      </Box>
 
       {/* Channel Details */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: 3, 
+        mb: 4,
+        '& > *': {
+          flex: '1 1 300px',
+          minWidth: '300px'
+        }
+      }}>
         {Object.entries(stats.byChannel).map(([channel, data]) => {
           const channelConfig = {
             email: { icon: <Email />, color: '#3b82f6', label: 'Email' },
@@ -347,63 +363,59 @@ export const NotificationDashboard: React.FC = () => {
           }[channel];
 
           return (
-            <Grid item xs={12} md={4} key={channel}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Avatar sx={{ bgcolor: channelConfig?.color }}>
-                      {channelConfig?.icon}
-                    </Avatar>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      {channelConfig?.label}
+            <Card key={channel}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <Avatar sx={{ bgcolor: channelConfig?.color }}>
+                    {channelConfig?.icon}
+                  </Avatar>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    {channelConfig?.label}
+                  </Typography>
+                </Box>
+                <Box sx={{ mb: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body2">Tasa de Éxito</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {data.rate.toFixed(1)}%
                     </Typography>
                   </Box>
-
-                  <Box sx={{ mb: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2">Tasa de Éxito</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {data.rate.toFixed(1)}%
-                      </Typography>
-                    </Box>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={data.rate} 
-                      sx={{ 
-                        height: 8, 
-                        borderRadius: 4,
-                        bgcolor: '#f1f5f9',
-                        '& .MuiLinearProgress-bar': {
-                          bgcolor: channelConfig?.color,
-                        }
-                      }}
-                    />
+                  <LinearProgress
+                    variant="determinate"
+                    value={data.rate}
+                    sx={{
+                      height: 8,
+                      borderRadius: 4,
+                      bgcolor: '#f1f5f9',
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: channelConfig?.color,
+                      }
+                    }}
+                  />
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#10b981' }}>
+                      {data.sent}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#64748b' }}>
+                      Enviadas
+                    </Typography>
                   </Box>
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#10b981' }}>
-                        {data.sent}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>
-                        Enviadas
-                      </Typography>
-                    </Box>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#ef4444' }}>
-                        {data.failed}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>
-                        Fallidas
-                      </Typography>
-                    </Box>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#ef4444' }}>
+                      {data.failed}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#64748b' }}>
+                      Fallidas
+                    </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                </Box>
+              </CardContent>
+            </Card>
           );
         })}
-      </Grid>
+      </Box>
 
       {/* Queue Status */}
       {queueHealth && (
@@ -412,9 +424,16 @@ export const NotificationDashboard: React.FC = () => {
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
               Estado de la Cola de Procesamiento
             </Typography>
-
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 3,
+              '& > *': {
+                flex: '1 1 400px',
+                minWidth: '400px'
+              }
+            }}>
+              <Box>
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
                     Métricas de Rendimiento
@@ -426,9 +445,9 @@ export const NotificationDashboard: React.FC = () => {
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Typography variant="body2">Tasa de Éxito:</Typography>
-                      <Chip 
-                        label={queueHealth.metrics.successRate} 
-                        size="small" 
+                      <Chip
+                        label={queueHealth.metrics.successRate}
+                        size="small"
                         color={parseFloat(queueHealth.metrics.successRate) >= 90 ? 'success' : 'warning'}
                       />
                     </Box>
@@ -442,9 +461,9 @@ export const NotificationDashboard: React.FC = () => {
                     </Box>
                   </Box>
                 </Box>
-              </Grid>
+              </Box>
 
-              <Grid item xs={12} md={6}>
+              <Box>
                 {queueHealth.issues.length > 0 && (
                   <Box sx={{ mb: 3 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: '#ef4444' }}>
@@ -459,7 +478,7 @@ export const NotificationDashboard: React.FC = () => {
                     </Box>
                   </Box>
                 )}
-
+                
                 {queueHealth.recommendations.length > 0 && (
                   <Box>
                     <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: '#3b82f6' }}>
@@ -474,8 +493,8 @@ export const NotificationDashboard: React.FC = () => {
                     </Box>
                   </Box>
                 )}
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </CardContent>
         </Card>
       )}
