@@ -60,8 +60,10 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
         let fechaFin: Date;
         if (b.fechaFin && typeof b.fechaFin === 'object' && typeof b.fechaFin.toDate === 'function') {
           fechaFin = b.fechaFin.toDate();
-        } else {
+        } else if (typeof b.fechaFin === 'string' || typeof b.fechaFin === 'number') {
           fechaFin = new Date(b.fechaFin);
+        } else {
+          return false; // Si no se puede convertir, no incluir en el filtro
         }
         const diasRestantes = Math.ceil((fechaFin.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         return diasRestantes <= 7 && diasRestantes > 0;
