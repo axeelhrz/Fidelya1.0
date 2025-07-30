@@ -527,65 +527,6 @@ const ComercioStatusCard: React.FC<{
   );
 };
 
-// Enhanced Quick Stats Component
-const QuickStats: React.FC<{
-  validacionesHoy: number;
-  validacionesMes: number;
-  clientesUnicos: number;
-  loading: boolean;
-}> = ({ validacionesHoy, validacionesMes, clientesUnicos, loading }) => {
-  const stats = [
-    {
-      label: 'Validaciones Hoy',
-      value: validacionesHoy,
-      icon: <Calendar className="w-5 h-5" />,
-      gradient: 'from-blue-500 to-indigo-500'
-    },
-    {
-      label: 'Validaciones del Mes',
-      value: validacionesMes,
-      icon: <TrendingUp className="w-5 h-5" />,
-      gradient: 'from-emerald-500 to-teal-500'
-    },
-    {
-      label: 'Clientes Únicos',
-      value: clientesUnicos,
-      icon: <Users className="w-5 h-5" />,
-      gradient: 'from-purple-500 to-pink-500'
-    }
-  ];
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-8">
-      {stats.map((stat, index) => (
-        <motion.div
-          key={stat.label}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          whileHover={{ scale: 1.02, y: -2 }}
-          className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-300 hover:shadow-xl group"
-        >
-          <div className="flex items-center space-x-4">
-            <motion.div 
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg bg-gradient-to-br ${stat.gradient}`}
-            >
-              {stat.icon}
-            </motion.div>
-            <div className="flex-1">
-              <p className="text-sm text-slate-600 font-semibold mb-1">{stat.label}</p>
-              <p className="text-2xl font-bold text-slate-900">
-                {loading ? '...' : stat.value.toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  );
-};
-
 // Main Component
 const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps> = ({
   onNavigate
@@ -735,14 +676,6 @@ const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps> = ({
           </div>
         </div>
       </motion.div>
-
-      {/* Quick Stats */}
-      <QuickStats
-        validacionesHoy={stats?.validacionesHoy || 0}
-        validacionesMes={stats?.validacionesMes || 0}
-        clientesUnicos={stats?.clientesUnicos || 0}
-        loading={comercioLoading}
-      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
