@@ -55,8 +55,9 @@ export const VincularComercioDialog: React.FC<VincularComercioDialogProps> = ({
   }, []);
 
   // Buscar comercios con debounce
-  const debouncedSearch = useDebounce(async (termino: string) => {
-    if (!termino.trim()) {
+  const debouncedSearch = useDebounce(async (...args: unknown[]) => {
+    const termino = args[0] as string;
+    if (!termino?.trim()) {
       setComercios([]);
       return;
     }
