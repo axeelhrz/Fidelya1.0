@@ -37,7 +37,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function processDeliveryEvent(event: any) {
+interface DeliveryEvent {
+  event: string;
+  tracking_id: string;
+  email: string;
+  timestamp?: number;
+  reason?: string;
+  metadata?: Record<string, unknown>;
+  url?: string;
+}
+
+async function processDeliveryEvent(event: DeliveryEvent) {
   const { event: eventType, tracking_id, email, timestamp } = event;
   
   if (!tracking_id) {
@@ -56,7 +66,13 @@ async function processDeliveryEvent(event: any) {
     return;
   }
 
-  const updates: any = {
+  const updates: {
+    status?: string;
+    deliveredAt?: unknown;
+    failureReason?: string;
+    metadata?: Record<string, unknown>;
+    updatedAt: unknown;
+  } = {
     updatedAt: serverTimestamp(),
   };
 

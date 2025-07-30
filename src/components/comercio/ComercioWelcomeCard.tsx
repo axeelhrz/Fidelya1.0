@@ -7,7 +7,6 @@ import {
   TrendingUp, 
   Users, 
   Gift, 
-  QrCode, 
   UserCheck,
   LogOut,
   Zap
@@ -99,9 +98,25 @@ export const ComercioWelcomeCard = memo<ComercioWelcomeCardProps>(({
     }
   ], [stats]);
 
-  const handleQuickAction = (actionId: string) => {
+  // Handlers for button clicks
+  const handleProfileClick = () => {
+    console.log('Profile button clicked'); // Debug log
+    if (onViewProfile) {
+      onViewProfile();
+    }
+  };
+
+  const handleBeneficiosClick = () => {
+    console.log('Beneficios button clicked'); // Debug log
     if (onQuickAction) {
-      onQuickAction(actionId);
+      onQuickAction('beneficios');
+    }
+  };
+
+  const handleLogoutClick = () => {
+    console.log('Logout button clicked'); // Debug log
+    if (onLogout) {
+      onLogout();
     }
   };
 
@@ -164,31 +179,37 @@ export const ComercioWelcomeCard = memo<ComercioWelcomeCardProps>(({
             transition={{ delay: 0.4 }}
             className="flex items-center space-x-3"
           >
+            {/* Profile Button (Casa/Home) */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={onViewProfile}
+              onClick={handleProfileClick}
               className="w-12 h-12 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-2xl flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all duration-200 shadow-lg hover:shadow-xl"
+              title="Ver Perfil"
             >
               <Store className="w-5 h-5" />
             </motion.button>
             
+            {/* Beneficios Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => handleQuickAction('beneficios')}
+              onClick={handleBeneficiosClick}
               className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 text-white px-6 py-3 rounded-2xl font-semibold transition-all duration-300 flex items-center space-x-2 shadow-xl hover:shadow-2xl"
+              title="Gestionar Beneficios"
             >
               <Gift className="w-5 h-5" />
               <span className="hidden sm:inline">Beneficios</span>
               <span className="sm:hidden">Ofertas</span>
             </motion.button>
 
+            {/* Logout Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={onLogout}
+              onClick={handleLogoutClick}
               className="w-12 h-12 bg-red-50 hover:bg-red-100 border border-red-200 rounded-2xl flex items-center justify-center text-red-600 hover:text-red-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              title="Cerrar Sesión"
             >
               <LogOut className="w-5 h-5" />
             </motion.button>
