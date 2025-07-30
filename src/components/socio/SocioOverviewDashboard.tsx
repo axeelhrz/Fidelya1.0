@@ -10,7 +10,11 @@ import {
   Building2,
   Activity,
   Clock,
-  Target
+  Target,
+  QrCode,
+  Eye,
+  Percent,
+  User
 } from 'lucide-react';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { useSocioProfile } from '@/hooks/useSocioProfile';
@@ -55,21 +59,92 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
       asociacionesActivas: 1, // Por ahora asumimos 1 asociación
       ahorroTotal: estadisticas?.ahorroTotal || 0,
       beneficiosVencenProximamente: beneficios.filter(b => {
-        if (!b.fechaVencimiento) return false;
-        const fechaVenc = b.fechaVencimiento.toDate ? b.fechaVencimiento.toDate() : new Date(b.fechaVencimiento);
-        const diasRestantes = Math.ceil((fechaVenc.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (!b.fechaFin) return false;
+        const fechaFin = b.fechaFin.toDate ? b.fechaFin.toDate() : new Date(b.fechaFin);
+        const diasRestantes = Math.ceil((fechaFin.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         return diasRestantes <= 7 && diasRestantes > 0;
       }).length
     };
   }, [estadisticasRapidas, estadisticas, beneficios]);
 
-  // Beneficios destacados
+  // Beneficios destacados - filtrar y ordenar correctamente
   const beneficiosDestacados = useMemo(() => {
+    const now = new Date();
+    
     return beneficios
-      .filter(b => b.estado === 'activo')
-      .sort((a, b) => (b.descuento || 0) - (a.descuento || 0))
+      .filter(b => {
+        // Verificar que esté activo
+        if (b.estado !== 'activo') return false;
+        
+        // Verificar fechas de vigencia
+        const fechaInicio = b.fechaInicio?.toDate ? b.fechaInicio.toDate() : new Date(b.fechaInicio);
+        const fechaFin = b.fechaFin?.toDate ? b.fechaFin.toDate() : new Date(b.fechaFin);
+        
+        if (fechaInicio > now || fechaFin <= now) return false;
+        
+        // Verificar límites de uso
+        if (b.limiteTotal && b.usosActuales >= b.limiteTotal) return false;
+        
+        return true;
+      })
+      .sort((a, b) => {
+        // Priorizar beneficios destacados
+        if (a.destacado && !b.destacado) return -1;
+        if (!a.destacado && b.destacado) return 1;
+        
+        // Luego por descuento (mayor descuento primero)
+        return (b.descuento || 0) - (a.descuento || 0);
+      })
       .slice(0, 3);
   }, [beneficios]);
+
+  // Función para formatear el descuento
+  const formatearDescuento = (beneficio: any) => {
+    if (!beneficio.descuento) return null;
+    
+    switch (beneficio.tipo) {
+      case 'porcentaje':
+        return `${beneficio.descuento}%`;
+      case 'monto_fijo':
+        return `$${beneficio.descuento}`;
+      case 'producto_gratis':
+        return 'GRATIS';
+      default:
+        return `${beneficio.descuento}%`;
+    }
+  };
+
+  // Función para manejar "Usar ahora" - navegar a validar QR
+  const handleUsarAhora = () => {
+    if (onNavigate) {
+      onNavigate('validar');
+    } else if (onQuickScan) {
+      onQuickScan();
+    }
+  };
+
+  // Función para manejar "Ver todos" - navegar a beneficios
+  const handleVerTodos = () => {
+    if (onNavigate) {
+      onNavigate('beneficios');
+    }
+  };
+
+  // Función para navegar al perfil
+  const handleVerPerfil = () => {
+    if (onNavigate) {
+      onNavigate('perfil');
+    }
+  };
+
+  // Función para navegar a escanear QR
+  const handleEscanearQR = () => {
+    if (onNavigate) {
+      onNavigate('validar');
+    } else if (onQuickScan) {
+      onQuickScan();
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -149,11 +224,15 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
           className="bg-white/80 backdrop-blur-sm rounded-3xl border border-white/20 shadow-xl p-6"
         >
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold text-slate-900">Beneficios Destacados</h3>
+            <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+              <Star className="w-6 h-6 text-yellow-500" />
+              Beneficios Destacados
+            </h3>
             <button
-              onClick={() => onNavigate?.('beneficios')}
-              className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+              onClick={handleVerTodos}
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors duration-200 hover:bg-blue-50 px-3 py-2 rounded-lg"
             >
+              <Eye className="w-4 h-4" />
               Ver todos
             </button>
           </div>
@@ -165,15 +244,16 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + index * 0.05 }}
-                className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-4 border border-gray-200 hover:shadow-lg transition-all duration-300"
+                className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-4 border border-gray-200 hover:shadow-lg transition-all duration-300 group"
               >
                 <div className="flex items-start justify-between mb-3">
                   <h4 className="font-bold text-gray-900 text-sm leading-tight flex-1">
                     {beneficio.titulo}
                   </h4>
                   {beneficio.descuento && (
-                    <div className="ml-2 px-2 py-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg text-xs font-bold">
-                      {beneficio.tipoDescuento === 'porcentaje' ? `${beneficio.descuento}%` : `$${beneficio.descuento}`}
+                    <div className="ml-2 px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-xs font-bold shadow-lg flex items-center gap-1">
+                      <Percent className="w-3 h-3" />
+                      {formatearDescuento(beneficio)}
                     </div>
                   )}
                 </div>
@@ -193,14 +273,15 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
                 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                     <span className="text-xs text-green-600 font-bold">Disponible</span>
                   </div>
                   
                   <button
-                    onClick={onQuickScan}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-bold"
+                    onClick={handleUsarAhora}
+                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-bold transition-colors duration-200 hover:bg-blue-50 px-2 py-1 rounded-md"
                   >
+                    <QrCode className="w-3 h-3" />
                     Usar ahora
                   </button>
                 </div>
@@ -230,7 +311,7 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
             </div>
           </div>
           <button
-            onClick={() => onNavigate?.('beneficios')}
+            onClick={handleVerTodos}
             className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-xl font-medium text-sm hover:from-amber-600 hover:to-orange-600 transition-all duration-200"
           >
             Ver detalles
@@ -249,12 +330,12 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
-            onClick={onQuickScan}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-2xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 text-left group"
+            onClick={handleEscanearQR}
+            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-2xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 text-left group transform hover:scale-105"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <Gift className="w-6 h-6 text-white" />
+                <QrCode className="w-6 h-6 text-white" />
               </div>
               <TrendingUp className="w-5 h-5 text-white/70 group-hover:text-white transition-colors" />
             </div>
@@ -263,12 +344,12 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
           </button>
 
           <button
-            onClick={() => onNavigate?.('beneficios')}
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-6 rounded-2xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 text-left group"
+            onClick={handleVerTodos}
+            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-6 rounded-2xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 text-left group transform hover:scale-105"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <Star className="w-6 h-6 text-white" />
+                <Gift className="w-6 h-6 text-white" />
               </div>
               <Activity className="w-5 h-5 text-white/70 group-hover:text-white transition-colors" />
             </div>
@@ -277,12 +358,12 @@ const SocioOverviewDashboard = memo<SocioOverviewDashboardProps>(({
           </button>
 
           <button
-            onClick={() => onNavigate?.('perfil')}
-            className="bg-gradient-to-r from-purple-500 to-pink-600 text-white p-6 rounded-2xl hover:from-purple-600 hover:to-pink-700 transition-all duration-300 text-left group"
+            onClick={handleVerPerfil}
+            className="bg-gradient-to-r from-purple-500 to-pink-600 text-white p-6 rounded-2xl hover:from-purple-600 hover:to-pink-700 transition-all duration-300 text-left group transform hover:scale-105"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-white" />
+                <User className="w-6 h-6 text-white" />
               </div>
               <Target className="w-5 h-5 text-white/70 group-hover:text-white transition-colors" />
             </div>
