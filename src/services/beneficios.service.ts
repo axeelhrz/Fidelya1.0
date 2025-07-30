@@ -149,7 +149,9 @@ export class BeneficiosService {
       const cacheKey = this.getCacheKey('beneficios_disponibles_socio', { socioId, asociacionId, filtros, limite });
       
       if (this.isValidCache(cacheKey)) {
-        return this.getCache(cacheKey) as Beneficio[];
+        const cachedBeneficios = this.getCache(cacheKey) as Beneficio[];
+        console.log(`📦 Beneficios desde cache: ${cachedBeneficios.length}`);
+        return cachedBeneficios;
       }
 
       let beneficios: Beneficio[] = [];

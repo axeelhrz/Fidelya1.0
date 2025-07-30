@@ -108,18 +108,29 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
 
       let beneficiosData: Beneficio[] = [];
 
+      console.log('🔍 Usuario actual:', {
+        uid: user.uid,
+        role: user.role,
+        asociacionId: user.asociacionId,
+        email: user.email
+      });
+
       switch (user.role) {
         case 'socio':
           if (user.asociacionId) {
-            console.log('🔍 Cargando beneficios para socio:', user.uid);
+            console.log('🔍 Cargando beneficios para socio con asociación:', user.uid, 'asociación:', user.asociacionId);
             beneficiosData = await BeneficiosService.obtenerBeneficiosDisponibles(
               user.uid,
               user.asociacionId,
               filtros
             );
           } else {
-            console.warn('⚠️ Socio sin asociación asignada');
-            setError('No tienes una asociación asignada. Contacta al administrador.');
+            console.log('🔍 Cargando beneficios para socio sin asociación:', user.uid);
+            beneficiosData = await BeneficiosService.obtenerBeneficiosDisponibles(
+              user.uid,
+              undefined,
+              filtros
+            );
           }
           break;
 
@@ -285,8 +296,9 @@ export const useBeneficios = (options: UseBeneficiosOptions = {}) => {
 
     return {
       total: beneficiosActivos.length,
+      disponibles: beneficiosActivos.length, // Beneficios disponibles para usar
       activos: beneficiosActivos.length,
-      usados: beneficiosUsados.length,
+      usados: beneficiosUsados.length, // Beneficios que ya ha usado el socio
       ahorroTotal: beneficiosUsados.reduce((total, uso) => total + (uso.montoDescuento || 0), 0),
       ahorroEsteMes
     };
