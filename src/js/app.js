@@ -134,7 +134,7 @@ const translationData = {
         'feature-calendar-item-1': 'Automatic identification from any location',
         'feature-calendar-item-2': 'Smart option to skip selfie verification',
         'feature-calendar-item-3': 'Quick and secure block cancellation',
-        'feature-calendar-item-4': 'Monthly and weekly view of your deliveries',
+        'feature-calendar-item-4': 'Detailed view of your accepted blocks',
         'feature-calendar-item-5': 'Automatic reminders of upcoming blocks',
         // Feature 4: Log
         'feature-log-title': 'LOG',
@@ -156,7 +156,7 @@ const translationData = {
         'feature-notifications-item-7': 'Advanced notification filters by priority',
         // Feature 6: Referrals
         'feature-referrals-title': 'REFERRALS',
-        'feature-referrals-description': 'Invite other drivers to join the StarFlex revolution and get exclusive benefits for each referral that successfully registers. Share your experience and earn rewards while helping other drivers maximize their earnings.',
+        'feature-referrals-description': 'Invite other drivers to join the StarFlex platform and get exclusive benefits for each referral that successfully registers. Share your experience and earn rewards while helping other drivers maximize their earnings. Both gain a completely free week for each successful referral.',
         'feature-referrals-item-1': 'Unique personalized and trackable referral link',
         'feature-referrals-item-2': 'Earn 1 completely free week for each successful referral',
         'feature-referrals-item-3': 'Dynamic QR code for easy sharing',
@@ -189,8 +189,12 @@ const translationData = {
         'faq-3-answer': 'StarFlex uses <span class="faq__answer-highlight">advanced human simulation technology</span> that includes natural behavior patterns, variable response times and realistic touch gestures. Our approach focuses on helping drivers provide better service to Amazon and its customers, ensuring efficient and high-quality deliveries.',
         'faq-4-question': 'Does StarFlex work on iPhone and Android?',
         'faq-4-answer': 'Yes, StarFlex is available for <span class="faq__answer-highlight">iOS (iPhone 8+) and Android (8.0+)</span>. We have developed native applications optimized for each platform, guaranteeing the best performance and superior user experience. Both versions include all functionalities and receive automatic updates.',
-        'faq-5-question': 'What do I need to start using StarFlex?',
-        'faq-5-answer': 'You only need an <span class="faq__answer-highlight">active Amazon Flex account and a compatible device</span>. After downloading the application, the setup process takes less than 5 minutes. Our guided setup system will help you optimize your experience from day one.',
+        'faq-5-question': '¿Qué necesito para empezar a usar StarFlex?',
+        'faq-5-answer': 'Solo necesitas una <span class="faq__answer-highlight">cuenta activa de Amazon Flex y un dispositivo compatible</span>. Después de descargar la aplicación, el proceso de configuración toma menos de 5 minutos. Nuestro sistema de configuración guiada te ayudará a optimizar tu experiencia desde el primer día.',
+        'faq-6-question': '¿Cómo funciona el sistema de referidos?',
+        'faq-6-answer': 'El sistema de referidos es simple y gratificante. <span class="faq__answer-highlight">Obtienes un enlace único de referido y código QR</span> que puedes compartir con otros conductores. Cuando alguien se registra usando tu enlace y completa su primera semana exitosa, <span class="faq__answer-highlight">tanto tú como tu referido reciben una semana completamente gratis</span> de StarFlex. Puedes rastrear todos tus referidos en tiempo real a través de tu panel de control y ganar semanas gratis ilimitadas ayudando a otros conductores a descubrir StarFlex.',
+        'faq-7-question': '¿Cómo funcionan las notificaciones de llamadas con inteligencia artificial?',
+        'faq-7-answer': 'StarFlex cuenta con un <span class="faq__answer-highlight">sistema avanzado de inteligencia artificial que realiza llamadas telefónicas automáticas</span> cuando se vuelven disponibles bloques premium. La IA habla con una voz clara y natural y proporciona información detallada sobre el bloque aceptado, incluyendo <span class="faq__answer-highlight">ubicación de la estación, horario, duración y monto del pago</span>. Esto asegura que seas informado inmediatamente de bloques importantes incluso cuando no puedes revisar tu teléfono, siendo perfecto para conductores que están trabajando actualmente o en situaciones donde no pueden ver las notificaciones.',
         'faq-no-results': 'No questions found matching your search',
         'faq-no-results-suggestion': 'Try different terms or contact our support',
         // Contact Section
@@ -284,7 +288,7 @@ const translationData = {
         'feature-calendar-item-1': 'Identificación automática desde cualquier ubicación',
         'feature-calendar-item-2': 'Opción inteligente para saltar verificación selfie',
         'feature-calendar-item-3': 'Cancelación rápida y segura de bloques',
-        'feature-calendar-item-4': 'Vista mensual y semanal de tus entregas',
+        'feature-calendar-item-4': 'Vista detallada de tus bloques aceptados',
         'feature-calendar-item-5': 'Recordatorios automáticos de bloques próximos',
         // Feature 4: Registro
         'feature-log-title': 'REGISTRO',
@@ -306,7 +310,7 @@ const translationData = {
         'feature-notifications-item-7': 'Filtros avanzados de notificación por prioridad',
         // Feature 6: Referidos
         'feature-referrals-title': 'REFERIDOS',
-        'feature-referrals-description': 'Invita a otros conductores a unirse a la revolución StarFlex y obtén beneficios exclusivos por cada referido que se registre exitosamente. Comparte tu experiencia y gana recompensas mientras ayudas a otros conductores a maximizar sus ganancias.',
+        'feature-referrals-description': 'Invita a otros conductores a unirse a la plataforma StarFlex y obtén beneficios exclusivos por cada referido que se registre exitosamente. Comparte tu experiencia y gana recompensas mientras ayudas a otros conductores a maximizar sus ganancias. Ambos ganan una semana gratis por referido.',
         'feature-referrals-item-1': 'Enlace único de referido personalizado y rastreable',
         'feature-referrals-item-2': 'Gana 1 semana completamente gratis por cada referido exitoso',
         'feature-referrals-item-3': 'Código QR dinámico para compartir fácilmente',
@@ -2813,8 +2817,6 @@ window.StarFlex = {
     showMainContent,
     showPrivacyPolicy,
     showTermsConditions,
-    // Funciones de scroll
-    scrollToTop,
     // Funciones para páginas legales
     goToPrivacyPolicy,
     goToTermsPolicy,
