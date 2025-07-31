@@ -41,13 +41,13 @@
             box-sizing: border-box;
         }
 
-        /* Variables CSS con tonos rojizos reducidos */
+        /* Variables CSS con tonos rojizos más intensos */
         :root {
-            --primary-color: #e91e63;
-            --primary-light: #f06292;
-            --primary-dark: #c2185b;
-            --secondary-color: #9c27b0;
-            --accent-color: #ff4081;
+            --primary-color: #dc143c;
+            --primary-light: #ff1744;
+            --primary-dark: #b71c1c;
+            --secondary-color: #8e24aa;
+            --accent-color: #ff4569;
             --background-dark: #0a0a0a;
             --background-darker: #050505;
             --text-primary: #ffffff;
@@ -66,6 +66,7 @@
             color: var(--text-primary);
             line-height: 1.6;
             overflow-x: hidden;
+            padding-top: 0;
         }
 
         /* Efectos de fondo */
@@ -86,32 +87,80 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 20% 20%, rgba(233, 30, 99, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 80%, rgba(156, 39, 176, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 40% 60%, rgba(240, 98, 146, 0.05) 0%, transparent 50%);
+            background: radial-gradient(circle at 20% 20%, rgba(220, 20, 60, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(142, 36, 170, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 60%, rgba(255, 23, 68, 0.05) 0%, transparent 50%);
         }
 
-        /* Header */
-        .header {
-            position: sticky;
-            top: 0;
-            background: rgba(10, 10, 10, 0.95);
+        /* Logo flotante a la izquierda - IGUAL AL PRIVACYPOLICY.HTML */
+        .floating-logo {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            z-index: 1002;
+            background: rgba(21, 25, 34, 0.95);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-color);
-            z-index: 100;
-            padding: 1rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(220, 20, 60, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .header__container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
+        .floating-logo:hover {
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(220, 20, 60, 0.2);
+            border-color: rgba(220, 20, 60, 0.3);
+        }
+
+        .floating-logo:active {
+            transform: translateY(-1px) scale(0.98);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(220, 20, 60, 0.2);
+            border-color: rgba(220, 20, 60, 0.3);
+        }
+
+        .floating-logo-container {
+            min-width: 44px;
+            min-height: 44px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
         }
 
-        .back-btn {
+        .floating-logo-image {
+            width: 44px;
+            height: 44px;
+            background-image: url('./assets/logo.webp');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            filter: brightness(1.2) contrast(1.1);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .floating-logo:hover .floating-logo-image {
+            transform: scale(1.05);
+            filter: brightness(1.3) contrast(1.2);
+        }
+
+        .floating-logo:active .floating-logo-image {
+            transform: scale(1.05);
+            filter: brightness(1.3) contrast(1.2);
+        }
+
+        /* Botón flotante a la derecha */
+        .floating-back-btn {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
@@ -125,33 +174,29 @@
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(220, 20, 60, 0.1);
+            backdrop-filter: blur(20px);
         }
 
-        .back-btn:hover {
+        .floating-back-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(233, 30, 99, 0.3);
+            box-shadow: 0 10px 30px rgba(220, 20, 60, 0.3);
         }
 
-        .back-btn svg {
+        .floating-back-btn:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .floating-back-btn svg {
             width: 18px;
             height: 18px;
-        }
-
-        .logo {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
         /* Contenido principal */
         .main-content {
             max-width: 800px;
             margin: 0 auto;
-            padding: 3rem 2rem;
+            padding: 6rem 2rem 3rem;
         }
 
         .page-title {
@@ -304,26 +349,40 @@
 
         .cta-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 15px 40px rgba(233, 30, 99, 0.4);
+            box-shadow: 0 15px 40px rgba(220, 20, 60, 0.4);
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .header__container {
-                padding: 0 1rem;
+            .floating-logo {
+                top: 1rem;
+                left: 1rem;
+                padding: 0.75rem;
+            }
+
+            .floating-logo-container {
+                min-width: 40px;
+                min-height: 40px;
+            }
+
+            .floating-logo-image {
+                width: 40px;
+                height: 40px;
+            }
+
+            .floating-back-btn {
+                top: 1rem;
+                right: 1rem;
+                padding: 0.6rem 1.2rem;
+                font-size: 0.8rem;
             }
 
             .main-content {
-                padding: 2rem 1rem;
+                padding: 5rem 1rem 2rem;
             }
 
             .section {
                 padding: 1.5rem;
-            }
-
-            .back-btn {
-                padding: 0.6rem 1.2rem;
-                font-size: 0.8rem;
             }
 
             .section-title {
@@ -335,6 +394,35 @@
 
             .footer-content {
                 gap: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .floating-logo {
+                top: 0.75rem;
+                left: 0.75rem;
+                padding: 0.5rem;
+            }
+
+            .floating-logo-container {
+                min-width: 36px;
+                min-height: 36px;
+            }
+
+            .floating-logo-image {
+                width: 36px;
+                height: 36px;
+            }
+
+            .floating-back-btn {
+                top: 0.75rem;
+                right: 0.75rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.75rem;
+            }
+
+            .main-content {
+                padding: 4.5rem 0.75rem 1.5rem;
             }
         }
 
@@ -377,26 +465,25 @@
     <!-- Efectos de fondo -->
     <div class="bg-effects"></div>
 
-    <!-- Header -->
-    <header class="header">
-        <div class="header__container">
-            <button class="back-btn" onclick="goToHome()" data-translate="back-to-home" aria-label="Back to Home">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-                </svg>
-                Back to Home
-            </button>
-            
-            <div class="logo" onclick="goToHome()">StarFlex</div>
+    <!-- Logo flotante a la izquierda - IGUAL AL PRIVACYPOLICY.HTML -->
+    <div class="floating-logo" onclick="goToHome()">
+        <div class="floating-logo-container">
+            <div class="floating-logo-image"></div>
         </div>
-    </header>
+    </div>
+    
+    <!-- Botón flotante a la derecha -->
+    <button class="floating-back-btn" onclick="goToHome()" data-translate="back-to-home" aria-label="Back to Home">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+        <span data-translate="back-to-home">Back to Home</span>
+    </button>
 
     <!-- Contenido principal -->
     <main class="main-content">
         <h1 class="page-title" data-translate="terms-title">Terms and Conditions</h1>
         <p class="page-subtitle" data-translate="terms-subtitle">StarFlex Terms of Service and User Agreement</p>
-        
-
         
         <!-- Sección 1 -->
         <section class="section">
@@ -771,18 +858,18 @@
                 'terms-section-7-p1': 'Cualquiera de las partes puede terminar este acuerdo en cualquier momento. StarFlex se reserva el derecho de <span class="highlight">suspender o terminar cuentas</span> que violen estos términos o participen en actividades prohibidas.',
                 'terms-section-7-p2': 'Condiciones de terminación:',
                 'terms-section-7-item-1': 'Terminación inmediata por violaciones de términos',
-                'terms-section-7-item-2': '30-day notice for service changes',
-                'terms-section-7-item-3': 'Data retention for legal compliance',
-                'terms-section-7-item-4': 'Refund eligibility based on circumstances',
+                'terms-section-7-item-2': 'Aviso de 30 días para cambios de servicio',
+                'terms-section-7-item-3': 'Retención de datos para cumplimiento legal',
+                'terms-section-7-item-4': 'Elegibilidad de reembolso basada en circunstancias',
                 
                 // Sección 8
                 'terms-section-8-title': 'Cambios a los Términos',
                 'terms-section-8-p1': 'Nos reservamos el derecho de modificar estos términos en cualquier momento. Los usuarios serán notificados de cambios significativos a través de la aplicación o por correo electrónico. El uso continuado del servicio constituye aceptación de los términos modificados.',
                 'terms-section-8-p2': 'Proceso de notificación de cambios:',
-                'terms-section-8-item-1': 'Email notification to active users',
-                'terms-section-8-item-2': 'In-app notifications for major changes',
-                'terms-section-8-item-3': 'Updated terms posted on website',
-                'terms-section-8-item-4': '30-day grace period for objections',
+                'terms-section-8-item-1': 'Notificación por correo electrónico a usuarios activos',
+                'terms-section-8-item-2': 'Notificaciones en la aplicación para cambios importantes',
+                'terms-section-8-item-3': 'Términos actualizados publicados en el sitio web',
+                'terms-section-8-item-4': 'Período de gracia de 30 días para objeciones',
                 
                 // Footer
                 'terms-contact-info': 'Para preguntas sobre estos Términos y Condiciones, puede contactarnos en:',
@@ -791,54 +878,40 @@
         };
 
         // Detectar idioma desde URL parameter
-function detectLanguageFromURL() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const langParam = urlParams.get('lang');
-    
-    if (langParam === 'es') {
-        return 'es';
-    }
-    
-    // También detectar desde la URL actual si viene de /es
-    const referrer = document.referrer;
-    if (referrer.includes('/es') || referrer.endsWith('/es')) {
-        return 'es';
-    }
-    
-    return 'en';
-}
-
-// Actualizar la función de detección inicial
-function detectInitialLanguage() {
-    // Primero intentar detectar desde URL parameter
-    const langFromURL = detectLanguageFromURL();
-    if (langFromURL) {
-        return langFromURL;
-    }
-    
-    // Fallback a detección por pathname
-    const pathname = window.location.pathname;
-    const href = window.location.href;
-    
-    if (pathname.includes('/es/') || pathname.startsWith('/es/') || 
-        href.includes('/es/') || pathname === '/es') {
-        return 'es';
-    }
-    
-    return 'en';
-}
-
-
-        // Función para detectar idioma inicial
-        function detectInitialLanguage() {
-            const pathname = window.location.pathname;
+        function detectLanguageFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const langParam = urlParams.get('lang');
             
-            // Detectar si la URL contiene /es/ para español
-            if (pathname.includes('/es/') || pathname.startsWith('/es/')) {
+            if (langParam === 'es') {
                 return 'es';
             }
             
-            // Por defecto, inglés para todas las demás rutas
+            // También detectar desde la URL actual si viene de /es
+            const referrer = document.referrer;
+            if (referrer.includes('/es') || referrer.endsWith('/es')) {
+                return 'es';
+            }
+            
+            return 'en';
+        }
+
+        // Actualizar la función de detección inicial
+        function detectInitialLanguage() {
+            // Primero intentar detectar desde URL parameter
+            const langFromURL = detectLanguageFromURL();
+            if (langFromURL) {
+                return langFromURL;
+            }
+            
+            // Fallback a detección por pathname
+            const pathname = window.location.pathname;
+            const href = window.location.href;
+            
+            if (pathname.includes('/es/') || pathname.startsWith('/es/') || 
+                href.includes('/es/') || pathname === '/es') {
+                return 'es';
+            }
+            
             return 'en';
         }
 
