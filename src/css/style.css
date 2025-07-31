@@ -2,24 +2,26 @@
 :root {
 --primary-bg: #0a0d14; --secondary-bg: #151922; --accent-bg: #1e2330;
 --glass-bg: rgba(21, 25, 34, 0.7); --glass-bg-light: rgba(255, 255, 255, 0.05); --glass-bg-medium: rgba(255, 255, 255, 0.08); --glass-bg-strong: rgba(255, 255, 255, 0.12); --glass-border: rgba(255, 255, 255, 0.12);
---starflex-red: #FF2D55; --starflex-red-dark: #cc1744; --starflex-red-bright: #ff4569; --starflex-orange: #ff6b35; --starflex-orange-bright: #ff7a47; --starflex-crimson: #b8002e; --starflex-crimson-glow: #ff1744; --starflex-crimson-light: #d4003a; --starflex-crimson-dark: #9c0025; --starflex-crimson-bright: #ff4569;
 
-/* NUEVA PALETA ROJIZA NEÓN SUTIL */
---neon-red-base: #ff1744;
---neon-red-soft: #ff2d55;
+/* COLORES ROJIZOS ACTUALIZADOS - MÁS INTENSOS Y MENOS ROSADOS */
+--starflex-red: #dc143c; --starflex-red-dark: #b71c1c; --starflex-red-bright: #ff1744; --starflex-orange: #ff6b35; --starflex-orange-bright: #ff7a47; --starflex-crimson: #b8002e; --starflex-crimson-glow: #ff1744; --starflex-crimson-light: #d4003a; --starflex-crimson-dark: #9c0025; --starflex-crimson-bright: #ff4569;
+
+/* NUEVA PALETA ROJIZA NEÓN MÁS INTENSA */
+--neon-red-base: #dc143c;
+--neon-red-soft: #ff1744;
 --neon-red-medium: #ff4569;
 --neon-red-bright: #ff6b9d;
---neon-red-subtle: rgba(255, 23, 68, 0.15);
---neon-red-glow-soft: rgba(255, 45, 85, 0.25);
+--neon-red-subtle: rgba(220, 20, 60, 0.15);
+--neon-red-glow-soft: rgba(255, 23, 68, 0.25);
 --neon-red-glow-medium: rgba(255, 69, 105, 0.35);
 --neon-red-glow-bright: rgba(255, 107, 157, 0.45);
---neon-red-shadow-soft: rgba(255, 23, 68, 0.2);
---neon-red-shadow-medium: rgba(255, 45, 85, 0.3);
+--neon-red-shadow-soft: rgba(220, 20, 60, 0.2);
+--neon-red-shadow-medium: rgba(255, 23, 68, 0.3);
 --neon-red-shadow-bright: rgba(255, 69, 105, 0.4);
 
---neon-primary: #FF2D55; --neon-primary-bright: #ff4569; --neon-primary-glow: #ff1744;
---neon-red-intense: #ff0040; --neon-red-electric: #ff1744; --neon-red-plasma: #ff2d55; --neon-red-fire: #ff4569; --neon-red-shadow: rgba(255, 23, 68, 0.6); --neon-red-aura: rgba(255, 45, 85, 0.4); --neon-red-pulse: rgba(255, 69, 105, 0.8);
---neon-red-shimmer: rgba(255, 23, 68, 0.8); --neon-red-shimmer-bright: rgba(255, 45, 85, 0.9); --neon-red-shimmer-intense: rgba(255, 69, 105, 1);
+--neon-primary: #dc143c; --neon-primary-bright: #ff4569; --neon-primary-glow: #ff1744;
+--neon-red-intense: #b71c1c; --neon-red-electric: #ff1744; --neon-red-plasma: #dc143c; --neon-red-fire: #ff4569; --neon-red-shadow: rgba(220, 20, 60, 0.6); --neon-red-aura: rgba(255, 23, 68, 0.4); --neon-red-pulse: rgba(255, 69, 105, 0.8);
+--neon-red-shimmer: rgba(220, 20, 60, 0.8); --neon-red-shimmer-bright: rgba(255, 23, 68, 0.9); --neon-red-shimmer-intense: rgba(255, 69, 105, 1);
 --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05); --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.1); --shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.1); --shadow-xl: 0 4px 6px rgba(0, 0, 0, 0.1); --shadow-2xl: 0 8px 15px rgba(0, 0, 0, 0.1);
 --shadow-neon: 0 0 20px var(--neon-red-shadow), 0 0 40px var(--neon-red-aura), 0 0 60px rgba(255, 23, 68, 0.3); --shadow-neon-intense: 0 0 30px var(--neon-red-shadow), 0 0 60px var(--neon-red-aura), 0 0 90px rgba(255, 23, 68, 0.4), 0 0 120px rgba(255, 45, 85, 0.2);
 --text-primary: #fff; --text-secondary: #e2e8f0; --text-muted: #94a3b8; --text-accent: #ff4569;
