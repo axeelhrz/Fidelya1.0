@@ -2817,6 +2817,8 @@ window.StarFlex = {
     showMainContent,
     showPrivacyPolicy,
     showTermsConditions,
+    // Funciones de scroll
+    scrollToTop,
     // Funciones para páginas legales
     goToPrivacyPolicy,
     goToTermsPolicy,
