@@ -57,6 +57,23 @@
             --card-background: #1a1a1a;
             --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             --gradient-accent: linear-gradient(135deg, var(--primary-light) 0%, var(--accent-color) 100%);
+            
+            /* Variables de espaciado */
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 0.75rem;
+            --space-lg: 1rem;
+            --space-xl: 1.25rem;
+            --space-2xl: 1.5rem;
+            --space-3xl: 2rem;
+            --space-4xl: 2.5rem;
+            --space-5xl: 3rem;
+            --space-6xl: 4rem;
+            
+            /* Variables de transición */
+            --transition: 0.2s ease;
+            --transition-fast: 0.15s ease;
+            --transition-slow: 0.3s ease;
         }
 
         /* Estilos base */
@@ -95,59 +112,61 @@
         /* Logo flotante a la izquierda - IGUAL AL INDEX.HTML */
         .floating-logo {
             position: fixed;
-            top: 2rem;
-            left: 2rem;
+            top: var(--space-sm);
+            left: var(--space-lg);
             z-index: 1002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
             background: rgba(21, 25, 34, 0.95);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
-            padding: 1rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(220, 20, 60, 0.1);
-            transition: all 0.3s ease;
+            padding: var(--space-md);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 69, 105, 0.1);
             cursor: pointer;
             touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
             user-select: none;
             -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .floating-logo:hover {
-            transform: translateY(-1px) scale(1.02);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(220, 20, 60, 0.2);
-            border-color: rgba(220, 20, 60, 0.3);
+            transition: all var(--transition-slow);
         }
 
         .floating-logo:active {
             transform: translateY(-1px) scale(0.98);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(220, 20, 60, 0.2);
-            border-color: rgba(220, 20, 60, 0.3);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 69, 105, 0.2);
+            border-color: rgba(255, 69, 105, 0.3);
         }
 
         .floating-logo-container {
-            min-width: 44px;
-            min-height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 100%;
+            height: 100%;
+            min-width: 44px;
+            min-height: 44px;
         }
 
         .floating-logo-image {
             width: 44px;
             height: 44px;
-            background-image: url('./assets/logo.webp');
+            background-image: url('../../assets/logo.webp');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
             filter: brightness(1.2) contrast(1.1);
-            transition: all 0.3s ease;
-            pointer-events: none;
-        }
-
-        .floating-logo:hover .floating-logo-image {
-            transform: scale(1.05);
-            filter: brightness(1.3) contrast(1.2);
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: all var(--transition);
+            display: block;
+            visibility: visible;
+            opacity: 1;
         }
 
         .floating-logo:active .floating-logo-image {
