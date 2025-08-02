@@ -795,8 +795,11 @@ filter:brightness(1.3) contrast(1.2);
 .nav__drawer-cta {
     padding: var(--space-lg) var(--space-xl);
     border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
     flex-shrink: 0;
     order: 1;
+    margin-bottom: var(--space-md); /* Añadir un poco de espacio inferior */
+
 }
 
 .nav__drawer-cta-btn {
