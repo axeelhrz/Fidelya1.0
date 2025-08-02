@@ -1724,12 +1724,6 @@ background: rgba(0, 0, 0, 0.8);
 /* ===== CONTACT MÓVIL OPTIMIZADO CON TRANSICIONES Y EFECTO DE ONDA EN FOOTER ===== */
 .contact{position:relative;width:100%;padding:var(--section-padding-y) var(--section-padding-x);background:var(--primary-bg);overflow:hidden}
 
-.contact__bg-effects{position:absolute;inset:0;z-index:1;pointer-events:none}
-
-.contact__orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:0.3}
-.contact__orb--1{top:20%;left:10%;width:200px;height:200px;background:radial-gradient(circle, var(--starflex-crimson) 0%, transparent 70%)}
-.contact__orb--2{bottom:30%;right:15%;width:150px;height:150px;background:radial-gradient(circle, var(--starflex-red) 0%, transparent 70%)}
-.contact__orb--3{top:60%;left:50%;width:100px;height:100px;background:radial-gradient(circle, var(--starflex-orange) 0%, transparent 70%)}
 
 .contact__header{position:relative;z-index:3;margin-bottom:var(--space-4xl);text-align:center}
 
@@ -1891,7 +1885,6 @@ animation-duration:1.2s;
 /* DESKTOP CONTACT COMPLETO - HOVER DEL BOTÓN FOOTER CON ANIMACIONES SUTILES */
 @media (min-width: 1024px) {
 .contact{background:linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 100%)}
-.contact::before{position:absolute;inset:0;content:'';background:radial-gradient(ellipse at 30% 20%, rgba(255, 69, 105, 0.02) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(184, 0, 46, 0.015) 0%, transparent 60%);pointer-events:none}
 .contact__grid{grid-template-columns:repeat(3, 1fr)!important;gap:var(--space-2xl)!important;max-width:1200px!important}
 .contact__subtitle{font-size:1.25rem;max-width:800px}
 .contact__channel{padding:var(--space-2xl);cursor:pointer;transition:all 0.2s ease}
