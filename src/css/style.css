@@ -22,6 +22,16 @@
 --neon-primary: #dc143c; --neon-primary-bright: #ff4569; --neon-primary-glow: #ff1744;
 --neon-red-intense: #b71c1c; --neon-red-electric: #ff1744; --neon-red-plasma: #dc143c; --neon-red-fire: #ff4569; --neon-red-shadow: rgba(220, 20, 60, 0.6); --neon-red-aura: rgba(255, 23, 68, 0.4); --neon-red-pulse: rgba(255, 69, 105, 0.8);
 --neon-red-shimmer: rgba(220, 20, 60, 0.8); --neon-red-shimmer-bright: rgba(255, 23, 68, 0.9); --neon-red-shimmer-intense: rgba(255, 69, 105, 1);
+
+/* NUEVAS VARIABLES PARA EFECTOS ULTRA MODERNOS DEL HERO */
+--neon-red-ultra: #ff0040;
+--neon-red-plasma-hero: #ff1744;
+--neon-red-electric-hero: #ff4569;
+--neon-red-fire-hero: #ff6b9d;
+--neon-glow-intense: rgba(255, 23, 68, 0.8);
+--neon-glow-ultra: rgba(255, 0, 64, 0.9);
+--neon-shadow-deep: rgba(255, 23, 68, 0.6);
+
 --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05); --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.1); --shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.1); --shadow-xl: 0 4px 6px rgba(0, 0, 0, 0.1); --shadow-2xl: 0 8px 15px rgba(0, 0, 0, 0.1);
 --shadow-neon: 0 0 20px var(--neon-red-shadow), 0 0 40px var(--neon-red-aura), 0 0 60px rgba(255, 23, 68, 0.3); --shadow-neon-intense: 0 0 30px var(--neon-red-shadow), 0 0 60px var(--neon-red-aura), 0 0 90px rgba(255, 23, 68, 0.4), 0 0 120px rgba(255, 45, 85, 0.2);
 --text-primary: #fff; --text-secondary: #e2e8f0; --text-muted: #94a3b8; --text-accent: #ff4569;
@@ -228,6 +238,117 @@ opacity:1;
 }
 }
 
+/* ANIMACIONES ESPECÍFICAS PARA EL HERO CTA ULTRA MODERNO */
+@keyframes hero-cta-breathe {
+    0%, 100% {
+        box-shadow: 
+            0 0 20px var(--neon-glow-intense),
+            0 0 40px var(--neon-glow-ultra),
+            0 0 60px rgba(255, 0, 64, 0.4),
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 
+            0 0 30px var(--neon-glow-intense),
+            0 0 60px var(--neon-glow-ultra),
+            0 0 90px rgba(255, 0, 64, 0.6),
+            0 12px 40px rgba(0, 0, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        transform: scale(1.02);
+    }
+}
+
+@keyframes hero-cta-shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+@keyframes hero-cta-aura-pulse {
+    0%, 100% {
+        opacity: 0.6;
+        filter: blur(8px);
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        filter: blur(12px);
+        transform: scale(1.05);
+    }
+}
+
+@keyframes hero-wave-ripple {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    70% {
+        width: 300px;
+        height: 300px;
+        opacity: 0.6;
+    }
+    100% {
+        width: 400px;
+        height: 400px;
+        opacity: 0;
+    }
+}
+
+@keyframes hero-text-glow {
+    0%, 100% {
+        text-shadow: 
+            0 1px 2px rgba(0, 0, 0, 0.8),
+            0 0 10px rgba(255, 255, 255, 0.6),
+            0 0 20px var(--neon-glow-intense);
+    }
+    50% {
+        text-shadow: 
+            0 1px 2px rgba(0, 0, 0, 0.9),
+            0 0 15px rgba(255, 255, 255, 0.8),
+            0 0 30px var(--neon-glow-ultra),
+            0 0 40px rgba(255, 0, 64, 0.4);
+    }
+}
+
+@keyframes hero-cta-hover-float {
+    0%, 100% {
+        transform: translateY(-5px) scale(1.05);
+    }
+    50% {
+        transform: translateY(-8px) scale(1.06);
+    }
+}
+
+@keyframes hero-particle-float {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+        opacity: 0.6;
+    }
+    25% {
+        transform: translateY(-10px) scale(1.2);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-5px) scale(0.8);
+        opacity: 0.8;
+    }
+    75% {
+        transform: translateY(-15px) scale(1.1);
+        opacity: 0.9;
+    }
+}
+
+@keyframes hero-energy-flow {
+    0% {
+        background-position: 0% 0%;
+    }
+    100% {
+        background-position: 200% 200%;
+    }
+}
+
 .animate-fadeIn{animation:fadeIn 0.3s ease-out}.animate-fadeInUp{animation:fadeInUp 0.4s ease-out}.animate-fadeInDown{animation:fadeInDown 0.4s ease-out}.animate-fadeInLeft{animation:fadeInLeft 0.4s ease-out}.animate-fadeInRight{animation:fadeInRight 0.4s ease-out}.animate-pulse{animation:pulse 2s infinite}.animate-pulse-gentle{animation:pulse-gentle 3s infinite}.animate-spin{animation:spin 1s linear infinite}
 .animate-neon-pulse{animation:neon-pulse 2s ease-in-out infinite}.animate-neon-glow{animation:neon-glow-intense 3s ease-in-out infinite}.animate-neon-border{animation:neon-border-flow 2s linear infinite}.animate-neon-text{animation:neon-text-glow 2s ease-in-out infinite}.animate-neon-shimmer{animation:neon-shimmer 2s linear infinite}.animate-neon-shimmer-red{animation:neon-shimmer-red 2s linear infinite}
 }
@@ -336,6 +457,196 @@ animation-delay:1.5s;
 background:radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 70%);
 }
 
+/* ===== BOTÓN HERO CTA ULTRA MODERNO CON EFECTOS NEÓN ROJIZOS Y ONDAS ===== */
+
+/* Botón CTA del Hero con efectos ultra modernos */
+.hero__cta-main .btn--cta {
+    position: relative !important;
+    background: linear-gradient(135deg, var(--neon-red-ultra) 0%, var(--neon-red-plasma-hero) 50%, var(--neon-red-electric-hero) 100%) !important;
+    border: 2px solid var(--neon-red-plasma-hero) !important;
+    box-shadow: 
+        0 0 20px var(--neon-glow-intense),
+        0 0 40px var(--neon-glow-ultra),
+        0 0 60px rgba(255, 0, 64, 0.4),
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    text-shadow: 
+        0 0 10px rgba(255, 255, 255, 0.8),
+        0 0 20px var(--neon-glow-intense),
+        0 0 30px var(--neon-glow-ultra) !important;
+    transform: translateZ(0) !important;
+    overflow: hidden !important;
+    animation: hero-cta-breathe 3s ease-in-out infinite !important;
+}
+
+/* Efecto de brillo interno dinámico */
+.hero__cta-main .btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -2px !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: calc(100% + 4px) !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.1) 20%, 
+        rgba(255, 255, 255, 0.3) 40%, 
+        rgba(255, 255, 255, 0.4) 50%, 
+        rgba(255, 255, 255, 0.3) 60%, 
+        rgba(255, 255, 255, 0.1) 80%, 
+        transparent 100%) !important;
+    z-index: 1 !important;
+    border-radius: inherit !important;
+    animation: hero-cta-shimmer 2.5s linear infinite !important;
+}
+
+/* Aura externa pulsante */
+.hero__cta-main .btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -4px !important;
+    left: -4px !important;
+    right: -4px !important;
+    bottom: -4px !important;
+    background: linear-gradient(45deg, 
+        var(--neon-red-ultra), 
+        var(--neon-red-plasma-hero), 
+        var(--neon-red-electric-hero), 
+        var(--neon-red-fire-hero),
+        var(--neon-red-electric-hero), 
+        var(--neon-red-plasma-hero), 
+        var(--neon-red-ultra)) !important;
+    border-radius: 18px !important;
+    z-index: -1 !important;
+    opacity: 0.6 !important;
+    filter: blur(8px) !important;
+    animation: hero-cta-aura-pulse 2s ease-in-out infinite !important;
+}
+
+/* Ondas concéntricas modernas */
+.hero__cta-main .btn--cta .wave-effect {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    animation: hero-wave-ripple 2s ease-out infinite !important;
+}
+
+.hero__cta-main .btn--cta .wave-effect:nth-child(2) {
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.4) 0%, 
+        rgba(255, 23, 68, 0.3) 30%, 
+        rgba(255, 0, 64, 0.2) 60%, 
+        transparent 80%) !important;
+    animation-delay: 0s !important;
+}
+
+.hero__cta-main .btn--cta .wave-effect:nth-child(3) {
+    background: radial-gradient(circle, 
+        rgba(255, 107, 157, 0.3) 0%, 
+        rgba(255, 69, 105, 0.2) 40%, 
+        transparent 70%) !important;
+    animation-delay: 0.4s !important;
+}
+
+.hero__cta-main .btn--cta .wave-effect:nth-child(4) {
+    background: radial-gradient(circle, 
+        rgba(255, 45, 85, 0.35) 0%, 
+        rgba(255, 23, 68, 0.2) 40%, 
+        transparent 70%) !important;
+    animation-delay: 0.8s !important;
+}
+
+.hero__cta-main .btn--cta .wave-effect:nth-child(5) {
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.25) 0%, 
+        rgba(255, 0, 64, 0.15) 50%, 
+        transparent 75%) !important;
+    animation-delay: 1.2s !important;
+}
+
+/* Texto del botón con efectos especiales */
+.hero__cta-main .btn--cta span,
+.hero__cta-main .btn--cta small {
+    position: relative !important;
+    z-index: 3 !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    text-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.8),
+        0 0 10px rgba(255, 255, 255, 0.6),
+        0 0 20px var(--neon-glow-intense) !important;
+    animation: hero-text-glow 2.5s ease-in-out infinite !important;
+}
+
+/* Partículas flotantes alrededor del botón */
+.hero__cta-main .btn--cta .particle {
+    position: absolute !important;
+    width: 3px !important;
+    height: 3px !important;
+    background: var(--neon-red-plasma-hero) !important;
+    border-radius: 50% !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    box-shadow: 0 0 6px var(--neon-glow-intense) !important;
+    animation: hero-particle-float 3s ease-in-out infinite !important;
+}
+
+.hero__cta-main .btn--cta .particle:nth-child(6) {
+    top: 10% !important;
+    left: 20% !important;
+    animation-delay: 0s !important;
+}
+
+.hero__cta-main .btn--cta .particle:nth-child(7) {
+    top: 20% !important;
+    right: 15% !important;
+    animation-delay: 0.5s !important;
+}
+
+.hero__cta-main .btn--cta .particle:nth-child(8) {
+    bottom: 15% !important;
+    left: 10% !important;
+    animation-delay: 1s !important;
+}
+
+.hero__cta-main .btn--cta .particle:nth-child(9) {
+    bottom: 25% !important;
+    right: 25% !important;
+    animation-delay: 1.5s !important;
+}
+
+/* Efecto de energía en los bordes */
+.hero__cta-main .btn--cta .energy-border {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: inherit !important;
+    background: linear-gradient(45deg, 
+        transparent 0%, 
+        var(--neon-red-plasma-hero) 25%, 
+        transparent 50%, 
+        var(--neon-red-electric-hero) 75%, 
+        transparent 100%) !important;
+    background-size: 200% 200% !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+    animation: hero-energy-flow 2s linear infinite !important;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+    mask-composite: xor !important;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+    -webkit-mask-composite: xor !important;
+    padding: 1px !important;
+}
+
 .btn:disabled,.btn--disabled{opacity:0.5;cursor:not-allowed;pointer-events:none}
 .btn--loading{color:transparent;pointer-events:none}
 .btn--loading::after{content:'';position:absolute;width:16px;height:16px;border:2px solid transparent;border-top:2px solid currentColor;border-radius:50%;animation:spin 1s linear infinite}
@@ -386,6 +697,33 @@ bottom:-4px;
 animation-duration:1.5s;
 }
 
+/* EFECTOS HOVER PARA HERO CTA */
+.hero__cta-main .btn--cta:hover {
+    background: linear-gradient(135deg, var(--neon-red-plasma-hero) 0%, var(--neon-red-electric-hero) 50%, var(--neon-red-fire-hero) 100%) !important;
+    box-shadow: 
+        0 0 30px var(--neon-glow-intense),
+        0 0 60px var(--neon-glow-ultra),
+        0 0 90px rgba(255, 0, 64, 0.6),
+        0 15px 50px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-5px) scale(1.05) !important;
+    animation: hero-cta-hover-float 1.5s ease-in-out infinite !important;
+}
+
+.hero__cta-main .btn--cta:hover::before {
+    animation-duration: 1.5s !important;
+}
+
+.hero__cta-main .btn--cta:hover::after {
+    opacity: 0.9 !important;
+    filter: blur(15px) !important;
+    transform: scale(1.1) !important;
+}
+
+.hero__cta-main .btn--cta:hover .wave-effect {
+    animation-duration: 1.2s !important;
+}
+
 /* BOTÓN FOOTER CORREGIDO - SIN EFECTOS QUE OCULTEN EL TEXTO */
 .btn--footer:hover{transform:translateY(-2px);box-shadow:0 0 25px var(--neon-red-shadow), 0 0 50px var(--neon-red-aura), 0 4px 20px rgba(0, 0, 0, 0.3);background:linear-gradient(135deg, var(--neon-red-electric) 0%, var(--neon-red-fire) 100%);border-color:var(--neon-red-fire);color:#ffffff!important;transition:all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)}
 }
@@ -401,6 +739,22 @@ animation:none;
 /* CREAR ONDAS AL HACER CLICK */
 .btn--cta:active .wave-effect{
 animation:cta-wave-ripple 0.6s ease-out;
+}
+
+/* EFECTOS TÁCTILES PARA HERO CTA */
+.hero__cta-main .btn--cta:active {
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 
+        0 0 25px var(--neon-glow-intense),
+        0 0 50px var(--neon-glow-ultra),
+        0 0 75px rgba(255, 0, 64, 0.5),
+        0 10px 35px rgba(0, 0, 0, 0.35) !important;
+    animation: none !important;
+    transition: all 0.1s ease !important;
+}
+
+.hero__cta-main .btn--cta:active .wave-effect {
+    animation-duration: 0.8s !important;
 }
 
 .btn--footer:active{transform:translateY(0) scale(0.98);box-shadow:0 0 20px var(--neon-red-shadow), 0 0 40px var(--neon-red-aura);color:#ffffff!important;transition:all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)}
@@ -1016,6 +1370,22 @@ filter:brightness(1.3) contrast(1.2);
     .nav__drawer-cta-btn:active {
         transform: scale(0.98) !important;
     }
+
+    /* DESHABILITAR ANIMACIONES DEL HERO CTA */
+    .hero__cta-main .btn--cta,
+    .hero__cta-main .btn--cta::before,
+    .hero__cta-main .btn--cta::after,
+    .hero__cta-main .btn--cta .wave-effect,
+    .hero__cta-main .btn--cta .particle,
+    .hero__cta-main .btn--cta .energy-border,
+    .hero__cta-main .btn--cta span,
+    .hero__cta-main .btn--cta small {
+        animation: none !important;
+    }
+    
+    .hero__cta-main .btn--cta:hover {
+        animation: none !important;
+    }
 }
 
 /* MODO ALTO CONTRASTE */
@@ -1023,6 +1393,13 @@ filter:brightness(1.3) contrast(1.2);
     .nav__drawer-cta-btn {
         border-width: 2px;
         box-shadow: 0 0 20px var(--neon-red-shadow-bright), 0 0 40px var(--neon-red-glow-bright);
+    }
+
+    .hero__cta-main .btn--cta {
+        border-width: 3px !important;
+        box-shadow: 
+            0 0 30px var(--neon-glow-ultra),
+            0 0 60px rgba(255, 0, 64, 0.8) !important;
     }
 }
 
@@ -1945,7 +2322,7 @@ html,body{overflow-x:hidden}
 .download-btn{transition-duration:var(--transition)!important}
 
 /* Deshabilitar animaciones complejas pero mantener transiciones sutiles */
-*:not(.nav__toggle):not(.nav__toggle-line):not(.btn--cta):not(.btn--footer):not(.floating-widget):not(.floating-widget__menu):not(.floating-widget__main-btn):not(.floating-widget__menu-item):not(.faq__question):not(.faq__icon):not(.faq__answer):not(.faq__search):not(.contact__channel):not(.contact__channel-btn):not(.contact__channel-icon):not(.download-btn):not(.nav__drawer):not(.nav__drawer-overlay):not(.nav__drawer-link):not(.nav__drawer-language-option){animation:none!important}
+*:not(.nav__toggle):not(.nav__toggle-line):not(.btn--cta):not(.btn--footer):not(.floating-widget):not(.floating-widget__menu):not(.floating-widget__main-btn):not(.floating-widget__menu-item):not(.faq__question):not(.faq__icon):not(.faq__answer):not(.faq__search):not(.contact__channel):not(.contact__channel-btn):not(.contact__channel-icon):not(.download-btn):not(.nav__drawer):not(.nav__drawer-overlay):not(.nav__drawer-link):not(.nav__drawer-language-option):not(.hero__cta-main .btn--cta):not(.hero__cta-main .btn--cta *){animation:none!important}
 
 /* EXCEPCIÓN: Permitir animación del botón hamburguesa */
 .nav__toggle.active .nav__toggle-line:nth-child(1){transform:rotate(45deg) translate(7px, 7px)!important}
@@ -1968,6 +2345,36 @@ animation-delay:0.6s!important;
 
 .btn--cta .wave-effect:nth-child(3), .btn--footer .wave-effect:nth-child(3){
 animation-delay:1.2s!important;
+}
+
+/* MANTENER ANIMACIONES DEL HERO CTA ULTRA MODERNO */
+.hero__cta-main .btn--cta{
+animation:hero-cta-breathe 3s ease-in-out infinite!important;
+}
+
+.hero__cta-main .btn--cta::before{
+animation:hero-cta-shimmer 2.5s linear infinite!important;
+}
+
+.hero__cta-main .btn--cta::after{
+animation:hero-cta-aura-pulse 2s ease-in-out infinite!important;
+}
+
+.hero__cta-main .btn--cta .wave-effect{
+animation:hero-wave-ripple 2s ease-out infinite!important;
+}
+
+.hero__cta-main .btn--cta .particle{
+animation:hero-particle-float 3s ease-in-out infinite!important;
+}
+
+.hero__cta-main .btn--cta .energy-border{
+animation:hero-energy-flow 2s linear infinite!important;
+}
+
+.hero__cta-main .btn--cta span,
+.hero__cta-main .btn--cta small{
+animation:hero-text-glow 2.5s ease-in-out infinite!important;
 }
 
 /* Efectos táctiles sutiles para móvil */
@@ -1999,7 +2406,11 @@ animation-delay:1.2s!important;
 .performance-mode .btn--footer .wave-effect,
 .performance-mode .nav__drawer-cta-btn .wave-effect,
 .performance-mode .hero__cta-main .btn--cta .wave-effect,
-.performance-mode .videos__cta-buttons .btn--cta .wave-effect{
+.performance-mode .videos__cta-buttons .btn--cta .wave-effect,
+.performance-mode .hero__cta-main .btn--cta::before,
+.performance-mode .hero__cta-main .btn--cta::after,
+.performance-mode .hero__cta-main .btn--cta .particle,
+.performance-mode .hero__cta-main .btn--cta .energy-border{
 display:none!important;
 }
 
@@ -2014,7 +2425,13 @@ display:none!important;
 .btn--footer .wave-effect,
 .nav__drawer-cta-btn .wave-effect,
 .hero__cta-main .btn--cta .wave-effect,
-.videos__cta-buttons .btn--cta .wave-effect{
+.videos__cta-buttons .btn--cta .wave-effect,
+.hero__cta-main .btn--cta::before,
+.hero__cta-main .btn--cta::after,
+.hero__cta-main .btn--cta .particle,
+.hero__cta-main .btn--cta .energy-border,
+.hero__cta-main .btn--cta span,
+.hero__cta-main .btn--cta small{
 display:none!important;
 }
 }
@@ -2104,7 +2521,7 @@ display:none!important;
 /* Optimizar rendimiento de imágenes */
 img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;transform:translateZ(0);backface-visibility:hidden}
 
-/* Reducir repaints y reflows */
+/* Reducir repaintsy reflows */
 .container,.hero__container,.features__grid,.faq__container,.contact__grid{contain:layout style}
 }
 
