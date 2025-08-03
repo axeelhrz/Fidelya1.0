@@ -76,6 +76,92 @@ const CONFIG = {
     }
 };
 
+// ===== EFECTOS DE ONDA CIRCULAR MEJORADOS =====
+
+// Función para crear efecto de onda al hacer click
+function createClickWaveEffect(button) {
+    const waves = button.querySelectorAll('.wave-effect');
+    
+    waves.forEach((wave, index) => {
+        // Reiniciar animación
+        wave.style.animation = 'none';
+        wave.offsetHeight; // Trigger reflow
+        wave.style.animation = `click-wave-burst 0.6s ease-out`;
+        wave.style.animationDelay = `${index * 0.1}s`;
+    });
+    
+    // Restaurar animación normal después del click
+    setTimeout(() => {
+        waves.forEach((wave, index) => {
+            wave.style.animation = `circular-wave-expand 2s ease-out infinite`;
+            wave.style.animationDelay = `${index * 0.5}s`;
+        });
+    }, 600);
+}
+
+// Aplicar efectos a todos los botones CTA
+function initializeWaveEffects() {
+    console.log('🌊 Inicializando efectos de onda circular...');
+    
+    // Seleccionar todos los botones CTA con efectos de onda
+    const ctaButtons = document.querySelectorAll('.btn--cta, .btn--footer, .nav__drawer-cta-btn');
+    
+    console.log(`🎯 Botones CTA encontrados: ${ctaButtons.length}`);
+    
+    ctaButtons.forEach((button, index) => {
+        console.log(`🔧 Configurando efectos para botón ${index + 1}:`, button.className);
+        
+        // Efecto al hacer click
+        button.addEventListener('click', function(e) {
+            console.log('🌊 Efecto de onda activado por click');
+            createClickWaveEffect(this);
+        });
+        
+        // Efecto al tocar en móvil
+        button.addEventListener('touchstart', function(e) {
+            console.log('🌊 Efecto de onda activado por touch');
+            createClickWaveEffect(this);
+        }, { passive: true });
+    });
+    
+    // Optimización para dispositivos de bajo rendimiento
+    const isLowEndDevice = navigator.hardwareConcurrency <= 2 || 
+                          navigator.deviceMemory <= 2 || 
+                          /Android.*Chrome\/[0-5]/.test(navigator.userAgent);
+    
+    if (isLowEndDevice) {
+        document.body.classList.add('performance-mode');
+        console.log('⚡ Modo rendimiento activado - Ondas deshabilitadas');
+    }
+    
+    // Respetar preferencias de movimiento reducido
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.body.classList.add('reduced-motion');
+        console.log('♿ Movimiento reducido detectado - Ondas deshabilitadas');
+    }
+    
+    console.log('✅ Efectos de onda circular inicializados');
+}
+
+// Función para pausar animaciones cuando la pestaña no está visible (optimización)
+function initializeVisibilityOptimization() {
+    document.addEventListener('visibilitychange', function() {
+        const waves = document.querySelectorAll('.wave-effect');
+        
+        if (document.hidden) {
+            waves.forEach(wave => {
+                wave.style.animationPlayState = 'paused';
+            });
+            console.log('⏸️ Animaciones de onda pausadas (pestaña oculta)');
+        } else {
+            waves.forEach(wave => {
+                wave.style.animationPlayState = 'running';
+            });
+            console.log('▶️ Animaciones de onda reanudadas (pestaña visible)');
+        }
+    });
+}
+
 // ===== SISTEMA DE TRADUCCIÓN OPTIMIZADO =====
 const translationData = {
     en: {
@@ -1827,10 +1913,10 @@ function smoothScrollToSection(targetSection) {
         return;
     }
     
-    const headerHeight = isMobile ? 70 : 80;
+    const headerHeight = isMobile ? 60 : 80;
     const targetPosition = targetSection.offsetTop - headerHeight;
     
-    console.log(`🚀 Scroll suave a: ${targetSection.id}, posición: ${targetPosition}`);
+    console.log(`🎯 Scroll suave a sección: ${targetSection.id} - Posición: ${targetPosition}`);
     
     if ('scrollBehavior' in document.documentElement.style && !performanceMode) {
         window.scrollTo({
@@ -1838,11 +1924,14 @@ function smoothScrollToSection(targetSection) {
             behavior: 'smooth'
         });
     } else {
+        // Fallback para navegadores que no soportan scroll suave
         window.scrollTo(0, targetPosition);
     }
 }
 
 function updateActiveNavLink(activeLink) {
+    console.log(`🎯 Actualizando enlace activo: ${activeLink ? activeLink.getAttribute('href') : 'ninguno'}`);
+    
     document.querySelectorAll('.nav__link').forEach(link => {
         link.classList.remove('active');
         link.setAttribute('aria-current', 'false');
@@ -1854,422 +1943,360 @@ function updateActiveNavLink(activeLink) {
     }
 }
 
-function initializeActiveSection() {
-    setTimeout(() => {
-        updateActiveNavOnScroll();
-    }, 100);
-}
-
 // ===== NAVEGACIÓN POR TECLADO OPTIMIZADA =====
 function initializeKeyboardNavigation() {
-    const navMenu = document.getElementById('nav-menu');
-    const navToggle = document.getElementById('nav-toggle');
-    const navDrawer = document.getElementById('nav-drawer');
+    const navLinks = document.querySelectorAll('.nav__link, .nav__drawer-link');
     
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (isMenuOpen) {
+    navLinks.forEach(link => {
+        link.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                closeMobileMenu();
-                return;
+                link.click();
             }
-            if (isMobileMenuOpen) {
-                e.preventDefault();
-                closeMobileMenu();
-                return;
-            }
-        }
-        
-        // Tab trap para menú desktop
-        if (e.key === 'Tab' && isMenuOpen && !isMobile && navMenu) {
-            handleTabTrap(e, navMenu);
-        }
-        
-        // Tab trap para drawer móvil
-        if (e.key === 'Tab' && isMobileMenuOpen && navDrawer) {
-            handleTabTrap(e, navDrawer);
-        }
-        
-        // Enter/Space para toggles
-        if ((e.key === 'Enter' || e.key === ' ')) {
-            if (e.target === navToggle) {
-                e.preventDefault();
-                toggleMobileMenu();
-            }
-        }
+        });
     });
 }
 
-function handleTabTrap(e, menuElement) {
-    const focusableElements = menuElement.querySelectorAll(
-        'a[href], button, [tabindex]:not([tabindex="-1"])'
+// ===== DETECCIÓN DE SECCIÓN ACTIVA OPTIMIZADA =====
+function initializeActiveSection() {
+    if (performanceMode) return;
+    
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav__link');
+    const drawerLinks = document.querySelectorAll('.nav__drawer-link');
+    
+    if (!sections.length) return;
+    
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const sectionId = entry.target.id;
+                    const activeNavLink = document.querySelector(`.nav__link[href="#${sectionId}"]`);
+                    const activeDrawerLink = document.querySelector(`.nav__drawer-link[href="#${sectionId}"]`);
+                    
+                    updateActiveNavLink(activeNavLink);
+                    updateActiveDrawerLink(activeDrawerLink);
+                }
+            });
+        },
+        {
+            rootMargin: isMobile ? '-20% 0px -60% 0px' : '-30% 0px -50% 0px',
+            threshold: 0.1
+        }
     );
-    const firstFocusable = focusableElements[0];
-    const lastFocusable = focusableElements[focusableElements.length - 1];
     
-    if (e.shiftKey) {
-        if (document.activeElement === firstFocusable) {
-            e.preventDefault();
-            lastFocusable.focus();
-        }
-    } else {
-        if (document.activeElement === lastFocusable) {
-            e.preventDefault();
-            firstFocusable.focus();
-        }
-    }
-}
-
-// ===== EFECTOS DE SCROLL ULTRA-OPTIMIZADOS =====
-function initializeScrollEffects() {
-    let scrollTimeout;
-    
-    window.addEventListener('scroll', () => {
-        if (scrollTimeout) return;
-        
-        scrollTimeout = setTimeout(() => {
-            if (!ticking) {
-                requestAnimationFrame(() => {
-                    updateActiveNavOnScroll();
-                    handleScrollDirection();
-                    updateHeaderOnScroll();
-                    ticking = false;
-                });
-                ticking = true;
-            }
-            scrollTimeout = null;
-        }, isMobile ? 50 : 25);
-    }, { passive: true });
-}
-
-function handleScrollDirection() {
-    const currentScrollY = window.scrollY;
-    
-    if (currentScrollY > lastScrollY && currentScrollY > (isMobile ? 50 : 100)) {
-        isScrollingDown = true;
-    } else {
-        isScrollingDown = false;
-    }
-    
-    lastScrollY = currentScrollY;
+    sections.forEach(section => observer.observe(section));
 }
 
 function updateActiveNavOnScroll() {
-    // Solo actualizar si estamos en la página principal
-    const pathname = window.location.pathname;
-    const isOnMainPage = pathname === '/' || pathname === '/es';
-    
-    if (!isOnMainPage) {
-        return;
-    }
-    
     const sections = document.querySelectorAll('section[id]');
-    // Usar la posición guardada si el drawer está abierto, sino usar la posición actual
-    const scrollY = isMobileMenuOpen && document.body.dataset.scrollPosition ? 
-                   parseInt(document.body.dataset.scrollPosition) : 
-                   window.scrollY;
-    const headerHeight = isMobile ? 80 : 100;
-    const windowHeight = window.innerHeight;
+    const scrollPosition = window.scrollY + (isMobile ? 100 : 120);
     
     let activeSection = null;
-    let maxVisibleArea = 0;
     
-    // Método mejorado para detectar la sección activa (MISMA LÓGICA QUE DESKTOP)
     sections.forEach(section => {
         const sectionTop = section.offsetTop;
         const sectionHeight = section.offsetHeight;
-        const sectionBottom = sectionTop + sectionHeight;
-        const sectionId = section.getAttribute('id');
         
-        const viewportTop = scrollY + headerHeight;
-        const viewportBottom = scrollY + windowHeight;
-        
-        const visibleTop = Math.max(viewportTop, sectionTop);
-        const visibleBottom = Math.min(viewportBottom, sectionBottom);
-        const visibleArea = Math.max(0, visibleBottom - visibleTop);
-        
-        // Considerar una sección como activa si tiene suficiente área visible
-        if (visibleArea > maxVisibleArea && visibleArea > 50) {
-            maxVisibleArea = visibleArea;
-            activeSection = sectionId;
+        if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+            activeSection = section;
         }
     });
-    
-    // Fallback: si no hay sección con suficiente área visible, usar posición del scroll
-    if (!activeSection) {
-        const scrollPosition = scrollY + headerHeight + 50;
-        
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            const sectionHeight = section.offsetHeight;
-            const sectionId = section.getAttribute('id');
-            
-            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-                activeSection = sectionId;
-            }
-        });
-    }
-    
-    // Si aún no hay sección activa, determinar por proximidad
-    if (!activeSection && sections.length > 0) {
-        let closestSection = null;
-        let minDistance = Infinity;
-        
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            const sectionId = section.getAttribute('id');
-            const distance = Math.abs(scrollY + headerHeight - sectionTop);
-            
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestSection = sectionId;
-            }
-        });
-        
-        activeSection = closestSection;
-    }
     
     if (activeSection) {
-        // Actualizar enlaces desktop (LÓGICA ORIGINAL)
-        const activeLink = document.querySelector(`.nav__link[href="#${activeSection}"]`);
-        const currentActiveLink = document.querySelector('.nav__link.active');
+        const sectionId = activeSection.id;
+        const activeNavLink = document.querySelector(`.nav__link[href="#${sectionId}"]`);
+        const activeDrawerLink = document.querySelector(`.nav__drawer-link[href="#${sectionId}"]`);
         
-        if (activeLink && activeLink !== currentActiveLink) {
-            updateActiveNavLink(activeLink);
-        }
-        
-        // Actualizar enlaces del drawer móvil (MISMA LÓGICA QUE DESKTOP)
-        const activeDrawerLink = document.querySelector(`.nav__drawer-link[href="#${activeSection}"]`);
-        const currentActiveDrawerLink = document.querySelector('.nav__drawer-link.active');
-        
-        if (activeDrawerLink && activeDrawerLink !== currentActiveDrawerLink) {
-            updateActiveDrawerLink(activeDrawerLink);
-        }
+        updateActiveNavLink(activeNavLink);
+        updateActiveDrawerLink(activeDrawerLink);
     }
 }
 
-function updateHeaderOnScroll() {
+// ===== CONTROL DEL NAVBAR RESPONSIVE ULTRA-OPTIMIZADO =====
+function initializeNavbarControl() {
+    if (isMobile) return;
+    
     const header = document.getElementById('header');
-    const scrollY = window.scrollY;
-    const threshold = isMobile ? 50 : 100;
+    if (!header) return;
     
-    // Actualizar header
-    if (header) {
-        if (scrollY > threshold) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+    
+    function updateNavbar() {
+        const currentScrollY = window.scrollY;
+        const scrollDifference = Math.abs(currentScrollY - lastScrollY);
+        
+        if (scrollDifference < 5) {
+            ticking = false;
+            return;
         }
         
-        // Auto-hide navbar móvil optimizado
-        if (isMobile && scrollY > lastScrollY && scrollY > threshold && !isMobileMenuOpen) {
-            if (isNavbarVisible) {
-                header.style.transform = 'translateY(-100%)';
-                isNavbarVisible = false;
-            }
-        } else if (isMobile) {
-            if (!isNavbarVisible) {
-                header.style.transform = 'translateY(0)';
-                isNavbarVisible = true;
-            }
+        if (currentScrollY > lastScrollY && currentScrollY > 100) {
+            // Scrolling down
+            header.classList.add('nav-hidden');
+        } else {
+            // Scrolling up
+            header.classList.remove('nav-hidden');
         }
+        
+        lastScrollY = currentScrollY;
+        ticking = false;
     }
+    
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            requestAnimationFrame(updateNavbar);
+            ticking = true;
+        }
+    }, { passive: true });
 }
 
-// ===== REPRODUCTOR DE VIDEO ULTRA-OPTIMIZADO =====
-function initializeVideoPlayer() {
-    const video = document.getElementById('main-video');
-    const playOverlay = document.getElementById('play-overlay');
-    const progressBar = document.querySelector('.videos__progress-bar');
-    const progressFill = document.querySelector('.videos__progress-fill');
-    const currentTimeDisplay = document.querySelector('.videos__current-time');
-    const durationDisplay = document.querySelector('.videos__duration');
-    const progressIndicators = document.querySelector('.videos__progress-indicators');
+// ===== FUNCIONALIDAD DE CARACTERÍSTICAS INTERACTIVAS =====
+function initializeFeatures() {
+    console.log('🎯 Inicializando sistema de características interactivas...');
     
-    if (!video || !playOverlay) return;
+    const features = document.querySelectorAll('.feature');
+    const featureButtons = document.querySelectorAll('.features__nav-btn');
     
-    video.controls = false;
-    video.preload = isMobile ? 'none' : 'metadata';
+    console.log(`📱 Características encontradas: ${features.length}`);
+    console.log(`🔘 Botones de navegación encontrados: ${featureButtons.length}`);
     
-    video.addEventListener('loadedmetadata', () => {
-        if (durationDisplay) {
-            durationDisplay.textContent = formatTime(video.duration);
-        }
-    });
-    
-    playOverlay.addEventListener('click', () => {
-        if (video.paused) {
-            video.play();
-            playOverlay.classList.add('hidden');
-            if (progressIndicators) {
-                progressIndicators.classList.add('visible');
-            }
-        }
-    });
-    
-    if (isMobile) {
-        playOverlay.addEventListener('touchstart', () => {
-            playOverlay.style.transform = 'scale(0.98)';
-        }, { passive: true });
-        playOverlay.addEventListener('touchend', () => {
-            playOverlay.style.transform = '';
-        }, { passive: true });
-    }
-    
-    video.addEventListener('click', () => {
-        if (!video.paused) {
-            video.pause();
-            playOverlay.classList.remove('hidden');
-            if (progressIndicators) {
-                progressIndicators.classList.remove('visible');
-            }
-        }
-    });
-    
-    video.addEventListener('timeupdate', () => {
-        if (video.duration) {
-            const progress = (video.currentTime / video.duration) * 100;
-            if (progressFill) {
-                progressFill.style.width = `${progress}%`;
-            }
-            if (currentTimeDisplay) {
-                currentTimeDisplay.textContent = formatTime(video.currentTime);
-            }
-        }
-    });
-    
-    if (progressBar) {
-        progressBar.addEventListener('click', (e) => {
-            const rect = progressBar.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const width = rect.width;
-            const clickTime = (clickX / width) * video.duration;
-            video.currentTime = clickTime;
-        });
-    }
-    
-    video.addEventListener('ended', () => {
-        playOverlay.classList.remove('hidden');
-        if (progressIndicators) {
-            progressIndicators.classList.remove('visible');
-        }
-        if (progressFill) {
-            progressFill.style.width = '0%';
-        }
-        if (currentTimeDisplay) {
-            currentTimeDisplay.textContent = '0:00';
-        }
-    });
-    
-    video.addEventListener('error', () => {
-        showVideoError();
-    });
-}
-
-// ===== REPRODUCTOR DE YOUTUBE ULTRA-OPTIMIZADO =====
-function initializeYouTubePlayer() {
-    const youtubeContainer = document.getElementById('youtube-video-container');
-    const youtubePlaceholder = document.getElementById('youtube-video-placeholder');
-    
-    if (!youtubeContainer || !youtubePlaceholder) {
-        console.log('🎥 Elementos del reproductor de YouTube no encontrados');
+    if (features.length === 0) {
+        console.warn('⚠️ No se encontraron características');
         return;
     }
     
-    console.log('🎥 Inicializando reproductor de YouTube...');
-    
-    // ID del video de YouTube extraído de la URL
-    const videoId = '8NpUvQFdDZE';
-    
-    youtubePlaceholder.addEventListener('click', () => {
-        console.log('▶️ Click en placeholder de YouTube');
-        loadYouTubeVideo(videoId, youtubeContainer);
+    // Configurar botones de navegación
+    featureButtons.forEach((button, index) => {
+        button.addEventListener('click', () => {
+            showFeature(index);
+            updateActiveFeatureButton(button);
+        });
+        
+        // Efectos táctiles para móvil
+        if (isMobile) {
+            button.addEventListener('touchstart', () => {
+                button.style.transform = 'scale(0.95)';
+            }, { passive: true });
+            button.addEventListener('touchend', () => {
+                button.style.transform = '';
+            }, { passive: true });
+        }
     });
+    
+    // Auto-rotación de características (solo en desktop y sin modo rendimiento)
+    if (!isMobile && !performanceMode) {
+        initializeFeatureAutoRotation();
+    }
+    
+    // Mostrar primera característica por defecto
+    if (features.length > 0) {
+        showFeature(0);
+        if (featureButtons.length > 0) {
+            updateActiveFeatureButton(featureButtons[0]);
+        }
+    }
+    
+    console.log('✅ Sistema de características inicializado');
+}
 
+function showFeature(index) {
+    const features = document.querySelectorAll('.feature');
+    
+    if (index < 0 || index >= features.length) {
+        console.warn(`⚠️ Índice de característica inválido: ${index}`);
+        return;
+    }
+    
+    console.log(`🎯 Mostrando característica ${index + 1}`);
+    
+    features.forEach((feature, i) => {
+        if (i === index) {
+            feature.classList.add('active');
+            feature.setAttribute('aria-hidden', 'false');
+        } else {
+            feature.classList.remove('active');
+            feature.setAttribute('aria-hidden', 'true');
+        }
+    });
+    
+    currentFeature = index;
+}
+
+function updateActiveFeatureButton(activeButton) {
+    const featureButtons = document.querySelectorAll('.features__nav-btn');
+    
+    featureButtons.forEach(button => {
+        button.classList.remove('active');
+        button.setAttribute('aria-pressed', 'false');
+    });
+    
+    if (activeButton) {
+        activeButton.classList.add('active');
+        activeButton.setAttribute('aria-pressed', 'true');
+    }
+}
+
+function initializeFeatureAutoRotation() {
+    const features = document.querySelectorAll('.feature');
+    const featureButtons = document.querySelectorAll('.features__nav-btn');
+    
+    if (features.length <= 1) return;
+    
+    const rotationInterval = 5000; // 5 segundos
+    let autoRotationTimer;
+    let isPaused = false;
+    
+    function startAutoRotation() {
+        if (isPaused) return;
+        
+        autoRotationTimer = setInterval(() => {
+            if (isPaused) return;
+            
+            const nextIndex = (currentFeature + 1) % features.length;
+            showFeature(nextIndex);
+            
+            if (featureButtons[nextIndex]) {
+                updateActiveFeatureButton(featureButtons[nextIndex]);
+            }
+        }, rotationInterval);
+    }
+    
+    function pauseAutoRotation() {
+        isPaused = true;
+        if (autoRotationTimer) {
+            clearInterval(autoRotationTimer);
+        }
+    }
+    
+    function resumeAutoRotation() {
+        isPaused = false;
+        startAutoRotation();
+    }
+    
+    // Pausar en hover o focus
+    const featuresContainer = document.querySelector('.features');
+    if (featuresContainer) {
+        featuresContainer.addEventListener('mouseenter', pauseAutoRotation);
+        featuresContainer.addEventListener('mouseleave', resumeAutoRotation);
+        featuresContainer.addEventListener('focusin', pauseAutoRotation);
+        featuresContainer.addEventListener('focusout', resumeAutoRotation);
+    }
+    
+    // Pausar cuando la pestaña no está visible
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            pauseAutoRotation();
+        } else {
+            resumeAutoRotation();
+        }
+    });
+    
+    // Iniciar auto-rotación
+    startAutoRotation();
+    
+    console.log('🔄 Auto-rotación de características activada');
+}
+
+// ===== FUNCIONALIDAD DE VIDEO OPTIMIZADA =====
+function initializeVideo() {
+    console.log('🎬 Inicializando sistema de video...');
+    
+    const video = document.getElementById('demo-video');
+    const playButton = document.getElementById('video-play-btn');
+    const videoContainer = document.querySelector('.videos__player');
+    
+    if (!video || !playButton) {
+        console.warn('⚠️ Elementos de video no encontrados');
+        return;
+    }
+    
+    // Configurar botón de reproducción
+    playButton.addEventListener('click', () => {
+        toggleVideoPlayback();
+    });
+    
+    // Efectos táctiles para móvil
     if (isMobile) {
-        youtubePlaceholder.addEventListener('touchstart', () => {
-            youtubePlaceholder.style.transform = 'scale(0.98)';
+        playButton.addEventListener('touchstart', () => {
+            playButton.style.transform = 'scale(0.95)';
         }, { passive: true });
-        youtubePlaceholder.addEventListener('touchend', () => {
-            youtubePlaceholder.style.transform = '';
+        playButton.addEventListener('touchend', () => {
+            playButton.style.transform = '';
         }, { passive: true });
     }
     
-    console.log('✅ Reproductor de YouTube inicializado correctamente');
+    // Eventos del video
+    video.addEventListener('play', () => {
+        videoContainer?.classList.add('playing');
+        playButton.setAttribute('aria-label', 'Pausar video');
+        console.log('▶️ Video iniciado');
+    });
+    
+    video.addEventListener('pause', () => {
+        videoContainer?.classList.remove('playing');
+        playButton.setAttribute('aria-label', 'Reproducir video');
+        console.log('⏸️ Video pausado');
+    });
+    
+    video.addEventListener('ended', () => {
+        videoContainer?.classList.remove('playing');
+        playButton.setAttribute('aria-label', 'Reproducir video');
+        console.log('🏁 Video terminado');
+    });
+    
+    // Pausar video cuando la pestaña no está visible
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && !video.paused) {
+            video.pause();
+            console.log('⏸️ Video pausado (pestaña oculta)');
+        }
+    });
+    
+    console.log('✅ Sistema de video inicializado');
 }
 
-function loadYouTubeVideo(videoId, container) {
-    console.log(`🎬 Cargando video de YouTube: ${videoId}`);
+function toggleVideoPlayback() {
+    const video = document.getElementById('demo-video');
     
-    const iframe = document.createElement('iframe');
-    iframe.className = 'youtube-video-iframe';
-    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
-    iframe.frameBorder = '0';
-    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-    iframe.allowFullscreen = true;
-    iframe.title = 'StarFlex Demo Video';
+    if (!video) return;
     
-    // Limpiar el contenedor y agregar el iframe
-    container.innerHTML = '';
-    container.appendChild(iframe);
-    
-    console.log('✅ Video de YouTube cargado:', videoId);
-}
-
-function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
-
-function showVideoError() {
-    const playOverlay = document.getElementById('play-overlay');
-    if (playOverlay) {
-        playOverlay.innerHTML = `
-            <div class="videos__error">
-                <div class="videos__error-icon">⚠️</div>
-                <div class="videos__error-text">Error al cargar el video</div>
-                <div class="videos__error-subtitle">Por favor, intenta recargar la página</div>
-            </div>
-        `;
+    if (video.paused) {
+        video.play().catch(error => {
+            console.error('Error reproduciendo video:', error);
+        });
+    } else {
+        video.pause();
     }
 }
 
-// ===== FAQ ULTRA-OPTIMIZADO =====
+// ===== FUNCIONALIDAD DE FAQ OPTIMIZADA =====
 function initializeFAQ() {
+    console.log('❓ Inicializando sistema de FAQ...');
+    
     const faqItems = document.querySelectorAll('.faq__item');
     const searchInput = document.getElementById('faq-search');
-    const noResults = document.getElementById('faq-no-results');
     
-    faqItems.forEach(item => {
+    console.log(`❓ Items de FAQ encontrados: ${faqItems.length}`);
+    
+    if (faqItems.length === 0) {
+        console.warn('⚠️ No se encontraron items de FAQ');
+        return;
+    }
+    
+    // Configurar items de FAQ
+    faqItems.forEach((item, index) => {
         const question = item.querySelector('.faq__question');
         const answer = item.querySelector('.faq__answer');
         
         if (question && answer) {
             question.addEventListener('click', () => {
-                const isActive = item.classList.contains('active');
-                
-                faqItems.forEach(otherItem => {
-                    if (otherItem !== item) {
-                        otherItem.classList.remove('active');
-                        const otherAnswer = otherItem.querySelector('.faq__answer');
-                        const otherQuestion = otherItem.querySelector('.faq__question');
-                        if (otherAnswer) otherAnswer.classList.remove('active');
-                        if (otherQuestion) otherQuestion.setAttribute('aria-expanded', 'false');
-                    }
-                });
-                
-                if (isActive) {
-                    item.classList.remove('active');
-                    answer.classList.remove('active');
-                    question.setAttribute('aria-expanded', 'false');
-                } else {
-                    item.classList.add('active');
-                    answer.classList.add('active');
-                    question.setAttribute('aria-expanded', 'true');
-                }
+                toggleFAQItem(item, index);
             });
-
+            
+            // Efectos táctiles para móvil
             if (isMobile) {
                 question.addEventListener('touchstart', () => {
                     question.style.transform = 'scale(0.98)';
@@ -2278,554 +2305,283 @@ function initializeFAQ() {
                     question.style.transform = '';
                 }, { passive: true });
             }
-        }
-    });
-    
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce((e) => {
-            const searchTerm = e.target.value.toLowerCase().trim();
-            let visibleItems = 0;
             
-            faqItems.forEach(item => {
-                const questionText = item.querySelector('.faq__question-text');
-                const answerText = item.querySelector('.faq__answer-text');
-                
-                if (questionText && answerText) {
-                    const questionContent = questionText.textContent.toLowerCase();
-                    const answerContent = answerText.textContent.toLowerCase();
-                    
-                    if (searchTerm === '' ||
-                        questionContent.includes(searchTerm) ||
-                        answerContent.includes(searchTerm)) {
-                        item.style.display = 'block';
-                        visibleItems++;
-                    } else {
-                        item.style.display = 'none';
-                        item.classList.remove('active');
-                        const answer = item.querySelector('.faq__answer');
-                        const question = item.querySelector('.faq__question');
-                        if (answer) answer.classList.remove('active');
-                        if (question) question.setAttribute('aria-expanded', 'false');
-                    }
+            // Accesibilidad
+            question.setAttribute('tabindex', '0');
+            question.setAttribute('role', 'button');
+            question.setAttribute('aria-expanded', 'false');
+            answer.setAttribute('aria-hidden', 'true');
+            
+            // Navegación por teclado
+            question.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleFAQItem(item, index);
                 }
             });
-            
-            if (noResults) {
-                if (visibleItems === 0 && searchTerm !== '') {
-                    noResults.classList.add('show');
-                } else {
-                    noResults.classList.remove('show');
-                }
-            }
-        }, isMobile ? 400 : 300));
-    }
-}
-
-// ===== INTERSECTION OBSERVER ULTRA-OPTIMIZADO =====
-function initializeIntersectionObserver() {
-    if (performanceMode) return;
-    
-    const observerOptions = {
-        threshold: isMobile ? 0.1 : 0.15,
-        rootMargin: isMobile ? '0px 0px -50px 0px' : '0px 0px -100px 0px'
-    };
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('in-view');
-                if (entry.target.classList.contains('feature')) {
-                    animateFeature(entry.target);
-                }
-                // Desconectar el elemento una vez que se ha animado
-                observer.unobserve(entry.target);
-            }
-        });
-    }, observerOptions);
-    
-    const elementsToObserve = document.querySelectorAll('.feature, .faq__item, .contact__channel, .videos');
-    elementsToObserve.forEach(element => {
-        observer.observe(element);
+        }
     });
+    
+    // Configurar búsqueda de FAQ
+    if (searchInput) {
+        let searchTimeout;
+        
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchFAQ(e.target.value);
+            }, 300);
+        });
+        
+        console.log('🔍 Búsqueda de FAQ configurada');
+    }
+    
+    console.log('✅ Sistema de FAQ inicializado');
 }
 
-function animateFeature(feature) {
-    if (performanceMode) return;
+function toggleFAQItem(item, index) {
+    const question = item.querySelector('.faq__question');
+    const answer = item.querySelector('.faq__answer');
     
-    const content = feature.querySelector('.feature__content');
+    if (!question || !answer) return;
     
-    if (content) {
-        const listItems = content.querySelectorAll('.feature__list-item');
-        listItems.forEach((item, index) => {
-            setTimeout(() => {
-                item.style.opacity = '1';
-                item.style.transform = 'translateX(0)';
-            }, 200 + (index * (isMobile ? 50 : 100)));
-        });
+    const isOpen = item.classList.contains('active');
+    
+    console.log(`❓ Toggle FAQ item ${index + 1} - ${isOpen ? 'cerrando' : 'abriendo'}`);
+    
+    if (isOpen) {
+        // Cerrar
+        item.classList.remove('active');
+        question.setAttribute('aria-expanded', 'false');
+        answer.setAttribute('aria-hidden', 'true');
+        
+        if (!performanceMode) {
+            answer.style.maxHeight = '0';
+        }
+    } else {
+        // Abrir
+        item.classList.add('active');
+        question.setAttribute('aria-expanded', 'true');
+        answer.setAttribute('aria-hidden', 'false');
+        
+        if (!performanceMode) {
+            answer.style.maxHeight = answer.scrollHeight + 'px';
+        }
     }
 }
 
-// ===== CONFIGURACIÓN DE LAZY LOADING ULTRA-OPTIMIZADA =====
-function setupImageLazyLoading() {
-    const waitForOptimizer = () => {
-        if (!imageOptimizer) {
-            setTimeout(waitForOptimizer, 100);
-            return;
-        }
-        
-        console.log('🖼️ Configurando lazy loading de imágenes...');
-        
-        // Logo del navbar desktop
-        const navLogo = document.querySelector('.nav__logo');
-        if (navLogo) {
-            imageOptimizer.loadImageImmediately(navLogo, 'logo');
-        }
-        
-        // Logo del drawer móvil
-        const drawerLogo = document.querySelector('.nav__drawer-logo');
-        if (drawerLogo) {
-            imageOptimizer.loadImageImmediately(drawerLogo, 'logo');
-        }
-        
-        // Imagen del hero (crítica) - Nota: Hero usa video, no imagen estática
-        const heroImage = document.querySelector('.hero__phone-app-image');
-        if (heroImage) {
-            // Usar video-poster como fallback para hero
-            imageOptimizer.loadImageImmediately(heroImage, 'videoPoster');
-        }
-        
-        // Imágenes de características - CORREGIDAS
-        const featureImages = document.querySelectorAll('.phone__app-image');
-        console.log(`📱 Encontradas ${featureImages.length} imágenes de características`);
-        
-        featureImages.forEach((img, index) => {
-            const imageKeys = [
-                'phones.schedule',
-                'phones.stations',
-                'phones.calendar',
-                'phones.log',
-                'phones.notifications',
-                'phones.referrals'
-            ];
-            
-            if (imageKeys[index]) {
-                console.log(`🔄 Cargando imagen ${index + 1}: ${imageKeys[index]}`);
-                if (performanceMode) {
-                    imageOptimizer.loadImageImmediately(img, imageKeys[index]);
-                } else {
-                    imageOptimizer.observeImage(img, imageKeys[index]);
-                }
-            }
+function searchFAQ(query) {
+    const faqItems = document.querySelectorAll('.faq__item');
+    const noResults = document.getElementById('faq-no-results');
+    
+    if (!query.trim()) {
+        // Mostrar todos los items
+        faqItems.forEach(item => {
+            item.style.display = '';
         });
-        
-        // Botones de descarga
-        const appleBtn = document.querySelector('.download-btn--app-store .download-btn__image');
-        const googleBtn = document.querySelector('.download-btn--google .download-btn__image');
-        
-        if (appleBtn) {
-            imageOptimizer.loadImageImmediately(appleBtn, 'downloads.apple');
-        }
-        if (googleBtn) {
-            imageOptimizer.loadImageImmediately(googleBtn, 'downloads.google');
-        }
-        
-        console.log('✅ Lazy loading configurado correctamente');
-    };
-    
-    waitForOptimizer();
-}
-
-// ===== VIDEO HERO ULTRA-OPTIMIZADO =====
-function initializeHeroVideoFallback() {
-    const heroVideo = document.getElementById('hero-video');
-    const heroFallbackImage = document.querySelector('.hero__phone-app-image');
-    const heroMobileVideo = document.getElementById('hero-mobile-video');
-    
-    if (heroMobileVideo && isMobile) {
-        heroMobileVideo.muted = true;
-        heroMobileVideo.autoplay = true;
-        heroMobileVideo.loop = true;
-        heroMobileVideo.playsInline = true;
-        heroMobileVideo.preload = 'auto';
-        
-        heroMobileVideo.addEventListener('loadeddata', () => {
-            console.log('Video móvil del hero cargado correctamente');
-        });
-        
-        heroMobileVideo.addEventListener('error', (e) => {
-            console.error('Error cargando video móvil del hero:', e);
-            const mobileVideoContainer = document.querySelector('.hero__mobile-video');
-            if (mobileVideoContainer) {
-                mobileVideoContainer.style.display = 'none';
-            }
-        });
-    }
-    
-    if (!heroVideo || !heroFallbackImage) return;
-    
-    if (isMobile || performanceMode) {
-        heroVideo.style.display = 'none';
-        heroFallbackImage.style.display = 'block';
-        heroFallbackImage.style.zIndex = '2';
-        console.log('Video del teléfono deshabilitado en móvil/modo rendimiento');
+        if (noResults) noResults.style.display = 'none';
         return;
     }
     
-    heroVideo.muted = true;
-    heroVideo.autoplay = true;
-    heroVideo.loop = true;
-    heroVideo.playsInline = true;
-    heroVideo.preload = 'auto';
+    const searchTerm = query.toLowerCase();
+    let visibleCount = 0;
     
-    heroVideo.addEventListener('loadeddata', () => {
-        heroVideo.classList.remove('loading');
-        heroVideo.classList.add('loaded');
-        console.log('Video del hero cargado correctamente');
-    });
-    
-    heroVideo.addEventListener('error', (e) => {
-        console.error('Error cargando video del hero:', e);
-        showVideoFallback();
-    });
-    
-    heroVideo.addEventListener('stalled', () => {
-        console.warn('Video del hero interrumpido, mostrando fallback');
-        showVideoFallback();
-    });
-    
-    function showVideoFallback() {
-        heroVideo.style.display = 'none';
-        heroFallbackImage.style.display = 'block';
-        heroFallbackImage.style.zIndex = '2';
-        console.log('Mostrando imagen de fallback para el video del hero');
-    }
-    
-    setTimeout(() => {
-        if (heroVideo.readyState < 2) {
-            showVideoFallback();
-        }
-    }, 2000);
-}
-
-// ===== UTILIDADES ULTRA-OPTIMIZADAS =====
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-function throttle(func, limit) {
-    let inThrottle;
-    return function() {
-        const args = arguments;
-        const context = this;
-        if (!inThrottle) {
-            func.apply(context, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    }
-}
-
-// ===== OPTIMIZACIONES DE RENDIMIENTO ULTRA-AGRESIVAS =====
-function initializePerformanceOptimizations() {
-    if (!performanceMode) {
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => {
-                preloadCriticalResources();
-            });
-        } else {
-            setTimeout(preloadCriticalResources, 5000);
-        }
-    }
-    
-    if (isMobile) {
-        const elementsToOptimize = document.querySelectorAll('.hero__phone, .nav__logo, .nav__drawer-logo, .floating-widget__main-btn');
-        elementsToOptimize.forEach(element => {
-            element.style.willChange = 'transform';
-        });
+    faqItems.forEach(item => {
+        const question = item.querySelector('.faq__question');
+        const answer = item.querySelector('.faq__answer');
         
-        const featureElements = document.querySelectorAll('.feature__phone, .phone');
-        featureElements.forEach(element => {
-            element.style.willChange = 'auto';
-        });
+        const questionText = question?.textContent.toLowerCase() || '';
+        const answerText = answer?.textContent.toLowerCase() || '';
+        
+        if (questionText.includes(searchTerm) || answerText.includes(searchTerm)) {
+            item.style.display = '';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // Mostrar/ocultar mensaje de "sin resultados"
+    if (noResults) {
+        noResults.style.display = visibleCount === 0 ? 'block' : 'none';
     }
     
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            handleResize();
-        }, isMobile ? 1000 : 500);
-    });
+    console.log(`🔍 Búsqueda FAQ: "${query}" - ${visibleCount} resultados`);
 }
 
-function preloadCriticalResources() {
-    const criticalResources = [
-        './assets/logo.webp',
-        './assets/video-poster.webp'
+// ===== EFECTOS DE SCROLL OPTIMIZADOS =====
+function initializeScrollEffects() {
+    if (performanceMode) {
+        console.log('⚡ Efectos de scroll deshabilitados (modo rendimiento)');
+        return;
+    }
+    
+    console.log('🌊 Inicializando efectos de scroll...');
+    
+    const elementsToAnimate = document.querySelectorAll('.animate-on-scroll');
+    
+    if (elementsToAnimate.length === 0) {
+        console.log('ℹ️ No hay elementos para animar en scroll');
+        return;
+    }
+    
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animated');
+                    observer.unobserve(entry.target);
+                }
+            });
+        },
+        {
+            rootMargin: isMobile ? '0px 0px -10% 0px' : '0px 0px -20% 0px',
+            threshold: 0.1
+        }
+    );
+    
+    elementsToAnimate.forEach(element => {
+        observer.observe(element);
+    });
+    
+    console.log(`✅ Efectos de scroll configurados para ${elementsToAnimate.length} elementos`);
+}
+
+// ===== OPTIMIZACIONES DE RENDIMIENTO =====
+function initializePerformanceOptimizations() {
+    console.log('⚡ Inicializando optimizaciones de rendimiento...');
+    
+    // Lazy loading de imágenes
+    if ('loading' in HTMLImageElement.prototype) {
+        const lazyImages = document.querySelectorAll('img[data-src]');
+        lazyImages.forEach(img => {
+            img.src = img.dataset.src;
+            img.removeAttribute('data-src');
+        });
+        console.log(`🖼️ Lazy loading nativo aplicado a ${lazyImages.length} imágenes`);
+    }
+    
+    // Preconnect a dominios externos
+    const preconnectDomains = [
+        'https://fonts.googleapis.com',
+        'https://fonts.gstatic.com'
     ];
     
-    criticalResources.forEach(src => {
+    preconnectDomains.forEach(domain => {
         const link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = 'image';
-        link.href = src;
+        link.rel = 'preconnect';
+        link.href = domain;
         document.head.appendChild(link);
     });
-}
-
-function handleResize() {
-    const newIsMobile = window.innerWidth <= 1023;
     
-    if (newIsMobile !== isMobile) {
-        isMobile = newIsMobile;
-        detectDeviceCapabilities();
-        
-        // Cerrar menús abiertos al cambiar de dispositivo
-        if (isMenuOpen) {
-            closeMobileMenu();
+    // Optimización de eventos de scroll
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
         }
-        if (isMobileMenuOpen) {
-            closeMobileMenu();
-        }
-        
-        // Manejar visibilidad del botón flotante según el dispositivo
-        const floatingWidget = document.getElementById('floating-widget');
-        if (floatingWidget) {
-            if (!isMobile) {
-                // En desktop, siempre mostrar el botón flotante
-                floatingWidget.classList.remove('hidden-by-drawer');
-            } else if (isMobileMenuOpen) {
-                // En móvil, ocultar si el drawer está abierto
-                floatingWidget.classList.add('hidden-by-drawer');
-            }
-        }
-        
-        // Reinicializar navegación
-        setTimeout(() => {
-            initializeNavigation();
+        scrollTimeout = setTimeout(() => {
+            // Lógica de scroll optimizada
             updateActiveNavOnScroll();
-        }, 100);
-    }
+        }, 16); // ~60fps
+    }, { passive: true });
     
-    if (isFloatingMenuOpen) {
-        closeFloatingMenu();
-    }
-    
-    if (isLanguageSwitcherOpen) {
-        closeLanguageSwitcher();
-    }
-}
-
-// ===== ACCESIBILIDAD ULTRA-OPTIMIZADA =====
-function initializeAccessibility() {
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (isMenuOpen) {
-                closeMobileMenu();
-            }
-            if (isMobileMenuOpen) {
-                closeMobileMenu();
-            }
-            if (isFloatingMenuOpen) {
-                closeFloatingMenu();
-            }
-            if (isLanguageSwitcherOpen) {
-                closeLanguageSwitcher();
-            }
-        }
-    });
-    
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
-            document.body.classList.add('keyboard-navigation');
-        }
-    });
-    
-    document.addEventListener('mousedown', () => {
-        document.body.classList.remove('keyboard-navigation');
-    });
-    
-    if (isMobile) {
-        document.addEventListener('touchstart', () => {
-            document.body.classList.add('touch-navigation');
-        }, { passive: true });
-    }
+    console.log('✅ Optimizaciones de rendimiento aplicadas');
 }
 
 // ===== INICIALIZACIÓN PRINCIPAL ULTRA-OPTIMIZADA =====
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Iniciando StarFlex con sistema de rutas basado en pathname...');
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 Iniciando aplicación StarFlex...');
+    console.log(`📱 Dispositivo detectado: ${isMobile ? 'Móvil' : 'Desktop'}`);
+    console.log(`⚡ Modo rendimiento: ${performanceMode ? 'Activado' : 'Desactivado'}`);
     
-    detectDeviceCapabilities();
-    
-    imageOptimizer = new UltraOptimizedImageLoader();
-    
-    initializeLanguageSystem();
-    initializeLanguageSwitcher();
-    initializeRouting(); // Sistema de routing basado en pathname
-    initializeNavigation();
-    initializeScrollEffects();
-    initializeVideoPlayer();
-    initializeYouTubePlayer();
-    initializeFAQ();
-    initializeHeroVideoFallback();
-    initializeAccessibility();
-    initializeFloatingWidget();
-    
-    setupImageLazyLoading();
-    
-    if (!performanceMode) {
-        initializeIntersectionObserver();
-    }
-    
-    initializePerformanceOptimizations();
-    
-    // AGREGAR ESTA LÍNEA PARA ASEGURAR QUE LOS ENLACES SE CONFIGUREN
-    setTimeout(() => {
-        setupLegalLinks();
-        updateLegalLinks();
-    }, 500);
-    
-    console.log(`✅ StarFlex Ultra-Optimizado con rutas basadas en pathname - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}, Idioma actual: ${currentLanguage}, Pathname: ${window.location.pathname}`);
-    
-});
-
-// ===== MANEJO DE ERRORES ULTRA-OPTIMIZADO =====
-window.addEventListener('error', (e) => {
-    console.error('Error en la aplicación:', e.error);
-    
-    if (isMobile && e.error && e.error.message.includes('video')) {
-        console.log('Error de video detectado, forzando fallback de imagen');
-        const heroVideo = document.getElementById('hero-video');
-        const heroImage = document.querySelector('.hero__phone-app-image');
-        if (heroVideo && heroImage) {
-            heroVideo.style.display = 'none';
-            heroImage.style.display = 'block';
-            heroImage.style.zIndex = '2';
+    try {
+        // 1. Detección de capacidades del dispositivo
+        detectDeviceCapabilities();
+        
+        // 2. Inicializar sistema de idiomas
+        initializeLanguageSystem();
+        
+        // 3. Inicializar sistema de routing
+        initializeRouting();
+        
+        // 4. Inicializar optimizador de imágenes
+        imageOptimizer = new UltraOptimizedImageLoader();
+        
+        // 5. Inicializar navegación
+        initializeNavigation();
+        
+        // 6. Inicializar controles específicos
+        if (!isMobile) {
+            initializeLanguageSwitcher();
+            initializeNavbarControl();
         }
-    }
-});
-
-window.addEventListener('unhandledrejection', (e) => {
-    console.error('Promise rechazada:', e.reason);
-});
-
-// ===== LIMPIEZA AL SALIR =====
-window.addEventListener('beforeunload', () => {
-    if (imageOptimizer && imageOptimizer.intersectionObserver) {
-        imageOptimizer.intersectionObserver.disconnect();
+        
+        // 7. Inicializar widget flotante
+        initializeFloatingWidget();
+        
+        // 8. Inicializar características interactivas
+        initializeFeatures();
+        
+        // 9. Inicializar video
+        initializeVideo();
+        
+        // 10. Inicializar FAQ
+        initializeFAQ();
+        
+        // 11. Inicializar efectos de onda
+        initializeWaveEffects();
+        
+        // 12. Inicializar efectos de scroll
+        initializeScrollEffects();
+        
+        // 13. Inicializar optimizaciones de rendimiento
+        initializePerformanceOptimizations();
+        
+        // 14. Inicializar optimización de visibilidad
+        initializeVisibilityOptimization();
+        
+        console.log('✅ Aplicación StarFlex inicializada correctamente');
+        
+        // Marcar como cargada
+        document.body.classList.add('loaded');
+        
+    } catch (error) {
+        console.error('❌ Error inicializando aplicación:', error);
     }
 });
 
-// ===== SOPORTE PARA PWA OPTIMIZADO =====
-if ('serviceWorker' in navigator && !isMobile && !performanceMode) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-                console.log('SW registrado:', registration);
-            })
-            .catch(registrationError => {
-                console.log('SW falló:', registrationError);
-            });
-    });
-}
-
-// ===== FUNCIONES ADICIONALES PARA DEBUGGING Y MONITOREO =====
-function debugImageLoading() {
-    console.log('🔍 Estado del cargador de imágenes:');
-    console.log('- Formatos soportados:', imageOptimizer?.supportedFormats);
-    console.log('- Imágenes en caché:', imageOptimizer?.imageCache.size);
-    console.log('- Imágenes lazy:', imageOptimizer?.lazyImages.size);
-    
-    // Verificar imágenes de características
-    const featureImages = document.querySelectorAll('.phone__app-image');
-    console.log(`📱 Imágenes de características encontradas: ${featureImages.length}`);
-    
-    featureImages.forEach((img, index) => {
-        const feature = img.closest('.feature');
-        const featureType = feature?.getAttribute('data-feature');
-        const backgroundImage = window.getComputedStyle(img).backgroundImage;
-        const hasBackground = backgroundImage && backgroundImage !== 'none';
+// ===== MANEJO DE REDIMENSIONAMIENTO DE VENTANA =====
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        const wasMobile = isMobile;
+        isMobile = window.innerWidth <= 1023;
         
-        console.log(`  ${index + 1}. ${featureType}: ${hasBackground ? '✅ Cargada' : '❌ Sin cargar'}`);
-        if (hasBackground) {
-            console.log(`     URL: ${backgroundImage}`);
+        if (wasMobile !== isMobile) {
+            console.log(`📱 Cambio de dispositivo detectado: ${isMobile ? 'Desktop → Móvil' : 'Móvil → Desktop'}`);
+            
+            // Cerrar menús abiertos
+            if (isMobileMenuOpen) closeMobileMenu();
+            if (isFloatingMenuOpen) closeFloatingMenu();
+            if (isLanguageSwitcherOpen) closeLanguageSwitcher();
+            
+            // Reinicializar navegación
+            setTimeout(() => {
+                initializeNavigation();
+            }, 100);
         }
-    });
-}
+    }, 250);
+}, { passive: true });
 
-// Exponer función de debug globalmente para testing
-window.debugImageLoading = debugImageLoading;
+// ===== MANEJO DE ERRORES GLOBALES =====
+window.addEventListener('error', (event) => {
+    console.error('❌ Error global capturado:', event.error);
+});
 
-// ===== FUNCIÓN PARA FORZAR RECARGA DE IMÁGENES =====
-function forceReloadImages() {
-    console.log('🔄 Forzando recarga de todas las imágenes...');
-    
-    if (imageOptimizer) {
-        // Limpiar caché
-        imageOptimizer.imageCache.clear();
-        
-        // Recargar imágenes de características
-        imageOptimizer.forceLoadFeatureImages();
-        
-        // Recargar logos
-        const navLogo = document.querySelector('.nav__logo');
-        const drawerLogo = document.querySelector('.nav__drawer-logo');
-        
-        if (navLogo) {
-            imageOptimizer.loadImageImmediately(navLogo, 'logo');
-        }
-        if (drawerLogo) {
-            imageOptimizer.loadImageImmediately(drawerLogo, 'logo');
-        }
-        
-        console.log('✅ Recarga de imágenes completada');
-    }
-}
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('❌ Promise rechazada no manejada:', event.reason);
+});
 
-// Exponer función de recarga globalmente
-window.forceReloadImages = forceReloadImages;
-
-// ===== EXPOSICIÓN DE API PARA DEBUGGING =====
-window.StarFlex = {
-    version: '2.0.0',
-    isMobile,
-    performanceMode,
-    imageOptimizer,
-    debugImageLoading,
-    forceReloadImages,
-    // Funciones de navegación
-    openMobileMenu,
-    closeMobileMenu,
-    toggleMobileMenu,
-    // Funciones de idioma
-    switchLanguage,
-    currentLanguage,
-    navigateToLanguageRoute,
-    detectInitialLanguage,
-    // Funciones de video
-    initializeYouTubePlayer,
-    loadYouTubeVideo,
-    // Funciones de routing
-    initializeRouting,
-    handleRouteChange,
-    showMainContent,
-    showPrivacyPolicy,
-    showTermsConditions,
-    // Funciones de scroll
-    scrollToTop,
-    // Funciones para páginas legales
-    goToPrivacyPolicy,
-    goToTermsPolicy,
-    getCurrentLanguage,
-    // Utilidades
-    detectDeviceCapabilities
-};
+console.log('📄 Archivo app.js cargado completamente');
