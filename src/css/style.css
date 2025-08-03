@@ -2919,3 +2919,718 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
 .hero__cta-group .btn--cta:active .particle {
     animation-duration: 2s !important;
 }
+/* ===== BOTÓN FOOTER CON EFECTOS COMPLETOS DEL HERO ===== */
+.btn--footer {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: var(--space-xs);
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: var(--space-lg) var(--space-4xl) !important;
+    font-weight: 800;
+    color: #ffffff !important;
+    text-decoration: none;
+    background: linear-gradient(135deg, 
+        var(--neon-crimson-ultra) 0%, 
+        var(--neon-crimson-electric) 50%, 
+        var(--neon-crimson-plasma) 100%) !important;
+    border: 2px solid var(--neon-crimson-electric) !important;
+    box-shadow: 
+        0 0 20px var(--neon-crimson-shadow), 
+        0 0 40px var(--neon-crimson-glow), 
+        0 0 60px rgba(255, 23, 68, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    text-shadow: 
+        0 0 10px var(--neon-crimson-glow),
+        0 0 20px var(--neon-crimson-shadow),
+        0 2px 4px rgba(0, 0, 0, 0.8) !important;
+    min-height: 44px;
+    touch-action: manipulation;
+    margin: 0 auto !important;
+    justify-content: center !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    border-radius: 18px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    z-index: 10 !important;
+}
+
+/* ONDAS CIRCULARES FUTURISTAS PARA FOOTER */
+.btn--footer .wave-effect {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    animation: cyber-wave-expand 3s ease-out infinite !important;
+}
+
+.btn--footer .wave-effect:nth-child(1) {
+    animation-delay: 0s !important;
+    background: radial-gradient(circle, 
+        var(--neon-crimson-electric) 0%, 
+        var(--neon-crimson-plasma) 30%, 
+        var(--neon-crimson-fire) 60%, 
+        transparent 100%) !important;
+}
+
+.btn--footer .wave-effect:nth-child(2) {
+    animation-delay: 0.75s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.8) 0%, 
+        var(--neon-crimson-electric) 20%, 
+        var(--neon-crimson-plasma) 50%, 
+        transparent 80%) !important;
+}
+
+.btn--footer .wave-effect:nth-child(3) {
+    animation-delay: 1.5s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.3) 0%, 
+        var(--neon-crimson-fire) 30%, 
+        transparent 70%) !important;
+}
+
+.btn--footer .wave-effect:nth-child(4) {
+    animation-delay: 2.25s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.6) 0%, 
+        rgba(255, 255, 255, 0.4) 25%, 
+        rgba(255, 255, 255, 0.2) 50%, 
+        transparent 75%) !important;
+}
+
+/* PARTÍCULAS DE ENERGÍA PARA FOOTER */
+.btn--footer .particle {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 4px !important;
+    height: 4px !important;
+    background: var(--energy-particle-1) !important;
+    border-radius: 50% !important;
+    pointer-events: none !important;
+    z-index: 3 !important;
+    animation: particle-float 3.5s ease-in-out infinite !important;
+}
+
+.btn--footer .particle:nth-child(5) {
+    animation-delay: 0.6s !important;
+    background: var(--energy-particle-2) !important;
+    width: 3px !important;
+    height: 3px !important;
+}
+
+.btn--footer .particle:nth-child(6) {
+    animation-delay: 1.4s !important;
+    background: var(--energy-particle-3) !important;
+    width: 5px !important;
+    height: 5px !important;
+}
+
+.btn--footer .particle:nth-child(7) {
+    animation-delay: 2.1s !important;
+    background: var(--energy-particle-1) !important;
+    width: 2px !important;
+    height: 2px !important;
+}
+
+.btn--footer .particle:nth-child(8) {
+    animation-delay: 2.8s !important;
+    background: var(--energy-particle-2) !important;
+    width: 4px !important;
+    height: 4px !important;
+}
+
+/* BORDE DE ENERGÍA PARA FOOTER */
+.btn--footer .energy-border {
+    position: absolute !important;
+    top: -2px !important;
+    left: -2px !important;
+    right: -2px !important;
+    bottom: -2px !important;
+    background: linear-gradient(45deg, 
+        var(--neon-crimson-electric) 0%, 
+        var(--neon-crimson-plasma) 25%, 
+        var(--neon-crimson-fire) 50%, 
+        var(--neon-crimson-electric) 75%, 
+        var(--neon-crimson-plasma) 100%) !important;
+    border-radius: 20px !important;
+    z-index: 1 !important;
+    animation: energy-border-flow 4.5s linear infinite !important;
+    opacity: 0.7 !important;
+}
+
+/* ANIMACIÓN DEL BORDE DE ENERGÍA */
+@keyframes energy-border-flow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* CONTENIDO DEL BOTÓN FOOTER */
+.btn--footer span {
+    position: relative !important;
+    z-index: 4 !important;
+    font-size: 1.1rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 2px !important;
+    text-align: center !important;
+    color: #ffffff !important;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    text-shadow: 
+        0 0 15px rgba(255, 255, 255, 0.8),
+        0 0 30px var(--neon-crimson-glow) !important;
+}
+
+.btn--footer small {
+    position: relative !important;
+    z-index: 4 !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 1.5px !important;
+    opacity: 0.95 !important;
+    text-align: center !important;
+    color: #ffffff !important;
+    text-shadow: 
+        0 0 10px rgba(255, 255, 255, 0.6),
+        0 0 20px var(--neon-crimson-shadow) !important;
+}
+
+/* EFECTOS TÁCTILES MÓVIL PARA FOOTER */
+.btn--footer:active {
+    transform: translateY(-2px) scale(1.01) !important;
+    box-shadow: 
+        0 0 25px var(--neon-crimson-glow), 
+        0 0 50px var(--neon-crimson-pulse), 
+        0 0 75px rgba(255, 23, 68, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        0 10px 30px rgba(0, 0, 0, 0.35) !important;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+/* ACELERAR EFECTOS AL HACER CLICK EN FOOTER */
+.btn--footer:active .wave-effect {
+    animation-duration: 1.8s !important;
+}
+
+.btn--footer:active .particle {
+    animation-duration: 2.2s !important;
+}
+
+.btn--footer:active .energy-border {
+    animation-duration: 3s !important;
+    opacity: 1 !important;
+}
+
+/* EFECTOS HOVER DESKTOP PARA FOOTER */
+@media (min-width: 1024px) {
+    .btn--footer {
+        width: auto !important;
+        min-width: 200px !important;
+        padding: var(--space-xl) var(--space-4xl) !important;
+        font-size: 1.1rem !important;
+        border-radius: 20px !important;
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .btn--footer:hover {
+        transform: translateY(-4px) scale(1.02) !important;
+        background: linear-gradient(135deg, 
+            var(--neon-crimson-electric) 0%, 
+            var(--neon-crimson-plasma) 50%, 
+            var(--neon-crimson-fire) 100%) !important;
+        box-shadow: 
+            0 0 30px var(--neon-crimson-glow), 
+            0 0 60px var(--neon-crimson-pulse), 
+            0 0 90px rgba(255, 23, 68, 0.6),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+            0 15px 45px rgba(0, 0, 0, 0.4) !important;
+        border-color: var(--neon-crimson-plasma) !important;
+        color: #ffffff !important;
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .btn--footer:hover .wave-effect {
+        animation-duration: 2.4s !important;
+    }
+
+    .btn--footer:hover .particle {
+        animation-duration: 2.8s !important;
+    }
+
+    .btn--footer:hover .energy-border {
+        animation-duration: 3.5s !important;
+        opacity: 1 !important;
+    }
+
+    .btn--footer:hover span,
+    .btn--footer:hover small {
+        color: #ffffff !important;
+        text-shadow: 
+            0 0 20px rgba(255, 255, 255, 0.9),
+            0 0 40px var(--neon-crimson-glow) !important;
+    }
+
+    .btn--footer span {
+        font-size: 1.3rem !important;
+    }
+
+    .btn--footer small {
+        font-size: 1rem !important;
+    }
+}
+
+/* RESPONSIVE PARA PANTALLAS PEQUEÑAS */
+@media (max-width: 480px) {
+    .btn--footer {
+        max-width: 100% !important;
+        padding: var(--space-xl) var(--space-3xl) !important;
+        border-radius: 16px !important;
+    }
+
+    .btn--footer span {
+        font-size: 1.1rem !important;
+    }
+
+    .btn--footer small {
+        font-size: 0.85rem !important;
+    }
+}
+
+/* DESHABILITAR EFECTOS EN PERFORMANCE MODE */
+.performance-mode .btn--footer .wave-effect,
+.performance-mode .btn--footer .particle,
+.performance-mode .btn--footer .energy-border {
+    display: none !important;
+}
+
+.performance-mode .btn--footer {
+    animation: none !important;
+}
+
+/* DESHABILITAR EFECTOS CON REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+    .btn--footer .wave-effect,
+    .btn--footer .particle,
+    .btn--footer .energy-border {
+        display: none !important;
+    }
+
+    .btn--footer {
+        transition: all 0.4s ease !important;
+    }
+
+    .btn--footer:hover {
+        transform: translateY(-1px) !important;
+        color: #ffffff !important;
+    }
+
+    .btn--footer:hover span,
+    .btn--footer:hover small {
+        color: #ffffff !important;
+    }
+}
+/* ===== BOTÓN CTA DEL NAVBAR CON EFECTOS COMPLETOS DEL HERO - VERSIÓN COMPACTA ===== */
+.nav__cta {
+    flex-shrink: 0 !important;
+    z-index: 1001;
+    min-width: 140px !important;
+    position: relative;
+    overflow: visible;
+}
+
+.nav__cta .btn {
+    min-width: 140px !important;
+    padding: clamp(8px, 1.2vw, 14px) clamp(12px, 1.5vw, 18px) !important;
+    font-size: clamp(0.7rem, 0.8vw, 0.85rem) !important;
+    font-weight: 800 !important;
+    white-space: nowrap;
+    flex-shrink: 0 !important;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, 
+        var(--neon-crimson-ultra) 0%, 
+        var(--neon-crimson-electric) 50%, 
+        var(--neon-crimson-plasma) 100%) !important;
+    border: 1.5px solid var(--neon-crimson-electric) !important;
+    box-shadow: 
+        0 0 12px var(--neon-crimson-shadow), 
+        0 0 24px var(--neon-crimson-glow), 
+        0 0 36px rgba(255, 23, 68, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 4px 16px rgba(0, 0, 0, 0.25) !important;
+    text-shadow: 
+        0 0 6px var(--neon-crimson-glow),
+        0 0 12px var(--neon-crimson-shadow),
+        0 1px 2px rgba(0, 0, 0, 0.8) !important;
+    color: #ffffff !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border-radius: 10px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    z-index: 10 !important;
+}
+
+/* ONDAS CIRCULARES FUTURISTAS PARA NAVBAR CTA - TAMAÑO COMPACTO */
+.nav__cta .btn .wave-effect {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    animation: cyber-wave-expand 2.2s ease-out infinite !important;
+}
+
+.nav__cta .btn .wave-effect:nth-child(1) {
+    animation-delay: 0s !important;
+    background: radial-gradient(circle, 
+        var(--neon-crimson-electric) 0%, 
+        var(--neon-crimson-plasma) 30%, 
+        var(--neon-crimson-fire) 60%, 
+        transparent 100%) !important;
+}
+
+.nav__cta .btn .wave-effect:nth-child(2) {
+    animation-delay: 0.55s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.6) 0%, 
+        var(--neon-crimson-electric) 20%, 
+        var(--neon-crimson-plasma) 50%, 
+        transparent 80%) !important;
+}
+
+.nav__cta .btn .wave-effect:nth-child(3) {
+    animation-delay: 1.1s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.3) 0%, 
+        var(--neon-crimson-fire) 30%, 
+        transparent 70%) !important;
+}
+
+.nav__cta .btn .wave-effect:nth-child(4) {
+    animation-delay: 1.65s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.4) 0%, 
+        rgba(255, 255, 255, 0.2) 25%, 
+        rgba(255, 255, 255, 0.1) 50%, 
+        transparent 75%) !important;
+}
+
+/* PARTÍCULAS DE ENERGÍA PARA NAVBAR CTA - TAMAÑO COMPACTO */
+.nav__cta .btn .particle {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 2px !important;
+    height: 2px !important;
+    background: var(--energy-particle-1) !important;
+    border-radius: 50% !important;
+    pointer-events: none !important;
+    z-index: 3 !important;
+    animation: particle-float 2.6s ease-in-out infinite !important;
+}
+
+.nav__cta .btn .particle:nth-child(5) {
+    animation-delay: 0.35s !important;
+    background: var(--energy-particle-2) !important;
+    width: 1.5px !important;
+    height: 1.5px !important;
+}
+
+.nav__cta .btn .particle:nth-child(6) {
+    animation-delay: 0.9s !important;
+    background: var(--energy-particle-3) !important;
+    width: 3px !important;
+    height: 3px !important;
+}
+
+.nav__cta .btn .particle:nth-child(7) {
+    animation-delay: 1.4s !important;
+    background: var(--energy-particle-1) !important;
+    width: 1.5px !important;
+    height: 1.5px !important;
+}
+
+.nav__cta .btn .particle:nth-child(8) {
+    animation-delay: 1.95s !important;
+    background: var(--energy-particle-2) !important;
+    width: 2px !important;
+    height: 2px !important;
+}
+
+/* BORDE DE ENERGÍA PARA NAVBAR CTA - TAMAÑO COMPACTO */
+.nav__cta .btn .energy-border {
+    position: absolute !important;
+    top: -1.5px !important;
+    left: -1.5px !important;
+    right: -1.5px !important;
+    bottom: -1.5px !important;
+    background: linear-gradient(45deg, 
+        var(--neon-crimson-electric) 0%, 
+        var(--neon-crimson-plasma) 25%, 
+        var(--neon-crimson-fire) 50%, 
+        var(--neon-crimson-electric) 75%, 
+        var(--neon-crimson-plasma) 100%) !important;
+    border-radius: 12px !important;
+    z-index: 1 !important;
+    animation: energy-border-flow 3.5s linear infinite !important;
+    opacity: 0.5 !important;
+}
+
+/* CONTENIDO DEL BOTÓN NAVBAR CTA - TAMAÑO COMPACTO */
+.nav__cta .btn span {
+    position: relative !important;
+    z-index: 4 !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.8px !important;
+    color: #ffffff !important;
+    text-shadow: 
+        0 0 8px rgba(255, 255, 255, 0.6),
+        0 0 16px var(--neon-crimson-glow) !important;
+}
+
+/* EFECTOS TÁCTILES MÓVIL PARA NAVBAR CTA - TAMAÑO COMPACTO */
+.nav__cta .btn:active {
+    transform: translateY(-1px) scale(1.005) !important;
+    box-shadow: 
+        0 0 15px var(--neon-crimson-glow), 
+        0 0 30px var(--neon-crimson-pulse), 
+        0 0 45px rgba(255, 23, 68, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        0 6px 18px rgba(0, 0, 0, 0.3) !important;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+/* ACELERAR EFECTOS AL HACER CLICK EN NAVBAR CTA */
+.nav__cta .btn:active .wave-effect {
+    animation-duration: 1.4s !important;
+}
+
+.nav__cta .btn:active .particle {
+    animation-duration: 1.8s !important;
+}
+
+.nav__cta .btn:active .energy-border {
+    animation-duration: 2.5s !important;
+    opacity: 0.8 !important;
+}
+
+/* EFECTOS HOVER DESKTOP PARA NAVBAR CTA - TAMAÑO COMPACTO */
+@media (min-width: 1024px) {
+    .nav__cta .btn {
+        padding: clamp(10px, 1.4vw, 16px) clamp(16px, 2vw, 22px) !important;
+        font-size: clamp(0.75rem, 0.85vw, 0.9rem) !important;
+        border-radius: 12px !important;
+        min-width: 150px !important;
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .nav__cta .btn:hover {
+        transform: translateY(-2px) scale(1.015) !important;
+        background: linear-gradient(135deg, 
+            var(--neon-crimson-electric) 0%, 
+            var(--neon-crimson-plasma) 50%, 
+            var(--neon-crimson-fire) 100%) !important;
+        box-shadow: 
+            0 0 20px var(--neon-crimson-glow), 
+            0 0 40px var(--neon-crimson-pulse), 
+            0 0 60px rgba(255, 23, 68, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+            0 8px 24px rgba(0, 0, 0, 0.35) !important;
+        border-color: var(--neon-crimson-plasma) !important;
+        color: #ffffff !important;
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .nav__cta .btn:hover .wave-effect {
+        animation-duration: 1.8s !important;
+    }
+
+    .nav__cta .btn:hover .particle {
+        animation-duration: 2.2s !important;
+    }
+
+    .nav__cta .btn:hover .energy-border {
+        animation-duration: 3s !important;
+        opacity: 0.7 !important;
+    }
+
+    .nav__cta .btn:hover span {
+        color: #ffffff !important;
+        text-shadow: 
+            0 0 12px rgba(255, 255, 255, 0.8),
+            0 0 24px var(--neon-crimson-glow) !important;
+    }
+}
+
+/* AJUSTES ESPECÍFICOS PARA EL NAVBAR - TAMAÑO COMPACTO */
+@media (min-width: 1024px) {
+    .nav__cta {
+        margin-left: clamp(1rem, 2.5vw, 1.5rem) !important;
+        margin-right: clamp(0.5rem, 1.5vw, 1rem) !important;
+        min-width: 150px !important;
+    }
+}
+
+/* RESPONSIVE PARA PANTALLAS MEDIANAS - TAMAÑO COMPACTO */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .nav__cta .btn {
+        min-width: 120px !important;
+        padding: 8px 14px !important;
+        font-size: 0.75rem !important;
+        border-radius: 8px !important;
+    }
+
+    .nav__cta .btn .wave-effect {
+        animation-duration: 2s !important;
+    }
+
+    .nav__cta .btn .particle {
+        width: 1.5px !important;
+        height: 1.5px !important;
+        animation-duration: 2.4s !important;
+    }
+}
+
+/* RESPONSIVE PARA PANTALLAS PEQUEÑAS - TAMAÑO COMPACTO */
+@media (max-width: 767px) {
+    .nav__cta .btn {
+        min-width: 100px !important;
+        padding: 6px 12px !important;
+        font-size: 0.7rem !important;
+        border-radius: 6px !important;
+        letter-spacing: 0.4px !important;
+    }
+
+    .nav__cta .btn .wave-effect {
+        animation-duration: 1.9s !important;
+    }
+
+    .nav__cta .btn .particle {
+        width: 1px !important;
+        height: 1px !important;
+        animation-duration: 2.3s !important;
+    }
+
+    .nav__cta .btn .energy-border {
+        border-radius: 8px !important;
+        top: -1px !important;
+        left: -1px !important;
+        right: -1px !important;
+        bottom: -1px !important;
+    }
+}
+
+/* ESTADO SCROLLED DEL HEADER - TAMAÑO COMPACTO */
+.header.scrolled .nav__cta .btn {
+    box-shadow: 
+        0 0 14px var(--neon-crimson-shadow), 
+        0 0 28px var(--neon-crimson-glow), 
+        0 0 42px rgba(255, 23, 68, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25),
+        0 6px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+.header.scrolled .nav__cta .btn:hover {
+    box-shadow: 
+        0 0 22px var(--neon-crimson-glow), 
+        0 0 44px var(--neon-crimson-pulse), 
+        0 0 66px rgba(255, 23, 68, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 10px 28px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* DESHABILITAR EFECTOS EN PERFORMANCE MODE */
+.performance-mode .nav__cta .btn .wave-effect,
+.performance-mode .nav__cta .btn .particle,
+.performance-mode .nav__cta .btn .energy-border {
+    display: none !important;
+}
+
+.performance-mode .nav__cta .btn {
+    animation: none !important;
+}
+
+/* DESHABILITAR EFECTOS CON REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+    .nav__cta .btn .wave-effect,
+    .nav__cta .btn .particle,
+    .nav__cta .btn .energy-border {
+        display: none !important;
+    }
+
+    .nav__cta .btn {
+        transition: all 0.4s ease !important;
+    }
+
+    .nav__cta .btn:hover {
+        transform: translateY(-1px) !important;
+        color: #ffffff !important;
+    }
+
+    .nav__cta .btn:hover span {
+        color: #ffffff !important;
+    }
+}
+
+/* AJUSTES DE Z-INDEX PARA EVITAR CONFLICTOS */
+.nav__cta .btn {
+    z-index: 1002 !important;
+}
+
+.nav__cta .btn .wave-effect,
+.nav__cta .btn .particle {
+    z-index: 1003 !important;
+}
+
+.nav__cta .btn span {
+    z-index: 1004 !important;
+}
+
+/* EFECTOS ESPECIALES CUANDO EL NAVBAR ESTÁ ACTIVO - TAMAÑO COMPACTO */
+.nav.active .nav__cta .btn {
+    background: linear-gradient(135deg, 
+        var(--neon-crimson-electric) 0%, 
+        var(--neon-crimson-plasma) 100%) !important;
+    box-shadow: 
+        0 0 16px var(--neon-crimson-glow), 
+        0 0 32px var(--neon-crimson-pulse), 
+        0 0 48px rgba(255, 23, 68, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        0 6px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+.nav.active .nav__cta .btn .wave-effect {
+    animation-duration: 2s !important;
+}
+
+.nav.active .nav__cta .btn .particle {
+    animation-duration: 2.4s !important;
+}
