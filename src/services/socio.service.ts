@@ -17,7 +17,7 @@ import {
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/constants';
 import { handleError } from '@/lib/error-handler';
-import { Socio, SocioStats, SocioActivity, SocioFormData } from '@/types/socio';
+import { Socio, SocioStats, SocioActivity, SocioFormData, BulkEditSocioData, BulkEditResult } from '@/types/socio';
 
 export interface SocioFilters {
   estado?: string;
@@ -371,6 +371,105 @@ class SocioService {
   }
 
   /**
+   * NUEVO: Edición múltiple de socios
+   */
+  async bulkUpdateSocios(data: BulkEditSocioData): Promise<BulkEditResult> {
+    const result: BulkEditResult = {
+      success: false,
+      updated: 0,
+      errors: [],
+      total: data.socioIds.length
+    };
+
+    try {
+      const batch = writeBatch(db);
+      let batchCount = 0;
+      const maxBatchSize = 500;
+
+      for (const socioId of data.socioIds) {
+        try {
+          // Verificar que el socio existe
+          const socioRef = doc(db, this.collection, socioId);
+          const socioDoc = await getDoc(socioRef);
+          
+          if (!socioDoc.exists()) {
+            result.errors.push({
+              socioId,
+              error: 'Socio no encontrado'
+            });
+            continue;
+          }
+
+          // Preparar datos de actualización
+          const updateData: Record<string, unknown> = {
+            actualizadoEn: serverTimestamp(),
+          };
+
+          // Solo agregar campos que tienen valores
+          if (data.changes.estado) {
+            updateData.estado = data.changes.estado;
+          }
+
+          if (data.changes.estadoMembresia) {
+            updateData.estadoMembresia = data.changes.estadoMembresia;
+          }
+
+          if (data.changes.montoCuota !== undefined) {
+            updateData.montoCuota = data.changes.montoCuota;
+          }
+
+          if (data.changes.fechaVencimiento) {
+            updateData.fechaVencimiento = Timestamp.fromDate(
+              data.changes.fechaVencimiento instanceof Date
+                ? data.changes.fechaVencimiento
+                : data.changes.fechaVencimiento.toDate()
+            );
+            
+            // Actualizar estado de membresía basado en fecha de vencimiento
+            const fechaVenc = data.changes.fechaVencimiento instanceof Date
+              ? data.changes.fechaVencimiento
+              : data.changes.fechaVencimiento.toDate();
+            updateData.estadoMembresia = fechaVenc > new Date() ? 'al_dia' : 'vencido';
+          }
+
+          batch.update(socioRef, updateData);
+          batchCount++;
+          result.updated++;
+
+          // Ejecutar batch si alcanza el tamaño máximo
+          if (batchCount >= maxBatchSize) {
+            await batch.commit();
+            batchCount = 0;
+          }
+
+        } catch (error) {
+          result.errors.push({
+            socioId,
+            error: error instanceof Error ? error.message : 'Error desconocido'
+          });
+        }
+      }
+
+      // Ejecutar batch restante
+      if (batchCount > 0) {
+        await batch.commit();
+      }
+
+      result.success = result.updated > 0;
+      console.log(`✅ Bulk update completed: ${result.updated} socios updated, ${result.errors.length} errors`);
+      
+    } catch (error) {
+      handleError(error, 'Bulk Update Socios');
+      result.errors.push({
+        socioId: 'general',
+        error: 'Error general en la actualización masiva'
+      });
+    }
+
+    return result;
+  }
+
+  /**
    * Delete socio (soft delete)
    */
   async deleteSocio(id: string): Promise<boolean> {
@@ -401,7 +500,7 @@ class SocioService {
       const stats: SocioStats = {
         total: 1,
         activos: socio.estado === 'activo' ? 1 : 0,
-        vencidos: socio.estadoMembresia === 'vencido' ? 1 : 0,
+        vencidos: socio.estado === 'vencido' ? 1 : 0,
         inactivos: socio.estado === 'inactivo' ? 1 : 0,
         beneficiosUsados: socio.beneficiosUsados || 0,
         ahorroTotal: 0, // Would be calculated from validaciones
@@ -608,8 +707,8 @@ class SocioService {
       const total = socios.length;
       const activos = socios.filter(s => s.estado === 'activo').length;
       const inactivos = socios.filter(s => s.estado === 'inactivo').length;
+      const vencidos = socios.filter(s => s.estado === 'vencido').length;
       const alDia = socios.filter(s => s.estadoMembresia === 'al_dia').length;
-      const vencidos = socios.filter(s => s.estadoMembresia === 'vencido').length;
       const pendientes = socios.filter(s => s.estadoMembresia === 'pendiente').length;
 
       // Calcular ingresos mensuales
@@ -624,8 +723,8 @@ class SocioService {
         total,
         activos,
         inactivos,
-        alDia,
         vencidos,
+        alDia,
         pendientes,
         ingresosMensuales,
         beneficiosUsados,
@@ -646,8 +745,8 @@ class SocioService {
         total: 0,
         activos: 0,
         inactivos: 0,
-        alDia: 0,
         vencidos: 0,
+        alDia: 0,
         pendientes: 0,
         ingresosMensuales: 0,
         beneficiosUsados: 0,
@@ -676,8 +775,9 @@ class SocioService {
         const data = docSnapshot.data();
         const fechaVencimiento = data.fechaVencimiento?.toDate();
 
-        if (fechaVencimiento && fechaVencimiento < now && data.estadoMembresia !== 'vencido') {
+        if (fechaVencimiento && fechaVencimiento < now && data.estado !== 'vencido') {
           batch.update(docSnapshot.ref, {
+            estado: 'vencido',
             estadoMembresia: 'vencido',
             actualizadoEn: serverTimestamp(),
           });
@@ -724,6 +824,7 @@ class SocioService {
         ultimoPago: serverTimestamp(),
         fechaVencimiento: Timestamp.fromDate(fechaVencimiento),
         estadoMembresia: 'al_dia',
+        estado: 'activo', // Reactivar si estaba vencido
         actualizadoEn: serverTimestamp(),
       });
 
