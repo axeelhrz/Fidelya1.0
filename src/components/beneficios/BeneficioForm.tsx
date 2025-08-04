@@ -54,15 +54,27 @@ const beneficioSchema = z.object({
   fechaFin: z
     .date(),
   limitePorSocio: z
-    .number()
-    .min(1, 'El límite por socio debe ser mayor a 0')
+    .union([
+      z.number().min(1, 'El límite por socio debe ser mayor a 0'),
+      z.undefined(),
+      z.nan()
+    ])
     .optional()
-    .or(z.literal(undefined)),
+    .transform((val) => {
+      if (val === undefined || isNaN(val) || val === 0) return undefined;
+      return val;
+    }),
   limiteTotal: z
-    .number()
-    .min(1, 'El límite total debe ser mayor a 0')
+    .union([
+      z.number().min(1, 'El límite total debe ser mayor a 0'),
+      z.undefined(),
+      z.nan()
+    ])
     .optional()
-    .or(z.literal(undefined)),
+    .transform((val) => {
+      if (val === undefined || isNaN(val) || val === 0) return undefined;
+      return val;
+    }),
   condiciones: z
     .string()
     .max(300, 'Las condiciones no pueden exceder 300 caracteres')

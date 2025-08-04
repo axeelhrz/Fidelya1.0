@@ -105,6 +105,11 @@ export const ComercioWelcomeCard = memo<ComercioWelcomeCardProps>(({
     }
   ], [stats]);
 
+  // Extend Window type for navigateToComercioTab
+  interface WindowWithNavigate extends Window {
+    navigateToComercioTab?: (tab: string) => void;
+  }
+
   // Fixed handlers for button clicks
   const handleProfileClick = () => {
     console.log('Profile button clicked - navigating to perfil'); // Debug log
@@ -113,10 +118,9 @@ export const ComercioWelcomeCard = memo<ComercioWelcomeCardProps>(({
     } else if (onViewProfile) {
       onViewProfile();
     }
-    
     // Also try to use the global navigation function if available
-    if (typeof window !== 'undefined' && (window as any).navigateToComercioTab) {
-      (window as any).navigateToComercioTab('perfil');
+    if (typeof window !== 'undefined' && (window as WindowWithNavigate).navigateToComercioTab) {
+      (window as WindowWithNavigate).navigateToComercioTab?.('perfil');
     }
   };
 
@@ -125,10 +129,9 @@ export const ComercioWelcomeCard = memo<ComercioWelcomeCardProps>(({
     if (onQuickAction) {
       onQuickAction('beneficios');
     }
-    
     // Also try to use the global navigation function if available
-    if (typeof window !== 'undefined' && (window as any).navigateToComercioTab) {
-      (window as any).navigateToComercioTab('beneficios');
+    if (typeof window !== 'undefined' && (window as WindowWithNavigate).navigateToComercioTab) {
+      (window as WindowWithNavigate).navigateToComercioTab?.('beneficios');
     }
   };
 
