@@ -16,15 +16,6 @@ import {
   BarChart3,
   Zap,
   Star,
-  TestTube,
-  Eye,
-  Settings,
-  Target,
-  Users,
-  DollarSign,
-  Package,
-  Calendar,
-  Tag
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
@@ -34,8 +25,6 @@ import { BeneficiosStats } from '@/components/beneficios/BeneficiosStats';
 import { Button } from '@/components/ui/Button';
 import { useBeneficiosComercios } from '@/hooks/useBeneficios';
 import { Beneficio, BeneficioFormData } from '@/types/beneficio';
-import { crearBeneficiosDePrueba } from '@/utils/test-data';
-import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
 
 // Componente para métricas rápidas mejoradas
@@ -43,14 +32,12 @@ interface EstadisticasRapidas {
   total: number;
   activos: number;
   usados: number;
-  vencidos: number;
 }
 
 const MetricasRapidas: React.FC<{
   estadisticas: EstadisticasRapidas;
   beneficios: Beneficio[];
-  loading?: boolean;
-}> = ({ estadisticas, beneficios, loading = false }) => {
+}> = ({ estadisticas, beneficios }) => {
   const metricas = [
     {
       id: 'total',
@@ -60,8 +47,7 @@ const MetricasRapidas: React.FC<{
       color: 'from-blue-500 to-blue-600',
       colorFondo: 'bg-blue-50',
       colorTexto: 'text-blue-700',
-      descripcion: 'Beneficios creados',
-      tendencia: '+12%'
+      descripcion: 'Beneficios creados'
     },
     {
       id: 'activos',
@@ -71,8 +57,7 @@ const MetricasRapidas: React.FC<{
       color: 'from-green-500 to-green-600',
       colorFondo: 'bg-green-50',
       colorTexto: 'text-green-700',
-      descripcion: 'Disponibles ahora',
-      tendencia: '+8%'
+      descripcion: 'Disponibles ahora'
     },
     {
       id: 'usados',
@@ -82,8 +67,7 @@ const MetricasRapidas: React.FC<{
       color: 'from-purple-500 to-purple-600',
       colorFondo: 'bg-purple-50',
       colorTexto: 'text-purple-700',
-      descripcion: 'Veces utilizados',
-      tendencia: '+25%'
+      descripcion: 'Veces utilizados'
     },
     {
       id: 'nuevos',
@@ -96,30 +80,9 @@ const MetricasRapidas: React.FC<{
       color: 'from-yellow-500 to-orange-500',
       colorFondo: 'bg-yellow-50',
       colorTexto: 'text-yellow-700',
-      descripcion: 'Creados recientemente',
-      tendencia: '+5%'
+      descripcion: 'Creados recientemente'
     }
   ];
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metricas.map((_, index) => (
-          <div key={index} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg animate-pulse">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-gray-200 rounded-2xl"></div>
-              <div className="w-12 h-6 bg-gray-200 rounded-full"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="w-16 h-8 bg-gray-200 rounded"></div>
-              <div className="w-24 h-4 bg-gray-200 rounded"></div>
-              <div className="w-20 h-3 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -139,7 +102,7 @@ const MetricasRapidas: React.FC<{
                 <IconoComponente size={28} />
               </div>
               <div className={`px-3 py-1 ${metrica.colorFondo} ${metrica.colorTexto} rounded-full text-xs font-semibold`}>
-                {metrica.tendencia}
+                +{Math.floor(Math.random() * 15)}%
               </div>
             </div>
             
@@ -161,15 +124,13 @@ const MetricasRapidas: React.FC<{
   );
 };
 
-// Componente para acciones rápidas mejorado
+// Componente para acciones rápidas
 const AccionesRapidas: React.FC<{
   onNuevoBeneficio: () => void;
   onRefresh: () => void;
   onExport: () => void;
-  onCrearDatosPrueba: () => void;
   loading: boolean;
-  beneficiosCount: number;
-}> = ({ onNuevoBeneficio, onRefresh, onExport, onCrearDatosPrueba, loading, beneficiosCount }) => {
+}> = ({ onNuevoBeneficio, onRefresh, onExport, loading }) => {
   const acciones = [
     {
       id: 'nuevo',
@@ -177,8 +138,7 @@ const AccionesRapidas: React.FC<{
       descripcion: 'Crear beneficio atractivo',
       icono: Plus,
       color: 'from-indigo-500 to-purple-600',
-      accion: onNuevoBeneficio,
-      destacado: true
+      accion: onNuevoBeneficio
     },
     {
       id: 'refresh',
@@ -194,59 +154,38 @@ const AccionesRapidas: React.FC<{
       descripcion: 'Descargar reporte',
       icono: Download,
       color: 'from-green-500 to-emerald-600',
-      accion: onExport,
-      disabled: beneficiosCount === 0
-    },
-    {
-      id: 'test',
-      titulo: 'Datos de Prueba',
-      descripcion: 'Crear beneficios de prueba',
-      icono: TestTube,
-      color: 'from-orange-500 to-red-600',
-      accion: onCrearDatosPrueba,
-      disabled: beneficiosCount > 0
+      accion: onExport
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {acciones.map((accion, index) => {
         const IconoComponente = accion.icono;
-        const isDisabled = loading || accion.disabled;
-        
         return (
           <motion.button
             key={accion.id}
             onClick={accion.accion}
-            disabled={isDisabled}
-            className={`bg-white rounded-2xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 text-left group ${
-              isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-            } ${accion.destacado ? 'ring-2 ring-indigo-500 ring-opacity-20' : ''}`}
+            disabled={loading}
+            className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 text-left group disabled:opacity-50 disabled:cursor-not-allowed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            whileHover={!isDisabled ? { y: -2 } : {}}
-            whileTap={!isDisabled ? { scale: 0.98 } : {}}
+            whileHover={{ y: -2, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center justify-between mb-4">
               <div className={`w-12 h-12 bg-gradient-to-r ${accion.color} rounded-xl flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-shadow`}>
-                <IconoComponente 
-                  size={24} 
-                  className={accion.id === 'refresh' && loading ? 'animate-spin' : ''} 
-                />
+                <IconoComponente size={24} className={accion.id === 'refresh' && loading ? 'animate-spin' : ''} />
               </div>
-              {accion.destacado && (
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-              )}
+              <div className="w-2 h-2 bg-gray-300 rounded-full group-hover:bg-gray-400 transition-colors"></div>
             </div>
             
             <div className="space-y-1">
-              <div className={`text-lg font-bold transition-colors ${
-                isDisabled ? 'text-gray-400' : 'text-gray-900 group-hover:text-indigo-600'
-              }`}>
+              <div className="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
                 {accion.titulo}
               </div>
-              <div className={`text-sm ${isDisabled ? 'text-gray-400' : 'text-gray-500'}`}>
+              <div className="text-sm text-gray-500">
                 {accion.descripcion}
               </div>
             </div>
@@ -257,14 +196,12 @@ const AccionesRapidas: React.FC<{
   );
 };
 
-// Componente para filtros avanzados mejorado
+// Componente para filtros avanzados
 const FiltrosAvanzados: React.FC<{
   beneficios: Beneficio[];
   filtroActivo: string;
   onFiltroChange: (filtro: string) => void;
-  searchTerm: string;
-  onSearchChange: (term: string) => void;
-}> = ({ beneficios, filtroActivo, onFiltroChange, searchTerm, onSearchChange }) => {
+}> = ({ beneficios, filtroActivo, onFiltroChange }) => {
   const now = new Date();
   
   const filtros = [
@@ -303,7 +240,7 @@ const FiltrosAvanzados: React.FC<{
     {
       id: 'populares',
       titulo: 'Populares',
-      cantidad: beneficios.filter(b => (b.usosActuales || 0) > 5).length,
+      cantidad: beneficios.filter(b => (b.usosActuales || 0) > 10).length,
       icono: TrendingUp,
       color: 'text-purple-600',
       colorFondo: 'bg-purple-100'
@@ -318,35 +255,12 @@ const FiltrosAvanzados: React.FC<{
             <Filter className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Filtros y Búsqueda</h3>
-            <p className="text-sm text-gray-500">Organiza y encuentra tus beneficios</p>
+            <h3 className="text-lg font-bold text-gray-900">Filtros</h3>
+            <p className="text-sm text-gray-500">Organiza tus beneficios</p>
           </div>
         </div>
       </div>
 
-      {/* Barra de búsqueda */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Buscar por título, descripción o categoría..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-all duration-200"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => onSearchChange('')}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              ×
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Filtros por categoría */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {filtros.map((filtro) => {
           const IconoComponente = filtro.icono;
@@ -381,32 +295,12 @@ const FiltrosAvanzados: React.FC<{
           );
         })}
       </div>
-
-      {/* Información de resultados */}
-      {(searchTerm || filtroActivo !== 'todos') && (
-        <div className="mt-4 flex items-center justify-between text-sm">
-          <span className="text-gray-600">
-            {filtroActivo !== 'todos' ? `Filtro: ${filtros.find(f => f.id === filtroActivo)?.titulo}` : ''}
-            {searchTerm ? ` • Búsqueda: "${searchTerm}"` : ''}
-          </span>
-          <button
-            onClick={() => {
-              onFiltroChange('todos');
-              onSearchChange('');
-            }}
-            className="text-indigo-600 hover:text-indigo-700 font-medium"
-          >
-            Limpiar filtros
-          </button>
-        </div>
-      )}
     </div>
   );
 };
 
-// Componente principal del contenido
+// Component that uses useSearchParams - needs to be wrapped in Suspense
 function ComercioBeneficiosContent() {
-  const { user } = useAuth();
 
   const {
     beneficios,
@@ -425,18 +319,8 @@ function ComercioBeneficiosContent() {
   const [editingBeneficio, setEditingBeneficio] = useState<Beneficio | null>(null);
   const [filtroActivo, setFiltroActivo] = useState('todos');
   const [searchTerm, setSearchTerm] = useState('');
-  const [creandoDatosPrueba, setCreandoDatosPrueba] = useState(false);
 
-  // Debug: Log del estado actual
-  console.log('🔍 Estado actual del hook:', {
-    beneficios: beneficios.length,
-    loading,
-    error,
-    user: user?.uid,
-    userRole: user?.role
-  });
-
-  // Filtrar beneficios según el filtro activo y búsqueda
+  // Filtrar beneficios según el filtro activo
   const beneficiosFiltrados = useMemo(() => {
     const now = new Date();
     let filtered = beneficios;
@@ -459,7 +343,7 @@ function ComercioBeneficiosContent() {
         filtered = beneficios.filter(b => b.destacado);
         break;
       case 'populares':
-        filtered = beneficios.filter(b => (b.usosActuales || 0) > 5);
+        filtered = beneficios.filter(b => (b.usosActuales || 0) > 10);
         break;
       default:
         filtered = beneficios;
@@ -470,8 +354,7 @@ function ComercioBeneficiosContent() {
       filtered = filtered.filter(beneficio =>
         beneficio.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
         beneficio.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        beneficio.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        beneficio.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        beneficio.categoria.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -479,25 +362,20 @@ function ComercioBeneficiosContent() {
   }, [beneficios, filtroActivo, searchTerm]);
 
   const handleCreateNew = () => {
-    console.log('🎯 Abriendo formulario para crear nuevo beneficio');
     setEditingBeneficio(null);
     setFormOpen(true);
   };
 
   const handleEdit = (beneficio: Beneficio) => {
-    console.log('🔄 Abriendo formulario para editar beneficio:', beneficio.id);
     setEditingBeneficio(beneficio);
     setFormOpen(true);
   };
 
   const handleDelete = async (beneficioId: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este beneficio?')) {
-      console.log('🗑️ Eliminando beneficio:', beneficioId);
       try {
-        const success = await eliminarBeneficio(beneficioId);
-        if (success) {
-          toast.success('Beneficio eliminado exitosamente');
-        }
+        await eliminarBeneficio(beneficioId);
+        toast.success('Beneficio eliminado exitosamente');
       } catch (error) {
         console.error('Error eliminando beneficio:', error);
         toast.error('Error al eliminar el beneficio');
@@ -506,12 +384,8 @@ function ComercioBeneficiosContent() {
   };
 
   const handleFormSubmit = async (data: BeneficioFormData) => {
-    console.log('📝 Enviando formulario:', data);
     try {
-      let success = false;
-      
       if (editingBeneficio) {
-        console.log('🔄 Actualizando beneficio existente:', editingBeneficio.id);
         const updateData: Partial<BeneficioFormData> = {
           titulo: data.titulo,
           descripcion: data.descripcion,
@@ -528,57 +402,23 @@ function ComercioBeneficiosContent() {
           asociacionesDisponibles: data.asociacionesDisponibles
         };
 
-        success = await actualizarBeneficio(editingBeneficio.id, updateData);
+        await actualizarBeneficio(editingBeneficio.id, updateData);
+        toast.success('Beneficio actualizado exitosamente');
       } else {
-        console.log('🎯 Creando nuevo beneficio');
-        success = await crearBeneficio(data);
+        await crearBeneficio(data);
+        toast.success('Beneficio creado exitosamente');
       }
-      
-      if (success) {
-        setFormOpen(false);
-        setEditingBeneficio(null);
-        console.log('✅ Operación completada exitosamente');
-      }
-      
-      return success;
+      setFormOpen(false);
+      setEditingBeneficio(null);
+      return true;
     } catch (error) {
-      console.error('❌ Error en formulario:', error);
+      console.error('Error en formulario:', error);
       toast.error('Error al guardar el beneficio');
       return false;
     }
   };
 
-  const handleCrearDatosPrueba = async () => {
-    if (!user) {
-      toast.error('Usuario no encontrado');
-      return;
-    }
-
-    setCreandoDatosPrueba(true);
-    console.log('🧪 Creando datos de prueba para comercio:', user.uid);
-    
-    try {
-      const success = await crearBeneficiosDePrueba(user.uid);
-      if (success) {
-        toast.success('Datos de prueba creados exitosamente');
-        await refrescar(); // Recargar los datos
-      } else {
-        toast.error('Error al crear datos de prueba');
-      }
-    } catch (error) {
-      console.error('❌ Error creando datos de prueba:', error);
-      toast.error('Error al crear datos de prueba');
-    } finally {
-      setCreandoDatosPrueba(false);
-    }
-  };
-
   const handleExport = () => {
-    if (beneficios.length === 0) {
-      toast.error('No hay beneficios para exportar');
-      return;
-    }
-
     const csvContent = [
       ['Título', 'Categoría', 'Tipo', 'Descuento', 'Estado', 'Usos', 'Fecha Creación', 'Fecha Vencimiento'],
       ...beneficios.map(beneficio => [
@@ -678,15 +518,6 @@ function ComercioBeneficiosContent() {
             </p>
           </motion.div>
 
-          {/* Debug info - solo en desarrollo */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                <strong>Debug:</strong> Beneficios: {beneficios.length}, Loading: {loading.toString()}, Error: {error || 'none'}
-              </p>
-            </div>
-          )}
-
           {/* Métricas rápidas */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -694,11 +525,7 @@ function ComercioBeneficiosContent() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mb-8"
           >
-            <MetricasRapidas 
-              estadisticas={estadisticasRapidas} 
-              beneficios={beneficios} 
-              loading={loading}
-            />
+            <MetricasRapidas estadisticas={estadisticasRapidas} beneficios={beneficios} />
           </motion.div>
 
           {/* Acciones rápidas */}
@@ -712,9 +539,7 @@ function ComercioBeneficiosContent() {
               onNuevoBeneficio={handleCreateNew}
               onRefresh={refrescar}
               onExport={handleExport}
-              onCrearDatosPrueba={handleCrearDatosPrueba}
-              loading={loading || creandoDatosPrueba}
-              beneficiosCount={beneficios.length}
+              loading={loading}
             />
           </motion.div>
 
@@ -729,9 +554,26 @@ function ComercioBeneficiosContent() {
               beneficios={beneficios}
               filtroActivo={filtroActivo}
               onFiltroChange={setFiltroActivo}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
             />
+          </motion.div>
+
+          {/* Barra de búsqueda */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg mb-8"
+          >
+            <div className="relative max-w-md mx-auto">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Buscar beneficios por título, descripción o categoría..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+              />
+            </div>
           </motion.div>
         </div>
 
@@ -739,7 +581,7 @@ function ComercioBeneficiosContent() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
         >
           <BeneficiosList
             beneficios={beneficiosFiltrados}
@@ -752,11 +594,11 @@ function ComercioBeneficiosContent() {
           />
         </motion.div>
 
-        {/* Estadísticas detalladas */}
+        {/* Estadísticas detalladas - AHORA CON DATOS REALES */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
           className="mt-12"
         >
           <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg">
