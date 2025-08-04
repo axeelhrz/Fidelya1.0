@@ -79,7 +79,7 @@ export const useBeneficios = (): UseBeneficiosReturn => {
           socioNombre: user.nombre || 'Usuario',
           socioEmail: user.email || '',
           asociacionId: user.asociacionId || null,
-          asociacionNombre: user.asociacionNombre || null,
+          asociacionNombre: null, // Not available in UserData
           fechaUso: Timestamp.fromDate(validacion.fechaValidacion),
           montoDescuento: validacion.montoDescuento || 0,
           descuento: validacion.descuento || 0,
@@ -133,7 +133,7 @@ export const useBeneficios = (): UseBeneficiosReturn => {
     }
   }, [user]);
 
-  const crearBeneficio = useCallback(async (data: BeneficioFormData): Promise<boolean> => {
+  const crearBeneficio = useCallback(async (): Promise<boolean> => {
     if (!user || user.role !== 'comercio') {
       toast.error('No tienes permisos para crear beneficios');
       return false;
@@ -150,7 +150,7 @@ export const useBeneficios = (): UseBeneficiosReturn => {
     }
   }, [user]);
 
-  const actualizarBeneficio = useCallback(async (id: string, data: Partial<BeneficioFormData>): Promise<boolean> => {
+  const actualizarBeneficio = useCallback(async (): Promise<boolean> => {
     if (!user || user.role !== 'comercio') {
       toast.error('No tienes permisos para actualizar beneficios');
       return false;
@@ -167,7 +167,7 @@ export const useBeneficios = (): UseBeneficiosReturn => {
     }
   }, [user]);
 
-  const eliminarBeneficio = useCallback(async (id: string): Promise<boolean> => {
+  const eliminarBeneficio = useCallback(async (): Promise<boolean> => {
     if (!user || user.role !== 'comercio') {
       toast.error('No tienes permisos para eliminar beneficios');
       return false;
@@ -184,7 +184,7 @@ export const useBeneficios = (): UseBeneficiosReturn => {
     }
   }, [user]);
 
-  const cambiarEstadoBeneficio = useCallback(async (id: string, estado: string): Promise<boolean> => {
+  const cambiarEstadoBeneficio = useCallback(async (): Promise<boolean> => {
     if (!user || user.role !== 'comercio') {
       toast.error('No tienes permisos para cambiar el estado del beneficio');
       return false;
@@ -236,7 +236,7 @@ export const useBeneficios = (): UseBeneficiosReturn => {
             socioNombre: user.role === 'socio' ? (user.nombre || 'Usuario') : 'Socio',
             socioEmail: user.role === 'socio' ? (user.email || '') : '',
             asociacionId: user.role === 'socio' ? (user.asociacionId || null) : null,
-            asociacionNombre: user.role === 'socio' ? (user.asociacionNombre || null) : null,
+            asociacionNombre: null, // Not available in UserData
             fechaUso: Timestamp.fromDate(validacion.fechaValidacion),
             montoDescuento: validacion.montoDescuento || 0,
             descuento: validacion.descuento || 0,
