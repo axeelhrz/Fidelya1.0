@@ -328,13 +328,17 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
     try {
       setLoading(true);
       setError(null);
+      
+      console.log('🔄 Cargando beneficios para comercio:', user.uid);
 
       // Cargar beneficios del comercio usando el servicio
       const beneficiosData = await BeneficiosService.obtenerBeneficiosPorComercio(user.uid);
+      console.log('✅ Beneficios cargados:', beneficiosData.length);
       setBeneficios(beneficiosData);
 
       // Cargar validaciones/usos del comercio
       const validacionesResult = await validacionesService.getValidacionesComercio(user.uid, 100);
+      console.log('✅ Validaciones cargadas:', validacionesResult.validaciones.length);
       
       const beneficiosUsadosData: BeneficioUsoLocal[] = validacionesResult.validaciones.map(validacion => ({
         id: validacion.id,
@@ -366,6 +370,7 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
       const statsData = await BeneficiosService.obtenerEstadisticas({
         comercioId: user.uid
       });
+      console.log('✅ Estadísticas cargadas:', statsData);
       setStats(statsData);
 
       // Calcular estadísticas rápidas
@@ -376,10 +381,11 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
         usados: beneficiosUsadosData.length,
         vencidos: beneficiosData.filter(b => b.estado === 'vencido' || (b.estado === 'activo' && b.fechaFin.toDate() <= now)).length
       };
+      console.log('✅ Estadísticas rápidas:', estadisticasRapidasData);
       setEstadisticasRapidas(estadisticasRapidasData);
 
     } catch (err) {
-      console.error('Error loading beneficios comercio:', err);
+      console.error('❌ Error loading beneficios comercio:', err);
       setError(err instanceof Error ? err.message : 'Error al cargar beneficios');
     } finally {
       setLoading(false);
@@ -393,11 +399,14 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
     }
 
     try {
-      await BeneficiosService.crearBeneficio(data, user.uid, user.role);
+      console.log('🎯 Creando beneficio:', data);
+      const beneficioId = await BeneficiosService.crearBeneficio(data, user.uid, user.role);
+      console.log('✅ Beneficio creado con ID:', beneficioId);
+      toast.success('Beneficio creado exitosamente');
       await cargarBeneficios(); // Recargar datos
       return true;
     } catch (error) {
-      console.error('Error creating beneficio:', error);
+      console.error('❌ Error creating beneficio:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error al crear el beneficio';
       toast.error(errorMessage);
       return false;
@@ -411,11 +420,14 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
     }
 
     try {
+      console.log('🔄 Actualizando beneficio:', id, data);
       await BeneficiosService.actualizarBeneficio(id, data);
+      console.log('✅ Beneficio actualizado');
+      toast.success('Beneficio actualizado exitosamente');
       await cargarBeneficios(); // Recargar datos
       return true;
     } catch (error) {
-      console.error('Error updating beneficio:', error);
+      console.error('❌ Error updating beneficio:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error al actualizar el beneficio';
       toast.error(errorMessage);
       return false;
@@ -429,11 +441,14 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
     }
 
     try {
+      console.log('🗑️ Eliminando beneficio:', id);
       await BeneficiosService.eliminarBeneficio(id);
+      console.log('✅ Beneficio eliminado');
+      toast.success('Beneficio eliminado exitosamente');
       await cargarBeneficios(); // Recargar datos
       return true;
     } catch (error) {
-      console.error('Error deleting beneficio:', error);
+      console.error('❌ Error deleting beneficio:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error al eliminar el beneficio';
       toast.error(errorMessage);
       return false;
@@ -447,11 +462,14 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
     }
 
     try {
+      console.log('🔄 Cambiando estado del beneficio:', id, 'a', estado);
       await BeneficiosService.actualizarEstadoBeneficio(id, estado as 'activo' | 'inactivo' | 'vencido' | 'agotado');
+      console.log('✅ Estado del beneficio actualizado');
+      toast.success('Estado del beneficio actualizado');
       await cargarBeneficios(); // Recargar datos
       return true;
     } catch (error) {
-      console.error('Error changing beneficio status:', error);
+      console.error('❌ Error changing beneficio status:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error al cambiar el estado del beneficio';
       toast.error(errorMessage);
       return false;
@@ -459,6 +477,7 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
   }, [user, cargarBeneficios]);
 
   const refrescar = useCallback(async () => {
+    console.log('🔄 Refrescando datos...');
     await cargarBeneficios();
   }, [cargarBeneficios]);
 
@@ -469,6 +488,8 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
   // Set up real-time subscription for beneficios del comercio
   useEffect(() => {
     if (user && user.role === 'comercio') {
+      console.log('🔄 Configurando suscripción en tiempo real para comercio:', user.uid);
+      
       // Clean up previous subscription
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
@@ -478,6 +499,7 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
       unsubscribeRef.current = BeneficiosService.suscribirBeneficiosComercio(
         user.uid,
         (newBeneficios) => {
+          console.log('🔄 Beneficios actualizados en tiempo real:', newBeneficios.length);
           setBeneficios(newBeneficios);
           
           // Recalcular estadísticas rápidas
