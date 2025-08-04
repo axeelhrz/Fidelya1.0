@@ -16,6 +16,7 @@ import {
   BarChart3,
   Zap,
   Star,
+  TestTube,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
@@ -25,6 +26,8 @@ import { BeneficiosStats } from '@/components/beneficios/BeneficiosStats';
 import { Button } from '@/components/ui/Button';
 import { useBeneficiosComercios } from '@/hooks/useBeneficios';
 import { Beneficio, BeneficioFormData } from '@/types/beneficio';
+import { crearBeneficiosDePrueba } from '@/utils/test-data';
+import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
 
 // Componente para métricas rápidas mejoradas
@@ -129,8 +132,9 @@ const AccionesRapidas: React.FC<{
   onNuevoBeneficio: () => void;
   onRefresh: () => void;
   onExport: () => void;
+  onCrearDatosPrueba: () => void;
   loading: boolean;
-}> = ({ onNuevoBeneficio, onRefresh, onExport, loading }) => {
+}> = ({ onNuevoBeneficio, onRefresh, onExport, onCrearDatosPrueba, loading }) => {
   const acciones = [
     {
       id: 'nuevo',
@@ -155,11 +159,19 @@ const AccionesRapidas: React.FC<{
       icono: Download,
       color: 'from-green-500 to-emerald-600',
       accion: onExport
+    },
+    {
+      id: 'test',
+      titulo: 'Datos de Prueba',
+      descripcion: 'Crear beneficios de prueba',
+      icono: TestTube,
+      color: 'from-orange-500 to-red-600',
+      accion: onCrearDatosPrueba
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
       {acciones.map((accion, index) => {
         const IconoComponente = accion.icono;
         return (
@@ -301,6 +313,7 @@ const FiltrosAvanzados: React.FC<{
 
 // Component that uses useSearchParams - needs to be wrapped in Suspense
 function ComercioBeneficiosContent() {
+  const { user } = useAuth();
 
   const {
     beneficios,
@@ -319,6 +332,16 @@ function ComercioBeneficiosContent() {
   const [editingBeneficio, setEditingBeneficio] = useState<Beneficio | null>(null);
   const [filtroActivo, setFiltroActivo] = useState('todos');
   const [searchTerm, setSearchTerm] = useState('');
+  const [creandoDatosPrueba, setCreandoDatosPrueba] = useState(false);
+
+  // Debug: Log del estado actual
+  console.log('🔍 Estado actual del hook:', {
+    beneficios: beneficios.length,
+    loading,
+    error,
+    user: user?.uid,
+    userRole: user?.role
+  });
 
   // Filtrar beneficios según el filtro activo
   const beneficiosFiltrados = useMemo(() => {
@@ -362,20 +385,25 @@ function ComercioBeneficiosContent() {
   }, [beneficios, filtroActivo, searchTerm]);
 
   const handleCreateNew = () => {
+    console.log('🎯 Abriendo formulario para crear nuevo beneficio');
     setEditingBeneficio(null);
     setFormOpen(true);
   };
 
   const handleEdit = (beneficio: Beneficio) => {
+    console.log('🔄 Abriendo formulario para editar beneficio:', beneficio.id);
     setEditingBeneficio(beneficio);
     setFormOpen(true);
   };
 
   const handleDelete = async (beneficioId: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este beneficio?')) {
+      console.log('🗑️ Eliminando beneficio:', beneficioId);
       try {
-        await eliminarBeneficio(beneficioId);
-        toast.success('Beneficio eliminado exitosamente');
+        const success = await eliminarBeneficio(beneficioId);
+        if (success) {
+          toast.success('Beneficio eliminado exitosamente');
+        }
       } catch (error) {
         console.error('Error eliminando beneficio:', error);
         toast.error('Error al eliminar el beneficio');
@@ -384,8 +412,12 @@ function ComercioBeneficiosContent() {
   };
 
   const handleFormSubmit = async (data: BeneficioFormData) => {
+    console.log('📝 Enviando formulario:', data);
     try {
+      let success = false;
+      
       if (editingBeneficio) {
+        console.log('🔄 Actualizando beneficio existente:', editingBeneficio.id);
         const updateData: Partial<BeneficioFormData> = {
           titulo: data.titulo,
           descripcion: data.descripcion,
@@ -402,19 +434,48 @@ function ComercioBeneficiosContent() {
           asociacionesDisponibles: data.asociacionesDisponibles
         };
 
-        await actualizarBeneficio(editingBeneficio.id, updateData);
-        toast.success('Beneficio actualizado exitosamente');
+        success = await actualizarBeneficio(editingBeneficio.id, updateData);
       } else {
-        await crearBeneficio(data);
-        toast.success('Beneficio creado exitosamente');
+        console.log('🎯 Creando nuevo beneficio');
+        success = await crearBeneficio(data);
       }
-      setFormOpen(false);
-      setEditingBeneficio(null);
-      return true;
+      
+      if (success) {
+        setFormOpen(false);
+        setEditingBeneficio(null);
+        console.log('✅ Operación completada exitosamente');
+      }
+      
+      return success;
     } catch (error) {
-      console.error('Error en formulario:', error);
+      console.error('❌ Error en formulario:', error);
       toast.error('Error al guardar el beneficio');
       return false;
+    }
+  };
+
+  const handleCrearDatosPrueba = async () => {
+    if (!user) {
+      toast.error('Usuario no encontrado');
+      return;
+    }
+
+    setCreandoDatosPrueba(true);
+    console.log('🧪 Creando datos de prueba para comercio:', user.uid);
+    
+    try {
+      const success = await crearBeneficiosDePrueba(user.uid);
+      if (success) {
+        toast.success('Datos de prueba creados exitosamente');
+        await refrescar(); // Recargar los datos
+      } else {
+        toast.error('Error al crear datos de prueba');
+      }
+    } catch (error) {
+      console.error('❌ Error creando datos de prueba:', error);
+      toast.error('Error al crear datos de prueba');
+    } finally {
+      setCreandoDatosPrueba(false);
     }
   };
 
@@ -518,6 +579,15 @@ function ComercioBeneficiosContent() {
             </p>
           </motion.div>
 
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                <strong>Debug:</strong> Beneficios: {beneficios.length}, Loading: {loading.toString()}, Error: {error || 'none'}
+              </p>
+            </div>
+          )}
+
           {/* Métricas rápidas */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -539,7 +609,8 @@ function ComercioBeneficiosContent() {
               onNuevoBeneficio={handleCreateNew}
               onRefresh={refrescar}
               onExport={handleExport}
-              loading={loading}
+              onCrearDatosPrueba={handleCrearDatosPrueba}
+              loading={loading || creandoDatosPrueba}
             />
           </motion.div>
 
