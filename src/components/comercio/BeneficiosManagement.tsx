@@ -73,19 +73,33 @@ const beneficioSchema = z.object({
     .min(0, 'El descuento debe ser mayor a 0'),
   fechaInicio: z
     .date()
-    .refine((date) => date >= new Date(), {
+    .refine((date) => date >= new Date(new Date().setHours(0, 0, 0, 0)), {
       message: 'La fecha de inicio debe ser hoy o posterior'
     }),
   fechaFin: z
     .date(),
   limitePorSocio: z
-    .number()
-    .min(1, 'El límite por socio debe ser mayor a 0')
-    .optional(),
+    .union([
+      z.number().min(1, 'El límite por socio debe ser mayor a 0'),
+      z.undefined(),
+      z.nan()
+    ])
+    .optional()
+    .transform((val) => {
+      if (val === undefined || isNaN(val) || val === 0) return undefined;
+      return val;
+    }),
   limiteTotal: z
-    .number()
-    .min(1, 'El límite total debe ser mayor a 0')
-    .optional(),
+    .union([
+      z.number().min(1, 'El límite total debe ser mayor a 0'),
+      z.undefined(),
+      z.nan()
+    ])
+    .optional()
+    .transform((val) => {
+      if (val === undefined || isNaN(val) || val === 0) return undefined;
+      return val;
+    }),
   condiciones: z
     .string()
     .max(300, 'Las condiciones no pueden exceder 300 caracteres')
@@ -821,8 +835,13 @@ export const BeneficiosManagement: React.FC = () => {
                         type="date"
                         fullWidth
                         InputLabelProps={{ shrink: true }}
-                        value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
-                        onChange={(e) => field.onChange(new Date(e.target.value))}
+                        value={field.value && !isNaN(field.value.getTime()) ? format(field.value, 'yyyy-MM-dd') : ''}
+                        onChange={(e) => {
+                          const date = new Date(e.target.value);
+                          if (!isNaN(date.getTime())) {
+                            field.onChange(date);
+                          }
+                        }}
                         error={!!errors.fechaInicio}
                         helperText={errors.fechaInicio?.message}
                         sx={{
@@ -849,8 +868,13 @@ export const BeneficiosManagement: React.FC = () => {
                         type="date"
                         fullWidth
                         InputLabelProps={{ shrink: true }}
-                        value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
-                        onChange={(e) => field.onChange(new Date(e.target.value))}
+                        value={field.value && !isNaN(field.value.getTime()) ? format(field.value, 'yyyy-MM-dd') : ''}
+                        onChange={(e) => {
+                          const date = new Date(e.target.value);
+                          if (!isNaN(date.getTime())) {
+                            field.onChange(date);
+                          }
+                        }}
                         error={!!errors.fechaFin}
                         helperText={errors.fechaFin?.message}
                         sx={{
