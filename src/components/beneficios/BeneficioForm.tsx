@@ -26,7 +26,7 @@ import { z } from 'zod';
 import { Beneficio, BeneficioFormData, CATEGORIAS_BENEFICIOS } from '@/types/beneficio';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { BeneficiosService } from '@/services/beneficios.service';
+import BeneficiosService from '@/services/beneficios.service';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 

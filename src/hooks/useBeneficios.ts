@@ -394,12 +394,12 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
 
     try {
       await BeneficiosService.crearBeneficio(data, user.uid, user.role);
-      toast.success('Beneficio creado exitosamente');
       await cargarBeneficios(); // Recargar datos
       return true;
     } catch (error) {
       console.error('Error creating beneficio:', error);
-      toast.error('Error al crear el beneficio');
+      const errorMessage = error instanceof Error ? error.message : 'Error al crear el beneficio';
+      toast.error(errorMessage);
       return false;
     }
   }, [user, cargarBeneficios]);
@@ -412,12 +412,12 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
 
     try {
       await BeneficiosService.actualizarBeneficio(id, data);
-      toast.success('Beneficio actualizado exitosamente');
       await cargarBeneficios(); // Recargar datos
       return true;
     } catch (error) {
       console.error('Error updating beneficio:', error);
-      toast.error('Error al actualizar el beneficio');
+      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar el beneficio';
+      toast.error(errorMessage);
       return false;
     }
   }, [user, cargarBeneficios]);
@@ -430,12 +430,12 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
 
     try {
       await BeneficiosService.eliminarBeneficio(id);
-      toast.success('Beneficio eliminado exitosamente');
       await cargarBeneficios(); // Recargar datos
       return true;
     } catch (error) {
       console.error('Error deleting beneficio:', error);
-      toast.error('Error al eliminar el beneficio');
+      const errorMessage = error instanceof Error ? error.message : 'Error al eliminar el beneficio';
+      toast.error(errorMessage);
       return false;
     }
   }, [user, cargarBeneficios]);
@@ -448,12 +448,12 @@ export const useBeneficiosComercios = (): UseBeneficiosComerciosReturn => {
 
     try {
       await BeneficiosService.actualizarEstadoBeneficio(id, estado as 'activo' | 'inactivo' | 'vencido' | 'agotado');
-      toast.success('Estado del beneficio actualizado');
       await cargarBeneficios(); // Recargar datos
       return true;
     } catch (error) {
       console.error('Error changing beneficio status:', error);
-      toast.error('Error al cambiar el estado del beneficio');
+      const errorMessage = error instanceof Error ? error.message : 'Error al cambiar el estado del beneficio';
+      toast.error(errorMessage);
       return false;
     }
   }, [user, cargarBeneficios]);
