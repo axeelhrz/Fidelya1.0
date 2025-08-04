@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
-import { BeneficiosService, BeneficioUso } from '@/services/beneficios.service';
+import { BeneficiosService } from '@/services/beneficios.service';
 import { validacionesService } from '@/services/validaciones.service';
-import { Beneficio, BeneficioFormData } from '@/types/beneficio';
+import { Beneficio, BeneficioFormData, BeneficioUso } from '@/types/beneficio';
 import toast from 'react-hot-toast';
 
 // Create instance of the service
