@@ -106,16 +106,19 @@ export default function OptimizedComercioDashboard() {
 
   // Optimized navigation handler
   const handleNavigate = useCallback((section: string) => {
+    console.log('Navigating to section:', section);
     setCurrentSection(section);
   }, []);
 
-  // Quick action handler
+  // Fixed quick action handler
   const handleQuickAction = useCallback((action: string) => {
+    console.log('Quick action triggered:', action);
     setCurrentSection(action);
   }, []);
 
-  // View profile handler
+  // Fixed view profile handler
   const handleViewProfile = useCallback(() => {
+    console.log('View profile triggered');
     setCurrentSection('perfil');
   }, []);
 

@@ -514,9 +514,10 @@ export const BeneficiosManagement: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {beneficio.tipo === 'porcentaje' && `${beneficio.descuento}%`}
-                          {beneficio.tipo === 'monto_fijo' && `$${beneficio.descuento}`}
+                          {beneficio.tipo === 'porcentaje' && beneficio.descuento > 0 && `${beneficio.descuento}%`}
+                          {beneficio.tipo === 'monto_fijo' && beneficio.descuento > 0 && `$${beneficio.descuento}`}
                           {beneficio.tipo === 'producto_gratis' && 'Gratis'}
+                          {beneficio.descuento === 0 && beneficio.tipo !== 'producto_gratis' && 'Sin descuento'}
                         </Typography>
                       </TableCell>
                       <TableCell>

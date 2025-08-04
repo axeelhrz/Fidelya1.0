@@ -35,7 +35,11 @@ import {
   Zap,
   Grid3X3,
   List,
-  Download
+  Download,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Send
 } from 'lucide-react';
 import { useComercios } from '@/hooks/useComercios';
 import { ComercioDisponible } from '@/services/adhesion.service';
@@ -59,14 +63,21 @@ interface ComercioConBeneficios extends ComercioDisponible {
   loadingBeneficios?: boolean;
   showBeneficios?: boolean;
   beneficiosActivosReales?: number;
+  permisos?: {
+    puedeVer: boolean;
+    puedeEditar: boolean;
+    puedeEliminar: boolean;
+    puedeDesvincular: boolean;
+    motivo?: string;
+  };
 }
 
-// Modern Stats Card Component - REMOVED ALL PERCENTAGES AND TRENDS
+// Modern Stats Card Component
 const ModernStatsCard: React.FC<{
   title: string;
   value: number;
   icon: React.ReactNode;
-  color: 'blue' | 'green' | 'orange' | 'purple';
+  color: 'blue' | 'green' | 'orange' | 'purple' | 'amber';
 }> = ({ title, value, icon, color }) => {
   const colorClasses = {
     blue: {
@@ -92,6 +103,12 @@ const ModernStatsCard: React.FC<{
       iconBg: 'bg-purple-100',
       iconColor: 'text-purple-600',
       textColor: 'text-purple-600'
+    },
+    amber: {
+      bg: 'from-amber-500 to-amber-600',
+      iconBg: 'bg-amber-100',
+      iconColor: 'text-amber-600',
+      textColor: 'text-amber-600'
     }
   };
 
@@ -130,225 +147,82 @@ const ModernStatsCard: React.FC<{
   );
 };
 
-// Modern Search and Filter Component with improved mobile design
-const ModernSearchFilter: React.FC<{
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  selectedCategoria: string;
-  onCategoriaChange: (value: string) => void;
-  selectedEstado: string;
-  onEstadoChange: (value: string) => void;
-  categorias: string[];
-  showFilters: boolean;
-  onToggleFilters: () => void;
-  onClearFilters: () => void;
-}> = ({
-  searchTerm,
-  onSearchChange,
-  selectedCategoria,
-  onCategoriaChange,
-  selectedEstado,
-  onEstadoChange,
-  categorias,
-  showFilters,
-  onToggleFilters,
-  onClearFilters
-}) => {
+// Status Badge Component
+const StatusBadge: React.FC<{ comercio: ComercioDisponible }> = ({ comercio }) => {
+  const getStatusInfo = () => {
+    if (comercio.estadoVinculacion === 'pendiente' || comercio.estado === 'pendiente_aprobacion') {
+      return {
+        color: 'bg-amber-100 text-amber-800 border-amber-200',
+        icon: <Clock className="w-3 h-3" />,
+        text: 'Pendiente Aprobación'
+      };
+    }
+    
+    switch (comercio.estado) {
+      case 'activo':
+        return {
+          color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+          icon: <CheckCircle className="w-3 h-3" />,
+          text: 'Activo'
+        };
+      case 'inactivo':
+        return {
+          color: 'bg-slate-100 text-slate-800 border-slate-200',
+          icon: <XCircle className="w-3 h-3" />,
+          text: 'Inactivo'
+        };
+      case 'suspendido':
+        return {
+          color: 'bg-red-100 text-red-800 border-red-200',
+          icon: <Pause className="w-3 h-3" />,
+          text: 'Suspendido'
+        };
+      default:
+        return {
+          color: 'bg-slate-100 text-slate-800 border-slate-200',
+          icon: <Clock className="w-3 h-3" />,
+          text: comercio.estado
+        };
+    }
+  };
+
+  const statusInfo = getStatusInfo();
+
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-xl lg:rounded-2xl border border-white/20 shadow-xl p-4 lg:p-6">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-        {/* Search */}
-        <div className="relative flex-1 max-w-full lg:max-w-md">
-          <div className="absolute inset-y-0 left-0 pl-3 lg:pl-4 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 lg:h-5 lg:w-5 text-slate-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Buscar comercios..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 lg:pl-12 pr-4 py-2.5 lg:py-3 bg-slate-50/50 border border-slate-200 rounded-lg lg:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-slate-400 text-sm lg:text-base"
-          />
-        </div>
-
-        {/* Filter Button */}
-        <div className="flex items-center justify-between lg:justify-end space-x-3">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onToggleFilters}
-            className={`inline-flex items-center px-4 py-2.5 lg:py-3 rounded-lg lg:rounded-xl text-sm font-medium transition-all duration-200 ${
-              showFilters 
-                ? 'bg-blue-100 border-blue-200 text-blue-700 shadow-lg' 
-                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-md'
-            } border`}
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Filtros</span>
-            <ChevronDown className={`w-4 h-4 ml-2 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
-          </motion.button>
-        </div>
-      </div>
-
-      {/* Advanced Filters */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mt-4 lg:mt-6 pt-4 lg:pt-6 border-t border-slate-200"
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Categoría
-                </label>
-                <select
-                  value={selectedCategoria}
-                  onChange={(e) => onCategoriaChange(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm lg:text-base"
-                >
-                  <option value="">Todas las categorías</option>
-                  {categorias.map(categoria => (
-                    <option key={categoria} value={categoria}>
-                      {categoria}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Estado
-                </label>
-                <select
-                  value={selectedEstado}
-                  onChange={(e) => onEstadoChange(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm lg:text-base"
-                >
-                  <option value="">Todos los estados</option>
-                  <option value="activo">Activo</option>
-                  <option value="inactivo">Inactivo</option>
-                  <option value="suspendido">Suspendido</option>
-                </select>
-              </div>
-
-              <div className="sm:col-span-2 lg:col-span-2 flex items-end">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={onClearFilters}
-                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all duration-200"
-                >
-                  Limpiar filtros
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <span className={`inline-flex items-center px-2 lg:px-3 py-1 rounded-full text-xs font-medium border ${statusInfo.color}`}>
+      {statusInfo.icon}
+      <span className="ml-1">{statusInfo.text}</span>
+    </span>
   );
 };
 
-// Enhanced Beneficio Card Component
-const BeneficioCard: React.FC<{ beneficio: Beneficio }> = ({ beneficio }) => {
-  const getTipoIcon = (tipo: string) => {
-    switch (tipo) {
-      case 'porcentaje':
-        return <Percent className="w-3 h-3" />;
-      case 'monto_fijo':
-        return <DollarSign className="w-3 h-3" />;
-      case 'producto_gratis':
-        return <Package className="w-3 h-3" />;
-      default:
-        return <Gift className="w-3 h-3" />;
-    }
-  };
-
-  const formatDescuento = (beneficio: Beneficio) => {
-    switch (beneficio.tipo) {
-      case 'porcentaje':
-        return `${beneficio.descuento}%`;
-      case 'monto_fijo':
-        return formatCurrency(beneficio.descuento);
-      case 'producto_gratis':
-        return 'Gratis';
-      default:
-        return beneficio.descuento.toString();
-    }
-  };
-
-  const getEstadoColor = (estado: string) => {
-    switch (estado) {
-      case 'activo':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      case 'inactivo':
-        return 'bg-slate-100 text-slate-800 border-slate-200';
-      case 'vencido':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'agotado':
-        return 'bg-amber-100 text-amber-800 border-amber-200';
-      default:
-        return 'bg-slate-100 text-slate-800 border-slate-200';
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="bg-gradient-to-br from-slate-50 to-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-slate-200 hover:shadow-lg transition-all duration-300"
+// Permission-aware Action Button Component
+const ActionButton: React.FC<{
+  onClick: () => void;
+  icon: React.ReactNode;
+  title: string;
+  color: string;
+  disabled?: boolean;
+  disabledReason?: string;
+}> = ({ onClick, icon, title, color, disabled = false, disabledReason }) => {
+  const button = (
+    <motion.button
+      whileHover={disabled ? {} : { scale: 1.1 }}
+      whileTap={disabled ? {} : { scale: 0.9 }}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      className={`p-2 rounded-lg transition-all duration-200 ${
+        disabled 
+          ? 'text-slate-300 cursor-not-allowed' 
+          : `${color} hover:bg-opacity-10`
+      }`}
+      title={disabled ? disabledReason : title}
     >
-      <div className="flex items-start justify-between mb-2 lg:mb-3">
-        <div className="flex items-center space-x-2 lg:space-x-3">
-          <div className="w-6 h-6 lg:w-8 lg:h-8 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
-            <div className="text-blue-600">
-              {getTipoIcon(beneficio.tipo)}
-            </div>
-          </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="text-xs lg:text-sm font-semibold text-slate-900 truncate">
-              {beneficio.titulo}
-            </h4>
-            {beneficio.destacado && (
-              <div className="flex items-center mt-1">
-                <Star className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-amber-500 fill-current" />
-                <span className="text-xs text-amber-600 ml-1">Destacado</span>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-xs lg:text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
-            {formatDescuento(beneficio)}
-          </span>
-        </div>
-      </div>
-      
-      <p className="text-xs text-slate-600 mb-2 lg:mb-3 line-clamp-2">
-        {beneficio.descripcion}
-      </p>
-      
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-1 lg:space-x-2">
-          <span className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium border ${getEstadoColor(beneficio.estado)}`}>
-            {beneficio.estado}
-          </span>
-          <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs bg-blue-50 text-blue-700 border border-blue-200">
-            {beneficio.categoria}
-          </span>
-        </div>
-        
-        <div className="flex items-center text-xs text-slate-500">
-          <Users className="w-3 h-3 mr-1" />
-          <span>{beneficio.usosActuales || 0}</span>
-        </div>
-      </div>
-    </motion.div>
+      {icon}
+    </motion.button>
   );
+
+  return button;
 };
 
 export const ComercioManagement: React.FC<ComercioManagementProps> = ({ 
@@ -356,6 +230,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
 }) => {
   const {
     comerciosVinculados,
+    comerciosPendientes,
     stats,
     loading,
     error,
@@ -369,6 +244,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     generateQRCode,
     generateBatchQRCodes,
     getComercioValidations,
+    checkPermissions,
     clearError
   } = useComercios();
 
@@ -397,39 +273,50 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   const [comercioToUnlink, setComercioToUnlink] = useState<ComercioDisponible | null>(null);
   const [comercioToDelete, setComercioToDelete] = useState<ComercioDisponible | null>(null);
   const [selectedComercios, setSelectedComercios] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<'vinculados' | 'pendientes'>('vinculados');
   
   // Estado para manejar los beneficios de cada comercio con conteo real
   const [comerciosConBeneficios, setComerciossConBeneficios] = useState<ComercioConBeneficios[]>([]);
 
-  // Cargar beneficios reales para cada comercio vinculado
+  // Combinar comercios vinculados y pendientes según la pestaña activa
+  const comerciosActivos = activeTab === 'vinculados' ? comerciosVinculados : comerciosPendientes;
+
+  // Cargar beneficios y permisos para cada comercio
   useEffect(() => {
-    const cargarBeneficiosRealesParaComercios = async () => {
-      if (comerciosVinculados.length === 0) {
+    const cargarDatosComplementarios = async () => {
+      if (comerciosActivos.length === 0) {
         setComerciossConBeneficios([]);
         return;
       }
 
       // Inicializar comercios con estado de carga
-      const comerciosConEstado: ComercioConBeneficios[] = comerciosVinculados.map(comercio => ({
+      const comerciosConEstado: ComercioConBeneficios[] = comerciosActivos.map(comercio => ({
         ...comercio,
         beneficios: [],
         loadingBeneficios: true,
         showBeneficios: false,
-        beneficiosActivosReales: 0
+        beneficiosActivosReales: 0,
+        permisos: {
+          puedeVer: false,
+          puedeEditar: false,
+          puedeEliminar: false,
+          puedeDesvincular: false
+        }
       }));
       
       setComerciossConBeneficios(comerciosConEstado);
 
-      // Cargar beneficios reales para cada comercio
-      for (const comercio of comerciosVinculados) {
+      // Cargar datos para cada comercio
+      for (const comercio of comerciosActivos) {
         try {
-          // Obtener TODOS los beneficios del comercio
-          const todosBeneficios = await BeneficiosService.obtenerBeneficiosPorComercio(comercio.id);
+          // Cargar beneficios y permisos en paralelo
+          const [todosBeneficios, permisos] = await Promise.all([
+            BeneficiosService.obtenerBeneficiosPorComercio(comercio.id),
+            checkPermissions(comercio.id)
+          ]);
           
           // Filtrar solo beneficios activos para mostrar
           const beneficiosActivos = todosBeneficios.filter(b => b.estado === 'activo');
-          
-          // Contar beneficios activos reales
           const beneficiosActivosReales = beneficiosActivos.length;
           
           setComerciossConBeneficios(prev => 
@@ -438,14 +325,15 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                 ? { 
                     ...c, 
                     beneficios: beneficiosActivos.slice(0, 3), // Solo mostrar 3 para preview
-                    beneficiosActivosReales, // Conteo real de beneficios activos
-                    loadingBeneficios: false 
+                    beneficiosActivosReales,
+                    loadingBeneficios: false,
+                    permisos
                   }
                 : c
             )
           );
         } catch (error) {
-          console.error(`Error cargando beneficios para comercio ${comercio.id}:`, error);
+          console.error(`Error cargando datos para comercio ${comercio.id}:`, error);
           setComerciossConBeneficios(prev => 
             prev.map(c => 
               c.id === comercio.id 
@@ -453,7 +341,13 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                     ...c, 
                     beneficios: [], 
                     beneficiosActivosReales: 0,
-                    loadingBeneficios: false 
+                    loadingBeneficios: false,
+                    permisos: {
+                      puedeVer: false,
+                      puedeEditar: false,
+                      puedeEliminar: false,
+                      puedeDesvincular: false
+                    }
                   }
                 : c
             )
@@ -462,8 +356,8 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
       }
     };
 
-    cargarBeneficiosRealesParaComercios();
-  }, [comerciosVinculados]);
+    cargarDatosComplementarios();
+  }, [comerciosActivos, checkPermissions]);
 
   // Función para alternar la visualización de beneficios
   const toggleBeneficios = (comercioId: string) => {
@@ -476,7 +370,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     );
   };
 
-  // Filtrar comercios vinculados
+  // Filtrar comercios
   const comerciosFiltrados = comerciosConBeneficios.filter(comercio => {
     const matchesSearch = !searchTerm || 
       comercio.nombreComercio.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -490,18 +384,18 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
   });
 
   // Obtener categorías únicas
-  const categorias = Array.from(new Set(comerciosVinculados.map(c => c.categoria)));
+  const categorias = Array.from(new Set([...comerciosVinculados, ...comerciosPendientes].map(c => c.categoria)));
 
-  // Calculate real stats based on actual data - NO TRENDS OR PERCENTAGES
+  // Calculate real stats based on actual data
   const realStats = {
     totalComercios: comerciosVinculados.length,
     comerciosActivos: comerciosVinculados.filter(c => c.estado === 'activo').length,
+    comerciosPendientesAprobacion: comerciosPendientes.length,
     comerciosInactivos: comerciosVinculados.filter(c => c.estado === 'inactivo').length,
-    comerciosSuspendidos: comerciosVinculados.filter(c => c.estado === 'suspendido').length,
     categorias: Object.keys(stats.categorias).length
   };
 
-  // Nueva función para manejar ver beneficios
+  // Handlers para las acciones
   const handleViewBeneficios = (comercio: ComercioDisponible) => {
     setSelectedComercioForBeneficios({
       id: comercio.id,
@@ -510,7 +404,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     setBeneficiosModalOpen(true);
   };
 
-  // Manejar desvinculación
   const handleDesvincular = async (comercio: ComercioDisponible) => {
     const success = await desvincularComercio(comercio.id);
     if (success) {
@@ -518,7 +411,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     }
   };
 
-  // Manejar eliminación
   const handleDelete = async (comercio: ComercioDisponible) => {
     const success = await deleteComercio(comercio.id);
     if (success) {
@@ -526,12 +418,10 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     }
   };
 
-  // Manejar cambio de estado
   const handleStatusChange = async (comercio: ComercioDisponible, newStatus: 'activo' | 'inactivo' | 'suspendido') => {
     await changeComercioStatus(comercio.id, newStatus);
   };
 
-  // Manejar edición
   const handleEdit = (comercio: ComercioDisponible) => {
     const comercioForEdit: Comercio = {
       id: comercio.id,
@@ -546,7 +436,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
       cuit: comercio.cuit || '',
       logo: comercio.logoUrl,
       banner: comercio.imagenPrincipalUrl || '',
-      estado: comercio.estado,
+      estado: comercio.estado === 'pendiente_aprobacion' ? 'pendiente' : comercio.estado,
       visible: comercio.visible,
       asociacionesVinculadas: comercio.asociacionesVinculadas,
       qrCode: comercio.qrCode || '',
@@ -570,7 +460,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     setEditDialogOpen(true);
   };
 
-  // Manejar ver validaciones
   const handleViewValidations = (comercio: ComercioDisponible) => {
     const comercioForValidations: Comercio = {
       id: comercio.id,
@@ -585,7 +474,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
       cuit: comercio.cuit || '',
       logo: comercio.logoUrl,
       banner: comercio.imagenPrincipalUrl || '',
-      estado: comercio.estado,
+      estado: comercio.estado === 'pendiente_aprobacion' ? 'pendiente' : comercio.estado,
       visible: comercio.visible,
       asociacionesVinculadas: comercio.asociacionesVinculadas,
       qrCode: comercio.qrCode || '',
@@ -609,7 +498,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     setValidationsModalOpen(true);
   };
 
-  // Manejar generación de QR individual
   const handleGenerateQR = async (comercio: ComercioDisponible) => {
     setSelectedComercioForQR({
       id: comercio.id,
@@ -620,7 +508,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     setQrModalOpen(true);
   };
 
-  // Función para generar QR desde el modal
   const handleGenerateQRFromModal = async (comercioId: string): Promise<{ qrCode: string; qrCodeUrl: string }> => {
     const result = await generateQRCode(comercioId);
     if (result === null) {
@@ -629,7 +516,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     return { qrCode: result, qrCodeUrl: result };
   };
 
-  // Manejar generación de QR masiva
   const handleBatchQRGeneration = async () => {
     if (selectedComercios.length === 0) {
       alert('Selecciona al menos un comercio');
@@ -645,7 +531,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
       results.forEach(result => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        const img = new window.Image();
+        const img = new window.Image
         
         img.onload = () => {
           canvas.width = img.width;
@@ -672,7 +558,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     }
   };
 
-  // Manejar selección múltiple
   const handleSelectComercio = (comercioId: string, selected: boolean) => {
     if (selected) {
       setSelectedComercios(prev => [...prev, comercioId]);
@@ -689,36 +574,10 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
     }
   };
 
-  const getStatusIcon = (estado: string) => {
-    switch (estado) {
-      case 'activo':
-        return <Zap className="w-4 h-4 text-emerald-600" />;
-      case 'inactivo':
-        return <PowerOff className="w-4 h-4 text-slate-600" />;
-      case 'suspendido':
-        return <Pause className="w-4 h-4 text-amber-600" />;
-      default:
-        return <Power className="w-4 h-4 text-slate-600" />;
-    }
-  };
-
-  const getStatusColor = (estado: string) => {
-    switch (estado) {
-      case 'activo':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      case 'inactivo':
-        return 'bg-slate-100 text-slate-800 border-slate-200';
-      case 'suspendido':
-        return 'bg-amber-100 text-amber-800 border-amber-200';
-      default:
-        return 'bg-slate-100 text-slate-800 border-slate-200';
-    }
-  };
-
   return (
     <div className="space-y-6 lg:space-y-8">
-      {/* Modern Stats Cards - NO TRENDS OR PERCENTAGES */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
+      {/* Modern Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-6">
         <ModernStatsCard
           title="Total Comercios"
           value={realStats.totalComercios}
@@ -730,6 +589,12 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
           value={realStats.comerciosActivos}
           icon={<Zap className="w-5 h-5 lg:w-6 lg:h-6" />}
           color="green"
+        />
+        <ModernStatsCard
+          title="Pendientes Aprobación"
+          value={realStats.comerciosPendientesAprobacion}
+          icon={<Clock className="w-5 h-5 lg:w-6 lg:h-6" />}
+          color="amber"
         />
         <ModernStatsCard
           title="Comercios Inactivos"
@@ -768,7 +633,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
             className="inline-flex items-center justify-center px-4 lg:px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-lg hover:shadow-emerald-500/25"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Agregar Comercio
+            Crear Comercio
           </motion.button>
 
           <motion.button
@@ -777,54 +642,179 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
             onClick={() => setVincularDialogOpen(true)}
             className="inline-flex items-center justify-center px-4 lg:px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-blue-500/25"
           >
-            <Store className="w-4 h-4 mr-2" />
-            Vincular Existente
+            <Send className="w-4 h-4 mr-2" />
+            Invitar Comercio
           </motion.button>
         </div>
       </div>
 
-      {/* Modern Search and Filters */}
-      <ModernSearchFilter
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        selectedCategoria={selectedCategoria}
-        onCategoriaChange={setSelectedCategoria}
-        selectedEstado={selectedEstado}
-        onEstadoChange={setSelectedEstado}
-        categorias={categorias}
-        showFilters={showFilters}
-        onToggleFilters={() => setShowFilters(!showFilters)}
-        onClearFilters={() => {
-          setSearchTerm('');
-          setSelectedCategoria('');
-          setSelectedEstado('');
-        }}
-      />
-
-      {/* Error Display */}
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between"
-        >
-          <div className="flex items-center">
-            <AlertTriangle className="w-5 h-5 text-red-600 mr-3" />
-            <span className="text-red-800 font-medium">{error}</span>
-          </div>
+      {/* Tabs for Vinculados vs Pendientes */}
+      <div className="bg-white/80 backdrop-blur-xl rounded-xl lg:rounded-2xl border border-white/20 shadow-xl">
+        <div className="flex border-b border-slate-200">
           <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={clearError}
-            className="text-red-600 hover:text-red-800 p-1 rounded-lg hover:bg-red-100 transition-all duration-200"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setActiveTab('vinculados')}
+            className={`flex-1 px-6 py-4 text-sm font-medium transition-all duration-200 ${
+              activeTab === 'vinculados'
+                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
           >
-            <X size={16} />
+            <div className="flex items-center justify-center space-x-2">
+              <CheckCircle className="w-4 h-4" />
+              <span>Comercios Vinculados</span>
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
+                {comerciosVinculados.length}
+              </span>
+            </div>
           </motion.button>
-        </motion.div>
-      )}
+          
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setActiveTab('pendientes')}
+            className={`flex-1 px-6 py-4 text-sm font-medium transition-all duration-200 ${
+              activeTab === 'pendientes'
+                ? 'text-amber-600 border-b-2 border-amber-600 bg-amber-50/50'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <div className="flex items-center justify-center space-x-2">
+              <Clock className="w-4 h-4" />
+              <span>Pendientes Aprobación</span>
+              <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs font-semibold">
+                {comerciosPendientes.length}
+              </span>
+            </div>
+          </motion.button>
+        </div>
 
-      {/* Comercios List */}
-      <div className="bg-white/80 backdrop-blur-xl rounded-xl lg:rounded-2xl shadow-xl border border-white/20">
+        {/* Search and Filters */}
+        <div className="p-4 lg:p-6 border-b border-slate-200">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            {/* Search */}
+            <div className="relative flex-1 max-w-full lg:max-w-md">
+              <div className="absolute inset-y-0 left-0 pl-3 lg:pl-4 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 lg:h-5 lg:w-5 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Buscar comercios..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 lg:pl-12 pr-4 py-2.5 lg:py-3 bg-slate-50/50 border border-slate-200 rounded-lg lg:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-slate-400 text-sm lg:text-base"
+              />
+            </div>
+
+            {/* Filter Button */}
+            <div className="flex items-center justify-between lg:justify-end space-x-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowFilters(!showFilters)}
+                className={`inline-flex items-center px-4 py-2.5 lg:py-3 rounded-lg lg:rounded-xl text-sm font-medium transition-all duration-200 ${
+                  showFilters 
+                    ? 'bg-blue-100 border-blue-200 text-blue-700 shadow-lg' 
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-md'
+                } border`}
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Filtros</span>
+                <ChevronDown className={`w-4 h-4 ml-2 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Advanced Filters */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mt-4 lg:mt-6 pt-4 lg:pt-6 border-t border-slate-200"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Categoría
+                    </label>
+                    <select
+                      value={selectedCategoria}
+                      onChange={(e) => setSelectedCategoria(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm lg:text-base"
+                    >
+                      <option value="">Todas las categorías</option>
+                      {categorias.map(categoria => (
+                        <option key={categoria} value={categoria}>
+                          {categoria}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Estado
+                    </label>
+                    <select
+                      value={selectedEstado}
+                      onChange={(e) => setSelectedEstado(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm lg:text-base"
+                    >
+                      <option value="">Todos los estados</option>
+                      <option value="activo">Activo</option>
+                      <option value="inactivo">Inactivo</option>
+                      <option value="suspendido">Suspendido</option>
+                      <option value="pendiente_aprobacion">Pendiente Aprobación</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-2 lg:col-span-2 flex items-end">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        setSearchTerm('');
+                        setSelectedCategoria('');
+                        setSelectedEstado('');
+                      }}
+                      className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all duration-200"
+                    >
+                      Limpiar filtros
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Error Display */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-4 lg:mx-6 mt-4 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between"
+          >
+            <div className="flex items-center">
+              <AlertTriangle className="w-5 h-5 text-red-600 mr-3" />
+              <span className="text-red-800 font-medium">{error}</span>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={clearError}
+              className="text-red-600 hover:text-red-800 p-1 rounded-lg hover:bg-red-100 transition-all duration-200"
+            >
+              <X size={16} />
+            </motion.button>
+          </motion.div>
+        )}
+
+        {/* Comercios List */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
@@ -835,18 +825,29 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
         ) : comerciosFiltrados.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Store className="w-8 h-8 text-blue-600" />
+              {activeTab === 'pendientes' ? (
+                <Clock className="w-8 h-8 text-amber-600" />
+              ) : (
+                <Store className="w-8 h-8 text-blue-600" />
+              )}
             </div>
             <h3 className="text-xl font-semibold text-slate-900 mb-2">
-              {comerciosVinculados.length === 0 ? 'No hay comercios vinculados' : 'No se encontraron comercios'}
+              {activeTab === 'pendientes' 
+                ? 'No hay comercios pendientes de aprobación'
+                : comerciosActivos.length === 0 
+                  ? 'No hay comercios vinculados' 
+                  : 'No se encontraron comercios'
+              }
             </h3>
             <p className="text-slate-600 mb-8">
-              {comerciosVinculados.length === 0 
-                ? 'Comienza agregando tu primer comercio.'
-                : 'Intenta ajustar los filtros de búsqueda.'
+              {activeTab === 'pendientes'
+                ? 'Los comercios aparecerán aquí cuando los invites y estén esperando aprobación.'
+                : comerciosActivos.length === 0 
+                  ? 'Comienza creando o invitando tu primer comercio.'
+                  : 'Intenta ajustar los filtros de búsqueda.'
               }
             </p>
-            {comerciosVinculados.length === 0 && (
+            {comerciosActivos.length === 0 && (
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -855,7 +856,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                   className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl font-medium shadow-lg hover:shadow-emerald-500/25 transition-all duration-200"
                 >
                   <Plus className="w-5 h-5 mr-2" />
-                  Agregar Comercio
+                  Crear Comercio
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -863,8 +864,8 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                   onClick={() => setVincularDialogOpen(true)}
                   className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium shadow-lg hover:shadow-blue-500/25 transition-all duration-200"
                 >
-                  <Store className="w-5 h-5 mr-2" />
-                  Vincular Comercio Existente
+                  <Send className="w-5 h-5 mr-2" />
+                  Invitar Comercio Existente
                 </motion.button>
               </div>
             )}
@@ -980,7 +981,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                         </div>
                         
                         <div className="flex items-center space-x-2">
-                          {getStatusIcon(comercio.estado)}
                           <button className="text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-all duration-300">
                             <MoreVertical size={20} />
                           </button>
@@ -989,9 +989,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
 
                       {/* Status and Category */}
                       <div className="flex items-center justify-between mb-4">
-                        <span className={`inline-flex items-center px-2 lg:px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(comercio.estado)}`}>
-                          {comercio.estado}
-                        </span>
+                        <StatusBadge comercio={comercio} />
                         <span className="inline-flex items-center px-2 lg:px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
                           {comercio.categoria}
                         </span>
@@ -1023,7 +1021,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                         )}
                       </div>
 
-                      {/* Benefits Section - FIXED WITH REAL COUNT */}
+                      {/* Benefits Section */}
                       <div className="border-t border-slate-200 pt-4 mb-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center text-xs lg:text-sm text-slate-700">
@@ -1064,7 +1062,62 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                                 className="space-y-3"
                               >
                                 {comercio.beneficios.map((beneficio) => (
-                                  <BeneficioCard key={beneficio.id} beneficio={beneficio} />
+                                  <div key={beneficio.id} className="bg-gradient-to-br from-slate-50 to-white rounded-lg lg:rounded-xl p-3 lg:p-4 border border-slate-200 hover:shadow-lg transition-all duration-300">
+                                    <div className="flex items-start justify-between mb-2 lg:mb-3">
+                                      <div className="flex items-center space-x-2 lg:space-x-3">
+                                        <div className="w-6 h-6 lg:w-8 lg:h-8 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
+                                          <div className="text-blue-600">
+                                            {beneficio.tipo === 'porcentaje' ? <Percent className="w-3 h-3" /> :
+                                             beneficio.tipo === 'monto_fijo' ? <DollarSign className="w-3 h-3" /> :
+                                             <Package className="w-3 h-3" />}
+                                          </div>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <h4 className="text-xs lg:text-sm font-semibold text-slate-900 truncate">
+                                            {beneficio.titulo}
+                                          </h4>
+                                          {beneficio.destacado && (
+                                            <div className="flex items-center mt-1">
+                                              <Star className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-amber-500 fill-current" />
+                                              <span className="text-xs text-amber-600 ml-1">Destacado</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <span className="text-xs lg:text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+                                          {beneficio.tipo === 'porcentaje' ? `${beneficio.descuento}%` :
+                                           beneficio.tipo === 'monto_fijo' ? formatCurrency(beneficio.descuento) :
+                                           'Gratis'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    
+                                    <p className="text-xs text-slate-600 mb-2 lg:mb-3 line-clamp-2">
+                                      {beneficio.descripcion}
+                                    </p>
+                                    
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center space-x-1 lg:space-x-2">
+                                        <span className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium border ${
+                                          beneficio.estado === 'activo' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+                                          beneficio.estado === 'inactivo' ? 'bg-slate-100 text-slate-800 border-slate-200' :
+                                          beneficio.estado === 'vencido' ? 'bg-red-100 text-red-800 border-red-200' :
+                                          'bg-amber-100 text-amber-800 border-amber-200'
+                                        }`}>
+                                          {beneficio.estado}
+                                        </span>
+                                        <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs bg-blue-50 text-blue-700 border border-blue-200">
+                                          {beneficio.categoria}
+                                        </span>
+                                      </div>
+                                      
+                                      <div className="flex items-center text-xs text-slate-500">
+                                        <Users className="w-3 h-3 mr-1" />
+                                        <span>{beneficio.usosActuales || 0}</span>
+                                      </div>
+                                    </div>
+                                  </div>
                                 ))}
                                 {(comercio.beneficiosActivosReales || 0) > 3 && (
                                   <motion.button
@@ -1087,7 +1140,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                         )}
                       </div>
                       
-                      {/* Actions */}
+                      {/* Actions - Permission-aware */}
                       <div className="flex items-center justify-between pt-4 border-t border-slate-200">
                         <div className="flex items-center">
                           {comercio.verificado && (
@@ -1096,89 +1149,84 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                               <span className="text-xs font-medium">Verificado</span>
                             </div>
                           )}
+                          {comercio.permisos?.motivo && (
+                            <div className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-lg">
+                              Control del comercio
+                            </div>
+                          )}
                         </div>
                         
                         <div className="flex items-center space-x-1">
-                          <motion.button
-                            whileTap={{ scale: 0.9 }}
+                          {/* Always allowed: View benefits */}
+                          <ActionButton
                             onClick={() => handleViewBeneficios(comercio)}
-                            className="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-all duration-200"
+                            icon={<Eye size={16} />}
                             title="Ver todos los beneficios"
-                          >
-                            <Eye size={16} />
-                          </motion.button>
+                            color="text-purple-600 hover:bg-purple-50"
+                          />
 
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                          {/* Always allowed: View validations */}
+                          <ActionButton
                             onClick={() => handleViewValidations(comercio)}
-                            className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                            icon={<FileText size={16} />}
                             title="Ver validaciones"
-                          >
-                            <FileText size={16} />
-                          </motion.button>
+                            color="text-blue-600 hover:bg-blue-50"
+                          />
 
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                          {/* Always allowed: Generate QR */}
+                          <ActionButton
                             onClick={() => handleGenerateQR(comercio)}
-                            className="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+                            icon={<QrCode size={16} />}
                             title="Generar QR"
-                          >
-                            <QrCode size={16} />
-                          </motion.button>
+                            color="text-indigo-600 hover:bg-indigo-50"
+                          />
                           
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                          {/* Permission-based: Edit */}
+                          <ActionButton
                             onClick={() => handleEdit(comercio)}
-                            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all duration-200"
+                            icon={<Edit size={16} />}
                             title="Editar"
-                          >
-                            <Edit size={16} />
-                          </motion.button>
+                            color="text-slate-600 hover:bg-slate-50"
+                            disabled={!comercio.permisos?.puedeEditar}
+                            disabledReason={comercio.permisos?.motivo || 'Sin permisos de edición'}
+                          />
 
-                          {comercio.estado === 'activo' ? (
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => handleStatusChange(comercio, 'inactivo')}
-                              className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-all duration-200"
-                              title="Desactivar"
-                            >
-                              <PowerOff size={16} />
-                            </motion.button>
-                          ) : (
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => handleStatusChange(comercio, 'activo')}
-                              className="p-2 text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 rounded-lg transition-all duration-200"
-                              title="Activar"
-                            >
-                              <Power size={16} />
-                            </motion.button>
+                          {/* Permission-based: Status change */}
+                          {comercio.permisos?.puedeEditar && (
+                            comercio.estado === 'activo' ? (
+                              <ActionButton
+                                onClick={() => handleStatusChange(comercio, 'inactivo')}
+                                icon={<PowerOff size={16} />}
+                                title="Desactivar"
+                                color="text-red-600 hover:bg-red-50"
+                              />
+                            ) : (
+                              <ActionButton
+                                onClick={() => handleStatusChange(comercio, 'activo')}
+                                icon={<Power size={16} />}
+                                title="Activar"
+                                color="text-emerald-600 hover:bg-emerald-50"
+                              />
+                            )
                           )}
                           
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                          {/* Always allowed: Unlink */}
+                          <ActionButton
                             onClick={() => setComercioToUnlink(comercio)}
-                            className="p-2 text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-lg transition-all duration-200"
+                            icon={<Unlink size={16} />}
                             title="Desvincular"
-                          >
-                            <Unlink size={16} />
-                          </motion.button>
+                            color="text-orange-600 hover:bg-orange-50"
+                          />
 
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                          {/* Permission-based: Delete */}
+                          <ActionButton
                             onClick={() => setComercioToDelete(comercio)}
-                            className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-all duration-200"
+                            icon={<Trash2 size={16} />}
                             title="Eliminar"
-                          >
-                            <Trash2 size={16} />
-                          </motion.button>
+                            color="text-red-600 hover:bg-red-50"
+                            disabled={!comercio.permisos?.puedeEliminar}
+                            disabledReason={comercio.permisos?.motivo || 'Sin permisos de eliminación'}
+                          />
                         </div>
                       </div>
                     </div>
@@ -1186,7 +1234,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                 ))}
               </div>
             ) : (
-              /* List View - Enhanced for mobile */
+              /* List View - Similar permission-aware structure */
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200">
                   <thead className="bg-slate-50">
@@ -1203,116 +1251,16 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                         Comercio
                       </th>
                       <th className="hidden md:table-cell px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Categoría
+                        Estado
                       </th>
                       <th className="hidden lg:table-cell px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                         Contacto
                       </th>
-                      <th className="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Estado
+                      <th className="hidden sm:table-cell px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        Beneficios
                       </th>
-                      <th className="hidden sm:table-cell px-3 lg:px-6 py-3 lg:py-4">
-                        <div className="max-w-xs">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center">
-                              <Gift className="w-3 h-3 lg:w-4 lg:h-4 text-purple-500 mr-2" />
-                              <span className="text-xs lg:text-sm font-semibold text-slate-900">
-                                Beneficios
-                              </span>
-                              <span className="text-xs text-slate-500 ml-1">activos</span>
-                            </div>
-                          </div>
-                        </div>
-                      </th>
-                      <th className="hidden xl:table-cell px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Calificación
-                      </th>
-                      <th className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center space-x-1">
-                          {/* Table header actions should not reference 'comercio' */}
-                          {/* <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleViewBeneficios(comercio)}
-                            className="p-1.5 lg:p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-all duration-200"
-                            title="Ver todos los beneficios"
-                          >
-                            <Eye size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button> */}
-
-                          {/* Table header actions should not reference 'comercio' */}
-                          {/* <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleViewValidations(comercio)}
-                            className="p-1.5 lg:p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                            title="Ver validaciones"
-                          >
-                            <FileText size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button>
-
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleGenerateQR(comercio)}
-                            className="p-1.5 lg:p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-all duration-200"
-                            title="Generar QR"
-                          >
-                            <QrCode size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button>
-                          
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleEdit(comercio)}
-                            className="p-1.5 lg:p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all duration-200"
-                            title="Editar"
-                          >
-                            <Edit size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button>
-
-                          {comercio.estado === 'activo' ? (
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => handleStatusChange(comercio, 'inactivo')}
-                              className="p-1.5 lg:p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-all duration-200"
-                              title="Desactivar"
-                            >
-                              <PowerOff size={14} className="lg:w-4 lg:h-4" />
-                            </motion.button>
-                          ) : (
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => handleStatusChange(comercio, 'activo')}
-                              className="p-1.5 lg:p-2 text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 rounded-lg transition-all duration-200"
-                              title="Activar"
-                            >
-                              <Power size={14} className="lg:w-4 lg:h-4" />
-                            </motion.button>
-                          )}
-                          
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setComercioToUnlink(comercio)}
-                            className="p-1.5 lg:p-2 text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-lg transition-all duration-200"
-                            title="Desvincular"
-                          >
-                            <Unlink size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button>
-
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setComercioToDelete(comercio)}
-                            className="p-1.5 lg:p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-all duration-200"
-                            title="Eliminar"
-                          >
-                            <Trash2 size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button> */}
-                        </div>
+                      <th className="px-3 lg:px-6 py-3 lg:py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        Acciones
                       </th>
                     </tr>
                   </thead>
@@ -1354,20 +1302,15 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                                 {comercio.nombreComercio}
                               </div>
                               <div className="text-xs text-slate-500">{comercio.nombre}</div>
-                              {/* Show category on mobile */}
-                              <div className="md:hidden">
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 mt-1">
-                                  {comercio.categoria}
-                                </span>
+                              <div className="md:hidden mt-1">
+                                <StatusBadge comercio={comercio} />
                               </div>
                             </div>
                           </div>
                         </td>
                         
                         <td className="hidden md:table-cell px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                            {comercio.categoria}
-                          </span>
+                          <StatusBadge comercio={comercio} />
                         </td>
                         
                         <td className="hidden lg:table-cell px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
@@ -1375,188 +1318,83 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                           <div className="text-sm text-slate-500">{comercio.telefono || 'Sin teléfono'}</div>
                         </td>
                         
-                        <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
-                          <div className="flex items-center space-x-2">
-                            <span className={`inline-flex items-center px-2 lg:px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(comercio.estado)}`}>
-                              {comercio.estado}
-                            </span>
-                            {comercio.verificado && (
-                              <Check className="w-3 h-3 lg:w-4 lg:h-4 text-emerald-600" />
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Benefits Column - FIXED WITH REAL COUNT */}
                         <td className="hidden sm:table-cell px-3 lg:px-6 py-3 lg:py-4">
-                          <div className="max-w-xs">
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center">
-                                <Gift className="w-3 h-3 lg:w-4 lg:h-4 text-purple-500 mr-2" />
-                                <span className="text-xs lg:text-sm font-semibold text-slate-900">
-                                  {comercio.beneficiosActivosReales || 0}
-                                </span>
-                                <span className="text-xs text-slate-500 ml-1">activos</span>
-                              </div>
-                              {comercio.beneficios && comercio.beneficios.length > 0 && (
-                                <motion.button
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
-                                  onClick={() => toggleBeneficios(comercio.id)}
-                                  className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition-all duration-200"
-                                >
-                                  {comercio.showBeneficios ? (
-                                    <ChevronUp className="w-3 h-3" />
-                                  ) : (
-                                    <ChevronDown className="w-3 h-3" />
-                                  )}
-                                </motion.button>
-                              )}
-                            </div>
-                            
-                            {comercio.loadingBeneficios ? (
-                              <div className="flex items-center py-2">
-                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-600"></div>
-                                <span className="ml-2 text-xs text-slate-500">Cargando...</span>
-                              </div>
-                            ) : comercio.beneficios && comercio.beneficios.length > 0 ? (
-                              <AnimatePresence>
-                                {comercio.showBeneficios && (
-                                  <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="space-y-2"
-                                  >
-                                    {comercio.beneficios.slice(0, 2).map((beneficio) => (
-                                      <div key={beneficio.id} className="text-xs bg-slate-50 p-2 rounded-lg border border-slate-200">
-                                        <div className="font-medium text-slate-900 truncate">
-                                          {beneficio.titulo}
-                                        </div>
-                                        <div className="text-emerald-600 font-bold">
-                                          {beneficio.tipo === 'porcentaje' ? `${beneficio.descuento}%` :
-                                           beneficio.tipo === 'monto_fijo' ? formatCurrency(beneficio.descuento) :
-                                           'Gratis'}
-                                        </div>
-                                      </div>
-                                    ))}
-                                    {(comercio.beneficiosActivosReales || 0) > 2 && (
-                                      <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => handleViewBeneficios(comercio)}
-                                        className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                                      >
-                                        +{(comercio.beneficiosActivosReales || 0) - 2} más
-                                      </motion.button>
-                                    )}
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            ) : (
-                              <span className="text-xs text-slate-400">Sin beneficios</span>
-                            )}
+                          <div className="flex items-center">
+                            <Gift className="w-4 h-4 text-purple-500 mr-2" />
+                            <span className="text-sm font-semibold text-slate-900">
+                              {comercio.beneficiosActivosReales || 0}
+                            </span>
+                            <span className="text-xs text-slate-500 ml-1">activos</span>
                           </div>
-                        </td>
-                        
-                        <td className="hidden xl:table-cell px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
-                          {comercio.puntuacion > 0 ? (
-                            <div className="flex items-center">
-                              <Star className="w-4 h-4 text-amber-400 fill-current mr-1" />
-                              <span className="text-sm text-slate-900 font-medium">
-                                {comercio.puntuacion.toFixed(1)}
-                              </span>
-                              <span className="text-sm text-slate-500 ml-1">
-                                ({comercio.totalReviews})
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-slate-500">Sin calificar</span>
-                          )}
                         </td>
                         
                         <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center space-x-1">
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
+                          <div className="flex items-center justify-end space-x-1">
+                            {/* Always allowed actions */}
+                            <ActionButton
                               onClick={() => handleViewBeneficios(comercio)}
-                              className="p-1.5 lg:p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-all duration-200"
-                              title="Ver todos los beneficios"
-                            >
-                              <Eye size={14} className="lg:w-4 lg:h-4" />
-                            </motion.button>
+                              icon={<Eye size={14} className="lg:w-4 lg:h-4" />}
+                              title="Ver beneficios"
+                              color="text-purple-600 hover:bg-purple-50"
+                            />
 
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
+                            <ActionButton
                               onClick={() => handleViewValidations(comercio)}
-                              className="p-1.5 lg:p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                              icon={<FileText size={14} className="lg:w-4 lg:h-4" />}
                               title="Ver validaciones"
-                            >
-                              <FileText size={14} className="lg:w-4 lg:h-4" />
-                            </motion.button>
+                              color="text-blue-600 hover:bg-blue-50"
+                            />
 
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
+                            <ActionButton
                               onClick={() => handleGenerateQR(comercio)}
-                              className="p-1.5 lg:p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+                              icon={<QrCode size={14} className="lg:w-4 lg:h-4" />}
                               title="Generar QR"
-                            >
-                              <QrCode size={14} className="lg:w-4 lg:h-4" />
-                            </motion.button>
+                              color="text-indigo-600 hover:bg-indigo-50"
+                            />
                             
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
+                            {/* Permission-based actions */}
+                            <ActionButton
                               onClick={() => handleEdit(comercio)}
-                              className="p-1.5 lg:p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all duration-200"
+                              icon={<Edit size={14} className="lg:w-4 lg:h-4" />}
                               title="Editar"
-                            >
-                              <Edit size={14} className="lg:w-4 lg:h-4" />
-                            </motion.button>
+                              color="text-slate-600 hover:bg-slate-50"
+                              disabled={!comercio.permisos?.puedeEditar}
+                              disabledReason={comercio.permisos?.motivo || 'Sin permisos de edición'}
+                            />
 
-                            {comercio.estado === 'activo' ? (
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => handleStatusChange(comercio, 'inactivo')}
-                                className="p-1.5 lg:p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-all duration-200"
-                                title="Desactivar"
-                              >
-                                <PowerOff size={14} className="lg:w-4 lg:h-4" />
-                              </motion.button>
-                            ) : (
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => handleStatusChange(comercio, 'activo')}
-                                className="p-1.5 lg:p-2 text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 rounded-lg transition-all duration-200"
-                                title="Activar"
-                              >
-                                <Power size={14} className="lg:w-4 lg:h-4" />
-                              </motion.button>
+                            {comercio.permisos?.puedeEditar && (
+                              comercio.estado === 'activo' ? (
+                                <ActionButton
+                                  onClick={() => handleStatusChange(comercio, 'inactivo')}
+                                  icon={<PowerOff size={14} className="lg:w-4 lg:h-4" />}
+                                  title="Desactivar"
+                                  color="text-red-600 hover:bg-red-50"
+                                />
+                              ) : (
+                                <ActionButton
+                                  onClick={() => handleStatusChange(comercio, 'activo')}
+                                  icon={<Power size={14} className="lg:w-4 lg:h-4" />}
+                                  title="Activar"
+                                  color="text-emerald-600 hover:bg-emerald-50"
+                                />
+                              )
                             )}
                             
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
+                            <ActionButton
                               onClick={() => setComercioToUnlink(comercio)}
-                              className="p-1.5 lg:p-2 text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-lg transition-all duration-200"
+                              icon={<Unlink size={14} className="lg:w-4 lg:h-4" />}
                               title="Desvincular"
-                            >
-                              <Unlink size={14} className="lg:w-4 lg:h-4" />
-                            </motion.button>
+                              color="text-orange-600 hover:bg-orange-50"
+                            />
 
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
+                            <ActionButton
                               onClick={() => setComercioToDelete(comercio)}
-                              className="p-1.5 lg:p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-all duration-200"
+                              icon={<Trash2 size={14} className="lg:w-4 lg:h-4" />}
                               title="Eliminar"
-                            >
-                              <Trash2 size={14} className="lg:w-4 lg:h-4" />
-                            </motion.button>
+                              color="text-red-600 hover:bg-red-50"
+                              disabled={!comercio.permisos?.puedeEliminar}
+                              disabledReason={comercio.permisos?.motivo || 'Sin permisos de eliminación'}
+                            />
                           </div>
                         </td>
                       </motion.tr>
@@ -1573,14 +1411,14 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
       <CreateComercioDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        onSubmit={createComercio}
+        onSubmit={(data) => createComercio(data, 'Te invitamos a formar parte de nuestra asociación')}
         loading={loading}
       />
 
       <VincularComercioDialog
         open={vincularDialogOpen}
         onClose={() => setVincularDialogOpen(false)}
-        onVincular={vincularComercio}
+        onVincular={(comercioId) => vincularComercio(comercioId, 'Te invitamos a formar parte de nuestra asociación')}
         onBuscar={buscarComercios}
         loading={loading}
       />
@@ -1681,11 +1519,10 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
         comercio={selectedComercioForBeneficios}
       />
 
-      {/* FIXED Unlink Confirmation Dialog - COMPLETELY CLEAR MODAL */}
+      {/* Enhanced Unlink Confirmation Dialog */}
       {comercioToUnlink && (
         <AnimatePresence>
           <div className="fixed inset-0 z-50 overflow-y-auto">
-            {/* Blurred backdrop only */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1694,7 +1531,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
               onClick={() => setComercioToUnlink(null)}
             />
 
-            {/* Clear, unblurred modal */}
             <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -1704,7 +1540,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                 className="relative inline-block align-bottom bg-white rounded-2xl lg:rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20"
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Header with gradient */}
                 <div className="relative bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 px-6 lg:px-8 py-4 lg:py-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3 lg:space-x-4">
@@ -1730,12 +1565,10 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                     </motion.button>
                   </div>
                   
-                  {/* Decorative elements */}
                   <div className="absolute top-0 right-0 w-24 h-24 lg:w-32 lg:h-32 bg-white/10 rounded-full -translate-y-12 lg:-translate-y-16 translate-x-12 lg:translate-x-16" />
                   <div className="absolute bottom-0 left-0 w-16 h-16 lg:w-24 lg:h-24 bg-white/10 rounded-full translate-y-8 lg:translate-y-12 -translate-x-8 lg:-translate-x-12" />
                 </div>
 
-                {/* Content */}
                 <div className="bg-white px-6 lg:px-8 py-4 lg:py-6">
                   <div className="text-center mb-4 lg:mb-6">
                     <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl lg:rounded-2xl flex items-center justify-center mx-auto mb-3 lg:mb-4">
@@ -1757,7 +1590,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                   </div>
                 </div>
 
-                {/* Footer */}
                 <div className="bg-slate-50 px-6 lg:px-8 py-4 lg:py-6 sm:flex sm:flex-row-reverse">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -1790,11 +1622,10 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
         </AnimatePresence>
       )}
 
-      {/* FIXED Delete Confirmation Dialog - COMPLETELY CLEAR MODAL */}
+      {/* Enhanced Delete Confirmation Dialog */}
       {comercioToDelete && (
         <AnimatePresence>
           <div className="fixed inset-0 z-50 overflow-y-auto">
-            {/* Blurred backdrop only */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1803,7 +1634,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
               onClick={() => setComercioToDelete(null)}
             />
 
-            {/* Clear, unblurred modal */}
             <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -1813,7 +1643,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                 className="relative inline-block align-bottom bg-white rounded-2xl lg:rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20"
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Header with gradient */}
                 <div className="relative bg-gradient-to-r from-red-500 via-red-600 to-red-700 px-6 lg:px-8 py-4 lg:py-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3 lg:space-x-4">
@@ -1839,12 +1668,10 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                     </motion.button>
                   </div>
                   
-                  {/* Decorative elements */}
                   <div className="absolute top-0 right-0 w-24 h-24 lg:w-32 lg:h-32 bg-white/10 rounded-full -translate-y-12 lg:-translate-y-16 translate-x-12 lg:translate-x-16" />
                   <div className="absolute bottom-0 left-0 w-16 h-16 lg:w-24 lg:h-24 bg-white/10 rounded-full translate-y-8 lg:translate-y-12 -translate-x-8 lg:-translate-x-12" />
                 </div>
 
-                {/* Content */}
                 <div className="bg-white px-6 lg:px-8 py-4 lg:py-6">
                   <div className="text-center mb-4 lg:mb-6">
                     <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-red-100 to-red-200 rounded-xl lg:rounded-2xl flex items-center justify-center mx-auto mb-3 lg:mb-4">
@@ -1867,7 +1694,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                   </div>
                 </div>
 
-                {/* Footer */}
                 <div className="bg-slate-50 px-6 lg:px-8 py-4 lg:py-6 sm:flex sm:flex-row-reverse">
                   <motion.button
                     whileHover={{ scale: 1.05 }}

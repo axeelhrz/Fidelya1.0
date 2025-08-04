@@ -9,7 +9,8 @@ import {
   Gift, 
   UserCheck,
   LogOut,
-  Zap
+  Zap,
+  User
 } from 'lucide-react';
 
 interface ComercioWelcomeCardProps {
@@ -104,18 +105,30 @@ export const ComercioWelcomeCard = memo<ComercioWelcomeCardProps>(({
     }
   ], [stats]);
 
-  // Handlers for button clicks
+  // Fixed handlers for button clicks
   const handleProfileClick = () => {
-    console.log('Profile button clicked'); // Debug log
-    if (onViewProfile) {
+    console.log('Profile button clicked - navigating to perfil'); // Debug log
+    if (onQuickAction) {
+      onQuickAction('perfil');
+    } else if (onViewProfile) {
       onViewProfile();
+    }
+    
+    // Also try to use the global navigation function if available
+    if (typeof window !== 'undefined' && (window as any).navigateToComercioTab) {
+      (window as any).navigateToComercioTab('perfil');
     }
   };
 
   const handleBeneficiosClick = () => {
-    console.log('Beneficios button clicked'); // Debug log
+    console.log('Beneficios button clicked - navigating to beneficios'); // Debug log
     if (onQuickAction) {
       onQuickAction('beneficios');
+    }
+    
+    // Also try to use the global navigation function if available
+    if (typeof window !== 'undefined' && (window as any).navigateToComercioTab) {
+      (window as any).navigateToComercioTab('beneficios');
     }
   };
 
@@ -185,18 +198,18 @@ export const ComercioWelcomeCard = memo<ComercioWelcomeCardProps>(({
             transition={{ delay: 0.4 }}
             className="flex items-center space-x-3"
           >
-            {/* Profile Button (Casa/Home) */}
+            {/* Profile Button (Fixed with User icon) */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleProfileClick}
               className="w-12 h-12 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-2xl flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all duration-200 shadow-lg hover:shadow-xl"
-              title="Ver Perfil"
+              title="Ver Perfil del Comercio"
             >
-              <Store className="w-5 h-5" />
+              <User className="w-5 h-5" />
             </motion.button>
             
-            {/* Beneficios Button */}
+            {/* Beneficios Button (Fixed) */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

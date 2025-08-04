@@ -13,11 +13,13 @@ import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 export const useComercios = () => {
   const { user } = useAuth();
   const [comerciosVinculados, setComerciossVinculados] = useState<ComercioDisponible[]>([]);
+  const [comerciosPendientes, setComerciosssPendientes] = useState<ComercioDisponible[]>([]);
   const [comerciosDisponibles, setComerciossDisponibles] = useState<ComercioDisponible[]>([]);
   const [solicitudesPendientes, setSolicitudesPendientes] = useState<SolicitudAdhesion[]>([]);
   const [stats, setStats] = useState<AdhesionStats>({
     totalComercios: 0,
     comerciosActivos: 0,
+    comerciosPendientesAprobacion: 0,
     solicitudesPendientes: 0,
     adhesionesEsteMes: 0,
     categorias: {},
@@ -40,12 +42,14 @@ export const useComercios = () => {
     setError('');
 
     try {
-      const [comerciosData, statsData] = await Promise.all([
+      const [comerciosData, pendientesData, statsData] = await Promise.all([
         adhesionService.getComerciossVinculados(asociacionId),
+        adhesionService.getComerciosssPendientesAprobacion(asociacionId),
         adhesionService.getAdhesionStats(asociacionId)
       ]);
 
       setComerciossVinculados(comerciosData);
+      setComerciosssPendientes(pendientesData);
       setStats(statsData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar comercios';
@@ -70,8 +74,8 @@ export const useComercios = () => {
     }
   }, [asociacionId]);
 
-  // Create new comercio
-  const createComercio = useCallback(async (data: ComercioFormData): Promise<boolean> => {
+  // Create new comercio with approval flow
+  const createComercio = useCallback(async (data: ComercioFormData, mensaje?: string): Promise<boolean> => {
     if (!asociacionId) {
       toast.error('No se pudo identificar la asociación');
       return false;
@@ -79,10 +83,49 @@ export const useComercios = () => {
 
     setLoading(true);
     try {
-      const comercioId = await comercioService.createComercio(data, asociacionId);
+      // Convertir ComercioFormData a ComercioDisponible
+      const comercioData: Omit<ComercioDisponible, 'id' | 'creadoEn' | 'actualizadoEn'> = {
+        nombreComercio: data.nombreComercio,
+        nombre: data.nombreComercio, // Usar nombreComercio como nombre por defecto
+        email: data.email,
+        categoria: data.categoria,
+        descripcion: data.descripcion,
+        direccion: data.direccion,
+        telefono: data.telefono,
+        sitioWeb: data.sitioWeb,
+        horario: data.horario,
+        cuit: data.cuit,
+        estado: 'pendiente_aprobacion',
+        estadoVinculacion: 'pendiente',
+        asociacionesVinculadas: [],
+        asociacionesPendientes: [asociacionId],
+        verificado: false,
+        puntuacion: 0,
+        totalReviews: 0,
+        beneficiosActivos: 0,
+        validacionesRealizadas: 0,
+        clientesAtendidos: 0,
+        ingresosMensuales: 0,
+        rating: 0,
+        visible: true,
+        configuracion: data.configuracion || {
+          notificacionesEmail: true,
+          notificacionesWhatsApp: false,
+          autoValidacion: false,
+          requiereAprobacion: true,
+        },
+        creadoPorAsociacion: asociacionId,
+        aprobadoPorComercio: false,
+      };
+
+      const comercioId = await adhesionService.crearComercioConAprobacion(
+        comercioData,
+        asociacionId,
+        mensaje
+      );
       
       if (comercioId) {
-        toast.success('Comercio creado exitosamente');
+        toast.success('Comercio creado. Se ha enviado una invitación para su aprobación.');
         await loadComercios(); // Reload the list
         return true;
       } else {
@@ -99,10 +142,23 @@ export const useComercios = () => {
     }
   }, [asociacionId, loadComercios]);
 
-  // Update comercio
+  // Update comercio (only if not approved)
   const updateComercio = useCallback(async (id: string, data: Partial<ComercioFormData>): Promise<boolean> => {
+    if (!asociacionId) {
+      toast.error('No se pudo identificar la asociación');
+      return false;
+    }
+
     setLoading(true);
     try {
+      // Verificar permisos antes de actualizar
+      const permisos = await adhesionService.verificarPermisosAsociacion(id, asociacionId);
+      
+      if (!permisos.puedeEditar) {
+        toast.error(permisos.motivo || 'No tienes permisos para editar este comercio');
+        return false;
+      }
+
       const success = await comercioService.updateComercio(id, data);
       
       if (success) {
@@ -121,12 +177,25 @@ export const useComercios = () => {
     } finally {
       setLoading(false);
     }
-  }, [loadComercios]);
+  }, [asociacionId, loadComercios]);
 
-  // Delete comercio (logical delete)
+  // Delete comercio (only if not approved)
   const deleteComercio = useCallback(async (id: string): Promise<boolean> => {
+    if (!asociacionId) {
+      toast.error('No se pudo identificar la asociación');
+      return false;
+    }
+
     setLoading(true);
     try {
+      // Verificar permisos antes de eliminar
+      const permisos = await adhesionService.verificarPermisosAsociacion(id, asociacionId);
+      
+      if (!permisos.puedeEliminar) {
+        toast.error(permisos.motivo || 'No tienes permisos para eliminar este comercio');
+        return false;
+      }
+
       const success = await comercioService.deleteComercio(id);
       
       if (success) {
@@ -145,12 +214,25 @@ export const useComercios = () => {
     } finally {
       setLoading(false);
     }
-  }, [loadComercios]);
+  }, [asociacionId, loadComercios]);
 
-  // Change comercio status
+  // Change comercio status (only if not approved)
   const changeComercioStatus = useCallback(async (id: string, estado: 'activo' | 'inactivo' | 'suspendido'): Promise<boolean> => {
+    if (!asociacionId) {
+      toast.error('No se pudo identificar la asociación');
+      return false;
+    }
+
     setLoading(true);
     try {
+      // Verificar permisos antes de cambiar estado
+      const permisos = await adhesionService.verificarPermisosAsociacion(id, asociacionId);
+      
+      if (!permisos.puedeEditar) {
+        toast.error(permisos.motivo || 'No tienes permisos para cambiar el estado de este comercio');
+        return false;
+      }
+
       const success = await comercioService.changeComercioStatus(id, estado);
       
       if (success) {
@@ -170,7 +252,7 @@ export const useComercios = () => {
     } finally {
       setLoading(false);
     }
-  }, [loadComercios]);
+  }, [asociacionId, loadComercios]);
 
   // Approve solicitud
   const aprobarSolicitud = useCallback(async (solicitudId: string): Promise<boolean> => {
@@ -246,8 +328,8 @@ export const useComercios = () => {
     }
   }, [asociacionId]);
 
-  // Vincular comercio
-  const vincularComercio = useCallback(async (comercioId: string): Promise<boolean> => {
+  // Vincular comercio (send invitation)
+  const vincularComercio = useCallback(async (comercioId: string, mensaje?: string): Promise<boolean> => {
     if (!asociacionId) {
       toast.error('No se pudo identificar la asociación');
       return false;
@@ -262,18 +344,18 @@ export const useComercios = () => {
         return false;
       }
 
-      const success = await adhesionService.vincularComercio(comercioId, asociacionId);
+      const success = await adhesionService.enviarInvitacionComercio(comercioId, asociacionId, mensaje);
       
       if (success) {
-        toast.success('Comercio vinculado exitosamente');
+        toast.success('Invitación enviada al comercio. Esperando aprobación.');
         await loadComercios(); // Reload the list
         return true;
       } else {
-        toast.error('Error al vincular el comercio');
+        toast.error('Error al enviar la invitación');
         return false;
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al vincular comercio';
+      const errorMessage = err instanceof Error ? err.message : 'Error al enviar invitación';
       setError(errorMessage);
       toast.error(errorMessage);
       return false;
@@ -282,7 +364,7 @@ export const useComercios = () => {
     }
   }, [asociacionId, loadComercios]);
 
-  // Desvincular comercio
+  // Desvincular comercio (always allowed)
   const desvincularComercio = useCallback(async (comercioId: string): Promise<boolean> => {
     if (!asociacionId) {
       toast.error('No se pudo identificar la asociación');
@@ -331,7 +413,29 @@ export const useComercios = () => {
     }
   }, [asociacionId]);
 
-  // Generate QR Code for comercio
+  // Check permissions for comercio
+  const checkPermissions = useCallback(async (comercioId: string) => {
+    if (!asociacionId) return {
+      puedeVer: false,
+      puedeEditar: false,
+      puedeEliminar: false,
+      puedeDesvincular: false
+    };
+
+    try {
+      return await adhesionService.verificarPermisosAsociacion(comercioId, asociacionId);
+    } catch (err) {
+      console.error('Error checking permissions:', err);
+      return {
+        puedeVer: false,
+        puedeEditar: false,
+        puedeEliminar: false,
+        puedeDesvincular: false
+      };
+    }
+  }, [asociacionId]);
+
+  // Generate QR Code for comercio (always allowed for viewing)
   const generateQRCode = useCallback(async (comercioId: string, beneficioId?: string): Promise<string | null> => {
     setLoading(true);
     try {
@@ -354,7 +458,7 @@ export const useComercios = () => {
     }
   }, []);
 
-  // Generate batch QR codes
+  // Generate batch QR codes (always allowed for viewing)
   const generateBatchQRCodes = useCallback(async (comercioIds: string[]): Promise<Array<{
     comercioId: string;
     nombreComercio: string;
@@ -381,7 +485,7 @@ export const useComercios = () => {
     }
   }, []);
 
-  // Get comercio validations
+  // Get comercio validations (always allowed for viewing)
   const getComercioValidations = useCallback(async (
     comercioId: string,
     filters: {
@@ -403,7 +507,7 @@ export const useComercios = () => {
     }
   }, []);
 
-  // Get active benefits for comercio
+  // Get active benefits for comercio (always allowed for viewing)
   const getActiveBenefits = useCallback(async (comercioId: string) => {
     try {
       return await comercioService.getActiveBenefits(comercioId);
@@ -449,6 +553,15 @@ export const useComercios = () => {
     );
     unsubscribers.push(unsubscribeComercios);
 
+    // Listen to comercios pendientes changes
+    const unsubscribePendientes = adhesionService.onComerciosPendientesChange(
+      asociacionId,
+      (comercios) => {
+        setComerciosssPendientes(comercios);
+      }
+    );
+    unsubscribers.push(unsubscribePendientes);
+
     // Listen to solicitudes pendientes changes
     const unsubscribeSolicitudes = adhesionService.onSolicitudesPendientesChange(
       asociacionId,
@@ -472,13 +585,14 @@ export const useComercios = () => {
   return {
     // Data
     comerciosVinculados,
+    comerciosPendientes, // New: comercios pending approval
     comerciosDisponibles,
     solicitudesPendientes,
     stats,
     loading,
     error,
     
-    // CRUD Actions
+    // CRUD Actions (with permission checks)
     createComercio,
     updateComercio,
     deleteComercio,
@@ -492,15 +606,18 @@ export const useComercios = () => {
     loadComercios,
     loadSolicitudesPendientes,
     buscarComercios,
-    vincularComercio,
+    vincularComercio, // Now sends invitation
     desvincularComercio,
     getComerciossDisponibles,
     
-    // QR Actions
+    // Permission checking
+    checkPermissions, // New: check what actions are allowed
+    
+    // QR Actions (always allowed for viewing)
     generateQRCode,
     generateBatchQRCodes,
     
-    // Validation Actions
+    // Validation Actions (always allowed for viewing)
     getComercioValidations,
     getActiveBenefits,
     
