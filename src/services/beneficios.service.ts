@@ -628,11 +628,11 @@ export class BeneficiosService {
       // Agregar campos opcionales solo si tienen valor
       const beneficioData: Record<string, unknown> = { ...beneficioDataBase };
 
-      if (data.limitePorSocio !== undefined && data.limitePorSocio > 0) {
+      if (data.limitePorSocio !== undefined && data.limitePorSocio !== null && data.limitePorSocio > 0) {
         beneficioData.limitePorSocio = data.limitePorSocio;
       }
 
-      if (data.limiteTotal !== undefined && data.limiteTotal > 0) {
+      if (data.limiteTotal !== undefined && data.limiteTotal !== null && data.limiteTotal > 0) {
         beneficioData.limiteTotal = data.limiteTotal;
       }
 
@@ -1552,4 +1552,3 @@ export class BeneficiosService {
 
 // Export singleton instance
 export default BeneficiosService;
-

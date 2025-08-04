@@ -729,7 +729,7 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
                         }
                       })}
                       type="number"
-                      placeholder="Ej: 1 (opcional)"
+                      placeholder="Ej: 1"
                       min="1"
                       error={errors.limitePorSocio?.message}
                     />
@@ -752,7 +752,7 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
                         }
                       })}
                       type="number"
-                      placeholder="Ej: 100 (opcional)"
+                      placeholder="Ej: 100"
                       min="1"
                       error={errors.limiteTotal?.message}
                     />
