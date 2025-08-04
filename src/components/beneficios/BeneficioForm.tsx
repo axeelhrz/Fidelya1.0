@@ -30,7 +30,7 @@ import BeneficiosService from '@/services/beneficios.service';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 
-// Schema de validación mejorado
+// Schema de validación corregido
 const beneficioSchema = z.object({
   titulo: z
     .string()
@@ -45,7 +45,7 @@ const beneficioSchema = z.object({
   tipo: z.enum(['porcentaje', 'monto_fijo', 'producto_gratis']),
   descuento: z
     .number()
-    .min(0, 'El descuento debe ser mayor a 0'),
+    .min(0, 'El descuento no puede ser negativo'),
   fechaInicio: z
     .date()
     .refine((date) => date >= new Date(new Date().setHours(0, 0, 0, 0)), {
@@ -95,12 +95,21 @@ const beneficioSchema = z.object({
   message: 'La fecha de fin debe ser posterior a la fecha de inicio',
   path: ['fechaFin']
 }).refine((data) => {
+  // Para producto gratis, el descuento puede ser 0
+  if (data.tipo === 'producto_gratis') {
+    return true;
+  }
+  // Para otros tipos, debe ser mayor a 0
+  if (data.descuento <= 0) {
+    return false;
+  }
+  // Para porcentaje, no puede ser mayor a 100
   if (data.tipo === 'porcentaje' && data.descuento > 100) {
     return false;
   }
   return true;
 }, {
-  message: 'El porcentaje no puede ser mayor a 100%',
+  message: 'El valor del descuento no es válido para el tipo seleccionado',
   path: ['descuento']
 });
 
@@ -298,6 +307,15 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
   const destacado = watch('destacado');
   const selectedAsociaciones = watch('asociacionesDisponibles') || [];
 
+  // Actualizar descuento cuando cambia el tipo
+  useEffect(() => {
+    if (selectedTipo === 'producto_gratis') {
+      setValue('descuento', 0);
+    } else if (watch('descuento') === 0) {
+      setValue('descuento', selectedTipo === 'porcentaje' ? 10 : 100);
+    }
+  }, [selectedTipo, setValue, watch]);
+
   // Cargar asociaciones disponibles para comercios
   useEffect(() => {
     const cargarAsociaciones = async () => {
@@ -341,7 +359,7 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
         titulo: '',
         descripcion: '',
         tipo: 'porcentaje',
-        descuento: 0,
+        descuento: 10,
         fechaInicio: new Date(),
         fechaFin: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         categoria: '',
@@ -548,7 +566,7 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
                       {...register('descuento', { valueAsNumber: true })}
                       type="number"
                       placeholder={tipoConfig.placeholder}
-                      min="0"
+                      min="0.01"
                       max={tipoConfig.maxValue}
                       step={selectedTipo === 'porcentaje' ? '0.1' : '1'}
                       error={errors.descuento?.message}
@@ -559,6 +577,20 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
                         <span className="text-2xl font-bold text-gray-500">{tipoConfig.suffix}</span>
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {selectedTipo === 'producto_gratis' && (
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                  <div className="flex items-center gap-3">
+                    <Gift className="w-8 h-8 text-purple-600" />
+                    <div>
+                      <h4 className="font-semibold text-purple-900 mb-1">Producto Gratis</h4>
+                      <p className="text-sm text-purple-700">
+                        El cliente recibirá el producto completamente gratis. No se requiere especificar un valor de descuento.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
