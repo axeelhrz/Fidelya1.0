@@ -721,7 +721,13 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
                       Límite por Socio
                     </label>
                     <Input
-                      {...register('limitePorSocio', { valueAsNumber: true })}
+                      {...register('limitePorSocio', { 
+                        setValueAs: (value) => {
+                          if (value === '' || value === null || value === undefined) return undefined;
+                          const num = Number(value);
+                          return isNaN(num) ? undefined : num;
+                        }
+                      })}
                       type="number"
                       placeholder="Ej: 1 (opcional)"
                       min="1"
@@ -738,7 +744,13 @@ export const BeneficioForm: React.FC<BeneficioFormProps> = ({
                       Límite Total
                     </label>
                     <Input
-                      {...register('limiteTotal', { valueAsNumber: true })}
+                      {...register('limiteTotal', { 
+                        setValueAs: (value) => {
+                          if (value === '' || value === null || value === undefined) return undefined;
+                          const num = Number(value);
+                          return isNaN(num) ? undefined : num;
+                        }
+                      })}
                       type="number"
                       placeholder="Ej: 100 (opcional)"
                       min="1"
