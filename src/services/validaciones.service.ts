@@ -10,6 +10,9 @@ import {
   runTransaction,
   limit,
   Timestamp,
+  onSnapshot,
+  QuerySnapshot,
+  DocumentData,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/constants';
@@ -75,6 +78,10 @@ export interface HistorialValidacion {
   notas?: string;
 }
 
+// Event listeners para sincronización en tiempo real
+type ValidationListener = (validaciones: HistorialValidacion[]) => void;
+const validationListeners = new Map<string, ValidationListener>();
+
 class ValidacionesService {
   private readonly collection = COLLECTIONS.VALIDACIONES;
   private readonly sociosCollection = COLLECTIONS.SOCIOS;
@@ -129,17 +136,6 @@ class ValidacionesService {
 
         if (comercioData.estado !== 'activo') {
           throw new Error(`Este comercio está ${comercioData.estado} y no puede procesar validaciones`);
-        }
-
-        // Check business hours if available
-        if (comercioData.horarios) {
-          const now = new Date();
-          const currentDay = now.getDay();
-          
-          // Simple business hours check (can be enhanced)
-          if (comercioData.horarios.cerrado && comercioData.horarios.cerrado.includes(currentDay)) {
-            throw new Error('El comercio está cerrado en este momento');
-          }
         }
 
         // 3. Enhanced benefit validation
@@ -337,6 +333,7 @@ class ValidacionesService {
           comercioNombre: comercioData.nombreComercio,
           comercioCategoria: comercioData.categoria,
           comercioDireccion: comercioData.direccion,
+          comercioLogo: comercioData.logo,
           
           // Benefit info
           beneficioId: selectedBeneficio.id,
@@ -400,6 +397,9 @@ class ValidacionesService {
       });
 
       console.log('✅ Enhanced validation successful:', result.validacionId);
+
+      // Trigger real-time updates
+      this.notifyValidationListeners(request.socioId, request.comercioId);
 
       return {
         success: true,
@@ -518,6 +518,144 @@ class ValidacionesService {
   }
 
   /**
+   * Get validaciones for comercio
+   */
+  async getValidacionesComercio(
+    comercioId: string,
+    maxResults: number = 50,
+    lastDoc?: import('firebase/firestore').DocumentSnapshot
+  ): Promise<{ validaciones: HistorialValidacion[]; hasMore: boolean; lastDoc: import('firebase/firestore').DocumentSnapshot | null }> {
+    try {
+      let q = query(
+        collection(db, this.collection),
+        where('comercioId', '==', comercioId),
+        orderBy('fechaValidacion', 'desc'),
+        limit(maxResults + 1)
+      );
+
+      if (lastDoc) {
+        q = query(q, limit(maxResults + 1));
+      }
+
+      const snapshot = await getDocs(q);
+      const docs = snapshot.docs;
+      const hasMore = docs.length > maxResults;
+
+      if (hasMore) {
+        docs.pop();
+      }
+
+      const validaciones = docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          comercioId: data.comercioId,
+          comercioNombre: data.comercioNombre,
+          comercioLogo: data.comercioLogo,
+          beneficioId: data.beneficioId,
+          beneficioTitulo: data.beneficioTitulo,
+          beneficioDescripcion: data.beneficioDescripcion,
+          descuento: data.descuento,
+          tipoDescuento: data.tipoDescuento,
+          fechaValidacion: data.fechaValidacion?.toDate() || new Date(),
+          montoDescuento: data.montoDescuento || 0,
+          estado: data.estado || 'exitosa',
+          codigoValidacion: data.codigoValidacion,
+          metodoPago: data.metodoPago,
+          notas: data.notas,
+        } as HistorialValidacion;
+      });
+
+      return {
+        validaciones,
+        hasMore,
+        lastDoc: docs.length > 0 ? docs[docs.length - 1] : null
+      };
+    } catch (error) {
+      console.error('Error getting comercio validations:', error);
+      handleError(error, 'Get Validaciones Comercio');
+      return { validaciones: [], hasMore: false, lastDoc: null };
+    }
+  }
+
+  /**
+   * Real-time listener for validaciones
+   */
+  subscribeToValidaciones(
+    userId: string,
+    userType: 'socio' | 'comercio',
+    callback: ValidationListener
+  ): () => void {
+    const listenerId = `${userType}_${userId}`;
+    validationListeners.set(listenerId, callback);
+
+    const q = query(
+      collection(db, this.collection),
+      where(userType === 'socio' ? 'socioId' : 'comercioId', '==', userId),
+      orderBy('fechaValidacion', 'desc'),
+      limit(50)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot: QuerySnapshot<DocumentData>) => {
+      const validaciones = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          comercioId: data.comercioId,
+          comercioNombre: data.comercioNombre,
+          comercioLogo: data.comercioLogo,
+          beneficioId: data.beneficioId,
+          beneficioTitulo: data.beneficioTitulo,
+          beneficioDescripcion: data.beneficioDescripcion,
+          descuento: data.descuento,
+          tipoDescuento: data.tipoDescuento,
+          fechaValidacion: data.fechaValidacion?.toDate() || new Date(),
+          montoDescuento: data.montoDescuento || 0,
+          estado: data.estado || 'exitosa',
+          codigoValidacion: data.codigoValidacion,
+          metodoPago: data.metodoPago,
+          notas: data.notas,
+        } as HistorialValidacion;
+      });
+
+      callback(validaciones);
+    }, (error) => {
+      console.error('Error in validaciones subscription:', error);
+    });
+
+    return () => {
+      validationListeners.delete(listenerId);
+      unsubscribe();
+    };
+  }
+
+  /**
+   * Notify listeners of validation changes
+   */
+  private async notifyValidationListeners(socioId: string, comercioId: string) {
+    // Force refresh for both socio and comercio
+    setTimeout(async () => {
+      try {
+        // Refresh socio data
+        const socioValidaciones = await this.getHistorialValidaciones(socioId, 50);
+        const socioListener = validationListeners.get(`socio_${socioId}`);
+        if (socioListener) {
+          socioListener(socioValidaciones.validaciones);
+        }
+
+        // Refresh comercio data
+        const comercioValidaciones = await this.getValidacionesComercio(comercioId, 50);
+        const comercioListener = validationListeners.get(`comercio_${comercioId}`);
+        if (comercioListener) {
+          comercioListener(comercioValidaciones.validaciones);
+        }
+      } catch (error) {
+        console.error('Error notifying listeners:', error);
+      }
+    }, 1000); // Wait 1 second for Firestore to propagate
+  }
+
+  /**
    * Enhanced QR parsing with better format support
    */
   parseQRData(qrData: string): { comercioId: string; beneficioId?: string } | null {
@@ -625,12 +763,12 @@ class ValidacionesService {
         id: doc.id,
         ...doc.data(),
         fechaValidacion: doc.data().fechaValidacion?.toDate() || new Date(),
-        estado: doc.data().estado, // Ensure 'estado' is present
-        montoDescuento: doc.data().montoDescuento, // Ensure 'montoDescuento' is present
-        beneficioId: doc.data().beneficioId, // Ensure 'beneficioId' is present
-        beneficioTitulo: doc.data().beneficioTitulo, // Add beneficioTitulo if present
-        comercioId: doc.data().comercioId, // Ensure 'comercioId' is present
-        comercioNombre: doc.data().comercioNombre // Optionally add comercioNombre if used later
+        estado: doc.data().estado,
+        montoDescuento: doc.data().montoDescuento,
+        beneficioId: doc.data().beneficioId,
+        beneficioTitulo: doc.data().beneficioTitulo,
+        comercioId: doc.data().comercioId,
+        comercioNombre: doc.data().comercioNombre
       }));
 
       const validacionesExitosas = validaciones.filter(v => v.estado === 'exitosa');

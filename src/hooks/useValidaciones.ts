@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { DocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { useAuth } from './useAuth';
 import { validacionesService, HistorialValidacion } from '@/services/validaciones.service';
@@ -25,6 +25,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [lastDoc, setLastDoc] = useState<DocumentSnapshot<DocumentData> | undefined>(undefined);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   // Transform HistorialValidacion to Validacion
   const transformHistorialToValidacion = useCallback((historial: HistorialValidacion): Validacion => {
@@ -66,11 +67,21 @@ export const useValidaciones = (): UseValidacionesReturn => {
       setLoading(true);
       setError(null);
       
-      const result = await validacionesService.getHistorialValidaciones(
-        user.uid, 
-        20, // Load 20 items at a time
-        reset ? undefined : lastDoc
-      );
+      // Determine user type and get appropriate validaciones
+      let result;
+      if (user.role === 'comercio') {
+        result = await validacionesService.getValidacionesComercio(
+          user.uid, 
+          20, // Load 20 items at a time
+          reset ? undefined : lastDoc
+        );
+      } else {
+        result = await validacionesService.getHistorialValidaciones(
+          user.uid, 
+          20, // Load 20 items at a time
+          reset ? undefined : lastDoc
+        );
+      }
       
       // Transform HistorialValidacion[] to Validacion[]
       const transformedValidaciones = result.validaciones.map(transformHistorialToValidacion);
@@ -143,7 +154,7 @@ export const useValidaciones = (): UseValidacionesReturn => {
       if (result.success) {
         setTimeout(() => {
           refrescar();
-        }, 1000);
+        }, 2000); // Wait 2 seconds for data to propagate
       }
 
       return transformedResult;
@@ -189,11 +200,36 @@ export const useValidaciones = (): UseValidacionesReturn => {
     return stats;
   }, [validaciones]);
 
+  // Set up real-time subscription
   useEffect(() => {
     if (user) {
+      // Clean up previous subscription
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+
+      // Set up new subscription
+      const userType = user.role === 'comercio' ? 'comercio' : 'socio';
+      unsubscribeRef.current = validacionesService.subscribeToValidaciones(
+        user.uid,
+        userType,
+        (newValidaciones) => {
+          const transformedValidaciones = newValidaciones.map(transformHistorialToValidacion);
+          setValidaciones(transformedValidaciones);
+          setLoading(false);
+        }
+      );
+
+      // Initial load
       cargarValidaciones(true);
     }
-  }, [user, cargarValidaciones]);
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+    };
+  }, [user, cargarValidaciones, transformHistorialToValidacion]);
 
   return {
     validaciones,
