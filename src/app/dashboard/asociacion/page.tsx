@@ -11,7 +11,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useBeneficios } from '@/hooks/useBeneficios';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { OptimizedOverviewDashboard } from '@/components/asociacion/OptimizedOverviewDashboard';
+import OptimizedOverviewDashboard from '@/components/asociacion/OptimizedOverviewDashboard';
 
 const AsociacionDashboardPage: React.FC = () => {
   const { user } = useAuth();
