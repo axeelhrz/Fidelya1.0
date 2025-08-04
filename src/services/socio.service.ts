@@ -13,6 +13,7 @@ import {
   serverTimestamp,
   writeBatch,
   Timestamp,
+  FieldValue,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/constants';
@@ -319,7 +320,7 @@ class SocioService {
    */
   async updateSocio(id: string, data: Partial<SocioFormData>): Promise<boolean> {
     try {
-      const updateData: Record<string, unknown> = {
+      const updateData: { [key: string]: FieldValue | string | number | Timestamp | undefined } = {
         actualizadoEn: serverTimestamp(),
       };
 
@@ -357,10 +358,7 @@ class SocioService {
         updateData.email = data.email.toLowerCase();
       }
 
-      await updateDoc(
-        doc(db, this.collection, id),
-        updateData as Partial<SocioFormData> & { actualizadoEn: import('firebase/firestore').FieldValue; estadoMembresia?: string }
-      );
+      await updateDoc(doc(db, this.collection, id), updateData);
 
       console.log('✅ Socio updated successfully:', id);
       return true;
@@ -401,7 +399,7 @@ class SocioService {
           }
 
           // Preparar datos de actualización
-          const updateData: Record<string, unknown> = {
+          const updateData: { [key: string]: FieldValue | string | number | Timestamp | undefined } = {
             actualizadoEn: serverTimestamp(),
           };
 

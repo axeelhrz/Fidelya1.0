@@ -1,19 +1,12 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { 
-  UserPlus,
-} from 'lucide-react';
 
 interface AddRegisteredSocioButtonProps {
   onSocioAdded?: () => void;
-  className?: string;
 }
 
-export const AddRegisteredSocioButton: React.FC<AddRegisteredSocioButtonProps> = ({
-  className = ""
-}) => {
+export const AddRegisteredSocioButton: React.FC<AddRegisteredSocioButtonProps> = () => {
   
   // Retornar null para no mostrar el botón
   // Esta funcionalidad ha sido eliminada según los requerimientos del usuario
