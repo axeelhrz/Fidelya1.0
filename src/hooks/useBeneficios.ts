@@ -1,12 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
-import { BeneficiosService } from '@/services/beneficios.service';
 import { validacionesService } from '@/services/validaciones.service';
 import { Beneficio, BeneficioFormData, BeneficioUso } from '@/types/beneficio';
 import toast from 'react-hot-toast';
-
-// Create instance of the service
-const beneficiosService = new BeneficiosService();
 
 interface UseBeneficiosReturn {
   beneficios: Beneficio[];
@@ -42,7 +38,7 @@ export const useBeneficios = (): UseBeneficiosReturn => {
       setError(null);
 
       if (user.role === 'socio') {
-        // Load beneficios usados for socio
+        // Load beneficios usados for socio from validaciones
         const historialResult = await validacionesService.getHistorialValidaciones(user.uid, 100);
         
         const beneficiosUsadosData: BeneficioUso[] = historialResult.validaciones.map(validacion => ({
@@ -58,17 +54,12 @@ export const useBeneficios = (): UseBeneficiosReturn => {
         }));
 
         setBeneficiosUsados(beneficiosUsadosData);
+        setBeneficios([]); // Socios don't create beneficios
         
-        // Also load available beneficios
-        const beneficiosDisponibles = await beneficiosService.getBeneficiosDisponibles(user.uid, user.asociacionId);
-        setBeneficios(beneficiosDisponibles);
       } else if (user.role === 'comercio') {
-        // Load beneficios created by comercio
-        const beneficiosComercio = await beneficiosService.getBeneficiosByComercio(user.uid);
-        setBeneficios(beneficiosComercio);
-        
-        // Load usage history
+        // For comercio, we'll load from validaciones as well since we don't have a beneficios service
         const validacionesResult = await validacionesService.getValidacionesComercio(user.uid, 100);
+        
         const beneficiosUsadosData: BeneficioUso[] = validacionesResult.validaciones.map(validacion => ({
           id: validacion.id,
           beneficioId: validacion.beneficioId,
@@ -80,7 +71,9 @@ export const useBeneficios = (): UseBeneficiosReturn => {
           detalles: validacion.beneficioTitulo,
           codigoValidacion: validacion.codigoValidacion
         }));
+        
         setBeneficiosUsados(beneficiosUsadosData);
+        setBeneficios([]); // We'll implement this when we have the beneficios service
       }
     } catch (err) {
       console.error('Error loading beneficios:', err);
@@ -97,26 +90,15 @@ export const useBeneficios = (): UseBeneficiosReturn => {
     }
 
     try {
-      const success = await beneficiosService.crearBeneficio({
-        ...data,
-        comercioId: user.uid,
-        comercioNombre: user.nombre || 'Comercio',
-      });
-
-      if (success) {
-        toast.success('Beneficio creado exitosamente');
-        await cargarBeneficios(); // Refresh data
-        return true;
-      } else {
-        toast.error('Error al crear el beneficio');
-        return false;
-      }
+      // TODO: Implement when beneficios service is available
+      toast.error('Funcionalidad en desarrollo');
+      return false;
     } catch (error) {
       console.error('Error creating beneficio:', error);
       toast.error('Error al crear el beneficio');
       return false;
     }
-  }, [user, cargarBeneficios]);
+  }, [user]);
 
   const actualizarBeneficio = useCallback(async (id: string, data: Partial<BeneficioFormData>): Promise<boolean> => {
     if (!user || user.role !== 'comercio') {
@@ -125,22 +107,15 @@ export const useBeneficios = (): UseBeneficiosReturn => {
     }
 
     try {
-      const success = await beneficiosService.actualizarBeneficio(id, data);
-
-      if (success) {
-        toast.success('Beneficio actualizado exitosamente');
-        await cargarBeneficios(); // Refresh data
-        return true;
-      } else {
-        toast.error('Error al actualizar el beneficio');
-        return false;
-      }
+      // TODO: Implement when beneficios service is available
+      toast.error('Funcionalidad en desarrollo');
+      return false;
     } catch (error) {
       console.error('Error updating beneficio:', error);
       toast.error('Error al actualizar el beneficio');
       return false;
     }
-  }, [user, cargarBeneficios]);
+  }, [user]);
 
   const eliminarBeneficio = useCallback(async (id: string): Promise<boolean> => {
     if (!user || user.role !== 'comercio') {
@@ -149,22 +124,15 @@ export const useBeneficios = (): UseBeneficiosReturn => {
     }
 
     try {
-      const success = await beneficiosService.eliminarBeneficio(id);
-
-      if (success) {
-        toast.success('Beneficio eliminado exitosamente');
-        await cargarBeneficios(); // Refresh data
-        return true;
-      } else {
-        toast.error('Error al eliminar el beneficio');
-        return false;
-      }
+      // TODO: Implement when beneficios service is available
+      toast.error('Funcionalidad en desarrollo');
+      return false;
     } catch (error) {
       console.error('Error deleting beneficio:', error);
       toast.error('Error al eliminar el beneficio');
       return false;
     }
-  }, [user, cargarBeneficios]);
+  }, [user]);
 
   const cambiarEstadoBeneficio = useCallback(async (id: string, estado: string): Promise<boolean> => {
     if (!user || user.role !== 'comercio') {
@@ -173,22 +141,15 @@ export const useBeneficios = (): UseBeneficiosReturn => {
     }
 
     try {
-      const success = await beneficiosService.cambiarEstadoBeneficio(id, estado);
-
-      if (success) {
-        toast.success(`Beneficio ${estado === 'activo' ? 'activado' : 'desactivado'} exitosamente`);
-        await cargarBeneficios(); // Refresh data
-        return true;
-      } else {
-        toast.error('Error al cambiar el estado del beneficio');
-        return false;
-      }
+      // TODO: Implement when beneficios service is available
+      toast.error('Funcionalidad en desarrollo');
+      return false;
     } catch (error) {
       console.error('Error changing beneficio status:', error);
       toast.error('Error al cambiar el estado del beneficio');
       return false;
     }
-  }, [user, cargarBeneficios]);
+  }, [user]);
 
   const refrescar = useCallback(async () => {
     await cargarBeneficios();
