@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
-import { beneficiosService, BeneficioUso } from '@/services/beneficios.service';
+import { BeneficiosService, BeneficioUso } from '@/services/beneficios.service';
 import { validacionesService } from '@/services/validaciones.service';
 import { Beneficio, BeneficioFormData } from '@/types/beneficio';
 import toast from 'react-hot-toast';
+
+// Create instance of the service
+const beneficiosService = new BeneficiosService();
 
 interface UseBeneficiosReturn {
   beneficios: Beneficio[];
