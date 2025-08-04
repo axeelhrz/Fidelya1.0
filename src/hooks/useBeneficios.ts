@@ -1,13 +1,38 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { validacionesService } from '@/services/validaciones.service';
-import { Beneficio, BeneficioFormData, BeneficioUso } from '@/types/beneficio';
+import { Beneficio, BeneficioFormData } from '@/types/beneficio';
 import { Timestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
+// Define a local interface that matches what we can provide
+interface BeneficioUsoLocal {
+  id: string;
+  beneficioId: string;
+  beneficioTitulo: string;
+  beneficioDescripcion: string;
+  comercioId: string;
+  comercioNombre: string;
+  comercioLogo?: string;
+  socioId: string;
+  socioNombre: string;
+  socioEmail: string;
+  asociacionId?: string | null;
+  asociacionNombre?: string | null;
+  fechaUso: Timestamp;
+  montoDescuento: number;
+  descuento: number;
+  tipoDescuento: string;
+  estado: 'usado' | 'cancelado' | 'pendiente' | 'vencido';
+  detalles: string;
+  codigoValidacion: string;
+  metodoPago?: string;
+  notas?: string | null;
+}
+
 interface UseBeneficiosReturn {
   beneficios: Beneficio[];
-  beneficiosUsados: BeneficioUso[];
+  beneficiosUsados: BeneficioUsoLocal[];
   loading: boolean;
   error: string | null;
   crearBeneficio: (data: BeneficioFormData) => Promise<boolean>;
@@ -21,7 +46,7 @@ interface UseBeneficiosReturn {
 export const useBeneficios = (): UseBeneficiosReturn => {
   const { user } = useAuth();
   const [beneficios, setBeneficios] = useState<Beneficio[]>([]);
-  const [beneficiosUsados, setBeneficiosUsados] = useState<BeneficioUso[]>([]);
+  const [beneficiosUsados, setBeneficiosUsados] = useState<BeneficioUsoLocal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
@@ -42,13 +67,13 @@ export const useBeneficios = (): UseBeneficiosReturn => {
         // Load beneficios usados for socio from validaciones
         const historialResult = await validacionesService.getHistorialValidaciones(user.uid, 100);
         
-        const beneficiosUsadosData: BeneficioUso[] = historialResult.validaciones.map(validacion => ({
+        const beneficiosUsadosData: BeneficioUsoLocal[] = historialResult.validaciones.map(validacion => ({
           id: validacion.id,
           beneficioId: validacion.beneficioId,
-          beneficioTitulo: validacion.beneficioTitulo,
-          beneficioDescripcion: validacion.beneficioDescripcion,
+          beneficioTitulo: validacion.beneficioTitulo || 'Beneficio',
+          beneficioDescripcion: validacion.beneficioDescripcion || '',
           comercioId: validacion.comercioId,
-          comercioNombre: validacion.comercioNombre,
+          comercioNombre: validacion.comercioNombre || 'Comercio',
           comercioLogo: validacion.comercioLogo,
           socioId: user.uid,
           socioNombre: user.nombre || 'Usuario',
@@ -56,12 +81,12 @@ export const useBeneficios = (): UseBeneficiosReturn => {
           asociacionId: user.asociacionId || null,
           asociacionNombre: user.asociacionNombre || null,
           fechaUso: Timestamp.fromDate(validacion.fechaValidacion),
-          montoDescuento: validacion.montoDescuento,
-          descuento: validacion.descuento,
-          tipoDescuento: validacion.tipoDescuento,
+          montoDescuento: validacion.montoDescuento || 0,
+          descuento: validacion.descuento || 0,
+          tipoDescuento: validacion.tipoDescuento || 'porcentaje',
           estado: validacion.estado === 'exitosa' ? 'usado' : 'cancelado',
-          detalles: validacion.beneficioTitulo,
-          codigoValidacion: validacion.codigoValidacion,
+          detalles: validacion.beneficioTitulo || 'Beneficio utilizado',
+          codigoValidacion: validacion.codigoValidacion || '',
           metodoPago: 'efectivo',
           notas: null
         }));
@@ -73,26 +98,26 @@ export const useBeneficios = (): UseBeneficiosReturn => {
         // For comercio, we'll load from validaciones as well
         const validacionesResult = await validacionesService.getValidacionesComercio(user.uid, 100);
         
-        const beneficiosUsadosData: BeneficioUso[] = validacionesResult.validaciones.map(validacion => ({
+        const beneficiosUsadosData: BeneficioUsoLocal[] = validacionesResult.validaciones.map(validacion => ({
           id: validacion.id,
           beneficioId: validacion.beneficioId,
-          beneficioTitulo: validacion.beneficioTitulo,
-          beneficioDescripcion: validacion.beneficioDescripcion,
+          beneficioTitulo: validacion.beneficioTitulo || 'Beneficio',
+          beneficioDescripcion: validacion.beneficioDescripcion || '',
           comercioId: validacion.comercioId,
-          comercioNombre: validacion.comercioNombre,
+          comercioNombre: validacion.comercioNombre || 'Comercio',
           comercioLogo: validacion.comercioLogo,
-          socioId: validacion.id, // Using validation id as socio reference
+          socioId: 'socio-' + validacion.id, // Generate a socio ID
           socioNombre: 'Socio',
           socioEmail: '',
           asociacionId: null,
           asociacionNombre: null,
           fechaUso: Timestamp.fromDate(validacion.fechaValidacion),
-          montoDescuento: validacion.montoDescuento,
-          descuento: validacion.descuento,
-          tipoDescuento: validacion.tipoDescuento,
+          montoDescuento: validacion.montoDescuento || 0,
+          descuento: validacion.descuento || 0,
+          tipoDescuento: validacion.tipoDescuento || 'porcentaje',
           estado: validacion.estado === 'exitosa' ? 'usado' : 'cancelado',
-          detalles: validacion.beneficioTitulo,
-          codigoValidacion: validacion.codigoValidacion,
+          detalles: validacion.beneficioTitulo || 'Beneficio utilizado',
+          codigoValidacion: validacion.codigoValidacion || '',
           metodoPago: 'efectivo',
           notas: null
         }));
@@ -199,26 +224,26 @@ export const useBeneficios = (): UseBeneficiosReturn => {
         userType,
         (newValidaciones) => {
           // Update beneficiosUsados when validaciones change
-          const beneficiosUsadosData: BeneficioUso[] = newValidaciones.map(validacion => ({
+          const beneficiosUsadosData: BeneficioUsoLocal[] = newValidaciones.map(validacion => ({
             id: validacion.id,
             beneficioId: validacion.beneficioId,
-            beneficioTitulo: validacion.beneficioTitulo,
-            beneficioDescripcion: validacion.beneficioDescripcion,
+            beneficioTitulo: validacion.beneficioTitulo || 'Beneficio',
+            beneficioDescripcion: validacion.beneficioDescripcion || '',
             comercioId: validacion.comercioId,
-            comercioNombre: validacion.comercioNombre,
+            comercioNombre: validacion.comercioNombre || 'Comercio',
             comercioLogo: validacion.comercioLogo,
-            socioId: user.role === 'socio' ? user.uid : validacion.id,
+            socioId: user.role === 'socio' ? user.uid : ('socio-' + validacion.id),
             socioNombre: user.role === 'socio' ? (user.nombre || 'Usuario') : 'Socio',
             socioEmail: user.role === 'socio' ? (user.email || '') : '',
             asociacionId: user.role === 'socio' ? (user.asociacionId || null) : null,
             asociacionNombre: user.role === 'socio' ? (user.asociacionNombre || null) : null,
             fechaUso: Timestamp.fromDate(validacion.fechaValidacion),
-            montoDescuento: validacion.montoDescuento,
-            descuento: validacion.descuento,
-            tipoDescuento: validacion.tipoDescuento,
+            montoDescuento: validacion.montoDescuento || 0,
+            descuento: validacion.descuento || 0,
+            tipoDescuento: validacion.tipoDescuento || 'porcentaje',
             estado: validacion.estado === 'exitosa' ? 'usado' : 'cancelado',
-            detalles: validacion.beneficioTitulo,
-            codigoValidacion: validacion.codigoValidacion,
+            detalles: validacion.beneficioTitulo || 'Beneficio utilizado',
+            codigoValidacion: validacion.codigoValidacion || '',
             metodoPago: 'efectivo',
             notas: null
           }));
