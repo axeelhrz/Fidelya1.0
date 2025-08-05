@@ -5596,3 +5596,274 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
         animation: none !important;
     }
 }
+/* ===== AGREGAR AL FINAL DEL CSS - EFECTO PULSE EXACTO ===== */
+
+/* Animación de pulse exacta como la solicitada */
+@keyframes pulseOut {
+    0% {
+        transform: translate(-50%, -50%) scale(1) !important;
+        opacity: 1 !important;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.5) !important;
+        opacity: 0 !important;
+    }
+}
+
+/* RESETEAR EFECTOS EXISTENTES Y APLICAR SOLO PULSE */
+.btn--cta,
+.btn--footer,
+.nav__drawer-cta-btn,
+.videos__cta-buttons .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    animation: none !important;
+}
+
+/* ELIMINAR TODOS LOS PSEUDO-ELEMENTOS EXISTENTES */
+.btn--cta::before,
+.btn--cta::after,
+.btn--footer::before,
+.btn--footer::after,
+.nav__drawer-cta-btn::before,
+.nav__drawer-cta-btn::after,
+.videos__cta-buttons .btn--cta::before,
+.videos__cta-buttons .btn--cta::after,
+.hero__cta-main .btn--cta::before,
+.hero__cta-main .btn--cta::after {
+    content: none !important;
+    display: none !important;
+    animation: none !important;
+}
+
+/* APLICAR EFECTO PULSE CON ::before Y ::after */
+
+/* Primer pulse */
+.btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.8) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+/* Segundo pulse con delay */
+.btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    animation-delay: 0.5s !important;
+    display: block !important;
+}
+
+/* Efectos para botón footer */
+.btn--footer::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 255, 255, 0.7) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: pulseOut 2.2s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.btn--footer::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.5) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: pulseOut 2.2s ease-out infinite !important;
+    animation-delay: 0.55s !important;
+    display: block !important;
+}
+
+/* Efectos para botón del drawer móvil */
+.nav__drawer-cta-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 255, 255, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: pulseOut 1.8s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.nav__drawer-cta-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 69, 105, 0.5) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: pulseOut 1.8s ease-out infinite !important;
+    animation-delay: 0.45s !important;
+    display: block !important;
+}
+
+/* Efectos para botones de videos */
+.videos__cta-buttons .btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.7) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: pulseOut 2.1s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.videos__cta-buttons .btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.5) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: pulseOut 2.1s ease-out infinite !important;
+    animation-delay: 0.52s !important;
+    display: block !important;
+}
+
+/* Asegurar que el contenido del botón esté visible */
+.btn--cta span,
+.btn--cta small,
+.btn--cta .hero__cta-main,
+.btn--cta .hero__cta-main span,
+.btn--cta .hero__cta-main small,
+.btn--footer span,
+.btn--footer small,
+.nav__drawer-cta-btn .nav__drawer-cta-content,
+.nav__drawer-cta-btn .nav__drawer-cta-main,
+.nav__drawer-cta-btn .nav__drawer-cta-trial,
+.nav__drawer-cta-btn .nav__drawer-cta-icon {
+    position: relative !important;
+    z-index: 20 !important;
+    color: #ffffff !important;
+}
+
+/* EFECTOS HOVER PARA DESKTOP - PULSE MÁS RÁPIDO */
+@media (hover: hover) and (pointer: fine) {
+    .btn--cta:hover::before,
+    .btn--cta:hover::after {
+        animation-duration: 1.5s !important;
+    }
+
+    .btn--footer:hover::before,
+    .btn--footer:hover::after {
+        animation-duration: 1.6s !important;
+    }
+
+    .nav__drawer-cta-btn:hover::before,
+    .nav__drawer-cta-btn:hover::after {
+        animation-duration: 1.3s !important;
+    }
+
+    .videos__cta-buttons .btn--cta:hover::before,
+    .videos__cta-buttons .btn--cta:hover::after {
+        animation-duration: 1.4s !important;
+    }
+}
+
+/* EFECTOS ACTIVE - PULSE RÁPIDO */
+.btn--cta:active::before,
+.btn--cta:active::after,
+.btn--footer:active::before,
+.btn--footer:active::after,
+.nav__drawer-cta-btn:active::before,
+.nav__drawer-cta-btn:active::after,
+.videos__cta-buttons .btn--cta:active::before,
+.videos__cta-buttons .btn--cta:active::after {
+    animation-duration: 0.8s !important;
+    animation-delay: 0s !important;
+}
+
+/* DESHABILITAR EN PERFORMANCE MODE */
+.performance-mode .btn--cta::before,
+.performance-mode .btn--cta::after,
+.performance-mode .btn--footer::before,
+.performance-mode .btn--footer::after,
+.performance-mode .nav__drawer-cta-btn::before,
+.performance-mode .nav__drawer-cta-btn::after,
+.performance-mode .videos__cta-buttons .btn--cta::before,
+.performance-mode .videos__cta-buttons .btn--cta::after {
+    display: none !important;
+    animation: none !important;
+}
+
+/* DESHABILITAR CON REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+    .btn--cta::before,
+    .btn--cta::after,
+    .btn--footer::before,
+    .btn--footer::after,
+    .nav__drawer-cta-btn::before,
+    .nav__drawer-cta-btn::after,
+    .videos__cta-buttons .btn--cta::before,
+    .videos__cta-buttons .btn--cta::after {
+        display: none !important;
+        animation: none !important;
+    }
+}
