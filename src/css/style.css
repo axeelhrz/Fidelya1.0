@@ -3757,3 +3757,345 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
 .hero__cta-main .btn--cta:active::after {
     animation-duration: 0.8s !important;
 }
+/* ===== AGREGAR AL FINAL DEL CSS - EFECTOS DE ONDA CIRCULAR FUNCIONALES ===== */
+
+/* Animaciones de ondas circulares */
+@keyframes circular-wave-expand {
+    0% {
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) scale(0) !important;
+    }
+    50% {
+        opacity: 0.8 !important;
+        transform: translate(-50%, -50%) scale(1) !important;
+    }
+    100% {
+        width: 200px !important;
+        height: 200px !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(2) !important;
+    }
+}
+
+@keyframes hero-circular-wave-expand {
+    0% {
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) scale(0) !important;
+    }
+    30% {
+        opacity: 0.9 !important;
+        transform: translate(-50%, -50%) scale(0.5) !important;
+    }
+    70% {
+        opacity: 0.4 !important;
+        transform: translate(-50%, -50%) scale(1.5) !important;
+    }
+    100% {
+        width: 300px !important;
+        height: 300px !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(2.5) !important;
+    }
+}
+
+@keyframes click-wave-burst {
+    0% {
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) scale(0) !important;
+        background: radial-gradient(circle, 
+            rgba(255, 255, 255, 0.9) 0%, 
+            rgba(255, 255, 255, 0.7) 20%, 
+            rgba(255, 255, 255, 0.4) 40%, 
+            transparent 60%) !important;
+    }
+    100% {
+        width: 250px !important;
+        height: 250px !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(2) !important;
+    }
+}
+
+/* CREAR ONDAS AUTOMÁTICAMENTE CON ::before, ::after Y PSEUDO-ELEMENTOS */
+.btn--cta {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* Primera onda con ::before */
+.btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.7) 0%, 
+        rgba(255, 255, 255, 0.5) 20%, 
+        rgba(255, 255, 255, 0.3) 40%, 
+        rgba(255, 255, 255, 0.1) 60%, 
+        transparent 80%) !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    animation: circular-wave-expand 2s ease-out infinite !important;
+    animation-delay: 0s !important;
+}
+
+/* Segunda onda con ::after */
+.btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, 
+        rgba(255, 107, 157, 0.6) 0%, 
+        rgba(255, 107, 157, 0.4) 25%, 
+        rgba(255, 107, 157, 0.2) 50%, 
+        transparent 75%) !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: circular-wave-expand 2s ease-out infinite !important;
+    animation-delay: 0.5s !important;
+}
+
+/* Efectos especiales para el botón del hero */
+.hero__cta-main .btn--cta::before {
+    animation: hero-circular-wave-expand 2.5s ease-out infinite !important;
+    animation-delay: 0s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.8) 0%, 
+        rgba(255, 255, 255, 0.6) 15%, 
+        rgba(255, 255, 255, 0.4) 30%, 
+        rgba(255, 255, 255, 0.2) 50%, 
+        transparent 70%) !important;
+}
+
+.hero__cta-main .btn--cta::after {
+    animation: hero-circular-wave-expand 2.5s ease-out infinite !important;
+    animation-delay: 0.6s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 107, 157, 0.7) 0%, 
+        rgba(255, 107, 157, 0.5) 20%, 
+        rgba(255, 107, 157, 0.3) 40%, 
+        rgba(255, 107, 157, 0.1) 60%, 
+        transparent 80%) !important;
+}
+
+/* Efectos para botón footer */
+.btn--footer::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.6) 0%, 
+        rgba(255, 255, 255, 0.4) 30%, 
+        rgba(255, 255, 255, 0.2) 60%, 
+        transparent 100%) !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    animation: circular-wave-expand 2.8s ease-out infinite !important;
+    animation-delay: 0s !important;
+}
+
+.btn--footer::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, 
+        rgba(255, 45, 85, 0.5) 0%, 
+        rgba(255, 45, 85, 0.3) 30%, 
+        rgba(255, 45, 85, 0.1) 60%, 
+        transparent 80%) !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: circular-wave-expand 2.8s ease-out infinite !important;
+    animation-delay: 0.7s !important;
+}
+
+/* Efectos para botón del drawer móvil */
+.nav__drawer-cta-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.5) 0%, 
+        rgba(255, 255, 255, 0.3) 30%, 
+        rgba(255, 255, 255, 0.1) 60%, 
+        transparent 100%) !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    animation: circular-wave-expand 2.2s ease-out infinite !important;
+    animation-delay: 0s !important;
+}
+
+.nav__drawer-cta-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, 
+        rgba(255, 107, 157, 0.4) 0%, 
+        rgba(255, 107, 157, 0.2) 35%, 
+        rgba(255, 107, 157, 0.1) 70%, 
+        transparent 85%) !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: circular-wave-expand 2.2s ease-out infinite !important;
+    animation-delay: 0.55s !important;
+}
+
+/* Asegurar que el contenido esté por encima de las ondas */
+.btn--cta span,
+.btn--cta small,
+.btn--cta .hero__cta-main,
+.btn--footer span,
+.btn--footer small,
+.nav__drawer-cta-btn .nav__drawer-cta-content,
+.nav__drawer-cta-btn .nav__drawer-cta-icon {
+    position: relative !important;
+    z-index: 10 !important;
+    color: #ffffff !important;
+}
+
+/* EFECTOS HOVER PARA DESKTOP */
+@media (hover: hover) and (pointer: fine) {
+    .btn--cta:hover::before {
+        animation-duration: 1.8s !important;
+    }
+
+    .btn--cta:hover::after {
+        animation-duration: 1.8s !important;
+        animation-delay: 0.4s !important;
+    }
+
+    .hero__cta-main .btn--cta:hover::before {
+        animation-duration: 2s !important;
+    }
+
+    .hero__cta-main .btn--cta:hover::after {
+        animation-duration: 2s !important;
+        animation-delay: 0.5s !important;
+    }
+
+    .btn--footer:hover::before {
+        animation-duration: 2.4s !important;
+    }
+
+    .btn--footer:hover::after {
+        animation-duration: 2.4s !important;
+        animation-delay: 0.6s !important;
+    }
+}
+
+/* EFECTOS ACTIVE PARA MÓVIL Y DESKTOP */
+.btn--cta:active::before,
+.btn--cta:active::after {
+    animation: click-wave-burst 0.6s ease-out !important;
+}
+
+.btn--footer:active::before,
+.btn--footer:active::after {
+    animation-duration: 1.2s !important;
+}
+
+.nav__drawer-cta-btn:active::before,
+.nav__drawer-cta-btn:active::after {
+    animation-duration: 1s !important;
+}
+
+/* DESHABILITAR EN PERFORMANCE MODE */
+.performance-mode .btn--cta::before,
+.performance-mode .btn--cta::after,
+.performance-mode .btn--footer::before,
+.performance-mode .btn--footer::after,
+.performance-mode .nav__drawer-cta-btn::before,
+.performance-mode .nav__drawer-cta-btn::after {
+    display: none !important;
+    animation: none !important;
+}
+
+/* DESHABILITAR CON REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+    .btn--cta::before,
+    .btn--cta::after,
+    .btn--footer::before,
+    .btn--footer::after,
+    .nav__drawer-cta-btn::before,
+    .nav__drawer-cta-btn::after {
+        display: none !important;
+        animation: none !important;
+    }
+}
+
+/* PULSE RING PARA EL HERO */
+.pulse-ring {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    border: 2px solid #dc143c !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: simple-pulse 2s infinite !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+}
+
+@keyframes simple-pulse {
+    0% {
+        transform: scale(1) !important;
+        opacity: 1 !important;
+    }
+    50% {
+        transform: scale(1.1) !important;
+        opacity: 0.7 !important;
+    }
+    100% {
+        transform: scale(1.2) !important;
+        opacity: 0 !important;
+    }
+}
+
+/* EFECTOS PARA BOTONES DE VIDEOS */
+.videos__cta-buttons .btn--cta::before {
+    animation: circular-wave-expand 2.3s ease-out infinite !important;
+    animation-delay: 0s !important;
+}
+
+.videos__cta-buttons .btn--cta::after {
+    animation: circular-wave-expand 2.3s ease-out infinite !important;
+    animation-delay: 0.58s !important;
+}
