@@ -1938,3 +1938,8 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
 .legal-page::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #ff3399 0%, #ff6666 100%);
 }
+.btn--cta.clicked {
+    animation: 
+        magneticPulse 0.5s ease-in-out,
+        borderSpark 0.3s linear;
+}
