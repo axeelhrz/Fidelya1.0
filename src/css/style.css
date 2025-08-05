@@ -1938,3 +1938,203 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
 .legal-page::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #ff3399 0%, #ff6666 100%);
 }
+/* ===== ANIMACIONES SUAVES DE LATIDO Y NEÓN PARA BOTÓN CTA ===== */
+
+/* Keyframes para latido suave */
+@keyframes gentleHeartbeat {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.015);
+    }
+}
+
+/* Keyframes para neón de bordes suave */
+@keyframes softBorderGlow {
+    0%, 100% {
+        border-color: var(--neon-red-soft);
+        box-shadow: 
+            0 0 15px var(--neon-red-shadow-soft), 
+            0 0 30px var(--neon-red-glow-soft), 
+            0 4px 12px rgba(0, 0, 0, 0.25),
+            inset 0 0 0 1px var(--neon-red-soft);
+    }
+    50% {
+        border-color: var(--neon-red-medium);
+        box-shadow: 
+            0 0 20px var(--neon-red-shadow-medium), 
+            0 0 35px var(--neon-red-glow-medium), 
+            0 4px 12px rgba(0, 0, 0, 0.25),
+            inset 0 0 0 1px var(--neon-red-medium);
+    }
+}
+
+/* Keyframes para resplandor interno suave */
+@keyframes innerGlow {
+    0%, 100% {
+        background: linear-gradient(135deg, var(--neon-red-base) 0%, var(--neon-red-soft) 100%);
+    }
+    50% {
+        background: linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);
+    }
+}
+
+/* Aplicar animaciones al botón CTA del Hero */
+.hero__cta-group .btn--cta {
+    animation: 
+        gentleHeartbeat 2.8s ease-in-out infinite,
+        softBorderGlow 3.2s ease-in-out infinite,
+        innerGlow 4s ease-in-out infinite;
+    position: relative;
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Efectos hover mejorados que se integran con las animaciones */
+@media (hover: hover) and (pointer: fine) {
+    .hero__cta-group .btn--cta:hover {
+        animation: 
+            gentleHeartbeat 1.8s ease-in-out infinite,
+            softBorderGlow 2s ease-in-out infinite,
+            innerGlow 2.5s ease-in-out infinite;
+        transform: translateY(-3px) scale(1.01);
+        background: linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);
+        box-shadow: 
+            0 0 25px var(--neon-red-shadow-bright), 
+            0 0 50px var(--neon-red-glow-bright), 
+            0 10px 25px rgba(0, 0, 0, 0.35),
+            inset 0 0 0 1px var(--neon-red-bright);
+        text-shadow: 
+            0 0 12px var(--neon-red-glow-medium), 
+            0 0 24px var(--neon-red-shadow-medium);
+        border-color: var(--neon-red-medium);
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+}
+
+/* Efectos táctiles para móvil que mantienen la suavidad */
+@media (max-width: 1023px) {
+    .hero__cta-group .btn--cta:active {
+        animation: 
+            gentleHeartbeat 1.5s ease-in-out infinite,
+            softBorderGlow 1.8s ease-in-out infinite,
+            innerGlow 2s ease-in-out infinite;
+        transform: translateY(-1px) scale(1.005);
+        box-shadow: 
+            0 0 20px var(--neon-red-shadow-medium), 
+            0 0 40px var(--neon-red-glow-medium), 
+            0 6px 18px rgba(0, 0, 0, 0.3),
+            inset 0 0 0 1px var(--neon-red-medium);
+        transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+}
+
+/* Desktop - Efectos adicionales para mayor refinamiento */
+@media (min-width: 1024px) {
+    .hero__cta-group .btn--cta {
+        padding: var(--space-lg) var(--space-2xl);
+        font-size: 1.1rem;
+        border-radius: 16px;
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .hero__cta-group .btn--cta:hover {
+        transform: translateY(-5px) scale(1.02);
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .hero__cta-group .btn--cta:active {
+        transform: translateY(-2px) scale(1.01);
+        box-shadow: 
+            0 0 25px var(--neon-red-shadow-bright), 
+            0 0 50px var(--neon-red-glow-bright), 
+            0 10px 25px rgba(0, 0, 0, 0.35),
+            inset 0 0 0 1px var(--neon-red-bright);
+        transition: all 0.2s ease;
+    }
+}
+
+/* Aplicar efectos similares a otros botones CTA pero más sutiles */
+.videos__cta-buttons .btn--cta,
+.contact__footer .btn--footer,
+.nav__drawer-cta-btn {
+    animation: 
+        gentleHeartbeat 3.5s ease-in-out infinite,
+        softBorderGlow 4s ease-in-out infinite;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .videos__cta-buttons .btn--cta:hover,
+    .contact__footer .btn--footer:hover,
+    .nav__drawer-cta-btn:hover {
+        animation: 
+            gentleHeartbeat 2.5s ease-in-out infinite,
+            softBorderGlow 3s ease-in-out infinite;
+        box-shadow: 
+            0 0 25px var(--neon-red-shadow-bright), 
+            0 0 50px var(--neon-red-glow-bright), 
+            0 8px 20px rgba(0, 0, 0, 0.35),
+            inset 0 0 0 1px var(--neon-red-medium);
+        border-color: var(--neon-red-medium);
+    }
+}
+
+/* Modo de rendimiento reducido - mantiene efectos mínimos */
+@media (prefers-reduced-motion: reduce) {
+    .hero__cta-group .btn--cta,
+    .videos__cta-buttons .btn--cta,
+    .contact__footer .btn--footer,
+    .nav__drawer-cta-btn {
+        animation: none;
+    }
+    
+    .hero__cta-group .btn--cta:hover {
+        animation: none;
+        transform: translateY(-2px);
+        transition: all 0.4s ease;
+    }
+}
+
+/* Modo performance para dispositivos de bajo rendimiento */
+.performance-mode .hero__cta-group .btn--cta,
+.performance-mode .videos__cta-buttons .btn--cta,
+.performance-mode .contact__footer .btn--footer,
+.performance-mode .nav__drawer-cta-btn {
+    animation: none;
+}
+
+.performance-mode .hero__cta-group .btn--cta:hover {
+    animation: none;
+    transform: translateY(-2px);
+    transition: all 0.4s ease;
+}
+
+/* Asegurar que el contenido del botón mantenga su posición */
+.hero__cta-group .btn--cta .hero__cta-main {
+    position: relative;
+    z-index: 2;
+    transition: none;
+}
+
+.hero__cta-group .btn--cta .hero__cta-main span,
+.hero__cta-group .btn--cta .hero__cta-main small {
+    transition: none;
+}
+
+/* Refinamiento para pantallas pequeñas */
+@media (max-width: 480px) {
+    .hero__cta-group .btn--cta {
+        animation: 
+            gentleHeartbeat 3.2s ease-in-out infinite,
+            softBorderGlow 3.8s ease-in-out infinite;
+    }
+}
+
+/* Asegurar compatibilidad con estados focus */
+.hero__cta-group .btn--cta:focus-visible {
+    outline: 2px solid var(--neon-red-bright);
+    outline-offset: 3px;
+    animation: 
+        gentleHeartbeat 2s ease-in-out infinite,
+        softBorderGlow 2.5s ease-in-out infinite;
+}
