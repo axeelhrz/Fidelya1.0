@@ -5867,6 +5867,280 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
         animation: none !important;
     }
 }
+/* ===== EFECTOS DE PULSE QUE SE SALGAN DEL BOTÓN - SOLUCIÓN FINAL ===== */
+
+/* Forzar reseteo completo del botón hero */
+.hero__cta-main .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    background: #000 !important;
+    border: 2px solid #0ff !important;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3) !important;
+}
+
+/* Definir la animación pulseOut que se sale del botón */
+@keyframes pulseOut {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Primer efecto de pulse que se sale del botón */
+.hero__cta-main .btn--cta::before {
+    content: "" !important;
+    position: absolute !important;
+    top: -4px !important;
+    left: -4px !important;
+    right: -4px !important;
+    bottom: -4px !important;
+    border: 2px solid #0ff !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    opacity: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* Segundo efecto de pulse que se sale del botón con delay */
+.hero__cta-main .btn--cta::after {
+    content: "" !important;
+    position: absolute !important;
+    top: -4px !important;
+    left: -4px !important;
+    right: -4px !important;
+    bottom: -4px !important;
+    border: 2px solid #0ff !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    animation-delay: 1s !important;
+    opacity: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: -2 !important;
+}
+
+/* Asegurar contenido visible con z-index alto */
+.hero__cta-main .btn--cta span,
+.hero__cta-main .btn--cta small,
+.hero__cta-main .btn--cta .hero__cta-main {
+    position: relative !important;
+    z-index: 100 !important;
+    color: #ffffff !important;
+}
+
+/* Efectos hover - pulse más rápido */
+@media (hover: hover) and (pointer: fine) {
+    .hero__cta-main .btn--cta:hover::before,
+    .hero__cta-main .btn--cta:hover::after {
+        animation-duration: 1.5s !important;
+        border-color: #00ffff !important;
+    }
+}
+
+/* Efectos active - pulse muy rápido */
+.hero__cta-main .btn--cta:active::before,
+.hero__cta-main .btn--cta:active::after {
+    animation-duration: 0.8s !important;
+    animation-delay: 0s !important;
+    border-color: #ffffff !important;
+}
+
+/* Deshabilitar en performance mode */
+.performance-mode .hero__cta-main .btn--cta::before,
+.performance-mode .hero__cta-main .btn--cta::after {
+    display: none !important;
+    animation: none !important;
+}
+
+/* Deshabilitar con reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .hero__cta-main .btn--cta::before,
+    .hero__cta-main .btn--cta::after {
+        display: none !important;
+        animation: none !important;
+    }
+}
+/* ===== EFECTOS DE PULSE QUE SE SALGAN HACIA LOS COSTADOS DEL BOTÓN ===== */
+
+/* Forzar reseteo completo del botón hero */
+.hero__cta-main .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    background: #000 !important;
+    border: 2px solid #0ff !important;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3) !important;
+}
+
+/* Definir la animación pulseOut que se expande hacia afuera */
+@keyframes pulseOut {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Primer efecto de pulse que empieza FUERA del botón */
+.hero__cta-main .btn--cta::before {
+    content: "" !important;
+    position: absolute !important;
+    top: -10px !important;
+    left: -10px !important;
+    right: -10px !important;
+    bottom: -10px !important;
+    border: 2px solid #0ff !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    opacity: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* Segundo efecto de pulse que empieza AÚN MÁS FUERA del botón */
+.hero__cta-main .btn--cta::after {
+    content: "" !important;
+    position: absolute !important;
+    top: -15px !important;
+    left: -15px !important;
+    right: -15px !important;
+    bottom: -15px !important;
+    border: 2px solid #0ff !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    animation-delay: 1s !important;
+    opacity: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: -2 !important;
+}
+
+/* Asegurar contenido visible */
+.hero__cta-main .btn--cta span,
+.hero__cta-main .btn--cta small,
+.hero__cta-main .btn--cta .hero__cta-main {
+    position: relative !important;
+    z-index: 100 !important;
+    color: #ffffff !important;
+}
+
+/* Efectos hover - pulse más rápido */
+@media (hover: hover) and (pointer: fine) {
+    .hero__cta-main .btn--cta:hover::before,
+    .hero__cta-main .btn--cta:hover::after {
+        animation-duration: 1.5s !important;
+        border-color: #00ffff !important;
+    }
+}
+
+/* Efectos active - pulse muy rápido */
+.hero__cta-main .btn--cta:active::before,
+.hero__cta-main .btn--cta:active::after {
+    animation-duration: 0.8s !important;
+    animation-delay: 0s !important;
+    border-color: #ffffff !important;
+}
+/* ===== SOLUCIÓN DEFINITIVA - PULSE QUE SE SALE DEL BOTÓN ===== */
+
+/* FORZAR OVERFLOW VISIBLE EN TODOS LOS CONTENEDORES */
+.hero {
+    overflow: visible !important;
+}
+
+.hero__container {
+    overflow: visible !important;
+}
+
+.hero__content {
+    overflow: visible !important;
+}
+
+.hero__cta-group {
+    overflow: visible !important;
+}
+
+.hero__cta-main {
+    overflow: visible !important;
+}
+
+/* RESETEAR COMPLETAMENTE EL BOTÓN HERO */
+.hero__cta-main .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    background: #000 !important;
+    border: 2px solid #0ff !important;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3) !important;
+}
+
+/* DEFINIR LA ANIMACIÓN */
+@keyframes pulseOut {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* PRIMER PULSE QUE SE SALE DEL BOTÓN */
+.hero__cta-main .btn--cta::before {
+    content: "" !important;
+    position: absolute !important;
+    top: -10px !important;
+    left: -10px !important;
+    right: -10px !important;
+    bottom: -10px !important;
+    border: 2px solid #0ff !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    opacity: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* SEGUNDO PULSE CON DELAY */
+.hero__cta-main .btn--cta::after {
+    content: "" !important;
+    position: absolute !important;
+    top: -10px !important;
+    left: -10px !important;
+    right: -10px !important;
+    bottom: -10px !important;
+    border: 2px solid #0ff !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    animation-delay: 1s !important;
+    opacity: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: -2 !important;
+}
+
+/* ASEGURAR CONTENIDO VISIBLE */
+.hero__cta-main .btn--cta span,
+.hero__cta-main .btn--cta small {
+    position: relative !important;
+    z-index: 100 !important;
+    color: #ffffff !important;
+}
 
 
 
