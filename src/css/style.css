@@ -1943,3 +1943,298 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
         magneticPulse 0.5s ease-in-out,
         borderSpark 0.3s linear;
 }
+.btn--cta.clicked {
+    animation: 
+        magneticPulse 0.5s ease-in-out,
+        borderSpark 0.3s linear;
+}
+/* ===== BOTÓN CTA HERO ULTRA MODERNO CON EFECTOS AVANZADOS ===== */
+
+/* Animaciones perpetuas y efectos de bordes */
+@keyframes magneticPulse {
+    0%, 100% {
+        transform: translateY(-3px) scale(1);
+        box-shadow: 
+            0 0 15px var(--neon-red-shadow-soft), 
+            0 0 30px var(--neon-red-glow-soft), 
+            0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+    50% {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 
+            0 0 25px var(--neon-red-shadow-medium), 
+            0 0 45px var(--neon-red-glow-medium), 
+            0 6px 18px rgba(0, 0, 0, 0.35);
+    }
+}
+
+@keyframes borderSpark {
+    0% {
+        box-shadow: 
+            0 0 15px var(--neon-red-shadow-soft), 
+            0 0 30px var(--neon-red-glow-soft), 
+            0 4px 12px rgba(0, 0, 0, 0.25),
+            inset 0 0 0 1px var(--neon-red-soft);
+    }
+    25% {
+        box-shadow: 
+            0 0 30px var(--neon-red-shadow-bright), 
+            0 0 60px var(--neon-red-glow-bright), 
+            0 8px 25px rgba(0, 0, 0, 0.4),
+            inset 0 0 0 2px var(--neon-red-medium);
+    }
+    50% {
+        box-shadow: 
+            0 0 40px var(--neon-red-shadow-bright), 
+            0 0 80px var(--neon-red-glow-bright), 
+            0 10px 30px rgba(0, 0, 0, 0.45),
+            inset 0 0 0 3px var(--neon-red-bright);
+    }
+    75% {
+        box-shadow: 
+            0 0 30px var(--neon-red-shadow-bright), 
+            0 0 60px var(--neon-red-glow-bright), 
+            0 8px 25px rgba(0, 0, 0, 0.4),
+            inset 0 0 0 2px var(--neon-red-medium);
+    }
+    100% {
+        box-shadow: 
+            0 0 15px var(--neon-red-shadow-soft), 
+            0 0 30px var(--neon-red-glow-soft), 
+            0 4px 12px rgba(0, 0, 0, 0.25),
+            inset 0 0 0 1px var(--neon-red-soft);
+    }
+}
+
+@keyframes cornerFrameGlow {
+    0%, 100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+}
+
+@keyframes borderExpansion {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.15);
+        opacity: 0.4;
+    }
+    100% {
+        transform: scale(1.3);
+        opacity: 0;
+    }
+}
+
+/* Botón CTA principal mejorado */
+.btn--cta {
+    position: relative !important;
+    padding: var(--space-md) var(--space-xl);
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, var(--neon-red-base) 0%, var(--neon-red-soft) 100%) !important;
+    border: 1px solid var(--neon-red-soft) !important;
+    box-shadow: 
+        0 0 15px var(--neon-red-shadow-soft), 
+        0 0 30px var(--neon-red-glow-soft), 
+        0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    text-shadow: 0 0 8px var(--neon-red-glow-soft) !important;
+    color: #ffffff !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 10 !important;
+    overflow: visible;
+    animation: magneticPulse 4s ease-in-out infinite;
+}
+
+/* Marcos de esquina animados */
+.btn--cta::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(45deg, 
+        var(--neon-red-bright) 0%, 
+        transparent 25%, 
+        transparent 75%, 
+        var(--neon-red-bright) 100%);
+    border-radius: 16px;
+    z-index: -1;
+    opacity: 0.7;
+    animation: cornerFrameGlow 3s ease-in-out infinite;
+}
+
+/* Efecto de expansión de bordes */
+.btn--cta::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid var(--neon-red-medium);
+    border-radius: 15px;
+    z-index: -2;
+    opacity: 0;
+    animation: borderExpansion 2.5s ease-out infinite;
+}
+
+/* Estados hover mejorados */
+@media (hover: hover) and (pointer: fine) {
+    .btn--cta:hover {
+        transform: translateY(-5px) scale(1.03);
+        background: linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);
+        box-shadow: 
+            0 0 35px var(--neon-red-shadow-bright), 
+            0 0 70px var(--neon-red-glow-bright), 
+            0 12px 30px rgba(0, 0, 0, 0.4);
+        text-shadow: 
+            0 0 15px var(--neon-red-glow-medium), 
+            0 0 30px var(--neon-red-shadow-medium);
+        border-color: var(--neon-red-medium);
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        animation: none;
+    }
+
+    .btn--cta:hover::before {
+        opacity: 1;
+        animation: cornerFrameGlow 1.5s ease-in-out infinite;
+    }
+
+    .btn--cta:hover::after {
+        animation: borderExpansion 1.2s ease-out infinite;
+    }
+}
+
+/* Estado activo (presionado) */
+.btn--cta:active {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 
+        0 0 25px var(--neon-red-shadow-bright), 
+        0 0 50px var(--neon-red-glow-bright), 
+        0 8px 20px rgba(0, 0, 0, 0.35),
+        inset 0 0 20px rgba(255, 45, 85, 0.3);
+    background: linear-gradient(135deg, var(--neon-red-medium) 0%, var(--neon-red-bright) 100%);
+    text-shadow: 
+        0 0 20px var(--neon-red-glow-bright), 
+        0 0 40px var(--neon-red-shadow-bright);
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Efecto de click especial */
+.btn--cta.clicked {
+    animation: 
+        magneticPulse 0.5s ease-in-out,
+        borderSpark 0.3s linear;
+}
+
+/* Versión desktop */
+@media (min-width: 1024px) {
+    .btn--cta {
+        padding: var(--space-lg) var(--space-2xl);
+        font-size: 1.1rem;
+        width: auto;
+        max-width: none;
+        margin: 0;
+        border-radius: 16px;
+        animation: magneticPulse 5s ease-in-out infinite;
+    }
+
+    .btn--cta:hover {
+        transform: translateY(-6px) scale(1.04);
+        box-shadow: 
+            0 0 40px var(--neon-red-shadow-bright), 
+            0 0 80px var(--neon-red-glow-bright), 
+            0 15px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .btn--cta:active {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 
+            0 0 30px var(--neon-red-shadow-bright), 
+            0 0 60px var(--neon-red-glow-bright), 
+            0 10px 25px rgba(0, 0, 0, 0.4),
+            inset 0 0 25px rgba(255, 45, 85, 0.4);
+    }
+}
+
+/* Optimizaciones para móviles */
+@media (max-width: 1023px) {
+    .btn--cta {
+        animation-duration: 6s;
+    }
+
+    .btn--cta:active {
+        transform: translateY(-1px) scale(1.005);
+        transition: all 0.15s ease;
+    }
+}
+
+/* Modo de rendimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+    .btn--cta {
+        animation: none;
+    }
+
+    .btn--cta::before,
+    .btn--cta::after {
+        animation: none;
+        opacity: 0.5;
+    }
+
+    .btn--cta:hover {
+        animation: none;
+    }
+
+    .btn--cta:hover::before,
+    .btn--cta:hover::after {
+        animation: none;
+    }
+}
+
+/* Modo performance para dispositivos de gama baja */
+.performance-mode .btn--cta {
+    animation: none;
+}
+
+.performance-mode .btn--cta::before,
+.performance-mode .btn--cta::after {
+    animation: none;
+    opacity: 0.3;
+}
+
+.performance-mode .btn--cta:hover {
+    animation: none;
+}
+
+/* Efectos adicionales para interacción táctil */
+@media (hover: none) and (pointer: coarse) {
+    .btn--cta {
+        -webkit-tap-highlight-color: rgba(255, 45, 85, 0.3);
+    }
+
+    .btn--cta:active {
+        transform: translateY(-1px) scale(0.98);
+        transition: all 0.1s ease;
+    }
+}
+
+/* Soporte para safe areas en dispositivos móviles */
+@supports (padding: max(0px)) {
+    .btn--cta {
+        margin-bottom: max(0px, env(safe-area-inset-bottom, 0px));
+    }
+}
