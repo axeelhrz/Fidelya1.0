@@ -114,20 +114,6 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .animate-fadeIn{animation:fadeIn 0.3s ease-out}.animate-fadeInUp{animation:fadeInUp 0.4s ease-out}.animate-fadeInDown{animation:fadeInDown 0.4s ease-out}.animate-fadeInLeft{animation:fadeInLeft 0.4s ease-out}.animate-fadeInRight{animation:fadeInRight 0.4s ease-out}.animate-pulse{animation:pulse 2s infinite}.animate-pulse-gentle{animation:pulse-gentle 3s infinite}.animate-spin{animation:spin 1s linear infinite}
 }
 
-/* ===== ANIMACIONES PARA MARCOS DECORATIVOS ===== */
-@keyframes corner-frame-glow {
-    0%, 70%, 100% {
-        opacity: 0;
-        transform: scale(0.8);
-        box-shadow: 0 0 0 rgba(255, 255, 255, 0);
-    }
-    15%, 55% {
-        opacity: 1;
-        transform: scale(1);
-        box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
-    }
-}
-
 /* ===== BOTONES OPTIMIZADOS MÓVIL ===== */
 .btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-lg);font-family:var(--font-primary);font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;text-decoration:none;border:none;border-radius:8px;cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;min-height:44px;touch-action:manipulation;transition:all var(--transition)}
 
@@ -136,7 +122,7 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .btn--outline{color:var(--starflex-crimson);background:transparent;border:2px solid var(--starflex-crimson)}
 .btn--ghost{color:var(--text-secondary);background:transparent;border:1px solid transparent}
 
-/* BOTÓN CTA CON MARCOS DECORATIVOS */
+/* BOTÓN CTA LIMPIO */
 .btn--cta {
     position: relative !important;
     padding: var(--space-md) var(--space-xl);
@@ -146,7 +132,6 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
     width: 100%;
     max-width: 300px;
     margin: 0 auto;
-    overflow: visible !important;
     background: linear-gradient(135deg, var(--neon-red-base) 0%, var(--neon-red-soft) 100%) !important;
     border: 1px solid var(--neon-red-soft) !important;
     box-shadow: 0 0 15px var(--neon-red-shadow-soft), 0 0 30px var(--neon-red-glow-soft), 0 4px 12px rgba(0, 0, 0, 0.25) !important;
@@ -155,42 +140,6 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
     transform: translateZ(0);
     backface-visibility: hidden;
     transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    z-index: 10 !important;
-}
-
-/* Marco esquina superior izquierda - AFUERA DEL BOTÓN */
-.btn--cta::before {
-    content: '' !important;
-    position: absolute !important;
-    top: -12px !important;
-    left: -12px !important;
-    width: 20px !important;
-    height: 20px !important;
-    border-top: 3px solid rgba(255, 255, 255, 0.9) !important;
-    border-left: 3px solid rgba(255, 255, 255, 0.9) !important;
-    background: transparent !important;
-    animation: corner-frame-glow 4s ease-in-out infinite !important;
-    animation-delay: 0s !important;
-    display: block !important;
-    pointer-events: none !important;
-    z-index: 10 !important;
-}
-
-/* Marco esquina inferior derecha - AFUERA DEL BOTÓN */
-.btn--cta::after {
-    content: '' !important;
-    position: absolute !important;
-    bottom: -12px !important;
-    right: -12px !important;
-    width: 20px !important;
-    height: 20px !important;
-    border-bottom: 3px solid rgba(255, 255, 255, 0.9) !important;
-    border-right: 3px solid rgba(255, 255, 255, 0.9) !important;
-    background: transparent !important;
-    animation: corner-frame-glow 4s ease-in-out infinite !important;
-    animation-delay: 1s !important;
-    display: block !important;
-    pointer-events: none !important;
     z-index: 10 !important;
 }
 
@@ -215,14 +164,6 @@ text-shadow:0 0 12px var(--neon-red-glow-medium), 0 0 24px var(--neon-red-shadow
 border-color:var(--neon-red-medium);
 transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-
-.btn--cta:hover::before,
-.btn--cta:hover::after {
-    animation-duration: 2.5s !important;
-    opacity: 1 !important;
-    border-width: 4px !important;
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.8) !important;
-}
 }
 
 /* EFECTOS TÁCTILES MÓVIL */
@@ -230,14 +171,6 @@ transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 transform:translateY(-1px) scale(1.005);
 box-shadow:0 0 20px var(--neon-red-shadow-medium), 0 0 40px var(--neon-red-glow-medium), 0 6px 18px rgba(0, 0, 0, 0.3);
 transition:all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.btn--cta:active::before,
-.btn--cta:active::after {
-    animation-duration: 1.5s !important;
-    opacity: 1 !important;
-    border-width: 4px !important;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 1) !important;
 }
 
 /* DESKTOP HOVER BOTONES */
@@ -752,42 +685,6 @@ filter:brightness(1.3) contrast(1.2);
 
 .hero__cta-main{position:relative;z-index:2;display:flex;flex-direction:column;gap:var(--space-sm);align-items:center;overflow:visible}
 
-/* Marco esquina superior derecha - AFUERA DEL BOTÓN */
-.hero__cta-main::before {
-    content: '' !important;
-    position: absolute !important;
-    top: -12px !important;
-    right: -12px !important;
-    width: 20px !important;
-    height: 20px !important;
-    border-top: 3px solid rgba(220, 20, 60, 0.9) !important;
-    border-right: 3px solid rgba(220, 20, 60, 0.9) !important;
-    background: transparent !important;
-    animation: corner-frame-glow 4s ease-in-out infinite !important;
-    animation-delay: 0.5s !important;
-    display: block !important;
-    pointer-events: none !important;
-    z-index: 10 !important;
-}
-
-/* Marco esquina inferior izquierda - AFUERA DEL BOTÓN */
-.hero__cta-main::after {
-    content: '' !important;
-    position: absolute !important;
-    bottom: -12px !important;
-    left: -12px !important;
-    width: 20px !important;
-    height: 20px !important;
-    border-bottom: 3px solid rgba(220, 20, 60, 0.9) !important;
-    border-left: 3px solid rgba(220, 20, 60, 0.9) !important;
-    background: transparent !important;
-    animation: corner-frame-glow 4s ease-in-out infinite !important;
-    animation-delay: 1.5s !important;
-    display: block !important;
-    pointer-events: none !important;
-    z-index: 10 !important;
-}
-
 .hero__cta-main small{font-family:var(--font-mono);font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;opacity:0.95}
 
 .hero__download{display:flex;gap:var(--space-xl);align-items:center;justify-content:center;width:100%;margin-bottom:var(--space-lg);flex-wrap:wrap}
@@ -815,19 +712,6 @@ filter:brightness(1.3) contrast(1.2);
 .hero__container{padding-top:var(--space-md);gap:var(--space-md)}
 .hero__content{margin-top:var(--space-sm)}
 .hero__mobile-video{max-width:280px;margin-top:var(--space-md)}
-
-.btn--cta::before,
-.btn--cta::after,
-.hero__cta-main::before,
-.hero__cta-main::after {
-    width: 16px !important;
-    height: 16px !important;
-    top: -10px !important;
-    left: -10px !important;
-    right: -10px !important;
-    bottom: -10px !important;
-    border-width: 2px !important;
-}
 }
 
 /* DESKTOP HERO COMPLETO */
@@ -857,14 +741,6 @@ filter:brightness(1.3) contrast(1.2);
 .download-btn--google .download-btn__image{background-image:url('../../assets/GooglePlay.png')}
 .download-btn--app-store .download-btn__image{background-image:url('../../assets/AppleStore.png')}
 .download-btn--google .download-btn__image,.download-btn--app-store .download-btn__image{width:auto;min-width:180px;max-width:200px;height:60px;background-repeat:no-repeat;background-position:center;background-size:contain}
-
-.hero__cta-main:hover::before,
-.hero__cta-main:hover::after {
-    animation-duration: 2.5s !important;
-    opacity: 1 !important;
-    border-width: 4px !important;
-    box-shadow: 0 0 12px rgba(220, 20, 60, 0.8) !important;
-}
 }
 
 /* ===== CARACTERÍSTICAS MÓVIL OPTIMIZADO ===== */
@@ -965,8 +841,7 @@ filter:brightness(1.3) contrast(1.2);
 .phone::before{position:absolute;inset:-20px;z-index:-1;content:'';background:radial-gradient(ellipse, rgba(255, 45, 85, 0.04) 0%, rgba(255, 45, 85, 0.02) 40%, transparent 70%);filter:blur(25px);border-radius:calc(var(--phone-border-radius) + 20px);opacity:0;transition:all 0.6s ease}
 .phone__screen{opacity:1!important;transition:all 0.6s ease}
 .phone__app-image{opacity:1!important;transform:scale(1)!important;transition:all 0.6s ease;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;display:block!important;visibility:visible!important}
-.feature.in-view .phone__app-image{opacity:1!important;transform:scale(1
-)!important}
+.feature.in-view .phone__app-image{opacity:1!important;transform:scale(1)!important}
 .phone__app-image{opacity:1!important;transform:scale(1)!important;transition:none!important}
 .feature.in-view .phone__app-image{opacity:1!important;transform:scale(1)!important}
 }
@@ -1568,28 +1443,10 @@ html,body{overflow-x:hidden}
 .performance-mode .nav__toggle, .performance-mode .nav__toggle-line{transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)!important}
 .performance-mode .btn--cta, .performance-mode .btn--footer{transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)!important}
 
-.performance-mode .btn--cta::before,
-.performance-mode .btn--cta::after,
-.performance-mode .btn--footer::before,
-.performance-mode .btn--footer::after,
-.performance-mode .hero__cta-main::before,
-.performance-mode .hero__cta-main::after {
-display:none!important;
-}
-
 @media (prefers-reduced-motion: reduce){
 *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 .nav__toggle, .nav__toggle-line{transition:all 0.2s ease!important}
 .btn--cta, .btn--footer{transition:all 0.4s ease!important}
-
-.btn--cta::before,
-.btn--cta::after,
-.btn--footer::before,
-.btn--footer::after,
-.hero__cta-main::before,
-.hero__cta-main::after {
-display:none!important;
-}
 }
 
 /* CRITICAL FOCUS STYLES */
@@ -2081,54 +1938,3 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
 .legal-page::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #ff3399 0%, #ff6666 100%);
 }
-
-/* ===== EFECTOS HOVER PARA MARCOS DECORATIVOS ===== */
-@media (hover: hover) and (pointer: fine) {
-    .hero__cta-main:hover::before,
-    .hero__cta-main:hover::after {
-        animation-duration: 2.5s !important;
-        opacity: 1 !important;
-        border-width: 4px !important;
-        box-shadow: 0 0 12px rgba(220, 20, 60, 0.8) !important;
-    }
-}
-
-/* EFECTOS ACTIVE PARA MARCOS DECORATIVOS */
-.hero__cta-main:active::before,
-.hero__cta-main:active::after {
-    animation-duration: 1.5s !important;
-    opacity: 1 !important;
-    border-width: 4px !important;
-    box-shadow: 0 0 15px rgba(220, 20, 60, 1) !important;
-}
-
-/* DESHABILITAR MARCOS EN PERFORMANCE MODE */
-.performance-mode .btn--cta::before,
-.performance-mode .btn--cta::after,
-.performance-mode .hero__cta-main::before,
-.performance-mode .hero__cta-main::after {
-    display: none !important;
-    animation: none !important;
-}
-
-/* DESHABILITAR MARCOS CON REDUCED MOTION */
-@media (prefers-reduced-motion: reduce) {
-    .btn--cta::before,
-    .btn--cta::after,
-    .hero__cta-main::before,
-    .hero__cta-main::after {
-        display: none !important;
-        animation: none !important;
-    }
-}
-
-/* ASEGURAR OVERFLOW VISIBLE PARA MARCOS */
-.hero,
-.hero__container,
-.hero__content,
-.hero__cta-group,
-.hero__cta-main {
-    overflow: visible !important;
-}
-
-
