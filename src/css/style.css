@@ -3666,3 +3666,94 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
 .nav.active .nav__cta .btn .particle {
     animation-duration: 2.4s !important;
 }
+/* ===== EFECTO PULSE SIMPLE Y FUNCIONAL PARA EL BOTÓN DEL HERO ===== */
+
+/* Eliminar cualquier animación existente que pueda interferir */
+.hero__cta-main .btn--cta .wave-effect,
+.hero__cta-main .btn--cta .particle,
+.hero__cta-main .btn--cta .energy-border {
+    display: none !important;
+    animation: none !important;
+}
+
+/* Resetear el botón del hero */
+.hero__cta-main .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    animation: none !important;
+    border: 2px solid #dc143c !important;
+    background: linear-gradient(135deg, #dc143c 0%, #ff1744 100%) !important;
+}
+
+/* Animación de pulse simple */
+@keyframes simple-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+}
+
+/* Crear el efecto pulse con ::before */
+.hero__cta-main .btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    border: 2px solid #dc143c !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: simple-pulse 2s infinite !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* Segundo pulse con delay */
+.hero__cta-main .btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    border: 2px solid #ff1744 !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: simple-pulse 2s infinite !important;
+    animation-delay: 1s !important;
+    pointer-events: none !important;
+    z-index: -2 !important;
+}
+
+/* Asegurar que el contenido esté visible */
+.hero__cta-main .btn--cta span,
+.hero__cta-main .btn--cta small {
+    position: relative !important;
+    z-index: 10 !important;
+    color: white !important;
+}
+
+/* Hover effect */
+.hero__cta-main .btn--cta:hover::before {
+    animation-duration: 1.5s !important;
+}
+
+.hero__cta-main .btn--cta:hover::after {
+    animation-duration: 1.5s !important;
+    animation-delay: 0.75s !important;
+}
+
+/* Active effect */
+.hero__cta-main .btn--cta:active::before,
+.hero__cta-main .btn--cta:active::after {
+    animation-duration: 0.8s !important;
+}
