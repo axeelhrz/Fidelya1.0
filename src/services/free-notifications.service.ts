@@ -8,15 +8,12 @@ import {
   where, 
   limit,
   serverTimestamp,
-  orderBy
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { 
   NotificationFormData, 
   NotificationDelivery, 
   NotificationSettings,
-  NotificationType,
-  NotificationPriority 
 } from '@/types/notification';
 
 // EmailJS service (completamente gratuito)
@@ -586,7 +583,7 @@ export class FreeNotificationService {
           const successCount = pushResults.filter(r => r.success).length;
           results.push = { 
             success: successCount > 0,
-            error: successCount === 0 ? 'All push notifications failed' : undefined
+            error: successCount === 0 ? 'All push notifications failed' : ''
           };
           
           await updateDoc(doc(db, 'notificationDeliveries', deliveryId), {
@@ -635,7 +632,7 @@ export class FreeNotificationService {
             }
           );
 
-          results.browser = browserResult;
+          results.browser = { success: browserResult.success, error: browserResult.error ?? '' };
           
           await updateDoc(doc(db, 'notificationDeliveries', deliveryId), {
             status: browserResult.success ? 'sent' : 'failed',

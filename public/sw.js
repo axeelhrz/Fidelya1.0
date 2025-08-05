@@ -242,7 +242,7 @@ self.addEventListener('notificationclose', (event) => {
 self.addEventListener('message', (event) => {
   console.log('📬 Message received:', event.data);
   
-  const { type, data } = event.data;
+  const { type } = event.data;
   
   switch (type) {
     case 'SKIP_WAITING':

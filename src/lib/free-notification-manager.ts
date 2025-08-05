@@ -106,7 +106,7 @@ class FreeNotificationManager {
   private initAudioContext(): void {
     try {
       if (typeof window !== 'undefined' && !this.audioContext) {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        const AudioContextClass = window.AudioContext || (window as Window & typeof globalThis).webkitAudioContext;
         if (AudioContextClass) {
           this.audioContext = new AudioContextClass();
         }
@@ -255,13 +255,11 @@ class FreeNotificationManager {
     }, {} as Record<string, QueuedNotification[]>);
 
     // Mostrar notificaciones agrupadas
-    Object.entries(grouped).forEach(([key, notifications]) => {
-      const [type, priority] = key.split('-');
-      
+    Object.entries(grouped).forEach(([, notifications]) => {
       if (notifications.length === 1) {
         this.showSingleNotification(notifications[0]);
       } else {
-        this.showBatchNotification(notifications, type as any, priority as any);
+        this.showBatchNotification(notifications);
       }
     });
 
@@ -323,11 +321,7 @@ class FreeNotificationManager {
   }
 
   // Mostrar notificación de lote
-  private showBatchNotification(
-    notifications: QueuedNotification[], 
-    type: 'success' | 'error' | 'info' | 'warning',
-    priority: 'low' | 'medium' | 'high' | 'urgent'
-  ): void {
+  private showBatchNotification(notifications: QueuedNotification[]): void {
     const count = notifications.length;
     const firstNotification = notifications[0];
     const batchMessage = `${firstNotification.message} (+${count - 1} más)`;
@@ -380,7 +374,7 @@ class FreeNotificationManager {
     }
 
     const notification: QueuedNotification = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
       title,
       message,
       type,
@@ -454,7 +448,7 @@ class FreeNotificationManager {
     inApp: { success: boolean };
   }> {
     try {
-      const notificationId = `external_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const notificationId = `external_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       
       const result = await freeNotificationService.sendNotificationToUser(
         notificationId,
@@ -464,7 +458,7 @@ class FreeNotificationManager {
           message,
           type,
           priority,
-          category: options.category || 'general',
+          category: (options.category as import('@/types/notification').NotificationCategory) || 'general' as import('@/types/notification').NotificationCategory,
           actionUrl: options.actionUrl,
           actionLabel: options.actionLabel
         }
@@ -515,7 +509,7 @@ class FreeNotificationManager {
   // Obtener estado del gestor
   public getStatus(): {
     initialized: boolean;
-    serviceAvailability: typeof this.serviceAvailability;
+    serviceAvailability: { email: boolean; push: boolean; browser: boolean };
     queueSize: number;
     config: NotificationConfig;
   } {

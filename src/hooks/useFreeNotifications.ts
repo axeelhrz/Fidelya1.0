@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { freeNotificationManager, showSuccess, showError, showWarning, showInfo, showUrgent } from '@/lib/free-notification-manager';
 import { freeNotificationService } from '@/services/free-notifications.service';
 import { useAuth } from '@/hooks/useAuth';
-import type { NotificationFormData } from '@/types/notification';
+import type { NotificationFormData, NotificationCategory } from '@/types/notification';
 
 interface NotificationStatus {
   initialized: boolean;
@@ -57,7 +57,7 @@ export const useFreeNotifications = () => {
     queueSize: 0
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorState, setErrorState] = useState<string | null>(null);
   
   const statusUpdateInterval = useRef<NodeJS.Timeout | null>(null);
   const diagnosticInterval = useRef<NodeJS.Timeout | null>(null);
@@ -104,7 +104,7 @@ export const useFreeNotifications = () => {
   const requestPermissions = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
+      setErrorState(null);
       
       const permissions = await freeNotificationManager.requestPermissions();
       
@@ -119,7 +119,7 @@ export const useFreeNotifications = () => {
       return permissions;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error requesting permissions';
-      setError(errorMessage);
+      setErrorState(errorMessage);
       console.error('❌ Error requesting permissions:', error);
       return { browser: false, push: false };
     } finally {
@@ -158,7 +158,7 @@ export const useFreeNotifications = () => {
   ) => {
     try {
       setLoading(true);
-      setError(null);
+      setErrorState(null);
       
       const result = await freeNotificationManager.sendExternalNotification(
         userId,
@@ -176,7 +176,7 @@ export const useFreeNotifications = () => {
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error sending notification';
-      setError(errorMessage);
+      setErrorState(errorMessage);
       console.error('❌ Error sending external notification:', error);
       throw error;
     } finally {
@@ -193,7 +193,7 @@ export const useFreeNotifications = () => {
   ) => {
     try {
       setLoading(true);
-      setError(null);
+      setErrorState(null);
       
       const notificationId = `bulk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
@@ -205,7 +205,7 @@ export const useFreeNotifications = () => {
           message,
           type: options.type || 'info',
           priority: options.priority || 'medium',
-          category: options.category || 'general',
+          category: (options.category as NotificationCategory) || 'general' as NotificationCategory,
           actionUrl: options.actionUrl,
           actionLabel: options.actionLabel
         }
@@ -220,7 +220,7 @@ export const useFreeNotifications = () => {
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error sending bulk notification';
-      setError(errorMessage);
+      setErrorState(errorMessage);
       console.error('❌ Error sending bulk notification:', error);
       throw error;
     } finally {
@@ -237,7 +237,7 @@ export const useFreeNotifications = () => {
   ) => {
     try {
       setLoading(true);
-      setError(null);
+      setErrorState(null);
       
       if (data.sendExternal && data.recipientIds && data.recipientIds.length > 0) {
         // Enviar notificación externa
@@ -260,7 +260,7 @@ export const useFreeNotifications = () => {
         notify(
           data.title,
           data.message,
-          data.type === 'announcement' ? 'info' : data.type as any,
+          data.type === 'announcement' ? 'info' : (data.type as 'success' | 'error' | 'info' | 'warning'),
           data.priority,
           {
             actionUrl: data.actionUrl,
@@ -278,7 +278,7 @@ export const useFreeNotifications = () => {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error creating notification';
-      setError(errorMessage);
+      setErrorState(errorMessage);
       console.error('❌ Error creating notification:', error);
       throw error;
     } finally {
@@ -369,20 +369,20 @@ export const useFreeNotifications = () => {
 
   // Limpiar error después de un tiempo
   useEffect(() => {
-    if (error) {
+    if (errorState) {
       const timeout = setTimeout(() => {
-        setError(null);
+        setErrorState(null);
       }, 10000);
       
       return () => clearTimeout(timeout);
     }
-  }, [error]);
+  }, [errorState]);
 
   return {
     // Estado
     status,
     loading,
-    error,
+    error: errorState,
     
     // Acciones principales
     notify,
@@ -392,7 +392,7 @@ export const useFreeNotifications = () => {
     
     // Funciones de conveniencia
     success,
-    error: error,
+    errorNotification: error,
     warning,
     info,
     urgent,

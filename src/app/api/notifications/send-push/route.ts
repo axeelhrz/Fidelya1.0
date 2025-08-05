@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 
 // Esta es una implementación simplificada para push notifications
 // En un entorno de producción, deberías usar Firebase Admin SDK
@@ -107,7 +106,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Método OPTIONS para CORS
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {

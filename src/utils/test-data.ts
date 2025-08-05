@@ -1,4 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
 import BeneficiosService from '@/services/beneficios.service';
 import { BeneficioFormData } from '@/types/beneficio';
 
