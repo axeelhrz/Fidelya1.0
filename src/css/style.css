@@ -3,10 +3,10 @@
 --primary-bg: #0a0d14; --secondary-bg: #151922; --accent-bg: #1e2330;
 --glass-bg: rgba(21, 25, 34, 0.7); --glass-bg-light: rgba(255, 255, 255, 0.05); --glass-bg-medium: rgba(255, 255, 255, 0.08); --glass-bg-strong: rgba(255, 255, 255, 0.12); --glass-border: rgba(255, 255, 255, 0.12);
 
-/* COLORES ROJIZOS ACTUALIZADOS */
+/* COLORES ROJIZOS ACTUALIZADOS - MÁS INTENSOS Y MENOS ROSADOS */
 --starflex-red: #dc143c; --starflex-red-dark: #b71c1c; --starflex-red-bright: #ff1744; --starflex-orange: #ff6b35; --starflex-orange-bright: #ff7a47; --starflex-crimson: #b8002e; --starflex-crimson-glow: #ff1744; --starflex-crimson-light: #d4003a; --starflex-crimson-dark: #9c0025; --starflex-crimson-bright: #ff4569;
 
-/* NUEVA PALETA ROJIZA NEÓN */
+/* NUEVA PALETA ROJIZA NEÓN MÁS INTENSA */
 --neon-red-base: #dc143c;
 --neon-red-soft: #ff1744;
 --neon-red-medium: #ff4569;
@@ -20,10 +20,36 @@
 --neon-red-shadow-bright: rgba(255, 69, 105, 0.4);
 
 --neon-primary: #dc143c; --neon-primary-bright: #ff4569; --neon-primary-glow: #ff1744;
+--neon-red-intense: #b71c1c; --neon-red-electric: #ff1744; --neon-red-plasma: #dc143c; --neon-red-fire: #ff4569; --neon-red-shadow: rgba(220, 20, 60, 0.6); --neon-red-aura: rgba(255, 23, 68, 0.4); --neon-red-pulse: rgba(255, 69, 105, 0.8);
+--neon-red-shimmer: rgba(220, 20, 60, 0.8); --neon-red-shimmer-bright: rgba(255, 23, 68, 0.9); --neon-red-shimmer-intense: rgba(255, 69, 105, 1);
+
+/* NUEVAS VARIABLES PARA EFECTOS ULTRA MODERNOS DEL HERO */
+--neon-red-ultra: #ff0040;
+--neon-red-plasma-hero: #ff1744;
+--neon-red-electric-hero: #ff4569;
+--neon-red-fire-hero: #ff6b9d;
+--neon-glow-intense: rgba(255, 23, 68, 0.8);
+--neon-glow-ultra: rgba(255, 0, 64, 0.9);
+--neon-shadow-deep: rgba(255, 23, 68, 0.6);
+
+/* NUEVAS VARIABLES PARA BOTÓN CTA FUTURISTA */
+--neon-crimson-ultra: #dc143c;
+--neon-crimson-electric: #ff1744;
+--neon-crimson-plasma: #ff4569;
+--neon-crimson-fire: #ff6b9d;
+--neon-crimson-shadow: rgba(220, 20, 60, 0.8);
+--neon-crimson-glow: rgba(255, 23, 68, 0.9);
+--neon-crimson-pulse: rgba(255, 69, 105, 1);
+
+/* EFECTOS DE PARTÍCULAS Y ENERGÍA */
+--energy-particle-1: rgba(255, 23, 68, 0.7);
+--energy-particle-2: rgba(220, 20, 60, 0.6);
+--energy-particle-3: rgba(255, 69, 105, 0.8);
+--energy-border-glow: rgba(255, 23, 68, 0.9);
+
 
 --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05); --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.1); --shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.1); --shadow-xl: 0 4px 6px rgba(0, 0, 0, 0.1); --shadow-2xl: 0 8px 15px rgba(0, 0, 0, 0.1);
---shadow-neon: 0 0 20px var(--neon-red-shadow-soft), 0 0 40px var(--neon-red-glow-soft), 0 0 60px rgba(255, 23, 68, 0.3);
-
+--shadow-neon: 0 0 20px var(--neon-red-shadow), 0 0 40px var(--neon-red-aura), 0 0 60px rgba(255, 23, 68, 0.3); --shadow-neon-intense: 0 0 30px var(--neon-red-shadow), 0 0 60px var(--neon-red-aura), 0 0 90px rgba(255, 23, 68, 0.4), 0 0 120px rgba(255, 45, 85, 0.2);
 --text-primary: #fff; --text-secondary: #e2e8f0; --text-muted: #94a3b8; --text-accent: #ff4569;
 --border-subtle: rgba(255, 255, 255, 0.08); --border-accent: rgba(255, 69, 105, 0.3); --border-crimson: rgba(184, 0, 46, 0.4);
 --font-primary: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; --font-mono: ui-monospace, monospace;
@@ -98,18 +124,6 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0}
 .touch-target{min-height:44px;min-width:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 
-/* ===== ANIMACIONES PULSE ===== */
-@keyframes pulseOut {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    100% {
-        transform: scale(1.5);
-        opacity: 0;
-    }
-}
-
 /* ANIMACIONES DESKTOP */
 @media (min-width: 1024px) {
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -126,15 +140,307 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .animate-fadeIn{animation:fadeIn 0.3s ease-out}.animate-fadeInUp{animation:fadeInUp 0.4s ease-out}.animate-fadeInDown{animation:fadeInDown 0.4s ease-out}.animate-fadeInLeft{animation:fadeInLeft 0.4s ease-out}.animate-fadeInRight{animation:fadeInRight 0.4s ease-out}.animate-pulse{animation:pulse 2s infinite}.animate-pulse-gentle{animation:pulse-gentle 3s infinite}.animate-spin{animation:spin 1s linear infinite}
 }
 
-/* ===== BOTONES OPTIMIZADOS MÓVIL ===== */
-.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-lg);font-family:var(--font-primary);font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;text-decoration:none;border:none;border-radius:8px;cursor:pointer;overflow:visible;-webkit-tap-highlight-color:transparent;user-select:none;min-height:44px;touch-action:manipulation;transition:all var(--transition)}
+/* ===== EFECTO DE ONDA CIRCULAR COMO EN LA IMAGEN ===== */
+
+/* Animación de onda circular que se expande */
+@keyframes circular-wave-expand {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0);
+    }
+    50% {
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        width: 200px;
+        height: 200px;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2);
+    }
+}
+
+/* Animación más grande para el hero */
+@keyframes hero-circular-wave-expand {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0);
+    }
+    30% {
+        opacity: 0.9;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    70% {
+        opacity: 0.4;
+        transform: translate(-50%, -50%) scale(1.5);
+    }
+    100% {
+        width: 300px;
+        height: 300px;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2.5);
+    }
+}
+
+/* Efecto al hacer click - onda más rápida e intensa */
+@keyframes click-wave-burst {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0);
+        background: radial-gradient(circle, 
+            rgba(255, 255, 255, 0.9) 0%, 
+            rgba(255, 255, 255, 0.7) 20%, 
+            rgba(255, 255, 255, 0.4) 40%, 
+            transparent 60%) !important;
+    }
+    100% {
+        width: 250px;
+        height: 250px;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2);
+    }
+
+}
+/* ANIMACIONES FUTURISTAS PARA EL BOTÓN CTA */
+@keyframes energy-pulse {
+    0%, 100% {
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+}
+
+@keyframes particle-float {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+    }
+    25% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(90deg);
+    }
+    75% {
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(0.8) rotate(270deg);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0) rotate(360deg);
+    }
+}
+
+/* KEYFRAME ULTRA FUTURISTA - EFECTO CYBER MATRIX */
+@keyframes cyber-matrix-pulse {
+    0% {
+        box-shadow: 
+            0 0 20px var(--neon-crimson-shadow), 
+            0 0 40px var(--neon-crimson-glow), 
+            0 0 60px rgba(255, 23, 68, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2),
+            0 8px 32px rgba(0, 0, 0, 0.3);
+        transform: translateZ(0) scale(1);
+        filter: brightness(1) saturate(1) hue-rotate(0deg);
+    }
+    
+    15% {
+        box-shadow: 
+            0 0 35px var(--neon-crimson-glow), 
+            0 0 70px var(--neon-crimson-pulse), 
+            0 0 105px rgba(255, 23, 68, 0.6),
+            inset 0 2px 0 rgba(255, 255, 255, 0.4),
+            0 12px 48px rgba(0, 0, 0, 0.4),
+            0 0 0 2px rgba(255, 23, 68, 0.3);
+        transform: translateZ(0) scale(1.01);
+        filter: brightness(1.1) saturate(1.2) hue-rotate(5deg);
+    }
+    
+    30% {
+        box-shadow: 
+            0 0 50px var(--neon-crimson-pulse), 
+            0 0 100px rgba(255, 69, 105, 0.8), 
+            0 0 150px rgba(255, 23, 68, 0.5),
+            inset 0 3px 0 rgba(255, 255, 255, 0.5),
+            0 16px 64px rgba(0, 0, 0, 0.5),
+            0 0 0 4px rgba(255, 69, 105, 0.4),
+            0 0 0 8px rgba(255, 23, 68, 0.2);
+        transform: translateZ(0) scale(1.02);
+        filter: brightness(1.2) saturate(1.4) hue-rotate(10deg);
+    }
+    
+    45% {
+        box-shadow: 
+            0 0 40px var(--neon-crimson-glow), 
+            0 0 80px var(--neon-crimson-pulse), 
+            0 0 120px rgba(255, 23, 68, 0.6),
+            inset 0 2px 0 rgba(255, 255, 255, 0.3),
+            0 14px 56px rgba(0, 0, 0, 0.45),
+            0 0 0 3px rgba(255, 23, 68, 0.3);
+        transform: translateZ(0) scale(1.015);
+        filter: brightness(1.15) saturate(1.3) hue-rotate(7deg);
+    }
+    
+    60% {
+        box-shadow: 
+            0 0 60px var(--neon-crimson-pulse), 
+            0 0 120px rgba(255, 69, 105, 0.9), 
+            0 0 180px rgba(255, 23, 68, 0.4),
+            inset 0 4px 0 rgba(255, 255, 255, 0.6),
+            0 20px 80px rgba(0, 0, 0, 0.6),
+            0 0 0 6px rgba(255, 69, 105, 0.5),
+            0 0 0 12px rgba(255, 23, 68, 0.3),
+            0 0 0 18px rgba(220, 20, 60, 0.1);
+        transform: translateZ(0) scale(1.03);
+        filter: brightness(1.3) saturate(1.5) hue-rotate(15deg);
+    }
+    
+    75% {
+        box-shadow: 
+            0 0 45px var(--neon-crimson-glow), 
+            0 0 90px var(--neon-crimson-pulse), 
+            0 0 135px rgba(255, 23, 68, 0.5),
+            inset 0 2px 0 rgba(255, 255, 255, 0.4),
+            0 16px 64px rgba(0, 0, 0, 0.5),
+            0 0 0 4px rgba(255, 23, 68, 0.4);
+        transform: translateZ(0) scale(1.02);
+        filter: brightness(1.2) saturate(1.3) hue-rotate(10deg);
+    }
+    
+    90% {
+        box-shadow: 
+            0 0 30px var(--neon-crimson-shadow), 
+            0 0 60px var(--neon-crimson-glow), 
+            0 0 90px rgba(255, 23, 68, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+            0 10px 40px rgba(0, 0, 0, 0.35),
+            0 0 0 2px rgba(255, 23, 68, 0.2);
+        transform: translateZ(0) scale(1.005);
+        filter: brightness(1.05) saturate(1.1) hue-rotate(3deg);
+    }
+    
+    100% {
+        box-shadow: 
+            0 0 20px var(--neon-crimson-shadow), 
+            0 0 40px var(--neon-crimson-glow), 
+            0 0 60px rgba(255, 23, 68, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2),
+            0 8px 32px rgba(0, 0, 0, 0.3);
+        transform: translateZ(0) scale(1);
+        filter: brightness(1) saturate(1) hue-rotate(0deg);
+    }
+}
+
+/* KEYFRAME COMPLEMENTARIO - EFECTO GLITCH SUTIL */
+@keyframes cyber-glitch-subtle {
+    0%, 90%, 100% {
+        text-shadow: 
+            0 0 10px var(--neon-crimson-glow),
+            0 0 20px var(--neon-crimson-shadow),
+            0 2px 4px rgba(0, 0, 0, 0.8);
+        transform: translateX(0);
+    }
+    
+    2% {
+        text-shadow: 
+            2px 0 0 #ff0040,
+            -2px 0 0 #00ffff,
+            0 0 10px var(--neon-crimson-glow),
+            0 0 20px var(--neon-crimson-shadow);
+        transform: translateX(1px);
+    }
+    
+    4% {
+        text-shadow: 
+            -1px 0 0 #ff0040,
+            1px 0 0 #00ffff,
+            0 0 10px var(--neon-crimson-glow),
+            0 0 20px var(--neon-crimson-shadow);
+        transform: translateX(-1px);
+    }
+    
+    6% {
+        text-shadow: 
+            0 0 10px var(--neon-crimson-glow),
+            0 0 20px var(--neon-crimson-shadow),
+            0 2px 4px rgba(0, 0, 0, 0.8);
+        transform: translateX(0);
+    }
+}
+
+/* KEYFRAME PARA EFECTO HOLOGRÁFICO */
+@keyframes holographic-shimmer {
+    0% {
+        background-position: -200% center;
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        background-position: 200% center;
+        opacity: 0;
+    }
+}
+
+
+@keyframes cyber-wave-expand {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0);
+        background: radial-gradient(circle, 
+            var(--neon-crimson-electric) 0%, 
+            var(--neon-crimson-plasma) 30%, 
+            var(--neon-crimson-fire) 60%, 
+            transparent 100%);
+    }
+    30% {
+        opacity: 0.9;
+        transform: translate(-50%, -50%) scale(0.6);
+        background: radial-gradient(circle, 
+            rgba(255, 255, 255, 0.8) 0%, 
+            var(--neon-crimson-electric) 20%, 
+            var(--neon-crimson-plasma) 50%, 
+            transparent 80%);
+    }
+    70% {
+        opacity: 0.4;
+        transform: translate(-50%, -50%) scale(1.8);
+        background: radial-gradient(circle, 
+            rgba(255, 255, 255, 0.3) 0%, 
+            var(--neon-crimson-fire) 30%, 
+            transparent 70%);
+    }
+    100% {
+        width: 350px;
+        height: 350px;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2.5);
+        background: radial-gradient(circle, 
+            transparent 0%, 
+            transparent 100%);
+    }
+}
+
+
+/* ===== BOTONES OPTIMIZADOS MÓVIL CON EFECTOS NEON ROJIZOS SUTILES Y ONDA CIRCULAR ===== */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-lg);font-family:var(--font-primary);font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;text-decoration:none;border:none;border-radius:8px;cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;min-height:44px;touch-action:manipulation;transition:all var(--transition)}
 
 .btn--primary{color:var(--text-primary);background:linear-gradient(135deg, var(--starflex-crimson), var(--starflex-crimson-bright));box-shadow:var(--shadow-md)}
 .btn--secondary{color:var(--text-secondary);background:var(--glass-bg);border:1px solid var(--border-subtle);backdrop-filter:blur(10px)}
 .btn--outline{color:var(--starflex-crimson);background:transparent;border:2px solid var(--starflex-crimson)}
 .btn--ghost{color:var(--text-secondary);background:transparent;border:1px solid transparent}
 
-/* BOTÓN CTA CON EFECTO PULSE */
+/* BOTÓN CTA CON EFECTO DE ONDA CIRCULAR */
 .btn--cta {
     position: relative !important;
     padding: var(--space-md) var(--space-xl);
@@ -144,7 +450,7 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
     width: 100%;
     max-width: 300px;
     margin: 0 auto;
-    overflow: visible !important;
+    overflow: hidden !important;
     background: linear-gradient(135deg, var(--neon-red-base) 0%, var(--neon-red-soft) 100%) !important;
     border: 1px solid var(--neon-red-soft) !important;
     box-shadow: 0 0 15px var(--neon-red-shadow-soft), 0 0 30px var(--neon-red-glow-soft), 0 4px 12px rgba(0, 0, 0, 0.25) !important;
@@ -156,40 +462,82 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
     z-index: 10 !important;
 }
 
-/* EFECTOS PULSE PARA BOTONES CTA */
-.btn--cta::before {
-    content: '' !important;
+/* Efecto de onda circular que se expande */
+.btn--cta .wave-effect {
     position: absolute !important;
-    top: -4px !important;
-    left: -4px !important;
-    right: -4px !important;
-    bottom: -4px !important;
-    border: 2px solid rgba(220, 20, 60, 0.8) !important;
-    border-radius: inherit !important;
-    background: transparent !important;
-    animation: pulseOut 2s ease-out infinite !important;
-    opacity: 0 !important;
-    display: block !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.6) 0%, 
+        rgba(255, 255, 255, 0.4) 30%, 
+        rgba(255, 255, 255, 0.2) 60%, 
+        transparent 100%) !important;
+    transform: translate(-50%, -50%) !important;
     pointer-events: none !important;
-    z-index: -1 !important;
+    z-index: 2 !important;
+    animation: circular-wave-expand 2s ease-out infinite !important;
 }
 
-.btn--cta::after {
-    content: '' !important;
-    position: absolute !important;
-    top: -4px !important;
-    left: -4px !important;
-    right: -4px !important;
-    bottom: -4px !important;
-    border: 2px solid rgba(255, 23, 68, 0.6) !important;
-    border-radius: inherit !important;
-    background: transparent !important;
-    animation: pulseOut 2s ease-out infinite !important;
+/* Múltiples ondas con diferentes delays para efecto continuo */
+.btn--cta .wave-effect:nth-child(1) {
+    animation-delay: 0s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.7) 0%, 
+        rgba(255, 255, 255, 0.5) 20%, 
+        rgba(255, 255, 255, 0.3) 40%, 
+        rgba(255, 255, 255, 0.1) 60%, 
+        transparent 80%) !important;
+}
+
+.btn--cta .wave-effect:nth-child(2) {
     animation-delay: 0.5s !important;
-    opacity: 0 !important;
-    display: block !important;
-    pointer-events: none !important;
-    z-index: -2 !important;
+    background: radial-gradient(circle, 
+        rgba(255, 107, 157, 0.6) 0%, 
+        rgba(255, 107, 157, 0.4) 25%, 
+        rgba(255, 107, 157, 0.2) 50%, 
+        transparent 75%) !important;
+}
+
+.btn--cta .wave-effect:nth-child(3) {
+    animation-delay: 1s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 45, 85, 0.5) 0%, 
+        rgba(255, 45, 85, 0.3) 30%, 
+        rgba(255, 45, 85, 0.1) 60%, 
+        transparent 80%) !important;
+}
+
+.btn--cta .wave-effect:nth-child(4) {
+    animation-delay: 1.5s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.4) 0%, 
+        rgba(255, 255, 255, 0.2) 35%, 
+        rgba(255, 255, 255, 0.1) 70%, 
+        transparent 85%) !important;
+}
+
+/* Efecto especial para el botón del hero */
+.hero__cta-main .btn--cta .wave-effect {
+    animation: hero-circular-wave-expand 2.5s ease-out infinite !important;
+}
+
+.hero__cta-main .btn--cta .wave-effect:nth-child(1) {
+    animation-delay: 0s !important;
+}
+
+.hero__cta-main .btn--cta .wave-effect:nth-child(2) {
+    animation-delay: 0.6s !important;
+}
+
+.hero__cta-main .btn--cta .wave-effect:nth-child(3) {
+    animation-delay: 1.2s !important;
+}
+
+.hero__cta-main .btn--cta .wave-effect:nth-child(4) {
+    animation-delay: 1.8s !important;
 }
 
 .btn:disabled,.btn--disabled{opacity:0.5;cursor:not-allowed;pointer-events:none}
@@ -203,7 +551,7 @@ p,span,h1,h2,h3,h4,h5,h6,li,td,th,input,textarea{-webkit-user-select:text;user-s
 .btn__icon--left{margin-right:var(--space-xs)}
 .btn__icon--right{margin-left:var(--space-xs)}
 
-/* EFECTOS HOVER MÓVIL */
+/* EFECTOS HOVER MÓVIL PARA CTA CON ANIMACIONES SUTILES */
 @media (hover: hover) and (pointer: fine) {
 .btn--cta:hover{
 transform:translateY(-3px) scale(1.01);
@@ -214,26 +562,32 @@ border-color:var(--neon-red-medium);
 transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.btn--cta:hover::before,
-.btn--cta:hover::after {
-    animation-duration: 1.5s !important;
-}
+.btn--cta:hover .wave-effect{
+animation-duration:1.8s !important;
 }
 
-/* EFECTOS TÁCTILES MÓVIL */
+.hero__cta-main .btn--cta:hover .wave-effect {
+animation-duration: 2s !important;
+}
+
+.btn--footer:hover{transform:translateY(-2px);box-shadow:0 0 25px var(--neon-red-shadow), 0 0 50px var(--neon-red-aura), 0 4px 20px rgba(0, 0, 0, 0.3);background:linear-gradient(135deg, var(--neon-red-electric) 0%, var(--neon-red-fire) 100%);border-color:var(--neon-red-fire);color:#ffffff!important;transition:all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)}
+}
+
+/* EFECTOS TÁCTILES MÓVIL CON ANIMACIONES SUTILES */
 .btn--cta:active{
 transform:translateY(-1px) scale(1.005);
 box-shadow:0 0 20px var(--neon-red-shadow-medium), 0 0 40px var(--neon-red-glow-medium), 0 6px 18px rgba(0, 0, 0, 0.3);
 transition:all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.btn--cta:active::before,
-.btn--cta:active::after {
-    animation-duration: 0.8s !important;
-    animation-delay: 0s !important;
+/* Efecto al hacer click - onda más rápida e intensa */
+.btn--cta:active .wave-effect {
+    animation: click-wave-burst 0.6s ease-out !important;
 }
 
-/* DESKTOP HOVER BOTONES */
+.btn--footer:active{transform:translateY(0) scale(0.98);box-shadow:0 0 20px var(--neon-red-shadow), 0 0 40px var(--neon-red-aura);color:#ffffff!important;transition:all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)}
+
+/* DESKTOP HOVER BOTONES CON EFECTOS ROJIZOS SUTILES */
 @media (min-width: 1024px) {
 .btn{transition:all var(--transition);padding:var(--space-md) var(--space-xl);font-size:0.95rem}
 .btn:active{transform:scale(0.98)}
@@ -243,6 +597,7 @@ transition:all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 .btn--outline:hover{color:var(--text-primary);background:var(--starflex-crimson);box-shadow:var(--shadow-md)}
 .btn--ghost:hover{color:var(--text-primary);background:var(--glass-bg-light);border-color:var(--border-subtle)}
 
+/* CTA DESKTOP CON ANIMACIONES SUTILES MEJORADAS */
 .btn--cta{
 padding:var(--space-lg) var(--space-2xl);
 font-size:1.1rem;
@@ -267,9 +622,15 @@ transform:translateY(-2px) scale(1.01);
 box-shadow:0 0 25px var(--neon-red-shadow-bright), 0 0 50px var(--neon-red-glow-bright), 0 10px 25px rgba(0, 0, 0, 0.35);
 transition:all 0.2s ease;
 }
+
+/* BOTÓN FOOTER DESKTOP - HOVER CORREGIDO SIN EFECTOS QUE OCULTEN TEXTO */
+.btn--footer{padding:var(--space-lg) var(--space-xl);font-size:1rem;transition:all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);position:relative;overflow:hidden}
+.btn--footer:hover{transform:translateY(-2px);box-shadow:0 0 30px var(--neon-red-shadow), 0 0 60px var(--neon-red-aura), 0 6px 25px rgba(0, 0, 0, 0.3);background:linear-gradient(135deg, var(--neon-red-electric) 0%, var(--neon-red-fire) 100%);border-color:var(--neon-red-fire);color:#ffffff!important;transition:all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)}
+.btn--footer span, .btn--footer small{position:relative;z-index:2;color:#ffffff!important}
+.btn--footer:hover span, .btn--footer:hover small{color:#ffffff!important}
 }
 
-/* ===== FLOATING WIDGET MÓVIL ===== */
+/* ===== FLOATING WIDGET MÓVIL CON TRANSICIONES ===== */
 .floating-widget{position:fixed;bottom:20px;right:20px;z-index:999;font-family:var(--font-primary);opacity:1;visibility:visible;transform:translateY(0) scale(1);pointer-events:auto;transition:all var(--transition-slow)}
 
 .floating-widget.hidden-by-drawer{opacity:0;visibility:hidden;transform:translateY(20px) scale(0.8);pointer-events:none}
@@ -302,7 +663,7 @@ transition:all 0.2s ease;
 .floating-widget__icon{width:20px;height:20px}
 }
 
-/* DESKTOP FLOATING COMPLETO */
+/* DESKTOP FLOATING COMPLETO CON EFECTOS ROJIZOS */
 @media (min-width: 1024px) {
 .floating-widget__menu,.floating-widget__menu-item,.floating-widget__main-btn,.floating-widget__tooltip{transition:all var(--transition)}
 .floating-widget__main-btn{width:64px;height:64px}
@@ -311,7 +672,7 @@ transition:all 0.2s ease;
 .floating-widget__icon{width:22px;height:22px}
 .floating-widget__tooltip{font-size:0.8rem;padding:8px 12px;right:calc(100% + 15px)}
 
-.floating-widget__menu-item::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg, transparent, var(--neon-red-shadow-soft), var(--neon-red-glow-soft), transparent);transition:left 0.3s ease}
+.floating-widget__menu-item::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg, transparent, var(--neon-red-shimmer), var(--neon-red-shimmer-bright), transparent);transition:left 0.3s ease}
 .floating-widget__menu-item:hover::before{left:100%}
 .floating-widget__menu-item:hover{background:linear-gradient(135deg, var(--starflex-crimson-bright), var(--starflex-red));box-shadow:var(--shadow-xl);transform:scale(1.05);border-color:var(--starflex-red)}
 .floating-widget__menu-item:hover .floating-widget__icon{transform:scale(1.1);filter:drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4))}
@@ -334,18 +695,19 @@ transition:all 0.2s ease;
 .floating-widget.hidden-by-drawer{opacity:1;visibility:visible;transform:translateY(0) scale(1);pointer-events:auto}
 }
 
-/* ===== HEADER FLOTANTE MÓVIL ===== */
+/* ===== HEADER FLOTANTE MÓVIL CON TRANSICIONES - LOGO CON CONTENEDOR RESTAURADO ===== */
 .header{position:fixed;top:0;left:0;right:0;z-index:1000;background:transparent;border:none;min-height:auto;max-height:auto;height:auto;padding:0;transition:all var(--transition)}
 
 /* Contenedor flotante para móvil */
 @media (max-width: 1023px) {
 .header{padding:var(--space-md) var(--space-lg) 0;background:transparent}
 
+/* ELIMINAR EFECTOS DE SCROLL EN MÓVIL */
 .header.scrolled{background:transparent;backdrop-filter:none;border-bottom:none;box-shadow:none}
 
 .nav{position:relative;display:flex;align-items:center;justify-content:space-between;width:100%;max-width:none;margin:0;padding:0;height:auto;min-height:auto;background:transparent}
 
-/* Logo flotante con contenedor */
+/* Logo flotante con contenedor - RESTAURADO Y CORREGIDO */
 .nav__brand{
 position:fixed;
 top:var(--space-sm);
@@ -410,32 +772,37 @@ transform:scale(1.05);
 filter:brightness(1.3) contrast(1.2);
 }
 
-/* Botón hamburguesa flotante */
+/* Botón hamburguesa flotante con transiciones mejoradas */
 .nav__toggle{position:fixed;top:var(--space-sm);right:var(--space-lg);z-index:1002;display:flex;flex-direction:column;justify-content:center;align-items:center;width:56px;height:56px;background:rgba(21, 25, 34, 0.95);backdrop-filter:blur(20px);border:1px solid rgba(255, 255, 255, 0.1);border-radius:20px;cursor:pointer;overflow:hidden;flex-shrink:0;min-width:56px;min-height:56px;touch-action:manipulation;box-shadow:0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 69, 105, 0.1);transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
 .nav__toggle:active{transform:translateY(-1px) scale(0.95);background:rgba(21, 25, 34, 0.98);border-color:rgba(255, 69, 105, 0.3);box-shadow:0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 69, 105, 0.2)}
 
-/* Líneas del hamburguesa */
+/* Líneas del hamburguesa con animación suave */
 .nav__toggle-line{width:24px;height:3px;background:var(--text-secondary);border-radius:2px;margin:3px 0;transform-origin:center;transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);position:relative;display:block}
 
 .nav__toggle-line::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:inherit;border-radius:inherit;transition:all 0.3s ease}
 
-/* Estado activo - Transformación a X */
+/* Estado activo - Transformación a X con animación fluida */
 .nav__toggle.active{background:rgba(21, 25, 34, 0.98);border-color:var(--neon-primary);box-shadow:0 8px 32px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 69, 105, 0.3)}
 
 .nav__toggle.active .nav__toggle-line{background:var(--neon-primary)}
 
+/* Primera línea - se convierte en la parte superior de la X */
 .nav__toggle.active .nav__toggle-line:nth-child(1){transform:rotate(45deg) translate(7px, 7px);background:var(--neon-primary)}
 
 .nav__toggle.active .nav__toggle-line:nth-child(1)::before{transform:scaleX(1.1);background:var(--neon-primary-bright)}
 
+/* Segunda línea - desaparece con efecto de escala */
 .nav__toggle.active .nav__toggle-line:nth-child(2){opacity:0;transform:scale(0) rotate(180deg);background:var(--neon-primary)}
 
+/* Tercera línea - se convierte en la parte inferior de la X */
 .nav__toggle.active .nav__toggle-line:nth-child(3){transform:rotate(-45deg) translate(7px, -7px);background:var(--neon-primary)}
 
 .nav__toggle.active .nav__toggle-line:nth-child(3)::before{transform:scaleX(1.1);background:var(--neon-primary-bright)}
 
+/* Efecto de brillo cuando está activo */
 .nav__toggle.active::before{content:'';position:absolute;top:50%;left:50%;width:100%;height:100%;background:radial-gradient(circle, rgba(255, 69, 105, 0.1) 0%, transparent 70%);border-radius:50%;transform:translate(-50%, -50%);animation:pulse-glow 2s infinite;pointer-events:none}
 
+/* Ocultar elementos de navegación desktop en móvil */
 .nav__menu,.nav__right-section{display:none}
 }
 
@@ -462,8 +829,9 @@ filter:brightness(1.3) contrast(1.2);
 .nav__list{display:flex;gap:clamp(var(--space-sm), 1.2vw, var(--space-xl));list-style:none;margin:0;padding:0;align-items:center;flex-wrap:nowrap;justify-content:flex-start;white-space:nowrap}
 .nav__link{position:relative;padding:var(--space-md) clamp(var(--space-xs), 0.8vw, var(--space-lg));font-family:var(--font-primary);font-size:clamp(0.7rem, 0.9vw, 0.9rem);font-weight:500;color:var(--text-secondary);text-decoration:none;text-transform:uppercase;letter-spacing:0.3px;border-radius:8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:clamp(50px, 7vw, 110px);flex-shrink:1;min-width:45px}
 
+/* MEJORA PARA EL ESTADO ACTIVO - ROJIZO PERO MÁS LEGIBLE */
 .nav__link.active{
-    color: #ff6b9d !important;
+    color: #ff6b9d !important; /* Rojo más brillante y legible */
     background: rgba(255, 45, 85, 0.15);
     border-top: 2px solid var(--starflex-crimson);
     box-shadow: 0 0 20px rgba(255, 69, 105, 0.2), inset 0 1px 0 rgba(255, 45, 85, 0.3);
@@ -471,6 +839,7 @@ filter:brightness(1.3) contrast(1.2);
     font-weight: 600 !important;
 }
 
+/* AJUSTES DE ESPACIADO PARA EL SELECTOR DE IDIOMA - SIN EFECTOS TRANSLÚCIDOS */
 .nav__language-switcher{position:relative;flex-shrink:0;z-index:1002;margin-left: clamp(1rem, 2.5vw, 1.5rem) !important;margin-right: clamp(2rem, 5vw, 3rem) !important}
 .nav__language-btn{display:flex;align-items:center;gap:clamp(6px, 0.8vw, 10px);padding: clamp(10px, 1.2vw, 16px) clamp(12px, 1.5vw, 20px);font-size: clamp(0.7rem, 0.85vw, 0.9rem);background:var(--secondary-bg);border:1px solid var(--border-subtle);border-radius:8px;cursor:pointer;user-select:none;-webkit-user-select:none;min-width: 70px !important;min-height: 40px !important;transition:all var(--transition)}
 .nav__language-icon{width:clamp(14px, 1.2vw, 16px);height:clamp(14px, 1.2vw, 16px);opacity:0.8;flex-shrink:0}
@@ -480,7 +849,7 @@ filter:brightness(1.3) contrast(1.2);
 .nav__cta .btn{min-width:160px !important;padding: clamp(12px, 1.5vw, 18px) clamp(16px, 2vw, 24px) !important;font-size: clamp(0.75rem, 0.9vw, 0.95rem) !important;white-space:nowrap;flex-shrink:0 !important}
 }
 
-/* DESKTOP HEADER HOVER EFFECTS */
+/* DESKTOP HEADER HOVER EFFECTS - SOLO PARA DESKTOP */
 @media (min-width: 1024px) {
 .header.scrolled{box-shadow:var(--shadow-lg), 0 1px 0 0 var(--neon-primary)}
 .nav__logo:hover{transform:scale(1.05);filter:brightness(1.2) contrast(1.1)}
@@ -504,7 +873,7 @@ filter:brightness(1.3) contrast(1.2);
 .nav__language-option:hover{color:var(--text-primary);background:linear-gradient(135deg, var(--glass-bg-light) 0%, var(--glass-bg-medium) 100%);transform:translateX(3px)}
 }
 
-/* ===== MOBILE DRAWER ===== */
+/* ===== MOBILE DRAWER CON TRANSICIONES MEJORADAS ===== */
 .nav__drawer{position:fixed;top:0;right:-100%;width:min(90%, 350px);height:100vh;background:rgba(15, 18, 25, 0.98);backdrop-filter:blur(20px);border-left:1px solid var(--border-subtle);box-shadow:-10px 0 50px rgba(0, 0, 0, 0.5);z-index:999;overflow:hidden;padding-top:calc(var(--space-6xl) + var(--space-lg));display:flex;flex-direction:column;transition:right 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
 
 .nav__drawer.active{right:0}
@@ -521,8 +890,9 @@ filter:brightness(1.3) contrast(1.2);
 
 .nav__drawer-title{font-family:var(--font-primary);font-size:1.3rem;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-.nav__drawer-content{padding:var(--space-md) 0;display:flex;flex-direction:column;flex:none;overflow:hidden}
+.nav__drawer-content{padding:var(--space-md) 0;display:flex;flex-direction:column;flex:1;overflow:hidden}
 
+/* SELECTOR DE IDIOMA REPOSICIONADO - AHORA VA ARRIBA CON TRANSICIONES */
 .nav__drawer-language{padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--border-subtle);flex-shrink:0;order:-1}
 
 .nav__drawer-language-title{font-family:var(--font-primary);font-size:0.85rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--space-sm);opacity:0.8}
@@ -537,8 +907,9 @@ filter:brightness(1.3) contrast(1.2);
 
 .nav__drawer-language-flag{font-size:1rem;line-height:1;flex-shrink:0}
 
+/* ===== AJUSTAR NAVEGACIÓN PARA QUE NO EMPUJE EL CTA HACIA ABAJO ===== */
 .nav__drawer-navigation {
-    flex: none;
+    flex: none; /* Cambiar de flex: 1 a flex: none para que no ocupe todo el espacio */
     padding: 0 var(--space-xl);
     display: flex;
     flex-direction: column;
@@ -547,15 +918,26 @@ filter:brightness(1.3) contrast(1.2);
     order: 1;
 }
 
+/* ===== BOTÓN CTA DEL DRAWER MÓVIL JUSTO DESPUÉS DE CONTACT ===== */
 .nav__drawer-cta {
-    padding: var(--space-md) var(--space-xl);
-    border-top: none;
+    padding: var(--space-md) var(--space-xl); /* Reducir padding vertical */
+    border-top: none; /* Eliminar borde superior */
     border-bottom: none;
     flex-shrink: 0;
     order: 2;
     margin-bottom: 0;
-    margin-top: var(--space-sm);
+    margin-top: var(--space-sm); /* Reducir margen superior para que esté más cerca */
 }
+
+/* ===== AJUSTAR EL CONTENEDOR DEL DRAWER PARA MEJOR DISTRIBUCIÓN ===== */
+.nav__drawer-content {
+    padding: var(--space-md) 0;
+    display: flex;
+    flex-direction: column;
+    flex: none; /* Cambiar de flex: 1 a flex: none */
+    overflow: hidden;
+}
+
 
 .nav__drawer-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-md)}
 
@@ -569,7 +951,36 @@ filter:brightness(1.3) contrast(1.2);
 
 .nav-menu-open{overflow:hidden}
 
-/* BOTÓN CTA DEL DRAWER MÓVIL */
+/* DESKTOP DRAWER HOVER */
+@media (min-width: 1024px) {
+.nav__drawer-link{transition:all var(--transition)}
+.nav__drawer-link:hover{color:var(--text-primary);background:var(--glass-bg-light);border-color:var(--neon-primary);transform:translateX(3px)}
+.nav__drawer-language-option{transition:all var(--transition)}
+.nav__drawer-language-option:hover{color:var(--text-primary);background:var(--glass-bg-light);border-color:var(--neon-primary);transform:scale(1.02)}
+}
+
+@media (max-width: 480px){
+.nav__brand{top:var(--space-xs);left:var(--space-md);width:56px;height:56px}
+.nav__logo{width:40px;height:40px}
+.nav__toggle{top:var(--space-xs);right:var(--space-md);width:52px;height:52px}
+.nav__toggle-line{width:22px;height:2.5px;margin:2.5px 0}
+.nav__drawer{width:min(95%, 320px)}
+.nav__drawer-language{padding:var(--space-md) var(--space-lg)}
+.nav__drawer-navigation{padding:0 var(--space-lg);padding-top:var(--space-md)}
+}
+
+/* ===== BOTÓN CTA DEL DRAWER MÓVIL REPOSICIONADO DESPUÉS DE CONTACT ===== */
+.nav__drawer-cta {
+    padding: var(--space-lg) var(--space-xl);
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: none; /* Eliminar borde inferior */
+    flex-shrink: 0;
+    order: 2; /* Cambiar de order: 1 a order: 2 para que vaya después de la navegación */
+    margin-bottom: 0; /* Eliminar margen inferior */
+    margin-top: var(--space-md); /* Agregar margen superior para separación */
+}
+
+
 .nav__drawer-cta-btn {
     display: flex !important;
     align-items: center !important;
@@ -593,44 +1004,27 @@ filter:brightness(1.3) contrast(1.2);
     transform: none !important;
     transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     position: relative;
-    overflow: visible;
+    overflow: hidden;
 }
 
-/* EFECTOS PULSE PARA DRAWER CTA */
-.nav__drawer-cta-btn::before {
-    content: '' !important;
-    position: absolute !important;
-    top: -4px !important;
-    left: -4px !important;
-    right: -4px !important;
-    bottom: -4px !important;
-    border: 2px solid rgba(255, 255, 255, 0.6) !important;
-    border-radius: inherit !important;
-    background: transparent !important;
-    animation: pulseOut 1.8s ease-out infinite !important;
-    opacity: 0 !important;
-    display: block !important;
-    pointer-events: none !important;
-    z-index: -1 !important;
+/* EFECTO DE ONDA CIRCULAR PARA EL BOTÓN CTA DEL DRAWER */
+.nav__drawer-cta-btn .wave-effect{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 40%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 2;
+    animation: circular-wave-expand 2.2s ease-out infinite;
 }
 
-.nav__drawer-cta-btn::after {
-    content: '' !important;
-    position: absolute !important;
-    top: -4px !important;
-    left: -4px !important;
-    right: -4px !important;
-    bottom: -4px !important;
-    border: 2px solid rgba(255, 69, 105, 0.5) !important;
-    border-radius: inherit !important;
-    background: transparent !important;
-    animation: pulseOut 1.8s ease-out infinite !important;
-    animation-delay: 0.45s !important;
-    opacity: 0 !important;
-    display: block !important;
-    pointer-events: none !important;
-    z-index: -2 !important;
-}
+.nav__drawer-cta-btn .wave-effect:nth-child(1) { animation-delay: 0s; }
+.nav__drawer-cta-btn .wave-effect:nth-child(2) { animation-delay: 0.55s; }
+.nav__drawer-cta-btn .wave-effect:nth-child(3) { animation-delay: 1.1s; }
 
 .nav__drawer-cta-content {
     display: flex !important;
@@ -678,6 +1072,7 @@ filter:brightness(1.3) contrast(1.2);
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
+/* EFECTOS TÁCTILES PARA MÓVIL */
 .nav__drawer-cta-btn:active {
     transform: translateY(-1px) scale(0.98) !important;
     transition: all 0.1s ease !important;
@@ -688,78 +1083,64 @@ filter:brightness(1.3) contrast(1.2);
     transform: scale(0.95);
 }
 
-.nav__drawer-cta-btn:active::before,
-.nav__drawer-cta-btn:active::after {
-    animation-duration: 0.9s !important;
-    animation-delay: 0s !important;
+/* ACELERAR ONDAS AL HACER CLICK */
+.nav__drawer-cta-btn:active .wave-effect{
+    animation-duration: 1s;
 }
 
-/* DESKTOP DRAWER HOVER */
+/* EFECTOS HOVER PARA DESKTOP */
 @media (min-width: 1024px) {
-.nav__drawer-link{transition:all var(--transition)}
-.nav__drawer-link:hover{color:var(--text-primary);background:var(--glass-bg-light);border-color:var(--neon-primary);transform:translateX(3px)}
-.nav__drawer-language-option{transition:all var(--transition)}
-.nav__drawer-language-option:hover{color:var(--text-primary);background:var(--glass-bg-light);border-color:var(--neon-primary);transform:scale(1.02)}
+    .nav__drawer-cta-btn:hover {
+        transform: translateY(-2px) scale(1.01);
+        background: linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);
+        box-shadow: 0 0 25px var(--neon-red-shadow-bright), 0 0 50px var(--neon-red-glow-bright), 0 8px 20px rgba(0, 0, 0, 0.35);
+        text-shadow: 0 0 12px var(--neon-red-glow-medium), 0 0 24px var(--neon-red-shadow-medium);
+        border-color: var(--neon-red-medium);
+        color: #ffffff !important;
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
 
-.nav__drawer-cta-btn:hover {
-    transform: translateY(-2px) scale(1.01);
-    background: linear-gradient(135deg, var(--neon-red-soft) 0%, var(--neon-red-medium) 100%);
-    box-shadow: 0 0 25px var(--neon-red-shadow-bright), 0 0 50px var(--neon-red-glow-bright), 0 8px 20px rgba(0, 0, 0, 0.35);
-    text-shadow: 0 0 12px var(--neon-red-glow-medium), 0 0 24px var(--neon-red-shadow-medium);
-    border-color: var(--neon-red-medium);
-    color: #ffffff !important;
-    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    .nav__drawer-cta-btn:hover .nav__drawer-cta-icon {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    .nav__drawer-cta-btn:hover .wave-effect{
+        animation-duration: 1.8s;
+    }
+
+    .nav__drawer-cta-btn:hover .nav__drawer-cta-main,
+    .nav__drawer-cta-btn:hover .nav__drawer-cta-trial {
+        color: #ffffff !important;
+    }
 }
 
-.nav__drawer-cta-btn:hover .nav__drawer-cta-icon {
-    transform: scale(1.1);
-    opacity: 1;
+/* RESPONSIVE PARA PANTALLAS PEQUEÑAS */
+@media (max-width: 480px) {
+    .nav__drawer-cta {
+        padding: var(--space-md) var(--space-lg);
+    }
+
+    .nav__drawer-cta-btn {
+        padding: var(--space-md) var(--space-lg);
+    }
+
+    .nav__drawer-cta-main {
+        font-size: 1rem !important;
+    }
+
+    .nav__drawer-cta-trial {
+        font-size: 0.8rem;
+    }
+
+    .nav__drawer-cta-icon {
+        width: 20px !important;
+        height: 20px !important;
+    }
 }
 
-.nav__drawer-cta-btn:hover::before,
-.nav__drawer-cta-btn:hover::after {
-    animation-duration: 1.3s !important;
-}
-
-.nav__drawer-cta-btn:hover .nav__drawer-cta-main,
-.nav__drawer-cta-btn:hover .nav__drawer-cta-trial {
-    color: #ffffff !important;
-}
-}
-
-@media (max-width: 480px){
-.nav__brand{top:var(--space-xs);left:var(--space-md);width:56px;height:56px}
-.nav__logo{width:40px;height:40px}
-.nav__toggle{top:var(--space-xs);right:var(--space-md);width:52px;height:52px}
-.nav__toggle-line{width:22px;height:2.5px;margin:2.5px 0}
-.nav__drawer{width:min(95%, 320px)}
-.nav__drawer-language{padding:var(--space-md) var(--space-lg)}
-.nav__drawer-navigation{padding:0 var(--space-lg);padding-top:var(--space-md)}
-
-.nav__drawer-cta {
-    padding: var(--space-md) var(--space-lg);
-}
-
-.nav__drawer-cta-btn {
-    padding: var(--space-md) var(--space-lg);
-}
-
-.nav__drawer-cta-main {
-    font-size: 1rem !important;
-}
-
-.nav__drawer-cta-trial {
-    font-size: 0.8rem;
-}
-
-.nav__drawer-cta-icon {
-    width: 20px !important;
-    height: 20px !important;
-}
-}
-
-/* ===== HERO MÓVIL OPTIMIZADO ===== */
-.hero{position:relative;min-height:100vh;display:flex;align-items:flex-start;justify-content:flex-start;padding:calc(var(--space-4xl) + var(--space-lg)) var(--section-padding-x) var(--space-lg);overflow:visible;background:var(--primary-bg)}
+/* ===== HERO MÓVIL OPTIMIZADO CON EFECTO DE ONDA CIRCULAR EN CTA ===== */
+.hero{position:relative;min-height:100vh;display:flex;align-items:flex-start;justify-content:flex-start;padding:calc(var(--space-4xl) + var(--space-lg)) var(--section-padding-x) var(--space-lg);overflow:hidden;background:var(--primary-bg)}
 
 .hero__container{position:relative;z-index:10;display:grid;grid-template-columns:1fr;gap:var(--space-xl);align-items:center;width:100%;max-width:var(--max-hero-width);margin:0 auto;text-align:center;padding-top:var(--space-lg)}
 
@@ -786,30 +1167,11 @@ filter:brightness(1.3) contrast(1.2);
 
 .hero__subtitle::before{margin-right:var(--space-md);font-family:var(--font-mono);font-weight:600;color:var(--starflex-crimson-bright);content:'//';opacity:0.7}
 
-.hero__cta-group{display:flex;flex-direction:column;gap:clamp(0.25rem, 1vh, 0.5rem);margin-bottom:clamp(0.5rem, 1.5vh, 0.75rem);overflow:visible}
+.hero__cta-group{display:flex;flex-direction:column;gap:clamp(0.25rem, 1vh, 0.5rem);margin-bottom:clamp(0.5rem, 1.5vh, 0.75rem)}
 
-.hero__cta-main{position:relative;z-index:2;display:flex;flex-direction:column;gap:var(--space-sm);align-items:center;overflow:visible}
+.hero__cta-main{position:relative;z-index:2;display:flex;flex-direction:column;gap:var(--space-sm);align-items:center}
 
 .hero__cta-main small{font-family:var(--font-mono);font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;opacity:0.95}
-
-/* EFECTOS PULSE ESPECIALES PARA HERO CTA */
-.hero__cta-main .btn--cta {
-    overflow: visible !important;
-}
-
-.hero__cta-main .btn--cta::before {
-    animation: pulseOut 2.5s ease-out infinite !important;
-    animation-delay: 0s !important;
-    border-color: rgba(255, 255, 255, 0.8) !important;
-    border-width: 3px !important;
-}
-
-.hero__cta-main .btn--cta::after {
-    animation: pulseOut 2.5s ease-out infinite !important;
-    animation-delay: 0.6s !important;
-    border-color: rgba(255, 23, 68, 0.7) !important;
-    border-width: 2px !important;
-}
 
 .hero__download{display:flex;gap:var(--space-xl);align-items:center;justify-content:center;width:100%;margin-bottom:var(--space-lg);flex-wrap:wrap}
 
@@ -872,7 +1234,7 @@ filter:brightness(1.3) contrast(1.2);
 
 .features__header{position:relative;z-index:3;max-width:1000px;margin:0 auto var(--space-4xl);text-align:center}
 
-.features__title{position:relative;margin-bottom:var(--space-2xl);font-size:clamp(2.5rem, 8vw, 4rem);font-weight:800;line-height:0.9;letter-spacing:-0.02em;background:linear-gradient(135deg, #fff 0%, #f8fafc 30%, #e2e8f0 70%, #cbd5e1 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.features__title{position:relative;margin-bottom:var(--space-2xl);font-size:clamp(2.5rem, 8vw, 4rem);font-weight:800;line-height:0.9;letter-spacing:-0.02em;background:linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 30%, var(--starflex-red) 70%, var(--starflex-crimson-glow) 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
 .features__title::after{position:absolute;bottom:-12px;left:50%;width:80px;height:3px;content:'';background:linear-gradient(90deg, transparent 0%, var(--starflex-red) 20%, var(--starflex-crimson-glow) 50%, var(--starflex-red) 80%, transparent 100%);border-radius:2px;transform:translateX(-50%)}
 
@@ -966,14 +1328,25 @@ filter:brightness(1.3) contrast(1.2);
 .phone__screen{opacity:1!important;transition:all 0.6s ease}
 .phone__app-image{opacity:1!important;transform:scale(1)!important;transition:all 0.6s ease;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;display:block!important;visibility:visible!important}
 .feature.in-view .phone__app-image{opacity:1!important;transform:scale(1)!important}
+.phone__app-image{opacity:1!important;transform:scale(1)!important;transition:none!important}
+.feature.in-view .phone__app-image{opacity:1!important;transform:scale(1)!important}
 }
 
-/* ===== SECCIÓN DE VIDEOS ===== */
+/* MANTENER REGLAS EXISTENTES CON MENOR PRIORIDAD */
+.feature[data-feature="schedule"] .phone__app-image{background-image:url('../../assets/phones/Schedule.webp');transition-delay:0.2s}
+.feature[data-feature="stations"] .phone__app-image{background-image:url('../../assets/phones/Stations.webp');transition-delay:0.3s}
+.feature[data-feature="calendar"] .phone__app-image{background-image:url('../../assets/phones/Calendar.webp');transition-delay:0.4s}
+.feature[data-feature="log"] .phone__app-image{background-image:url('../../assets/phones/Log.webp');transition-delay:0.5s}
+.feature[data-feature="notifications"] .phone__app-image{background-image:url('../../assets/phones/Notifications.webp');transition-delay:0.6s}
+.feature[data-feature="referrals"] .phone__app-image{background-image:url('../../assets/phones/Referrals.webp');transition-delay:0.7s}
+
+/* ===== SECCIÓN DE VIDEOS MINIMALISTA Y ESTÉTICA CON EFECTO DE ONDA CIRCULAR EN CTA ===== */
 .videos {
 position: relative;
 width: 100%;
 padding: clamp(4rem, 10vh, 6rem) var(--section-padding-x);
 overflow: hidden;
+/* Fondo limpio y elegante */
 background: linear-gradient(180deg,
 var(--primary-bg) 0%,
 rgba(15, 20, 28, 0.98) 50%,
@@ -981,6 +1354,7 @@ var(--primary-bg) 100%
 );
 }
 
+/* Efecto sutil de fondo */
 .videos::before {
 position: absolute;
 inset: 0;
@@ -993,6 +1367,7 @@ transparent 70%
 );
 }
 
+/* ===== HEADER MINIMALISTA ===== */
 .videos__header {
 position: relative;
 z-index: 3;
@@ -1053,6 +1428,7 @@ color: var(--text-secondary);
 opacity: 0.9;
 }
 
+/* ===== CONTENEDOR PRINCIPAL SIMPLIFICADO ===== */
 .videos__main-container {
 position: relative;
 z-index: 3;
@@ -1068,6 +1444,7 @@ margin: 0 auto;
 overflow: hidden;
 }
 
+/* ===== REPRODUCTOR MINIMALISTA ===== */
 .videos__player-container {
 position: relative;
 z-index: 2;
@@ -1091,10 +1468,11 @@ border-radius: 16px;
 box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.4);
 }
 
+/* ===== REPRODUCTOR DE YOUTUBE LIMPIO ===== */
 .youtube-video-container {
 position: relative;
 width: 100%;
-padding-bottom: 56.25%;
+padding-bottom: 56.25%; /* Proporción 16:9 */
 height: 0;
 overflow: hidden;
 border-radius: 12px;
@@ -1110,6 +1488,7 @@ height: 100%;
 border-radius: 12px;
 }
 
+/* Placeholder del video */
 .youtube-video-placeholder {
 position: absolute;
 top: 0;
@@ -1157,6 +1536,7 @@ height: 100%;
 filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
 }
 
+/* ===== CTA MINIMALISTA CON EFECTO DE ONDA CIRCULAR ===== */
 .videos__cta {
 position: relative;
 width: 100%;
@@ -1200,19 +1580,26 @@ align-items: center;
 justify-content: center;
 }
 
-/* EFECTOS PULSE PARA BOTONES DE VIDEOS */
-.videos__cta-buttons .btn--cta::before {
-    animation: pulseOut 2.1s ease-out infinite !important;
-    animation-delay: 0s !important;
-    border-color: rgba(220, 20, 60, 0.7) !important;
+/* AGREGAR ONDAS CIRCULARES AL BOTÓN CTA DE VIDEOS */
+.videos__cta-buttons .btn--cta .wave-effect{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 40%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 2;
+    animation: circular-wave-expand 2.3s ease-out infinite;
 }
 
-.videos__cta-buttons .btn--cta::after {
-    animation: pulseOut 2.1s ease-out infinite !important;
-    animation-delay: 0.52s !important;
-    border-color: rgba(255, 23, 68, 0.5) !important;
-}
+.videos__cta-buttons .btn--cta .wave-effect:nth-child(1) { animation-delay: 0s; }
+.videos__cta-buttons .btn--cta .wave-effect:nth-child(2) { animation-delay: 0.58s; }
+.videos__cta-buttons .btn--cta .wave-effect:nth-child(3) { animation-delay: 1.15s; }
 
+/* ===== RESPONSIVE LIMPIO ===== */
 @media (width <= 1023px) {
 .videos {
 padding: clamp(2rem, 6vh, 4rem) var(--section-padding-x);
@@ -1268,7 +1655,7 @@ height: 42px;
 }
 }
 
-/* ===== FAQ MÓVIL OPTIMIZADO ===== */
+/* ===== FAQ MÓVIL OPTIMIZADO CON TRANSICIONES ===== */
 .faq{position:relative;width:100%;padding:clamp(2rem, 6vh, 4rem) var(--section-padding-x) clamp(1.5rem, 4vh, 3rem);overflow:hidden;background:var(--primary-bg)}
 
 .faq__header{position:relative;z-index:3;max-width:1000px;margin:0 auto var(--space-4xl);text-align:center}
@@ -1366,7 +1753,7 @@ height: 42px;
 .faq__question:focus,.faq__search:focus{outline:2px solid var(--starflex-red);outline-offset:3px;border-radius:8px}
 }
 
-/* ===== CONTACT MÓVIL OPTIMIZADO ===== */
+/* ===== CONTACT MÓVIL OPTIMIZADO CON TRANSICIONES Y EFECTO DE ONDA CIRCULAR EN FOOTER ===== */
 .contact{position:relative;width:100%;padding:var(--section-padding-y) var(--section-padding-x);background:var(--primary-bg);overflow:hidden}
 
 .contact__header{position:relative;z-index:3;margin-bottom:var(--space-4xl);text-align:center}
@@ -1380,6 +1767,7 @@ height: 42px;
 
 .contact__subtitle{font-size:1.1rem;line-height:1.6;color:var(--text-secondary);max-width:600px;margin:0 auto}
 
+/* GRID MEJORADO PARA CARDS MÁS ANCHAS EN MOBILE CON TRANSICIONES */
 .contact__grid{position:relative;z-index:3;display:grid!important;gap:var(--space-lg)!important;grid-template-columns:1fr!important;width:100%;max-width:420px!important;margin:0 auto var(--space-4xl)!important;justify-items:center!important;visibility:visible!important;opacity:1!important}
 
 .contact__channel{display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important;padding:var(--space-xl) var(--space-lg);background:rgba(255, 255, 255, 0.02);border:1px solid rgba(255, 255, 255, 0.05);border-radius:16px;width:100%!important;max-width:100%!important;margin:0 auto!important;visibility:visible!important;opacity:1!important;transform:none!important;transition:all var(--transition)}
@@ -1423,7 +1811,7 @@ height: 42px;
 
 .contact__footer-text p{font-size:0.9rem!important;color:var(--text-muted);display:block!important;visibility:visible!important;opacity:1!important;text-align:center!important}
 
-/* BOTÓN FOOTER CON EFECTO PULSE */
+/* BOTÓN FOOTER CON EFECTO DE ONDA CIRCULAR */
 .btn--footer{
 display:flex!important;
 flex-direction:column!important;
@@ -1448,51 +1836,33 @@ opacity:1!important;
 transform:none!important;
 transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 position:relative;
-overflow:visible;
+overflow:hidden;
 }
 
-/* EFECTOS PULSE PARA BOTÓN FOOTER */
-.btn--footer::before {
-    content: '' !important;
-    position: absolute !important;
-    top: -4px !important;
-    left: -4px !important;
-    right: -4px !important;
-    bottom: -4px !important;
-    border: 2px solid rgba(255, 255, 255, 0.7) !important;
-    border-radius: inherit !important;
-    background: transparent !important;
-    animation: pulseOut 2.2s ease-out infinite !important;
-    opacity: 0 !important;
-    display: block !important;
-    pointer-events: none !important;
-    z-index: -1 !important;
+/* EFECTO DE ONDA CIRCULAR PARA EL BOTÓN FOOTER */
+.btn--footer .wave-effect{
+position:absolute;
+top:50%;
+left:50%;
+width:0;
+height:0;
+background:radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 40%, transparent 70%);
+border-radius:50%;
+transform:translate(-50%, -50%);
+pointer-events:none;
+z-index:2;
+animation:circular-wave-expand 2.8s ease-out infinite;
 }
 
-.btn--footer::after {
-    content: '' !important;
-    position: absolute !important;
-    top: -4px !important;
-    left: -4px !important;
-    right: -4px !important;
-    bottom: -4px !important;
-    border: 2px solid rgba(220, 20, 60, 0.5) !important;
-    border-radius: inherit !important;
-    background: transparent !important;
-    animation: pulseOut 2.2s ease-out infinite !important;
-    animation-delay: 0.55s !important;
-    opacity: 0 !important;
-    display: block !important;
-    pointer-events: none !important;
-    z-index: -2 !important;
-}
+.btn--footer .wave-effect:nth-child(1) { animation-delay: 0s; }
+.btn--footer .wave-effect:nth-child(2) { animation-delay: 0.7s; }
+.btn--footer .wave-effect:nth-child(3) { animation-delay: 1.4s; }
 
 .btn--footer:active{transform:translateY(0) scale(0.98);transition:all 0.1s ease}
 
-.btn--footer:active::before,
-.btn--footer:active::after {
-    animation-duration: 1.2s !important;
-    animation-delay: 0s !important;
+/* ACELERAR ONDAS AL HACER CLICK EN FOOTER */
+.btn--footer:active .wave-effect{
+animation-duration:1.2s;
 }
 
 .btn--footer span{position:relative;z-index:3;font-size:1.1rem!important;font-weight:800;letter-spacing:1px;text-align:center!important;color:#ffffff!important;line-height:1.2;margin-bottom:2px}
@@ -1521,7 +1891,7 @@ overflow:visible;
 .btn--footer small{font-size:1rem!important}
 }
 
-/* DESKTOP CONTACT COMPLETO */
+/* DESKTOP CONTACT COMPLETO - HOVER DEL BOTÓN FOOTER CON ANIMACIONES SUTILES */
 @media (min-width: 1024px) {
 .contact{background:linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 100%)}
 .contact__grid{grid-template-columns:repeat(3, 1fr)!important;gap:var(--space-2xl)!important;max-width:1200px!important}
@@ -1540,6 +1910,7 @@ overflow:visible;
 .contact__channel-arrow{transition:transform 0.2s ease}
 .contact__footer-content{flex-direction:row!important;justify-content:space-between!important;text-align:left!important}
 
+/* BOTÓN FOOTER DESKTOP - HOVER CON ANIMACIONES SUTILES ROJIZAS */
 .btn--footer{
 width:auto!important;
 min-width:200px!important;
@@ -1555,24 +1926,24 @@ color:#ffffff!important;
 transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.btn--footer:hover::before,
-.btn--footer:hover::after {
-    animation-duration: 1.6s !important;
+.btn--footer:hover .wave-effect{
+animation-duration:2s;
 }
 
 .btn--footer span, .btn--footer small{position:relative;z-index:3;color:#ffffff!important}
 .btn--footer:hover span, .btn--footer:hover small{color:#ffffff!important}
 }
 
-/* ===== MOBILE FIXES CRÍTICOS ===== */
+/* ===== MOBILE FIXES CRÍTICOS CON TRANSICIONES MEJORADAS ===== */
 .features,.faq,.contact{display:block!important;visibility:visible!important;opacity:1!important;position:relative;z-index:auto}
 
 .features *,.faq *,.contact *{visibility:visible!important}
 
 html,body{overflow-x:hidden}
 
-/* PERFORMANCE OPTIMIZATIONS MÓVIL */
+/* PERFORMANCE OPTIMIZATIONS MÓVIL - ACTUALIZADO CON TRANSICIONES SUTILES */
 @media (max-width: 1023px) {
+/* Permitir transiciones sutiles en móvil para elementos interactivos */
 .nav__toggle, .nav__toggle-line, .nav__drawer, .nav__drawer-overlay, .nav__drawer-link, .nav__drawer-language-option{transition-duration:var(--transition)!important}
 .btn--cta, .btn--footer{transition-duration:0.8s!important}
 .floating-widget, .floating-widget__menu, .floating-widget__main-btn, .floating-widget__menu-item{transition-duration:var(--transition)!important}
@@ -1580,15 +1951,58 @@ html,body{overflow-x:hidden}
 .contact__channel, .contact__channel-btn, .contact__channel-icon{transition-duration:var(--transition)!important}
 .download-btn{transition-duration:var(--transition)!important}
 
+/* Deshabilitar animaciones complejas pero mantener transiciones sutiles */
 *:not(.nav__toggle):not(.nav__toggle-line):not(.btn--cta):not(.btn--footer):not(.floating-widget):not(.floating-widget__menu):not(.floating-widget__main-btn):not(.floating-widget__menu-item):not(.faq__question):not(.faq__icon):not(.faq__answer):not(.faq__search):not(.contact__channel):not(.contact__channel-btn):not(.contact__channel-icon):not(.download-btn):not(.nav__drawer):not(.nav__drawer-overlay):not(.nav__drawer-link):not(.nav__drawer-language-option):not(.hero__cta-main .btn--cta):not(.hero__cta-main .btn--cta *){animation:none!important}
 
+/* EXCEPCIÓN: Permitir animación del botón hamburguesa */
 .nav__toggle.active .nav__toggle-line:nth-child(1){transform:rotate(45deg) translate(7px, 7px)!important}
 .nav__toggle.active .nav__toggle-line:nth-child(1)::before{transform:scaleX(1.1);background:var(--neon-primary-bright)}
 .nav__toggle.active .nav__toggle-line:nth-child(2){opacity:0!important;transform:scale(0) rotate(180deg)!important}
 .nav__toggle.active .nav__toggle-line:nth-child(3){transform:rotate(-45deg) translate(7px, -7px)!important}
 
+/* EXCEPCIÓN: Permitir efectos sutiles en botones CTA y FOOTER con ondas circulares */
+.btn--cta::before{animation:none!important}
 .btn--cta:active, .btn--footer:active{transform:translateY(-1px) scale(0.98)!important;transition:all 0.1s ease!important;color:#ffffff!important}
 
+/* MANTENER ONDAS CIRCULARES EN MÓVIL PARA BOTONES CTA Y FOOTER */
+.btn--cta .wave-effect, .btn--footer .wave-effect{
+animation:circular-wave-expand 2.5s ease-out infinite!important;
+}
+
+.btn--cta .wave-effect:nth-child(1), .btn--footer .wave-effect:nth-child(1){
+animation-delay:0s!important;
+}
+
+.btn--cta .wave-effect:nth-child(2), .btn--footer .wave-effect:nth-child(2){
+animation-delay:0.6s!important;
+}
+
+.btn--cta .wave-effect:nth-child(3), .btn--footer .wave-effect:nth-child(3){
+animation-delay:1.2s!important;
+}
+
+/* MANTENER ANIMACIONES DEL HERO CTA ULTRA MODERNO CON ONDAS CIRCULARES */
+.hero__cta-main .btn--cta .wave-effect{
+animation:hero-circular-wave-expand 2.5s ease-out infinite!important;
+}
+
+.hero__cta-main .btn--cta .wave-effect:nth-child(1){
+animation-delay:0s!important;
+}
+
+.hero__cta-main .btn__cta .wave-effect:nth-child(2){
+animation-delay:0.6s!important;
+}
+
+.hero__cta-main .btn--cta .wave-effect:nth-child(3){
+animation-delay:1.2s!important;
+}
+
+.hero__cta-main .btn--cta .wave-effect:nth-child(4){
+animation-delay:1.8s!important;
+}
+
+/* Efectos táctiles sutiles para móvil */
 .nav__brand:active{transform:translateY(-1px) scale(0.98)!important}
 .nav__toggle:active{transform:translateY(-1px) scale(0.95)!important}
 .nav__drawer-link:active{transform:scale(0.98)!important}
@@ -1608,33 +2022,31 @@ html,body{overflow-x:hidden}
 
 .performance-mode *{animation:none!important;transition:none!important;transform:none!important;will-change:auto!important}
 
+/* EXCEPCIÓN PARA PERFORMANCE MODE - Permitir hamburguesa y CTA con animaciones sutiles */
 .performance-mode .nav__toggle, .performance-mode .nav__toggle-line{transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)!important}
 .performance-mode .btn--cta, .performance-mode .btn--footer{transition:all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)!important}
 
-.performance-mode .btn--cta::before,
-.performance-mode .btn--cta::after,
-.performance-mode .btn--footer::before,
-.performance-mode .btn--footer::after,
-.performance-mode .nav__drawer-cta-btn::before,
-.performance-mode .nav__drawer-cta-btn::after,
-.performance-mode .videos__cta-buttons .btn--cta::before,
-.performance-mode .videos__cta-buttons .btn--cta::after{
+/* DESHABILITAR ONDAS EN PERFORMANCE MODE */
+.performance-mode .btn--cta .wave-effect, 
+.performance-mode .btn--footer .wave-effect,
+.performance-mode .nav__drawer-cta-btn .wave-effect,
+.performance-mode .hero__cta-main .btn--cta .wave-effect,
+.performance-mode .videos__cta-buttons .btn--cta .wave-effect{
 display:none!important;
 }
 
 @media (prefers-reduced-motion: reduce){
 *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+/* Mantener hamburguesa y CTA incluso con reduced motion pero con transición más rápida */
 .nav__toggle, .nav__toggle-line{transition:all 0.2s ease!important}
 .btn--cta, .btn--footer{transition:all 0.4s ease!important}
 
-.btn--cta::before,
-.btn--cta::after,
-.btn--footer::before,
-.btn--footer::after,
-.nav__drawer-cta-btn::before,
-.nav__drawer-cta-btn::after,
-.videos__cta-buttons .btn--cta::before,
-.videos__cta-buttons .btn--cta::after{
+/* DESHABILITAR ONDAS CON REDUCED MOTION */
+.btn--cta .wave-effect, 
+.btn--footer .wave-effect,
+.nav__drawer-cta-btn .wave-effect,
+.hero__cta-main .btn--cta .wave-effect,
+.videos__cta-buttons .btn--cta .wave-effect{
 display:none!important;
 }
 }
@@ -1684,8 +2096,9 @@ transform: none !important;
 .performance-mode .faq::before{display:none}
 .performance-mode .faq__item:hover{transform:none}
 
-/* FINAL MOBILE OVERRIDES CRÍTICOS */
+/* FINAL MOBILE OVERRIDES CRÍTICOS - ACTUALIZADO CON TRANSICIONES SUTILES */
 @media (max-width: 1023px){
+/* Permitir transiciones específicas para elementos interactivos */
 .nav__toggle, .nav__toggle *, .nav__toggle-line{transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)!important}
 .nav__drawer{transition:right 0.4s cubic-bezier(0.4, 0, 0.2, 1)!important}
 .nav__drawer-overlay{transition:all var(--transition-slow)!important}
@@ -1720,22 +2133,26 @@ transform: none !important;
 .feature[data-feature="notifications"] .phone__app-image{background-image:url('../../assets/phones/Notifications.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
 .feature[data-feature="referrals"] .phone__app-image{background-image:url('../../assets/phones/Referrals.webp')!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;opacity:1!important;transform:scale(1)!important;display:block!important;visibility:visible!important}
 
+/* Asegurar que las imágenes estén visibles desde el inicio */
 .phone__app-image{opacity:1!important;transform:scale(1)!important;transition:none!important}
 .feature.in-view .phone__app-image{opacity:1!important;transform:scale(1)!important}
 .phone__screen{opacity:1!important}
 .feature__phone{opacity:1!important;transform:translateY(0) scale(1)!important}
 }
 
-/* OPTIMIZACIONES CRÍTICAS FINALES */
+/* OPTIMIZACIONES CRÍTICAS FINALES CON TRANSICIONES SUTILES */
 @media (max-width: 1023px) {
+/* Forzar visibilidad de elementos críticos */
 .features,.faq,.contact,.hero{display:block!important;visibility:visible!important;opacity:1!important}
 
+/* Optimizar rendimiento de imágenes */
 img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;transform:translateZ(0);backface-visibility:hidden}
 
+/* Reducir repaints y reflows */
 .container,.hero__container,.features__grid,.faq__container,.contact__grid{contain:layout style}
 }
 
-/* TOUCH OPTIMIZATIONS */
+/* TOUCH OPTIMIZATIONS CON TRANSICIONES SUTILES */
 @media (hover: none) and (pointer: coarse) {
 .btn,.nav__toggle,.nav__drawer-link,.faq__question,.contact__channel-btn,.btn--cta,.btn--footer{-webkit-tap-highlight-color:rgba(255, 69, 105, 0.2);}
 }
@@ -1746,13 +2163,16 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
 .floating-widget{bottom:max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px))}
 }
 
-/* FINAL CRITICAL OVERRIDES */
+/* FINAL CRITICAL OVERRIDES CON TRANSICIONES SUTILES */
 @media (max-width: 1023px) {
+/* Asegurar que no hay elementos ocultos por error */
 .hero__mobile-video,.hero__mobile-video-player,.download-btn__image{display:block!important;visibility:visible!important;opacity:1!important}
 
+/* Eliminar cualquier transform que pueda causar problemas EXCEPTO elementos con transiciones permitidas */
 .hero__content,.hero__media,.feature,.feature__phone,.phone__app-image{transform:none!important}
 }
 
+/* ÚLTIMO OVERRIDE PARA GARANTIZAR FUNCIONAMIENTO */
 .features *,.faq *,.contact *,.hero *{visibility:visible!important;opacity:1!important}
 
 /* FINAL SELECTION STYLES */
@@ -1799,7 +2219,7 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
     font-weight: 300;
 }
 
-/* ===== ESTILOS PARA PÁGINAS LEGALES ===== */
+/* ===== ESTILOS PARA PÁGINAS LEGALES CON ESTÉTICA ROJIZA ===== */
 .legal-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 25%, #2a0a1a 50%, #1a0a2a 75%, #0a0a0a 100%);
@@ -1983,7 +2403,7 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
     box-shadow: 0 0 6px rgba(255, 0, 150, 0.6);
 }
 
-/* RESPONSIVE PARA PÁGINAS LEGALES */
+/* ===== RESPONSIVE PARA PÁGINAS LEGALES ===== */
 @media (max-width: 768px) {
     .legal-page {
         padding: 1rem 0;
@@ -2021,7 +2441,7 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
     }
 }
 
-/* EFECTOS TÁCTILES PARA MÓVIL */
+/* ===== EFECTOS TÁCTILES PARA MÓVIL ===== */
 @media (max-width: 1023px) {
     .footer-legal-link:active {
         transform: scale(0.98);
@@ -2032,7 +2452,7 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
     }
 }
 
-/* ANIMACIONES PARA PÁGINAS LEGALES */
+/* ===== ANIMACIONES PARA PÁGINAS LEGALES ===== */
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -2052,6 +2472,7 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
         box-shadow: 0 0 20px rgba(255, 0, 150, 0.6);
     }
 }
+
 
 .legal-page__header {
     animation: fadeInUp 0.6s ease-out;
@@ -2077,7 +2498,7 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
     animation: glowPulse 2s ease-in-out infinite;
 }
 
-/* MODO RENDIMIENTO - DESHABILITAR ANIMACIONES */
+/* ===== MODO RENDIMIENTO - DESHABILITAR ANIMACIONES ===== */
 .performance-mode .legal-section {
     animation: none;
 }
@@ -2090,7 +2511,28 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
     animation: none;
 }
 
-/* SCROLLBAR PERSONALIZADO PARA PÁGINAS LEGALES */
+/* ===== EFECTOS ADICIONALES PARA ESTÉTICA ROJIZA ===== */
+.legal-section h2 {
+    text-shadow: 0 0 10px rgba(255, 0, 150, 0.3);
+}
+
+.legal-page__title {
+    position: relative;
+}
+
+.legal-page__title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, #ff0096 50%, transparent 100%);
+    box-shadow: 0 0 10px rgba(255, 0, 150, 0.5);
+}
+
+/* ===== SCROLLBAR PERSONALIZADO PARA PÁGINAS LEGALES ===== */
 .legal-page::-webkit-scrollbar {
     width: 8px;
 }
@@ -2107,5 +2549,3600 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
 .legal-page::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #ff3399 0%, #ff6666 100%);
 }
+
+/* BOTÓN CTA FUTURISTA CON EFECTOS CYBER */
+.btn--cta {
+    position: relative !important;
+    padding: var(--space-lg) var(--space-2xl);
+    font-size: 1.1rem;
+    font-weight: 800;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    overflow: hidden !important;
+    background: linear-gradient(135deg, 
+        var(--neon-crimson-ultra) 0%, 
+        var(--neon-crimson-electric) 50%, 
+        var(--neon-crimson-plasma) 100%) !important;
+    border: 2px solid var(--neon-crimson-electric) !important;
+    box-shadow: 
+        0 0 20px var(--neon-crimson-shadow), 
+        0 0 40px var(--neon-crimson-glow), 
+        0 0 60px rgba(255, 23, 68, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    text-shadow: 
+        0 0 10px var(--neon-crimson-glow),
+        0 0 20px var(--neon-crimson-shadow),
+        0 2px 4px rgba(0, 0, 0, 0.8) !important;
+    color: #ffffff !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 10 !important;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* ONDAS CIRCULARES FUTURISTAS */
+.btn--cta .wave-effect {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    animation: cyber-wave-expand 2.8s ease-out infinite !important;
+}
+
+.btn--cta .wave-effect:nth-child(1) {
+    animation-delay: 0s !important;
+}
+
+.btn--cta .wave-effect:nth-child(2) {
+    animation-delay: 0.7s !important;
+}
+
+.btn--cta .wave-effect:nth-child(3) {
+    animation-delay: 1.4s !important;
+}
+
+.btn--cta .wave-effect:nth-child(4) {
+    animation-delay: 2.1s !important;
+}
+
+/* PARTÍCULAS DE ENERGÍA */
+.btn--cta .particle {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 4px !important;
+    height: 4px !important;
+    background: var(--energy-particle-1) !important;
+    border-radius: 50% !important;
+    pointer-events: none !important;
+    z-index: 3 !important;
+    animation: particle-float 3s ease-in-out infinite !important;
+}
+
+.btn--cta .particle:nth-child(5) {
+    animation-delay: 0.5s !important;
+    background: var(--energy-particle-2) !important;
+    width: 3px !important;
+    height: 3px !important;
+}
+
+.btn--cta .particle:nth-child(6) {
+    animation-delay: 1.2s !important;
+    background: var(--energy-particle-3) !important;
+    width: 5px !important;
+    height: 5px !important;
+}
+
+.btn--cta .particle:nth-child(7) {
+    animation-delay: 1.8s !important;
+    background: var(--energy-particle-1) !important;
+    width: 2px !important;
+    height: 2px !important;
+}
+
+.btn--cta .particle:nth-child(8) {
+    animation-delay: 2.5s !important;
+    background: var(--energy-particle-2) !important;
+    width: 4px !important;
+    height: 4px !important;
+}
+
+/* BORDE DE ENERGÍA */
+.btn--cta .energy-border {
+    position: absolute !important;
+    top: -2px !important;
+    left: -2px !important;
+    right: -2px !important;
+    bottom: -2px !important;
+    background: linear-gradient(45deg, 
+        var(--neon-crimson-electric) 0%, 
+        var(--neon-crimson-plasma) 25%, 
+        var(--neon-crimson-fire) 50%, 
+        var(--neon-crimson-electric) 75%, 
+        var(--neon-crimson-plasma) 100%) !important;
+    border-radius: 20px !important;
+    z-index: 1 !important;
+    animation: energy-border-flow 4s linear infinite !important;
+    opacity: 0.8 !important;
+}
+
+/* CONTENIDO DEL BOTÓN */
+.btn--cta .hero__cta-main {
+    position: relative !important;
+    z-index: 4 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 2px !important;
+}
+
+.btn--cta .hero__cta-main span {
+    font-size: 1.2rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 2px !important;
+    text-shadow: 
+        0 0 15px rgba(255, 255, 255, 0.8),
+        0 0 30px var(--neon-crimson-glow) !important;
+}
+
+.btn--cta .hero__cta-main small {
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.5px !important;
+    opacity: 0.95 !important;
+    text-shadow: 
+        0 0 10px rgba(255, 255, 255, 0.6),
+        0 0 20px var(--neon-crimson-shadow) !important;
+}
+/* EFECTOS HOVER FUTURISTAS */
+@media (hover: hover) and (pointer: fine) {
+    .btn--cta:hover {
+        transform: translateY(-4px) scale(1.02);
+        background: linear-gradient(135deg, 
+            var(--neon-crimson-electric) 0%, 
+            var(--neon-crimson-plasma) 50%, 
+            var(--neon-crimson-fire) 100%);
+        box-shadow: 
+            0 0 30px var(--neon-crimson-glow), 
+            0 0 60px var(--neon-crimson-pulse), 
+            0 0 90px rgba(255, 23, 68, 0.6),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+            0 15px 45px rgba(0, 0, 0, 0.4);
+        border-color: var(--neon-crimson-plasma);
+        transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .btn--cta:hover .wave-effect {
+        animation-duration: 2.2s !important;
+    }
+
+    .btn--cta:hover .particle {
+        animation-duration: 2.5s !important;
+    }
+
+    .btn--cta:hover .energy-border {
+        animation-duration: 3s !important;
+        opacity: 1 !important;
+    }
+}
+
+/* EFECTOS ACTIVE FUTURISTAS */
+.btn--cta:active {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 
+        0 0 25px var(--neon-crimson-glow), 
+        0 0 50px var(--neon-crimson-pulse), 
+        0 0 75px rgba(255, 23, 68, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        0 10px 30px rgba(0, 0, 0, 0.35);
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn--cta:active .wave-effect {
+    animation-duration: 1.5s !important;
+}
+
+.btn--cta:active .particle {
+    animation-duration: 2s !important;
+}
+/* DESKTOP CTA FUTURISTA */
+@media (min-width: 1024px) {
+    .btn--cta {
+        padding: var(--space-xl) var(--space-4xl);
+        font-size: 1.3rem;
+        width: auto;
+        max-width: none;
+        margin: 0;
+        border-radius: 20px;
+    }
+
+    .btn--cta .hero__cta-main span {
+        font-size: 1.4rem !important;
+    }
+
+    .btn--cta .hero__cta-main small {
+        font-size: 1rem !important;
+    }
+}
+/* ===== ANIMACIÓN MINIMALISTA ELEGANTE CON ROJO SUTIL ===== */
+
+/* Ondas minimalistas que se expanden suavemente */
+@keyframes minimal-red-wave {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(0);
+    }
+    50% {
+        opacity: 0.4;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        width: 200px;
+        height: 200px;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.5);
+    }
+}
+
+/* Respiración muy sutil */
+@keyframes subtle-breathe {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.01);
+    }
+}
+
+/* Línea de luz sutil que se desliza */
+@keyframes minimal-light-sweep {
+    0%, 80%, 100% {
+        left: -100%;
+        opacity: 0;
+    }
+    20%, 60% {
+        left: 100%;
+        opacity: 0.3;
+    }
+}
+
+/* Partículas minimalistas */
+@keyframes minimal-particles {
+    0%, 100% {
+        transform: translateY(0px) scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: translateY(-8px) scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+/* APLICAR EFECTOS MINIMALISTAS AL BOTÓN */
+.hero__cta-group .btn--cta {
+    animation: subtle-breathe 5s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Ondas minimalistas y elegantes */
+.hero__cta-group .btn--cta .wave-effect {
+    animation: minimal-red-wave 4s ease-out infinite !important;
+    background: radial-gradient(circle, 
+        rgba(220, 20, 60, 0.3) 0%, 
+        rgba(255, 23, 68, 0.2) 30%, 
+        rgba(255, 69, 105, 0.1) 60%, 
+        transparent 80%) !important;
+}
+
+.hero__cta-group .btn--cta .wave-effect:nth-child(1) {
+    animation-delay: 0s !important;
+}
+
+.hero__cta-group .btn--cta .wave-effect:nth-child(2) {
+    animation-delay: 1s !important;
+}
+
+.hero__cta-group .btn--cta .wave-effect:nth-child(3) {
+    animation-delay: 2s !important;
+}
+
+.hero__cta-group .btn--cta .wave-effect:nth-child(4) {
+    animation-delay: 3s !important;
+}
+
+/* Línea de luz sutil */
+.hero__cta-group .btn--cta::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 30%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.15) 50%, 
+        transparent 100%);
+    z-index: 2;
+    animation: minimal-light-sweep 6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* Partículas minimalistas */
+.hero__cta-group .btn--cta .particle {
+    animation: minimal-particles 4s ease-in-out infinite !important;
+    opacity: 0.6 !important;
+    background: rgba(220, 20, 60, 0.7) !important;
+    width: 2px !important;
+    height: 2px !important;
+    border-radius: 50% !important;
+    box-shadow: 0 0 4px rgba(220, 20, 60, 0.5) !important;
+}
+
+.hero__cta-group .btn--cta .particle:nth-child(5) {
+    animation-delay: 0.5s !important;
+}
+
+.hero__cta-group .btn--cta .particle:nth-child(6) {
+    animation-delay: 1.5s !important;
+}
+
+.hero__cta-group .btn--cta .particle:nth-child(7) {
+    animation-delay: 2.5s !important;
+}
+
+.hero__cta-group .btn--cta .particle:nth-child(8) {
+    animation-delay: 3.5s !important;
+}
+
+/* Borde sutil sin efectos intensos */
+.hero__cta-group .btn--cta .energy-border {
+    opacity: 0.3 !important;
+    background: linear-gradient(45deg, 
+        rgba(220, 20, 60, 0.4) 0%, 
+        rgba(255, 23, 68, 0.3) 50%, 
+        rgba(220, 20, 60, 0.4) 100%) !important;
+    animation: none !important;
+}
+
+/* Efectos hover sutiles */
+@media (hover: hover) and (pointer: fine) {
+    .hero__cta-group .btn--cta:hover {
+        animation: subtle-breathe 3s ease-in-out infinite;
+    }
+
+    .hero__cta-group .btn--cta:hover .wave-effect {
+        animation-duration: 3s !important;
+    }
+
+    .hero__cta-group .btn--cta:hover .particle {
+        animation-duration: 3s !important;
+        opacity: 0.8 !important;
+    }
+
+    .hero__cta-group .btn--cta:hover::after {
+        animation-duration: 4s !important;
+        opacity: 0.5;
+    }
+}
+
+/* Efecto active minimalista */
+.hero__cta-group .btn--cta:active {
+    animation: none !important;
+    transform: scale(0.98) !important;
+}
+
+.hero__cta-group .btn--cta:active .wave-effect {
+    animation-duration: 2s !important;
+}
+
+.hero__cta-group .btn--cta:active .particle {
+    animation-duration: 2s !important;
+}
+/* ===== BOTÓN FOOTER CON EFECTOS COMPLETOS DEL HERO ===== */
+.btn--footer {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: var(--space-xs);
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: var(--space-lg) var(--space-4xl) !important;
+    font-weight: 800;
+    color: #ffffff !important;
+    text-decoration: none;
+    background: linear-gradient(135deg, 
+        var(--neon-crimson-ultra) 0%, 
+        var(--neon-crimson-electric) 50%, 
+        var(--neon-crimson-plasma) 100%) !important;
+    border: 2px solid var(--neon-crimson-electric) !important;
+    box-shadow: 
+        0 0 20px var(--neon-crimson-shadow), 
+        0 0 40px var(--neon-crimson-glow), 
+        0 0 60px rgba(255, 23, 68, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    text-shadow: 
+        0 0 10px var(--neon-crimson-glow),
+        0 0 20px var(--neon-crimson-shadow),
+        0 2px 4px rgba(0, 0, 0, 0.8) !important;
+    min-height: 44px;
+    touch-action: manipulation;
+    margin: 0 auto !important;
+    justify-content: center !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    border-radius: 18px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    z-index: 10 !important;
+}
+
+/* ONDAS CIRCULARES FUTURISTAS PARA FOOTER */
+.btn--footer .wave-effect {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    animation: cyber-wave-expand 3s ease-out infinite !important;
+}
+
+.btn--footer .wave-effect:nth-child(1) {
+    animation-delay: 0s !important;
+    background: radial-gradient(circle, 
+        var(--neon-crimson-electric) 0%, 
+        var(--neon-crimson-plasma) 30%, 
+        var(--neon-crimson-fire) 60%, 
+        transparent 100%) !important;
+}
+
+.btn--footer .wave-effect:nth-child(2) {
+    animation-delay: 0.75s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.8) 0%, 
+        var(--neon-crimson-electric) 20%, 
+        var(--neon-crimson-plasma) 50%, 
+        transparent 80%) !important;
+}
+
+.btn--footer .wave-effect:nth-child(3) {
+    animation-delay: 1.5s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.3) 0%, 
+        var(--neon-crimson-fire) 30%, 
+        transparent 70%) !important;
+}
+
+.btn--footer .wave-effect:nth-child(4) {
+    animation-delay: 2.25s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.6) 0%, 
+        rgba(255, 255, 255, 0.4) 25%, 
+        rgba(255, 255, 255, 0.2) 50%, 
+        transparent 75%) !important;
+}
+
+/* PARTÍCULAS DE ENERGÍA PARA FOOTER */
+.btn--footer .particle {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 4px !important;
+    height: 4px !important;
+    background: var(--energy-particle-1) !important;
+    border-radius: 50% !important;
+    pointer-events: none !important;
+    z-index: 3 !important;
+    animation: particle-float 3.5s ease-in-out infinite !important;
+}
+
+.btn--footer .particle:nth-child(5) {
+    animation-delay: 0.6s !important;
+    background: var(--energy-particle-2) !important;
+    width: 3px !important;
+    height: 3px !important;
+}
+
+.btn--footer .particle:nth-child(6) {
+    animation-delay: 1.4s !important;
+    background: var(--energy-particle-3) !important;
+    width: 5px !important;
+    height: 5px !important;
+}
+
+.btn--footer .particle:nth-child(7) {
+    animation-delay: 2.1s !important;
+    background: var(--energy-particle-1) !important;
+    width: 2px !important;
+    height: 2px !important;
+}
+
+.btn--footer .particle:nth-child(8) {
+    animation-delay: 2.8s !important;
+    background: var(--energy-particle-2) !important;
+    width: 4px !important;
+    height: 4px !important;
+}
+
+/* BORDE DE ENERGÍA PARA FOOTER */
+.btn--footer .energy-border {
+    position: absolute !important;
+    top: -2px !important;
+    left: -2px !important;
+    right: -2px !important;
+    bottom: -2px !important;
+    background: linear-gradient(45deg, 
+        var(--neon-crimson-electric) 0%, 
+        var(--neon-crimson-plasma) 25%, 
+        var(--neon-crimson-fire) 50%, 
+        var(--neon-crimson-electric) 75%, 
+        var(--neon-crimson-plasma) 100%) !important;
+    border-radius: 20px !important;
+    z-index: 1 !important;
+    animation: energy-border-flow 4.5s linear infinite !important;
+    opacity: 0.7 !important;
+}
+
+/* ANIMACIÓN DEL BORDE DE ENERGÍA */
+@keyframes energy-border-flow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* CONTENIDO DEL BOTÓN FOOTER */
+.btn--footer span {
+    position: relative !important;
+    z-index: 4 !important;
+    font-size: 1.1rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 2px !important;
+    text-align: center !important;
+    color: #ffffff !important;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    text-shadow: 
+        0 0 15px rgba(255, 255, 255, 0.8),
+        0 0 30px var(--neon-crimson-glow) !important;
+}
+
+.btn--footer small {
+    position: relative !important;
+    z-index: 4 !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 1.5px !important;
+    opacity: 0.95 !important;
+    text-align: center !important;
+    color: #ffffff !important;
+    text-shadow: 
+        0 0 10px rgba(255, 255, 255, 0.6),
+        0 0 20px var(--neon-crimson-shadow) !important;
+}
+
+/* EFECTOS TÁCTILES MÓVIL PARA FOOTER */
+.btn--footer:active {
+    transform: translateY(-2px) scale(1.01) !important;
+    box-shadow: 
+        0 0 25px var(--neon-crimson-glow), 
+        0 0 50px var(--neon-crimson-pulse), 
+        0 0 75px rgba(255, 23, 68, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        0 10px 30px rgba(0, 0, 0, 0.35) !important;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+/* ACELERAR EFECTOS AL HACER CLICK EN FOOTER */
+.btn--footer:active .wave-effect {
+    animation-duration: 1.8s !important;
+}
+
+.btn--footer:active .particle {
+    animation-duration: 2.2s !important;
+}
+
+.btn--footer:active .energy-border {
+    animation-duration: 3s !important;
+    opacity: 1 !important;
+}
+
+/* EFECTOS HOVER DESKTOP PARA FOOTER */
+@media (min-width: 1024px) {
+    .btn--footer {
+        width: auto !important;
+        min-width: 200px !important;
+        padding: var(--space-xl) var(--space-4xl) !important;
+        font-size: 1.1rem !important;
+        border-radius: 20px !important;
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .btn--footer:hover {
+        transform: translateY(-4px) scale(1.02) !important;
+        background: linear-gradient(135deg, 
+            var(--neon-crimson-electric) 0%, 
+            var(--neon-crimson-plasma) 50%, 
+            var(--neon-crimson-fire) 100%) !important;
+        box-shadow: 
+            0 0 30px var(--neon-crimson-glow), 
+            0 0 60px var(--neon-crimson-pulse), 
+            0 0 90px rgba(255, 23, 68, 0.6),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+            0 15px 45px rgba(0, 0, 0, 0.4) !important;
+        border-color: var(--neon-crimson-plasma) !important;
+        color: #ffffff !important;
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .btn--footer:hover .wave-effect {
+        animation-duration: 2.4s !important;
+    }
+
+    .btn--footer:hover .particle {
+        animation-duration: 2.8s !important;
+    }
+
+    .btn--footer:hover .energy-border {
+        animation-duration: 3.5s !important;
+        opacity: 1 !important;
+    }
+
+    .btn--footer:hover span,
+    .btn--footer:hover small {
+        color: #ffffff !important;
+        text-shadow: 
+            0 0 20px rgba(255, 255, 255, 0.9),
+            0 0 40px var(--neon-crimson-glow) !important;
+    }
+
+    .btn--footer span {
+        font-size: 1.3rem !important;
+    }
+
+    .btn--footer small {
+        font-size: 1rem !important;
+    }
+}
+
+/* RESPONSIVE PARA PANTALLAS PEQUEÑAS */
+@media (max-width: 480px) {
+    .btn--footer {
+        max-width: 100% !important;
+        padding: var(--space-xl) var(--space-3xl) !important;
+        border-radius: 16px !important;
+    }
+
+    .btn--footer span {
+        font-size: 1.1rem !important;
+    }
+
+    .btn--footer small {
+        font-size: 0.85rem !important;
+    }
+}
+
+/* DESHABILITAR EFECTOS EN PERFORMANCE MODE */
+.performance-mode .btn--footer .wave-effect,
+.performance-mode .btn--footer .particle,
+.performance-mode .btn--footer .energy-border {
+    display: none !important;
+}
+
+.performance-mode .btn--footer {
+    animation: none !important;
+}
+
+/* DESHABILITAR EFECTOS CON REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+    .btn--footer .wave-effect,
+    .btn--footer .particle,
+    .btn--footer .energy-border {
+        display: none !important;
+    }
+
+    .btn--footer {
+        transition: all 0.4s ease !important;
+    }
+
+    .btn--footer:hover {
+        transform: translateY(-1px) !important;
+        color: #ffffff !important;
+    }
+
+    .btn--footer:hover span,
+    .btn--footer:hover small {
+        color: #ffffff !important;
+    }
+}
+/* ===== BOTÓN CTA DEL NAVBAR CON EFECTOS COMPLETOS DEL HERO - VERSIÓN COMPACTA ===== */
+.nav__cta {
+    flex-shrink: 0 !important;
+    z-index: 1001;
+    min-width: 140px !important;
+    position: relative;
+    overflow: visible;
+}
+
+.nav__cta .btn {
+    min-width: 140px !important;
+    padding: clamp(8px, 1.2vw, 14px) clamp(12px, 1.5vw, 18px) !important;
+    font-size: clamp(0.7rem, 0.8vw, 0.85rem) !important;
+    font-weight: 800 !important;
+    white-space: nowrap;
+    flex-shrink: 0 !important;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, 
+        var(--neon-crimson-ultra) 0%, 
+        var(--neon-crimson-electric) 50%, 
+        var(--neon-crimson-plasma) 100%) !important;
+    border: 1.5px solid var(--neon-crimson-electric) !important;
+    box-shadow: 
+        0 0 12px var(--neon-crimson-shadow), 
+        0 0 24px var(--neon-crimson-glow), 
+        0 0 36px rgba(255, 23, 68, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 4px 16px rgba(0, 0, 0, 0.25) !important;
+    text-shadow: 
+        0 0 6px var(--neon-crimson-glow),
+        0 0 12px var(--neon-crimson-shadow),
+        0 1px 2px rgba(0, 0, 0, 0.8) !important;
+    color: #ffffff !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border-radius: 10px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    z-index: 10 !important;
+}
+
+/* ONDAS CIRCULARES FUTURISTAS PARA NAVBAR CTA - TAMAÑO COMPACTO */
+.nav__cta .btn .wave-effect {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    animation: cyber-wave-expand 2.2s ease-out infinite !important;
+}
+
+.nav__cta .btn .wave-effect:nth-child(1) {
+    animation-delay: 0s !important;
+    background: radial-gradient(circle, 
+        var(--neon-crimson-electric) 0%, 
+        var(--neon-crimson-plasma) 30%, 
+        var(--neon-crimson-fire) 60%, 
+        transparent 100%) !important;
+}
+
+.nav__cta .btn .wave-effect:nth-child(2) {
+    animation-delay: 0.55s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.6) 0%, 
+        var(--neon-crimson-electric) 20%, 
+        var(--neon-crimson-plasma) 50%, 
+        transparent 80%) !important;
+}
+
+.nav__cta .btn .wave-effect:nth-child(3) {
+    animation-delay: 1.1s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.3) 0%, 
+        var(--neon-crimson-fire) 30%, 
+        transparent 70%) !important;
+}
+
+.nav__cta .btn .wave-effect:nth-child(4) {
+    animation-delay: 1.65s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.4) 0%, 
+        rgba(255, 255, 255, 0.2) 25%, 
+        rgba(255, 255, 255, 0.1) 50%, 
+        transparent 75%) !important;
+}
+
+/* PARTÍCULAS DE ENERGÍA PARA NAVBAR CTA - TAMAÑO COMPACTO */
+.nav__cta .btn .particle {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 2px !important;
+    height: 2px !important;
+    background: var(--energy-particle-1) !important;
+    border-radius: 50% !important;
+    pointer-events: none !important;
+    z-index: 3 !important;
+    animation: particle-float 2.6s ease-in-out infinite !important;
+}
+
+.nav__cta .btn .particle:nth-child(5) {
+    animation-delay: 0.35s !important;
+    background: var(--energy-particle-2) !important;
+    width: 1.5px !important;
+    height: 1.5px !important;
+}
+
+.nav__cta .btn .particle:nth-child(6) {
+    animation-delay: 0.9s !important;
+    background: var(--energy-particle-3) !important;
+    width: 3px !important;
+    height: 3px !important;
+}
+
+.nav__cta .btn .particle:nth-child(7) {
+    animation-delay: 1.4s !important;
+    background: var(--energy-particle-1) !important;
+    width: 1.5px !important;
+    height: 1.5px !important;
+}
+
+.nav__cta .btn .particle:nth-child(8) {
+    animation-delay: 1.95s !important;
+    background: var(--energy-particle-2) !important;
+    width: 2px !important;
+    height: 2px !important;
+}
+
+/* BORDE DE ENERGÍA PARA NAVBAR CTA - TAMAÑO COMPACTO */
+.nav__cta .btn .energy-border {
+    position: absolute !important;
+    top: -1.5px !important;
+    left: -1.5px !important;
+    right: -1.5px !important;
+    bottom: -1.5px !important;
+    background: linear-gradient(45deg, 
+        var(--neon-crimson-electric) 0%, 
+        var(--neon-crimson-plasma) 25%, 
+        var(--neon-crimson-fire) 50%, 
+        var(--neon-crimson-electric) 75%, 
+        var(--neon-crimson-plasma) 100%) !important;
+    border-radius: 12px !important;
+    z-index: 1 !important;
+    animation: energy-border-flow 3.5s linear infinite !important;
+    opacity: 0.5 !important;
+}
+
+/* CONTENIDO DEL BOTÓN NAVBAR CTA - TAMAÑO COMPACTO */
+.nav__cta .btn span {
+    position: relative !important;
+    z-index: 4 !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.8px !important;
+    color: #ffffff !important;
+    text-shadow: 
+        0 0 8px rgba(255, 255, 255, 0.6),
+        0 0 16px var(--neon-crimson-glow) !important;
+}
+
+/* EFECTOS TÁCTILES MÓVIL PARA NAVBAR CTA - TAMAÑO COMPACTO */
+.nav__cta .btn:active {
+    transform: translateY(-1px) scale(1.005) !important;
+    box-shadow: 
+        0 0 15px var(--neon-crimson-glow), 
+        0 0 30px var(--neon-crimson-pulse), 
+        0 0 45px rgba(255, 23, 68, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        0 6px 18px rgba(0, 0, 0, 0.3) !important;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+/* ACELERAR EFECTOS AL HACER CLICK EN NAVBAR CTA */
+.nav__cta .btn:active .wave-effect {
+    animation-duration: 1.4s !important;
+}
+
+.nav__cta .btn:active .particle {
+    animation-duration: 1.8s !important;
+}
+
+.nav__cta .btn:active .energy-border {
+    animation-duration: 2.5s !important;
+    opacity: 0.8 !important;
+}
+
+/* EFECTOS HOVER DESKTOP PARA NAVBAR CTA - TAMAÑO COMPACTO */
+@media (min-width: 1024px) {
+    .nav__cta .btn {
+        padding: clamp(10px, 1.4vw, 16px) clamp(16px, 2vw, 22px) !important;
+        font-size: clamp(0.75rem, 0.85vw, 0.9rem) !important;
+        border-radius: 12px !important;
+        min-width: 150px !important;
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .nav__cta .btn:hover {
+        transform: translateY(-2px) scale(1.015) !important;
+        background: linear-gradient(135deg, 
+            var(--neon-crimson-electric) 0%, 
+            var(--neon-crimson-plasma) 50%, 
+            var(--neon-crimson-fire) 100%) !important;
+        box-shadow: 
+            0 0 20px var(--neon-crimson-glow), 
+            0 0 40px var(--neon-crimson-pulse), 
+            0 0 60px rgba(255, 23, 68, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+            0 8px 24px rgba(0, 0, 0, 0.35) !important;
+        border-color: var(--neon-crimson-plasma) !important;
+        color: #ffffff !important;
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .nav__cta .btn:hover .wave-effect {
+        animation-duration: 1.8s !important;
+    }
+
+    .nav__cta .btn:hover .particle {
+        animation-duration: 2.2s !important;
+    }
+
+    .nav__cta .btn:hover .energy-border {
+        animation-duration: 3s !important;
+        opacity: 0.7 !important;
+    }
+
+    .nav__cta .btn:hover span {
+        color: #ffffff !important;
+        text-shadow: 
+            0 0 12px rgba(255, 255, 255, 0.8),
+            0 0 24px var(--neon-crimson-glow) !important;
+    }
+}
+
+/* AJUSTES ESPECÍFICOS PARA EL NAVBAR - TAMAÑO COMPACTO */
+@media (min-width: 1024px) {
+    .nav__cta {
+        margin-left: clamp(1rem, 2.5vw, 1.5rem) !important;
+        margin-right: clamp(0.5rem, 1.5vw, 1rem) !important;
+        min-width: 150px !important;
+    }
+}
+
+/* RESPONSIVE PARA PANTALLAS MEDIANAS - TAMAÑO COMPACTO */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .nav__cta .btn {
+        min-width: 120px !important;
+        padding: 8px 14px !important;
+        font-size: 0.75rem !important;
+        border-radius: 8px !important;
+    }
+
+    .nav__cta .btn .wave-effect {
+        animation-duration: 2s !important;
+    }
+
+    .nav__cta .btn .particle {
+        width: 1.5px !important;
+        height: 1.5px !important;
+        animation-duration: 2.4s !important;
+    }
+}
+
+/* RESPONSIVE PARA PANTALLAS PEQUEÑAS - TAMAÑO COMPACTO */
+@media (max-width: 767px) {
+    .nav__cta .btn {
+        min-width: 100px !important;
+        padding: 6px 12px !important;
+        font-size: 0.7rem !important;
+        border-radius: 6px !important;
+        letter-spacing: 0.4px !important;
+    }
+
+    .nav__cta .btn .wave-effect {
+        animation-duration: 1.9s !important;
+    }
+
+    .nav__cta .btn .particle {
+        width: 1px !important;
+        height: 1px !important;
+        animation-duration: 2.3s !important;
+    }
+
+    .nav__cta .btn .energy-border {
+        border-radius: 8px !important;
+        top: -1px !important;
+        left: -1px !important;
+        right: -1px !important;
+        bottom: -1px !important;
+    }
+}
+
+/* ESTADO SCROLLED DEL HEADER - TAMAÑO COMPACTO */
+.header.scrolled .nav__cta .btn {
+    box-shadow: 
+        0 0 14px var(--neon-crimson-shadow), 
+        0 0 28px var(--neon-crimson-glow), 
+        0 0 42px rgba(255, 23, 68, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25),
+        0 6px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+.header.scrolled .nav__cta .btn:hover {
+    box-shadow: 
+        0 0 22px var(--neon-crimson-glow), 
+        0 0 44px var(--neon-crimson-pulse), 
+        0 0 66px rgba(255, 23, 68, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 10px 28px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* DESHABILITAR EFECTOS EN PERFORMANCE MODE */
+.performance-mode .nav__cta .btn .wave-effect,
+.performance-mode .nav__cta .btn .particle,
+.performance-mode .nav__cta .btn .energy-border {
+    display: none !important;
+}
+
+.performance-mode .nav__cta .btn {
+    animation: none !important;
+}
+
+/* DESHABILITAR EFECTOS CON REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+    .nav__cta .btn .wave-effect,
+    .nav__cta .btn .particle,
+    .nav__cta .btn .energy-border {
+        display: none !important;
+    }
+
+    .nav__cta .btn {
+        transition: all 0.4s ease !important;
+    }
+
+    .nav__cta .btn:hover {
+        transform: translateY(-1px) !important;
+        color: #ffffff !important;
+    }
+
+    .nav__cta .btn:hover span {
+        color: #ffffff !important;
+    }
+}
+
+/* AJUSTES DE Z-INDEX PARA EVITAR CONFLICTOS */
+.nav__cta .btn {
+    z-index: 1002 !important;
+}
+
+.nav__cta .btn .wave-effect,
+.nav__cta .btn .particle {
+    z-index: 1003 !important;
+}
+
+.nav__cta .btn span {
+    z-index: 1004 !important;
+}
+
+/* EFECTOS ESPECIALES CUANDO EL NAVBAR ESTÁ ACTIVO - TAMAÑO COMPACTO */
+.nav.active .nav__cta .btn {
+    background: linear-gradient(135deg, 
+        var(--neon-crimson-electric) 0%, 
+        var(--neon-crimson-plasma) 100%) !important;
+    box-shadow: 
+        0 0 16px var(--neon-crimson-glow), 
+        0 0 32px var(--neon-crimson-pulse), 
+        0 0 48px rgba(255, 23, 68, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        0 6px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+.nav.active .nav__cta .btn .wave-effect {
+    animation-duration: 2s !important;
+}
+
+.nav.active .nav__cta .btn .particle {
+    animation-duration: 2.4s !important;
+}
+/* ===== EFECTO PULSE SIMPLE Y FUNCIONAL PARA EL BOTÓN DEL HERO ===== */
+
+/* Eliminar cualquier animación existente que pueda interferir */
+.hero__cta-main .btn--cta .wave-effect,
+.hero__cta-main .btn--cta .particle,
+.hero__cta-main .btn--cta .energy-border {
+    display: none !important;
+    animation: none !important;
+}
+
+/* Resetear el botón del hero */
+.hero__cta-main .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    animation: none !important;
+    border: 2px solid #dc143c !important;
+    background: linear-gradient(135deg, #dc143c 0%, #ff1744 100%) !important;
+}
+
+/* Animación de pulse simple */
+@keyframes simple-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+}
+
+/* Crear el efecto pulse con ::before */
+.hero__cta-main .btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    border: 2px solid #dc143c !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: simple-pulse 2s infinite !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* Segundo pulse con delay */
+.hero__cta-main .btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    border: 2px solid #ff1744 !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: simple-pulse 2s infinite !important;
+    animation-delay: 1s !important;
+    pointer-events: none !important;
+    z-index: -2 !important;
+}
+
+/* Asegurar que el contenido esté visible */
+.hero__cta-main .btn--cta span,
+.hero__cta-main .btn--cta small {
+    position: relative !important;
+    z-index: 10 !important;
+    color: white !important;
+}
+
+/* Hover effect */
+.hero__cta-main .btn--cta:hover::before {
+    animation-duration: 1.5s !important;
+}
+
+.hero__cta-main .btn--cta:hover::after {
+    animation-duration: 1.5s !important;
+    animation-delay: 0.75s !important;
+}
+
+/* Active effect */
+.hero__cta-main .btn--cta:active::before,
+.hero__cta-main .btn--cta:active::after {
+    animation-duration: 0.8s !important;
+}
+/* ===== AGREGAR AL FINAL DEL CSS - EFECTOS DE ONDA CIRCULAR FUNCIONALES ===== */
+
+/* Animaciones de ondas circulares */
+@keyframes circular-wave-expand {
+    0% {
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) scale(0) !important;
+    }
+    50% {
+        opacity: 0.8 !important;
+        transform: translate(-50%, -50%) scale(1) !important;
+    }
+    100% {
+        width: 200px !important;
+        height: 200px !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(2) !important;
+    }
+}
+
+@keyframes hero-circular-wave-expand {
+    0% {
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) scale(0) !important;
+    }
+    30% {
+        opacity: 0.9 !important;
+        transform: translate(-50%, -50%) scale(0.5) !important;
+    }
+    70% {
+        opacity: 0.4 !important;
+        transform: translate(-50%, -50%) scale(1.5) !important;
+    }
+    100% {
+        width: 300px !important;
+        height: 300px !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(2.5) !important;
+    }
+}
+
+@keyframes click-wave-burst {
+    0% {
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) scale(0) !important;
+        background: radial-gradient(circle, 
+            rgba(255, 255, 255, 0.9) 0%, 
+            rgba(255, 255, 255, 0.7) 20%, 
+            rgba(255, 255, 255, 0.4) 40%, 
+            transparent 60%) !important;
+    }
+    100% {
+        width: 250px !important;
+        height: 250px !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(2) !important;
+    }
+}
+
+/* CREAR ONDAS AUTOMÁTICAMENTE CON ::before, ::after Y PSEUDO-ELEMENTOS */
+.btn--cta {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* Primera onda con ::before */
+.btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.7) 0%, 
+        rgba(255, 255, 255, 0.5) 20%, 
+        rgba(255, 255, 255, 0.3) 40%, 
+        rgba(255, 255, 255, 0.1) 60%, 
+        transparent 80%) !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    animation: circular-wave-expand 2s ease-out infinite !important;
+    animation-delay: 0s !important;
+}
+
+/* Segunda onda con ::after */
+.btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, 
+        rgba(255, 107, 157, 0.6) 0%, 
+        rgba(255, 107, 157, 0.4) 25%, 
+        rgba(255, 107, 157, 0.2) 50%, 
+        transparent 75%) !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: circular-wave-expand 2s ease-out infinite !important;
+    animation-delay: 0.5s !important;
+}
+
+/* Efectos especiales para el botón del hero */
+.hero__cta-main .btn--cta::before {
+    animation: hero-circular-wave-expand 2.5s ease-out infinite !important;
+    animation-delay: 0s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.8) 0%, 
+        rgba(255, 255, 255, 0.6) 15%, 
+        rgba(255, 255, 255, 0.4) 30%, 
+        rgba(255, 255, 255, 0.2) 50%, 
+        transparent 70%) !important;
+}
+
+.hero__cta-main .btn--cta::after {
+    animation: hero-circular-wave-expand 2.5s ease-out infinite !important;
+    animation-delay: 0.6s !important;
+    background: radial-gradient(circle, 
+        rgba(255, 107, 157, 0.7) 0%, 
+        rgba(255, 107, 157, 0.5) 20%, 
+        rgba(255, 107, 157, 0.3) 40%, 
+        rgba(255, 107, 157, 0.1) 60%, 
+        transparent 80%) !important;
+}
+
+/* Efectos para botón footer */
+.btn--footer::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.6) 0%, 
+        rgba(255, 255, 255, 0.4) 30%, 
+        rgba(255, 255, 255, 0.2) 60%, 
+        transparent 100%) !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    animation: circular-wave-expand 2.8s ease-out infinite !important;
+    animation-delay: 0s !important;
+}
+
+.btn--footer::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, 
+        rgba(255, 45, 85, 0.5) 0%, 
+        rgba(255, 45, 85, 0.3) 30%, 
+        rgba(255, 45, 85, 0.1) 60%, 
+        transparent 80%) !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: circular-wave-expand 2.8s ease-out infinite !important;
+    animation-delay: 0.7s !important;
+}
+
+/* Efectos para botón del drawer móvil */
+.nav__drawer-cta-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.5) 0%, 
+        rgba(255, 255, 255, 0.3) 30%, 
+        rgba(255, 255, 255, 0.1) 60%, 
+        transparent 100%) !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    animation: circular-wave-expand 2.2s ease-out infinite !important;
+    animation-delay: 0s !important;
+}
+
+.nav__drawer-cta-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, 
+        rgba(255, 107, 157, 0.4) 0%, 
+        rgba(255, 107, 157, 0.2) 35%, 
+        rgba(255, 107, 157, 0.1) 70%, 
+        transparent 85%) !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: circular-wave-expand 2.2s ease-out infinite !important;
+    animation-delay: 0.55s !important;
+}
+
+/* Asegurar que el contenido esté por encima de las ondas */
+.btn--cta span,
+.btn--cta small,
+.btn--cta .hero__cta-main,
+.btn--footer span,
+.btn--footer small,
+.nav__drawer-cta-btn .nav__drawer-cta-content,
+.nav__drawer-cta-btn .nav__drawer-cta-icon {
+    position: relative !important;
+    z-index: 10 !important;
+    color: #ffffff !important;
+}
+
+/* EFECTOS HOVER PARA DESKTOP */
+@media (hover: hover) and (pointer: fine) {
+    .btn--cta:hover::before {
+        animation-duration: 1.8s !important;
+    }
+
+    .btn--cta:hover::after {
+        animation-duration: 1.8s !important;
+        animation-delay: 0.4s !important;
+    }
+
+    .hero__cta-main .btn--cta:hover::before {
+        animation-duration: 2s !important;
+    }
+
+    .hero__cta-main .btn--cta:hover::after {
+        animation-duration: 2s !important;
+        animation-delay: 0.5s !important;
+    }
+
+    .btn--footer:hover::before {
+        animation-duration: 2.4s !important;
+    }
+
+    .btn--footer:hover::after {
+        animation-duration: 2.4s !important;
+        animation-delay: 0.6s !important;
+    }
+}
+
+/* EFECTOS ACTIVE PARA MÓVIL Y DESKTOP */
+.btn--cta:active::before,
+.btn--cta:active::after {
+    animation: click-wave-burst 0.6s ease-out !important;
+}
+
+.btn--footer:active::before,
+.btn--footer:active::after {
+    animation-duration: 1.2s !important;
+}
+
+.nav__drawer-cta-btn:active::before,
+.nav__drawer-cta-btn:active::after {
+    animation-duration: 1s !important;
+}
+
+/* DESHABILITAR EN PERFORMANCE MODE */
+.performance-mode .btn--cta::before,
+.performance-mode .btn--cta::after,
+.performance-mode .btn--footer::before,
+.performance-mode .btn--footer::after,
+.performance-mode .nav__drawer-cta-btn::before,
+.performance-mode .nav__drawer-cta-btn::after {
+    display: none !important;
+    animation: none !important;
+}
+
+/* DESHABILITAR CON REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+    .btn--cta::before,
+    .btn--cta::after,
+    .btn--footer::before,
+    .btn--footer::after,
+    .nav__drawer-cta-btn::before,
+    .nav__drawer-cta-btn::after {
+        display: none !important;
+        animation: none !important;
+    }
+}
+
+/* PULSE RING PARA EL HERO */
+.pulse-ring {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    border: 2px solid #dc143c !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: simple-pulse 2s infinite !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+}
+
+@keyframes simple-pulse {
+    0% {
+        transform: scale(1) !important;
+        opacity: 1 !important;
+    }
+    50% {
+        transform: scale(1.1) !important;
+        opacity: 0.7 !important;
+    }
+    100% {
+        transform: scale(1.2) !important;
+        opacity: 0 !important;
+    }
+}
+
+/* EFECTOS PARA BOTONES DE VIDEOS */
+.videos__cta-buttons .btn--cta::before {
+    animation: circular-wave-expand 2.3s ease-out infinite !important;
+    animation-delay: 0s !important;
+}
+
+.videos__cta-buttons .btn--cta::after {
+    animation: circular-wave-expand 2.3s ease-out infinite !important;
+    animation-delay: 0.58s !important;
+}
+/* ===== AGREGAR AL FINAL DEL CSS - EFECTOS DE BORDES QUE SE DESPRENDEN LENTAMENTE ===== */
+
+/* Animación de bordes que se desprenden lentamente */
+@keyframes detaching-border-slow {
+    0% {
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) scale(1) !important;
+        border-width: 2px !important;
+    }
+    25% {
+        width: 110% !important;
+        height: 110% !important;
+        opacity: 0.9 !important;
+        transform: translate(-50%, -50%) scale(1.05) !important;
+        border-width: 1.5px !important;
+    }
+    50% {
+        width: 130% !important;
+        height: 130% !important;
+        opacity: 0.7 !important;
+        transform: translate(-50%, -50%) scale(1.15) !important;
+        border-width: 1px !important;
+    }
+    75% {
+        width: 160% !important;
+        height: 160% !important;
+        opacity: 0.4 !important;
+        transform: translate(-50%, -50%) scale(1.3) !important;
+        border-width: 0.5px !important;
+    }
+    100% {
+        width: 200% !important;
+        height: 200% !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(1.5) !important;
+        border-width: 0px !important;
+    }
+}
+
+/* Animación más lenta para el hero */
+@keyframes hero-detaching-border-slow {
+    0% {
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) scale(1) !important;
+        border-width: 3px !important;
+    }
+    20% {
+        width: 105% !important;
+        height: 105% !important;
+        opacity: 0.95 !important;
+        transform: translate(-50%, -50%) scale(1.025) !important;
+        border-width: 2.5px !important;
+    }
+    40% {
+        width: 120% !important;
+        height: 120% !important;
+        opacity: 0.8 !important;
+        transform: translate(-50%, -50%) scale(1.1) !important;
+        border-width: 2px !important;
+    }
+    60% {
+        width: 140% !important;
+        height: 140% !important;
+        opacity: 0.6 !important;
+        transform: translate(-50%, -50%) scale(1.2) !important;
+        border-width: 1.5px !important;
+    }
+    80% {
+        width: 170% !important;
+        height: 170% !important;
+        opacity: 0.3 !important;
+        transform: translate(-50%, -50%) scale(1.35) !important;
+        border-width: 1px !important;
+    }
+    100% {
+        width: 220% !important;
+        height: 220% !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(1.6) !important;
+        border-width: 0px !important;
+    }
+}
+
+/* Efecto al hacer click - borde que se desprende rápido */
+@keyframes click-detaching-burst {
+    0% {
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) scale(1) !important;
+        border-width: 3px !important;
+        border-color: rgba(255, 255, 255, 0.9) !important;
+    }
+    100% {
+        width: 180% !important;
+        height: 180% !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(1.4) !important;
+        border-width: 0px !important;
+        border-color: rgba(255, 255, 255, 0) !important;
+    }
+}
+
+/* APLICAR EFECTOS DE BORDES QUE SE DESPRENDEN A LOS BOTONES */
+.btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+}
+
+/* Primer borde que se desprende lentamente */
+.btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: detaching-border-slow 4s ease-out infinite !important;
+    animation-delay: 0s !important;
+}
+
+/* Segundo borde que se desprende lentamente */
+.btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 69, 105, 0.5) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: detaching-border-slow 4s ease-out infinite !important;
+    animation-delay: 1s !important;
+}
+
+/* Efectos especiales para el botón del hero - más lento */
+.hero__cta-main .btn--cta::before {
+    animation: hero-detaching-border-slow 5s ease-out infinite !important;
+    animation-delay: 0s !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+    border-width: 3px !important;
+}
+
+.hero__cta-main .btn--cta::after {
+    animation: hero-detaching-border-slow 5s ease-out infinite !important;
+    animation-delay: 1.2s !important;
+    border-color: rgba(255, 23, 68, 0.7) !important;
+    border-width: 2px !important;
+}
+
+/* Efectos para botón footer - lento y elegante */
+.btn--footer::before {
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    border-width: 2px !important;
+    animation: detaching-border-slow 4.5s ease-out infinite !important;
+    animation-delay: 0s !important;
+}
+
+.btn--footer::after {
+    border-color: rgba(255, 45, 85, 0.5) !important;
+    border-width: 2px !important;
+    animation: detaching-border-slow 4.5s ease-out infinite !important;
+    animation-delay: 1.1s !important;
+}
+
+/* Efectos para botón del drawer móvil - lento */
+.nav__drawer-cta-btn::before {
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    border-width: 2px !important;
+    animation: detaching-border-slow 3.8s ease-out infinite !important;
+    animation-delay: 0s !important;
+}
+
+.nav__drawer-cta-btn::after {
+    border-color: rgba(255, 107, 157, 0.4) !important;
+    border-width: 1.5px !important;
+    animation: detaching-border-slow 3.8s ease-out infinite !important;
+    animation-delay: 0.9s !important;
+}
+
+/* Efectos para botones de videos - lento */
+.videos__cta-buttons .btn--cta::before {
+    animation: detaching-border-slow 4.2s ease-out infinite !important;
+    animation-delay: 0s !important;
+    border-color: rgba(255, 23, 68, 0.6) !important;
+}
+
+.videos__cta-buttons .btn--cta::after {
+    animation: detaching-border-slow 4.2s ease-out infinite !important;
+    animation-delay: 1.05s !important;
+    border-color: rgba(255, 69, 105, 0.5) !important;
+}
+
+/* Asegurar que el contenido del botón esté visible */
+.btn--cta span,
+.btn--cta small,
+.btn--cta .hero__cta-main,
+.btn--cta .hero__cta-main span,
+.btn--cta .hero__cta-main small,
+.btn--footer span,
+.btn--footer small,
+.nav__drawer-cta-btn .nav__drawer-cta-content,
+.nav__drawer-cta-btn .nav__drawer-cta-main,
+.nav__drawer-cta-btn .nav__drawer-cta-trial,
+.nav__drawer-cta-btn .nav__drawer-cta-icon {
+    position: relative !important;
+    z-index: 15 !important;
+    color: #ffffff !important;
+}
+
+/* EFECTOS HOVER PARA DESKTOP - BORDES MÁS RÁPIDOS */
+@media (hover: hover) and (pointer: fine) {
+    .btn--cta:hover::before {
+        animation-duration: 3.2s !important;
+    }
+
+    .btn--cta:hover::after {
+        animation-duration: 3.2s !important;
+        animation-delay: 0.8s !important;
+    }
+
+    .hero__cta-main .btn--cta:hover::before {
+        animation-duration: 3.8s !important;
+    }
+
+    .hero__cta-main .btn--cta:hover::after {
+        animation-duration: 3.8s !important;
+        animation-delay: 0.9s !important;
+    }
+
+    .btn--footer:hover::before {
+        animation-duration: 3.5s !important;
+    }
+
+    .btn--footer:hover::after {
+        animation-duration: 3.5s !important;
+        animation-delay: 0.85s !important;
+    }
+}
+
+/* EFECTOS ACTIVE - BORDES QUE SE DESPRENDEN RÁPIDO AL HACER CLICK */
+.btn--cta:active::before,
+.btn--cta:active::after {
+    animation: click-detaching-burst 0.8s ease-out !important;
+}
+
+.btn--footer:active::before,
+.btn--footer:active::after {
+    animation: click-detaching-burst 1s ease-out !important;
+}
+
+.nav__drawer-cta-btn:active::before,
+.nav__drawer-cta-btn:active::after {
+    animation: click-detaching-burst 0.9s ease-out !important;
+}
+
+/* DESHABILITAR EN PERFORMANCE MODE */
+.performance-mode .btn--cta::before,
+.performance-mode .btn--cta::after,
+.performance-mode .btn--footer::before,
+.performance-mode .btn--footer::after,
+.performance-mode .nav__drawer-cta-btn::before,
+.performance-mode .nav__drawer-cta-btn::after {
+    display: none !important;
+    animation: none !important;
+}
+
+/* DESHABILITAR CON REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+    .btn--cta::before,
+    .btn--cta::after,
+    .btn--footer::before,
+    .btn--footer::after,
+    .nav__drawer-cta-btn::before,
+    .nav__drawer-cta-btn::after {
+        display: none !important;
+        animation: none !important;
+    }
+}
+/* ===== ELIMINAR EFECTOS EXISTENTES Y AGREGAR SOLO BORDES QUE SE DESPRENDEN ===== */
+
+/* RESETEAR TODOS LOS EFECTOS EXISTENTES DE BOTONES */
+.btn--cta,
+.btn--footer,
+.nav__drawer-cta-btn,
+.videos__cta-buttons .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    animation: none !important;
+    transform: none !important;
+}
+
+/* ELIMINAR TODOS LOS PSEUDO-ELEMENTOS EXISTENTES */
+.btn--cta::before,
+.btn--cta::after,
+.btn--footer::before,
+.btn--footer::after,
+.nav__drawer-cta-btn::before,
+.nav__drawer-cta-btn::after,
+.videos__cta-buttons .btn--cta::before,
+.videos__cta-buttons .btn--cta::after,
+.hero__cta-main .btn--cta::before,
+.hero__cta-main .btn--cta::after {
+    content: none !important;
+    display: none !important;
+    animation: none !important;
+}
+
+/* ELIMINAR PULSE RING */
+.pulse-ring {
+    display: none !important;
+    animation: none !important;
+}
+
+/* ELIMINAR WAVE EFFECTS */
+.wave-effect {
+    display: none !important;
+    animation: none !important;
+}
+
+/* ELIMINAR ANIMACIONES DE RESPIRACIÓN */
+.hero__cta-group .btn--cta {
+    animation: none !important;
+}
+
+/* ===== NUEVA ANIMACIÓN DE BORDES QUE SE DESPRENDEN LENTAMENTE ===== */
+
+/* Animación de bordes que se desprenden muy lentamente */
+@keyframes slow-detaching-border {
+    0% {
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) scale(1) !important;
+        border-width: 2px !important;
+    }
+    15% {
+        width: 105% !important;
+        height: 105% !important;
+        opacity: 0.95 !important;
+        transform: translate(-50%, -50%) scale(1.025) !important;
+        border-width: 2px !important;
+    }
+    30% {
+        width: 115% !important;
+        height: 115% !important;
+        opacity: 0.85 !important;
+        transform: translate(-50%, -50%) scale(1.075) !important;
+        border-width: 1.8px !important;
+    }
+    50% {
+        width: 130% !important;
+        height: 130% !important;
+        opacity: 0.7 !important;
+        transform: translate(-50%, -50%) scale(1.15) !important;
+        border-width: 1.5px !important;
+    }
+    70% {
+        width: 150% !important;
+        height: 150% !important;
+        opacity: 0.5 !important;
+        transform: translate(-50%, -50%) scale(1.25) !important;
+        border-width: 1px !important;
+    }
+    85% {
+        width: 175% !important;
+        height: 175% !important;
+        opacity: 0.25 !important;
+        transform: translate(-50%, -50%) scale(1.375) !important;
+        border-width: 0.5px !important;
+    }
+    100% {
+        width: 200% !important;
+        height: 200% !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(1.5) !important;
+        border-width: 0px !important;
+    }
+}
+
+/* APLICAR SOLO EL EFECTO DE BORDES QUE SE DESPRENDEN */
+
+/* Primer borde que se desprende */
+.btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.8) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: slow-detaching-border 6s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+/* Segundo borde que se desprende */
+.btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: slow-detaching-border 6s ease-out infinite !important;
+    animation-delay: 1.5s !important;
+    display: block !important;
+}
+
+/* Efectos para botón footer */
+.btn--footer::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 255, 255, 0.7) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: slow-detaching-border 6.5s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.btn--footer::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.5) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: slow-detaching-border 6.5s ease-out infinite !important;
+    animation-delay: 1.6s !important;
+    display: block !important;
+}
+
+/* Efectos para botón del drawer móvil */
+.nav__drawer-cta-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 255, 255, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: slow-detaching-border 5.5s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.nav__drawer-cta-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 69, 105, 0.5) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: slow-detaching-border 5.5s ease-out infinite !important;
+    animation-delay: 1.4s !important;
+    display: block !important;
+}
+
+/* Efectos para botones de videos */
+.videos__cta-buttons .btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.7) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: slow-detaching-border 6.2s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.videos__cta-buttons .btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.5) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: slow-detaching-border 6.2s ease-out infinite !important;
+    animation-delay: 1.55s !important;
+    display: block !important;
+}
+
+/* Asegurar que el contenido del botón esté visible */
+.btn--cta span,
+.btn--cta small,
+.btn--cta .hero__cta-main,
+.btn--cta .hero__cta-main span,
+.btn--cta .hero__cta-main small,
+.btn--footer span,
+.btn--footer small,
+.nav__drawer-cta-btn .nav__drawer-cta-content,
+.nav__drawer-cta-btn .nav__drawer-cta-main,
+.nav__drawer-cta-btn .nav__drawer-cta-trial,
+.nav__drawer-cta-btn .nav__drawer-cta-icon {
+    position: relative !important;
+    z-index: 20 !important;
+    color: #ffffff !important;
+}
+
+/* EFECTOS HOVER PARA DESKTOP - BORDES MÁS RÁPIDOS */
+@media (hover: hover) and (pointer: fine) {
+    .btn--cta:hover::before,
+    .btn--cta:hover::after {
+        animation-duration: 4s !important;
+    }
+
+    .btn--footer:hover::before,
+    .btn--footer:hover::after {
+        animation-duration: 4.5s !important;
+    }
+
+    .nav__drawer-cta-btn:hover::before,
+    .nav__drawer-cta-btn:hover::after {
+        animation-duration: 3.8s !important;
+    }
+
+    .videos__cta-buttons .btn--cta:hover::before,
+    .videos__cta-buttons .btn--cta:hover::after {
+        animation-duration: 4.2s !important;
+    }
+}
+
+/* EFECTOS ACTIVE - BORDES QUE SE DESPRENDEN MÁS RÁPIDO AL HACER CLICK */
+.btn--cta:active::before,
+.btn--cta:active::after,
+.btn--footer:active::before,
+.btn--footer:active::after,
+.nav__drawer-cta-btn:active::before,
+.nav__drawer-cta-btn:active::after,
+.videos__cta-buttons .btn--cta:active::before,
+.videos__cta-buttons .btn--cta:active::after {
+    animation-duration: 2s !important;
+}
+
+/* DESHABILITAR EN PERFORMANCE MODE */
+.performance-mode .btn--cta::before,
+.performance-mode .btn--cta::after,
+.performance-mode .btn--footer::before,
+.performance-mode .btn--footer::after,
+.performance-mode .nav__drawer-cta-btn::before,
+.performance-mode .nav__drawer-cta-btn::after,
+.performance-mode .videos__cta-buttons .btn--cta::before,
+.performance-mode .videos__cta-buttons .btn--cta::after {
+    display: none !important;
+    animation: none !important;
+}
+
+/* DESHABILITAR CON REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+    .btn--cta::before,
+    .btn--cta::after,
+    .btn--footer::before,
+    .btn--footer::after,
+    .nav__drawer-cta-btn::before,
+    .nav__drawer-cta-btn::after,
+    .videos__cta-buttons .btn--cta::before,
+    .videos__cta-buttons .btn--cta::after {
+        display: none !important;
+        animation: none !important;
+    }
+}
+/* ===== ELIMINAR EFECTOS EXISTENTES Y AGREGAR BORDES QUE SE ABREN ESTÉTICAMENTE ===== */
+
+/* RESETEAR TODOS LOS EFECTOS EXISTENTES DE BOTONES */
+.btn--cta,
+.btn--footer,
+.nav__drawer-cta-btn,
+.videos__cta-buttons .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    animation: none !important;
+    transform: none !important;
+}
+
+/* ELIMINAR TODOS LOS PSEUDO-ELEMENTOS EXISTENTES */
+.btn--cta::before,
+.btn--cta::after,
+.btn--footer::before,
+.btn--footer::after,
+.nav__drawer-cta-btn::before,
+.nav__drawer-cta-btn::after,
+.videos__cta-buttons .btn--cta::before,
+.videos__cta-buttons .btn--cta::after,
+.hero__cta-main .btn--cta::before,
+.hero__cta-main .btn--cta::after {
+    content: none !important;
+    display: none !important;
+    animation: none !important;
+}
+
+/* ELIMINAR OTROS EFECTOS */
+.pulse-ring,
+.wave-effect {
+    display: none !important;
+    animation: none !important;
+}
+
+.hero__cta-group .btn--cta {
+    animation: none !important;
+}
+
+/* ===== NUEVA ANIMACIÓN DE BORDES QUE SE ABREN ESTÉTICAMENTE ===== */
+
+/* Animación de bordes que se abren y expanden de forma visible */
+@keyframes aesthetic-border-opening {
+    0% {
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) scale(1) !important;
+        border-width: 3px !important;
+        filter: blur(0px) !important;
+    }
+    10% {
+        width: 102% !important;
+        height: 102% !important;
+        opacity: 0.98 !important;
+        transform: translate(-50%, -50%) scale(1.01) !important;
+        border-width: 3px !important;
+        filter: blur(0px) !important;
+    }
+    25% {
+        width: 108% !important;
+        height: 108% !important;
+        opacity: 0.9 !important;
+        transform: translate(-50%, -50%) scale(1.04) !important;
+        border-width: 2.8px !important;
+        filter: blur(0.2px) !important;
+    }
+    40% {
+        width: 120% !important;
+        height: 120% !important;
+        opacity: 0.8 !important;
+        transform: translate(-50%, -50%) scale(1.1) !important;
+        border-width: 2.5px !important;
+        filter: blur(0.5px) !important;
+    }
+    55% {
+        width: 135% !important;
+        height: 135% !important;
+        opacity: 0.65 !important;
+        transform: translate(-50%, -50%) scale(1.175) !important;
+        border-width: 2px !important;
+        filter: blur(0.8px) !important;
+    }
+    70% {
+        width: 155% !important;
+        height: 155% !important;
+        opacity: 0.45 !important;
+        transform: translate(-50%, -50%) scale(1.275) !important;
+        border-width: 1.5px !important;
+        filter: blur(1.2px) !important;
+    }
+    85% {
+        width: 180% !important;
+        height: 180% !important;
+        opacity: 0.25 !important;
+        transform: translate(-50%, -50%) scale(1.4) !important;
+        border-width: 1px !important;
+        filter: blur(1.8px) !important;
+    }
+    100% {
+        width: 220% !important;
+        height: 220% !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(1.6) !important;
+        border-width: 0.5px !important;
+        filter: blur(2.5px) !important;
+    }
+}
+
+/* Respiración sutil del botón para conectar con el efecto */
+@keyframes subtle-button-breathe {
+    0%, 100% {
+        transform: scale(1) !important;
+        box-shadow: 
+            0 0 15px var(--neon-red-shadow-soft), 
+            0 0 30px var(--neon-red-glow-soft), 
+            0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    }
+    50% {
+        transform: scale(1.02) !important;
+        box-shadow: 
+            0 0 20px var(--neon-red-shadow-medium), 
+            0 0 40px var(--neon-red-glow-medium), 
+            0 6px 18px rgba(0, 0, 0, 0.3) !important;
+    }
+}
+
+/* APLICAR RESPIRACIÓN SUTIL A LOS BOTONES */
+.btn--cta {
+    animation: subtle-button-breathe 4s ease-in-out infinite !important;
+}
+
+.btn--footer {
+    animation: subtle-button-breathe 4.5s ease-in-out infinite !important;
+}
+
+.nav__drawer-cta-btn {
+    animation: subtle-button-breathe 4.2s ease-in-out infinite !important;
+}
+
+.videos__cta-buttons .btn--cta {
+    animation: subtle-button-breathe 4.3s ease-in-out infinite !important;
+}
+
+/* APLICAR BORDES QUE SE ABREN ESTÉTICAMENTE */
+
+/* Primer borde que se abre - más visible */
+.btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 3px solid rgba(220, 20, 60, 0.9) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: aesthetic-border-opening 5s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+    box-shadow: 0 0 8px rgba(220, 20, 60, 0.4) !important;
+}
+
+/* Segundo borde que se abre - complementario */
+.btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.7) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: aesthetic-border-opening 5s ease-out infinite !important;
+    animation-delay: 1.25s !important;
+    display: block !important;
+    box-shadow: 0 0 6px rgba(255, 23, 68, 0.3) !important;
+}
+
+/* Efectos para botón footer */
+.btn--footer::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 3px solid rgba(255, 255, 255, 0.8) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: aesthetic-border-opening 5.5s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3) !important;
+}
+
+.btn--footer::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: aesthetic-border-opening 5.5s ease-out infinite !important;
+    animation-delay: 1.4s !important;
+    display: block !important;
+    box-shadow: 0 0 6px rgba(220, 20, 60, 0.3) !important;
+}
+
+/* Efectos para botón del drawer móvil */
+.nav__drawer-cta-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 255, 255, 0.7) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: aesthetic-border-opening 4.8s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.2) !important;
+}
+
+.nav__drawer-cta-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 69, 105, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: aesthetic-border-opening 4.8s ease-out infinite !important;
+    animation-delay: 1.2s !important;
+    display: block !important;
+    box-shadow: 0 0 5px rgba(255, 69, 105, 0.2) !important;
+}
+
+/* Efectos para botones de videos */
+.videos__cta-buttons .btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 3px solid rgba(220, 20, 60, 0.8) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: aesthetic-border-opening 5.2s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+    box-shadow: 0 0 7px rgba(220, 20, 60, 0.3) !important;
+}
+
+.videos__cta-buttons .btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: aesthetic-border-opening 5.2s ease-out infinite !important;
+    animation-delay: 1.3s !important;
+    display: block !important;
+    box-shadow: 0 0 5px rgba(255, 23, 68, 0.2) !important;
+}
+
+/* Asegurar que el contenido del botón esté visible */
+.btn--cta span,
+.btn--cta small,
+.btn--cta .hero__cta-main,
+.btn--cta .hero__cta-main span,
+.btn--cta .hero__cta-main small,
+.btn--footer span,
+.btn--footer small,
+.nav__drawer-cta-btn .nav__drawer-cta-content,
+.nav__drawer-cta-btn .nav__drawer-cta-main,
+.nav__drawer-cta-btn .nav__drawer-cta-trial,
+.nav__drawer-cta-btn .nav__drawer-cta-icon {
+    position: relative !important;
+    z-index: 20 !important;
+    color: #ffffff !important;
+}
+
+/* EFECTOS HOVER PARA DESKTOP */
+@media (hover: hover) and (pointer: fine) {
+    .btn--cta:hover {
+        animation: subtle-button-breathe 2.5s ease-in-out infinite !important;
+        transform: scale(1.05) !important;
+    }
+
+    .btn--cta:hover::before,
+    .btn--cta:hover::after {
+        animation-duration: 3.5s !important;
+    }
+
+    .btn--footer:hover {
+        animation: subtle-button-breathe 2.8s ease-in-out infinite !important;
+        transform: scale(1.03) !important;
+    }
+
+    .btn--footer:hover::before,
+    .btn--footer:hover::after {
+        animation-duration: 3.8s !important;
+    }
+
+    .nav__drawer-cta-btn:hover::before,
+    .nav__drawer-cta-btn:hover::after {
+        animation-duration: 3.2s !important;
+    }
+
+    .videos__cta-buttons .btn--cta:hover::before,
+    .videos__cta-buttons .btn--cta:hover::after {
+        animation-duration: 3.6s !important;
+    }
+}
+
+/* EFECTOS ACTIVE */
+.btn--cta:active,
+.btn--footer:active,
+.nav__drawer-cta-btn:active,
+.videos__cta-buttons .btn--cta:active {
+    animation: none !important;
+    transform: scale(0.98) !important;
+}
+
+.btn--cta:active::before,
+.btn--cta:active::after,
+.btn--footer:active::before,
+.btn--footer:active::after,
+.nav__drawer-cta-btn:active::before,
+.nav__drawer-cta-btn:active::after,
+.videos__cta-buttons .btn--cta:active::before,
+.videos__cta-buttons .btn--cta:active::after {
+    animation-duration: 1.5s !important;
+}
+
+/* DESHABILITAR EN PERFORMANCE MODE */
+.performance-mode .btn--cta,
+.performance-mode .btn--footer,
+.performance-mode .nav__drawer-cta-btn,
+.performance-mode .videos__cta-buttons .btn--cta {
+    animation: none !important;
+}
+
+.performance-mode .btn--cta::before,
+.performance-mode .btn--cta::after,
+.performance-mode .btn--footer::before,
+.performance-mode .btn--footer::after,
+.performance-mode .nav__drawer-cta-btn::before,
+.performance-mode .nav__drawer-cta-btn::after,
+.performance-mode .videos__cta-buttons .btn--cta::before,
+.performance-mode .videos__cta-buttons .btn--cta::after {
+    display: none !important;
+    animation: none !important;
+}
+
+/* DESHABILITAR CON REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+    .btn--cta,
+    .btn--footer,
+    .nav__drawer-cta-btn,
+    .videos__cta-buttons .btn--cta {
+        animation: none !important;
+    }
+
+    .btn--cta::before,
+    .btn--cta::after,
+    .btn--footer::before,
+    .btn--footer::after,
+    .nav__drawer-cta-btn::before,
+    .nav__drawer-cta-btn::after,
+    .videos__cta-buttons .btn--cta::before,
+    .videos__cta-buttons .btn--cta::after {
+        display: none !important;
+        animation: none !important;
+    }
+}
+/* ===== ELIMINAR EFECTOS EXISTENTES Y AGREGAR BORDES TIPO PULSE/ORBES ===== */
+
+/* RESETEAR TODOS LOS EFECTOS EXISTENTES DE BOTONES */
+.btn--cta,
+.btn--footer,
+.nav__drawer-cta-btn,
+.videos__cta-buttons .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    animation: none !important;
+    transform: none !important;
+}
+
+/* ELIMINAR TODOS LOS PSEUDO-ELEMENTOS EXISTENTES */
+.btn--cta::before,
+.btn--cta::after,
+.btn--footer::before,
+.btn--footer::after,
+.nav__drawer-cta-btn::before,
+.nav__drawer-cta-btn::after,
+.videos__cta-buttons .btn--cta::before,
+.videos__cta-buttons .btn--cta::after,
+.hero__cta-main .btn--cta::before,
+.hero__cta-main .btn--cta::after {
+    content: none !important;
+    display: none !important;
+    animation: none !important;
+}
+
+/* ELIMINAR OTROS EFECTOS */
+.pulse-ring,
+.wave-effect {
+    display: none !important;
+    animation: none !important;
+}
+
+.hero__cta-group .btn--cta {
+    animation: none !important;
+}
+
+/* ===== ANIMACIÓN DE BORDES TIPO PULSE/ORBES QUE SE EXPANDEN ===== */
+
+/* Animación de pulse/orbe que se expande desde el botón */
+@keyframes border-pulse-orb {
+    0% {
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) scale(1) !important;
+        border-width: 3px !important;
+        box-shadow: 
+            0 0 0 0 rgba(220, 20, 60, 0.8),
+            0 0 10px rgba(220, 20, 60, 0.6) !important;
+    }
+    25% {
+        width: 120% !important;
+        height: 120% !important;
+        opacity: 0.9 !important;
+        transform: translate(-50%, -50%) scale(1.1) !important;
+        border-width: 2.5px !important;
+        box-shadow: 
+            0 0 0 8px rgba(220, 20, 60, 0.4),
+            0 0 20px rgba(220, 20, 60, 0.5) !important;
+    }
+    50% {
+        width: 150% !important;
+        height: 150% !important;
+        opacity: 0.7 !important;
+        transform: translate(-50%, -50%) scale(1.25) !important;
+        border-width: 2px !important;
+        box-shadow: 
+            0 0 0 16px rgba(220, 20, 60, 0.2),
+            0 0 30px rgba(220, 20, 60, 0.4) !important;
+    }
+    75% {
+        width: 180% !important;
+        height: 180% !important;
+        opacity: 0.4 !important;
+        transform: translate(-50%, -50%) scale(1.4) !important;
+        border-width: 1.5px !important;
+        box-shadow: 
+            0 0 0 24px rgba(220, 20, 60, 0.1),
+            0 0 40px rgba(220, 20, 60, 0.3) !important;
+    }
+    100% {
+        width: 220% !important;
+        height: 220% !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(1.6) !important;
+        border-width: 1px !important;
+        box-shadow: 
+            0 0 0 32px rgba(220, 20, 60, 0),
+            0 0 50px rgba(220, 20, 60, 0) !important;
+    }
+}
+
+/* Animación de orbe secundario más sutil */
+@keyframes secondary-orb-pulse {
+    0% {
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 0.8 !important;
+        transform: translate(-50%, -50%) scale(1) !important;
+        border-width: 2px !important;
+        box-shadow: 
+            0 0 0 0 rgba(255, 23, 68, 0.6),
+            0 0 8px rgba(255, 23, 68, 0.4) !important;
+    }
+    30% {
+        width: 130% !important;
+        height: 130% !important;
+        opacity: 0.6 !important;
+        transform: translate(-50%, -50%) scale(1.15) !important;
+        border-width: 1.8px !important;
+        box-shadow: 
+            0 0 0 10px rgba(255, 23, 68, 0.3),
+            0 0 18px rgba(255, 23, 68, 0.3) !important;
+    }
+    60% {
+        width: 170% !important;
+        height: 170% !important;
+        opacity: 0.3 !important;
+        transform: translate(-50%, -50%) scale(1.35) !important;
+        border-width: 1.5px !important;
+        box-shadow: 
+            0 0 0 20px rgba(255, 23, 68, 0.15),
+            0 0 28px rgba(255, 23, 68, 0.2) !important;
+    }
+    100% {
+        width: 200% !important;
+        height: 200% !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(1.5) !important;
+        border-width: 1px !important;
+        box-shadow: 
+            0 0 0 30px rgba(255, 23, 68, 0),
+            0 0 35px rgba(255, 23, 68, 0) !important;
+    }
+}
+
+/* Respiración muy sutil del botón */
+@keyframes gentle-button-pulse {
+    0%, 100% {
+        transform: scale(1) !important;
+        box-shadow: 
+            0 0 15px var(--neon-red-shadow-soft), 
+            0 0 30px var(--neon-red-glow-soft), 
+            0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    }
+    50% {
+        transform: scale(1.015) !important;
+        box-shadow: 
+            0 0 18px var(--neon-red-shadow-medium), 
+            0 0 35px var(--neon-red-glow-medium), 
+            0 5px 15px rgba(0, 0, 0, 0.3) !important;
+    }
+}
+
+/* APLICAR RESPIRACIÓN SUTIL A LOS BOTONES */
+.btn--cta {
+    animation: gentle-button-pulse 3s ease-in-out infinite !important;
+}
+
+.btn--footer {
+    animation: gentle-button-pulse 3.2s ease-in-out infinite !important;
+}
+
+.nav__drawer-cta-btn {
+    animation: gentle-button-pulse 2.8s ease-in-out infinite !important;
+}
+
+.videos__cta-buttons .btn--cta {
+    animation: gentle-button-pulse 3.1s ease-in-out infinite !important;
+}
+
+/* APLICAR BORDES TIPO PULSE/ORBES */
+
+/* Primer orbe/pulse principal */
+.btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 3px solid rgba(220, 20, 60, 0.9) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: border-pulse-orb 4s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+/* Segundo orbe/pulse secundario */
+.btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.7) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: secondary-orb-pulse 4s ease-out infinite !important;
+    animation-delay: 1s !important;
+    display: block !important;
+}
+
+/* Efectos para botón footer */
+.btn--footer::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 3px solid rgba(255, 255, 255, 0.8) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: border-pulse-orb 4.5s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.btn--footer::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: secondary-orb-pulse 4.5s ease-out infinite !important;
+    animation-delay: 1.1s !important;
+    display: block !important;
+}
+
+/* Efectos para botón del drawer móvil */
+.nav__drawer-cta-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 255, 255, 0.7) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: border-pulse-orb 3.8s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.nav__drawer-cta-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 69, 105, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: secondary-orb-pulse 3.8s ease-out infinite !important;
+    animation-delay: 0.9s !important;
+    display: block !important;
+}
+
+/* Efectos para botones de videos */
+.videos__cta-buttons .btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 3px solid rgba(220, 20, 60, 0.8) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: border-pulse-orb 4.2s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.videos__cta-buttons .btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: secondary-orb-pulse 4.2s ease-out infinite !important;
+    animation-delay: 1.05s !important;
+    display: block !important;
+}
+
+/* Asegurar que el contenido del botón esté visible */
+.btn--cta span,
+.btn--cta small,
+.btn--cta .hero__cta-main,
+.btn--cta .hero__cta-main span,
+.btn--cta .hero__cta-main small,
+.btn--footer span,
+.btn--footer small,
+.nav__drawer-cta-btn .nav__drawer-cta-content,
+.nav__drawer-cta-btn .nav__drawer-cta-main,
+.nav__drawer-cta-btn .nav__drawer-cta-trial,
+.nav__drawer-cta-btn .nav__drawer-cta-icon {
+    position: relative !important;
+    z-index: 20 !important;
+    color: #ffffff !important;
+}
+
+/* EFECTOS HOVER PARA DESKTOP - ORBES MÁS RÁPIDOS */
+@media (hover: hover) and (pointer: fine) {
+    .btn--cta:hover {
+        animation: gentle-button-pulse 2s ease-in-out infinite !important;
+        transform: scale(1.03) !important;
+    }
+
+    .btn--cta:hover::before {
+        animation-duration: 2.8s !important;
+        border-width: 4px !important;
+        box-shadow: 
+            0 0 0 0 rgba(220, 20, 60, 1),
+            0 0 15px rgba(220, 20, 60, 0.8) !important;
+    }
+
+    .btn--cta:hover::after {
+        animation-duration: 2.8s !important;
+        animation-delay: 0.7s !important;
+        border-width: 3px !important;
+        box-shadow: 
+            0 0 0 0 rgba(255, 23, 68, 0.8),
+            0 0 12px rgba(255, 23, 68, 0.6) !important;
+    }
+
+    .btn--footer:hover {
+        animation: gentle-button-pulse 2.2s ease-in-out infinite !important;
+        transform: scale(1.02) !important;
+    }
+
+    .btn--footer:hover::before,
+    .btn--footer:hover::after {
+        animation-duration: 3s !important;
+    }
+
+    .nav__drawer-cta-btn:hover::before,
+    .nav__drawer-cta-btn:hover::after {
+        animation-duration: 2.5s !important;
+    }
+
+    .videos__cta-buttons .btn--cta:hover::before,
+    .videos__cta-buttons .btn--cta:hover::after {
+        animation-duration: 2.9s !important;
+    }
+}
+
+/* EFECTOS ACTIVE - ORBES EXPLOSIVOS */
+.btn--cta:active,
+.btn--footer:active,
+.nav__drawer-cta-btn:active,
+.videos__cta-buttons .btn--cta:active {
+    animation: none !important;
+    transform: scale(0.97) !important;
+}
+
+.btn--cta:active::before,
+.btn--cta:active::after {
+    animation-duration: 1s !important;
+    animation-delay: 0s !important;
+    border-width: 5px !important;
+    box-shadow: 
+        0 0 0 0 rgba(220, 20, 60, 1),
+        0 0 25px rgba(220, 20, 60, 1) !important;
+}
+
+.btn--footer:active::before,
+.btn--footer:active::after,
+.nav__drawer-cta-btn:active::before,
+.nav__drawer-cta-btn:active::after,
+.videos__cta-buttons .btn--cta:active::before,
+.videos__cta-buttons .btn--cta:active::after {
+    animation-duration: 1.2s !important;
+    animation-delay: 0s !important;
+}
+
+/* DESHABILITAR EN PERFORMANCE MODE */
+.performance-mode .btn--cta,
+.performance-mode .btn--footer,
+.performance-mode .nav__drawer-cta-btn,
+.performance-mode .videos__cta-buttons .btn--cta {
+    animation: none !important;
+}
+
+.performance-mode .btn--cta::before,
+.performance-mode .btn--cta::after,
+.performance-mode .btn--footer::before,
+.performance-mode .btn--footer::after,
+.performance-mode .nav__drawer-cta-btn::before,
+.performance-mode .nav__drawer-cta-btn::after,
+.performance-mode .videos__cta-buttons .btn--cta::before,
+.performance-mode .videos__cta-buttons .btn--cta::after {
+    display: none !important;
+    animation: none !important;
+}
+
+/* DESHABILITAR CON REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+    .btn--cta,
+    .btn--footer,
+    .nav__drawer-cta-btn,
+    .videos__cta-buttons .btn--cta {
+        animation: none !important;
+    }
+
+    .btn--cta::before,
+    .btn--cta::after,
+    .btn--footer::before,
+    .btn--footer::after,
+    .nav__drawer-cta-btn::before,
+    .nav__drawer-cta-btn::after,
+    .videos__cta-buttons .btn--cta::before,
+    .videos__cta-buttons .btn--cta::after {
+        display: none !important;
+        animation: none !important;
+    }
+}
+/* ===== AGREGAR AL FINAL DEL CSS - EFECTO PULSE EXACTO ===== */
+
+/* Animación de pulse exacta como la solicitada */
+@keyframes pulseOut {
+    0% {
+        transform: translate(-50%, -50%) scale(1) !important;
+        opacity: 1 !important;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.5) !important;
+        opacity: 0 !important;
+    }
+}
+
+/* RESETEAR EFECTOS EXISTENTES Y APLICAR SOLO PULSE */
+.btn--cta,
+.btn--footer,
+.nav__drawer-cta-btn,
+.videos__cta-buttons .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    animation: none !important;
+}
+
+/* ELIMINAR TODOS LOS PSEUDO-ELEMENTOS EXISTENTES */
+.btn--cta::before,
+.btn--cta::after,
+.btn--footer::before,
+.btn--footer::after,
+.nav__drawer-cta-btn::before,
+.nav__drawer-cta-btn::after,
+.videos__cta-buttons .btn--cta::before,
+.videos__cta-buttons .btn--cta::after,
+.hero__cta-main .btn--cta::before,
+.hero__cta-main .btn--cta::after {
+    content: none !important;
+    display: none !important;
+    animation: none !important;
+}
+
+/* APLICAR EFECTO PULSE CON ::before Y ::after */
+
+/* Primer pulse */
+.btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.8) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+/* Segundo pulse con delay */
+.btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    animation-delay: 0.5s !important;
+    display: block !important;
+}
+
+/* Efectos para botón footer */
+.btn--footer::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 255, 255, 0.7) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: pulseOut 2.2s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.btn--footer::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.5) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: pulseOut 2.2s ease-out infinite !important;
+    animation-delay: 0.55s !important;
+    display: block !important;
+}
+
+/* Efectos para botón del drawer móvil */
+.nav__drawer-cta-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 255, 255, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: pulseOut 1.8s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.nav__drawer-cta-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 69, 105, 0.5) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: pulseOut 1.8s ease-out infinite !important;
+    animation-delay: 0.45s !important;
+    display: block !important;
+}
+
+/* Efectos para botones de videos */
+.videos__cta-buttons .btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.7) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: pulseOut 2.1s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.videos__cta-buttons .btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.5) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: pulseOut 2.1s ease-out infinite !important;
+    animation-delay: 0.52s !important;
+    display: block !important;
+}
+
+/* Asegurar que el contenido del botón esté visible */
+.btn--cta span,
+.btn--cta small,
+.btn--cta .hero__cta-main,
+.btn--cta .hero__cta-main span,
+.btn--cta .hero__cta-main small,
+.btn--footer span,
+.btn--footer small,
+.nav__drawer-cta-btn .nav__drawer-cta-content,
+.nav__drawer-cta-btn .nav__drawer-cta-main,
+.nav__drawer-cta-btn .nav__drawer-cta-trial,
+.nav__drawer-cta-btn .nav__drawer-cta-icon {
+    position: relative !important;
+    z-index: 20 !important;
+    color: #ffffff !important;
+}
+
+/* EFECTOS HOVER PARA DESKTOP - PULSE MÁS RÁPIDO */
+@media (hover: hover) and (pointer: fine) {
+    .btn--cta:hover::before,
+    .btn--cta:hover::after {
+        animation-duration: 1.5s !important;
+    }
+
+    .btn--footer:hover::before,
+    .btn--footer:hover::after {
+        animation-duration: 1.6s !important;
+    }
+
+    .nav__drawer-cta-btn:hover::before,
+    .nav__drawer-cta-btn:hover::after {
+        animation-duration: 1.3s !important;
+    }
+
+    .videos__cta-buttons .btn--cta:hover::before,
+    .videos__cta-buttons .btn--cta:hover::after {
+        animation-duration: 1.4s !important;
+    }
+}
+
+/* EFECTOS ACTIVE - PULSE RÁPIDO */
+.btn--cta:active::before,
+.btn--cta:active::after,
+.btn--footer:active::before,
+.btn--footer:active::after,
+.nav__drawer-cta-btn:active::before,
+.nav__drawer-cta-btn:active::after,
+.videos__cta-buttons .btn--cta:active::before,
+.videos__cta-buttons .btn--cta:active::after {
+    animation-duration: 0.8s !important;
+    animation-delay: 0s !important;
+}
+
+/* DESHABILITAR EN PERFORMANCE MODE */
+.performance-mode .btn--cta::before,
+.performance-mode .btn--cta::after,
+.performance-mode .btn--footer::before,
+.performance-mode .btn--footer::after,
+.performance-mode .nav__drawer-cta-btn::before,
+.performance-mode .nav__drawer-cta-btn::after,
+.performance-mode .videos__cta-buttons .btn--cta::before,
+.performance-mode .videos__cta-buttons .btn--cta::after {
+    display: none !important;
+    animation: none !important;
+}
+
+/* DESHABILITAR CON REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+    .btn--cta::before,
+    .btn--cta::after,
+    .btn--footer::before,
+    .btn--footer::after,
+    .nav__drawer-cta-btn::before,
+    .nav__drawer-cta-btn::after,
+    .videos__cta-buttons .btn--cta::before,
+    .videos__cta-buttons .btn--cta::after {
+        display: none !important;
+        animation: none !important;
+    }
+}
+/* ===== EFECTOS DE PULSE QUE SE SALGAN DEL BOTÓN - SOLUCIÓN FINAL ===== */
+
+/* Forzar reseteo completo del botón hero */
+.hero__cta-main .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    background: #000 !important;
+    border: 2px solid #0ff !important;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3) !important;
+}
+
+/* Definir la animación pulseOut que se sale del botón */
+@keyframes pulseOut {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Primer efecto de pulse que se sale del botón */
+.hero__cta-main .btn--cta::before {
+    content: "" !important;
+    position: absolute !important;
+    top: -4px !important;
+    left: -4px !important;
+    right: -4px !important;
+    bottom: -4px !important;
+    border: 2px solid #0ff !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    opacity: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* Segundo efecto de pulse que se sale del botón con delay */
+.hero__cta-main .btn--cta::after {
+    content: "" !important;
+    position: absolute !important;
+    top: -4px !important;
+    left: -4px !important;
+    right: -4px !important;
+    bottom: -4px !important;
+    border: 2px solid #0ff !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    animation-delay: 1s !important;
+    opacity: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: -2 !important;
+}
+
+/* Asegurar contenido visible con z-index alto */
+.hero__cta-main .btn--cta span,
+.hero__cta-main .btn--cta small,
+.hero__cta-main .btn--cta .hero__cta-main {
+    position: relative !important;
+    z-index: 100 !important;
+    color: #ffffff !important;
+}
+
+/* Efectos hover - pulse más rápido */
+@media (hover: hover) and (pointer: fine) {
+    .hero__cta-main .btn--cta:hover::before,
+    .hero__cta-main .btn--cta:hover::after {
+        animation-duration: 1.5s !important;
+        border-color: #00ffff !important;
+    }
+}
+
+/* Efectos active - pulse muy rápido */
+.hero__cta-main .btn--cta:active::before,
+.hero__cta-main .btn--cta:active::after {
+    animation-duration: 0.8s !important;
+    animation-delay: 0s !important;
+    border-color: #ffffff !important;
+}
+
+/* Deshabilitar en performance mode */
+.performance-mode .hero__cta-main .btn--cta::before,
+.performance-mode .hero__cta-main .btn--cta::after {
+    display: none !important;
+    animation: none !important;
+}
+
+/* Deshabilitar con reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .hero__cta-main .btn--cta::before,
+    .hero__cta-main .btn--cta::after {
+        display: none !important;
+        animation: none !important;
+    }
+}
+/* ===== EFECTOS DE PULSE QUE SE SALGAN HACIA LOS COSTADOS DEL BOTÓN ===== */
+
+/* Forzar reseteo completo del botón hero */
+.hero__cta-main .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    background: #000 !important;
+    border: 2px solid #0ff !important;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3) !important;
+}
+
+/* Definir la animación pulseOut que se expande hacia afuera */
+@keyframes pulseOut {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Primer efecto de pulse que empieza FUERA del botón */
+.hero__cta-main .btn--cta::before {
+    content: "" !important;
+    position: absolute !important;
+    top: -10px !important;
+    left: -10px !important;
+    right: -10px !important;
+    bottom: -10px !important;
+    border: 2px solid #0ff !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    opacity: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* Segundo efecto de pulse que empieza AÚN MÁS FUERA del botón */
+.hero__cta-main .btn--cta::after {
+    content: "" !important;
+    position: absolute !important;
+    top: -15px !important;
+    left: -15px !important;
+    right: -15px !important;
+    bottom: -15px !important;
+    border: 2px solid #0ff !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    animation-delay: 1s !important;
+    opacity: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: -2 !important;
+}
+
+/* Asegurar contenido visible */
+.hero__cta-main .btn--cta span,
+.hero__cta-main .btn--cta small,
+.hero__cta-main .btn--cta .hero__cta-main {
+    position: relative !important;
+    z-index: 100 !important;
+    color: #ffffff !important;
+}
+
+/* Efectos hover - pulse más rápido */
+@media (hover: hover) and (pointer: fine) {
+    .hero__cta-main .btn--cta:hover::before,
+    .hero__cta-main .btn--cta:hover::after {
+        animation-duration: 1.5s !important;
+        border-color: #00ffff !important;
+    }
+}
+
+/* Efectos active - pulse muy rápido */
+.hero__cta-main .btn--cta:active::before,
+.hero__cta-main .btn--cta:active::after {
+    animation-duration: 0.8s !important;
+    animation-delay: 0s !important;
+    border-color: #ffffff !important;
+}
+/* ===== SOLUCIÓN DEFINITIVA - PULSE QUE SE SALE DEL BOTÓN ===== */
+
+/* FORZAR OVERFLOW VISIBLE EN TODOS LOS CONTENEDORES */
+.hero {
+    overflow: visible !important;
+}
+
+.hero__container {
+    overflow: visible !important;
+}
+
+.hero__content {
+    overflow: visible !important;
+}
+
+.hero__cta-group {
+    overflow: visible !important;
+}
+
+.hero__cta-main {
+    overflow: visible !important;
+}
+
+/* RESETEAR COMPLETAMENTE EL BOTÓN HERO */
+.hero__cta-main .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    background: #000 !important;
+    border: 2px solid #0ff !important;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3) !important;
+}
+
+/* DEFINIR LA ANIMACIÓN */
+@keyframes pulseOut {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* PRIMER PULSE QUE SE SALE DEL BOTÓN */
+.hero__cta-main .btn--cta::before {
+    content: "" !important;
+    position: absolute !important;
+    top: -10px !important;
+    left: -10px !important;
+    right: -10px !important;
+    bottom: -10px !important;
+    border: 2px solid #0ff !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    opacity: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* SEGUNDO PULSE CON DELAY */
+.hero__cta-main .btn--cta::after {
+    content: "" !important;
+    position: absolute !important;
+    top: -10px !important;
+    left: -10px !important;
+    right: -10px !important;
+    bottom: -10px !important;
+    border: 2px solid #0ff !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    animation: pulseOut 2s ease-out infinite !important;
+    animation-delay: 1s !important;
+    opacity: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: -2 !important;
+}
+
+/* ASEGURAR CONTENIDO VISIBLE */
+.hero__cta-main .btn--cta span,
+.hero__cta-main .btn--cta small {
+    position: relative !important;
+    z-index: 100 !important;
+    color: #ffffff !important;
+}
+
+
+
 
 
