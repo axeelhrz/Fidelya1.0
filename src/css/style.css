@@ -6142,7 +6142,371 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
     color: #ffffff !important;
 }
 
+/* ===== EFECTO ELECTROMAGNÉTICO PARA EL BOTÓN DEL HERO ===== */
 
+/* Resetear efectos existentes del botón hero */
+.hero__cta-main .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    animation: electromagnetic-breathe 3s ease-in-out infinite !important;
+}
+
+/* Animación de respiración electromagnética */
+@keyframes electromagnetic-breathe {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 
+            0 0 20px var(--neon-red-shadow-soft), 
+            0 0 40px var(--neon-red-glow-soft), 
+            0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 
+            0 0 30px var(--neon-red-shadow-medium), 
+            0 0 60px var(--neon-red-glow-medium), 
+            0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+}
+
+/* Animación de pulso electromagnético que se extiende */
+@keyframes electromagnetic-pulse {
+    0% {
+        width: 100%;
+        height: 100%;
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+        border-width: 3px;
+        box-shadow: 
+            0 0 0 0 rgba(220, 20, 60, 0.8),
+            0 0 15px rgba(220, 20, 60, 0.6);
+    }
+    25% {
+        width: 110%;
+        height: 110%;
+        opacity: 0.9;
+        transform: translate(-50%, -50%) scale(1.05);
+        border-width: 2.5px;
+        box-shadow: 
+            0 0 0 8px rgba(220, 20, 60, 0.4),
+            0 0 25px rgba(220, 20, 60, 0.5);
+    }
+    50% {
+        width: 130%;
+        height: 130%;
+        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(1.15);
+        border-width: 2px;
+        box-shadow: 
+            0 0 0 16px rgba(220, 20, 60, 0.2),
+            0 0 35px rgba(220, 20, 60, 0.4);
+    }
+    75% {
+        width: 160%;
+        height: 160%;
+        opacity: 0.4;
+        transform: translate(-50%, -50%) scale(1.3);
+        border-width: 1.5px;
+        box-shadow: 
+            0 0 0 24px rgba(220, 20, 60, 0.1),
+            0 0 45px rgba(220, 20, 60, 0.3);
+    }
+    100% {
+        width: 200%;
+        height: 200%;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.5);
+        border-width: 1px;
+        box-shadow: 
+            0 0 0 32px rgba(220, 20, 60, 0),
+            0 0 55px rgba(220, 20, 60, 0);
+    }
+}
+
+/* Primer pulso electromagnético */
+.hero__cta-main .btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 3px solid rgba(220, 20, 60, 0.9) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: electromagnetic-pulse 4s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+/* Segundo pulso electromagnético con delay */
+.hero__cta-main .btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.7) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: electromagnetic-pulse 4s ease-out infinite !important;
+    animation-delay: 1s !important;
+    display: block !important;
+}
+
+/* Asegurar que el contenido esté visible */
+.hero__cta-main .btn--cta span,
+.hero__cta-main .btn--cta small,
+.hero__cta-main .btn--cta .hero__cta-main {
+    position: relative !important;
+    z-index: 20 !important;
+    color: #ffffff !important;
+}
+
+/* Efectos hover para desktop - más intenso */
+@media (hover: hover) and (pointer: fine) {
+    .hero__cta-main .btn--cta:hover {
+        animation: electromagnetic-breathe 2s ease-in-out infinite !important;
+        transform: scale(1.05) !important;
+        box-shadow: 
+            0 0 40px var(--neon-red-shadow-bright), 
+            0 0 80px var(--neon-red-glow-bright), 
+            0 8px 25px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .hero__cta-main .btn--cta:hover::before {
+        animation-duration: 2.5s !important;
+        border-color: rgba(255, 23, 68, 1) !important;
+        border-width: 4px !important;
+    }
+
+    .hero__cta-main .btn--cta:hover::after {
+        animation-duration: 2.5s !important;
+        animation-delay: 0.6s !important;
+        border-color: rgba(255, 69, 105, 0.9) !important;
+        border-width: 3px !important;
+    }
+}
+
+/* Efectos active - explosión electromagnética */
+.hero__cta-main .btn--cta:active {
+    animation: none !important;
+    transform: scale(0.98) !important;
+    box-shadow: 
+        0 0 50px var(--neon-red-shadow-bright), 
+        0 0 100px var(--neon-red-glow-bright), 
+        0 4px 15px rgba(0, 0, 0, 0.6) !important;
+}
+
+.hero__cta-main .btn--cta:active::before,
+.hero__cta-main .btn--cta:active::after {
+    animation-duration: 1s !important;
+    animation-delay: 0s !important;
+    border-width: 5px !important;
+    opacity: 1 !important;
+}
+
+/* Deshabilitar en performance mode */
+.performance-mode .hero__cta-main .btn--cta {
+    animation: none !important;
+}
+
+.performance-mode .hero__cta-main .btn--cta::before,
+.performance-mode .hero__cta-main .btn--cta::after {
+    display: none !important;
+    animation: none !important;
+}
+
+/* Deshabilitar con reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .hero__cta-main .btn--cta {
+        animation: none !important;
+    }
+
+    .hero__cta-main .btn--cta::before,
+    .hero__cta-main .btn--cta::after {
+        display: none !important;
+        animation: none !important;
+    }
+}
+
+/* Asegurar overflow visible en contenedores padre */
+.hero,
+.hero__container,
+.hero__content,
+.hero__cta-group,
+.hero__cta-main {
+    overflow: visible !important;
+}
+
+/* ===== RESETEAR EFECTOS EXISTENTES ===== */
+.btn--cta::before,
+.btn--cta::after {
+    content: none !important;
+    display: none !important;
+    animation: none !important;
+}
+
+.btn--cta {
+    animation: none !important;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+/* ===== MARCOS DECORATIVOS AFUERA DEL BOTÓN ===== */
+
+/* Animación de aparición elegante */
+@keyframes border-frame-appear {
+    0%, 60%, 100% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    20%, 40% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Marco esquina superior izquierda - AFUERA */
+.btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -8px !important;
+    left: -8px !important;
+    width: 16px !important;
+    height: 16px !important;
+    border-top: 2px solid rgba(255, 255, 255, 0.8) !important;
+    border-left: 2px solid rgba(255, 255, 255, 0.8) !important;
+    background: transparent !important;
+    animation: border-frame-appear 3s ease-in-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
+}
+
+/* Marco esquina inferior derecha - AFUERA */
+.btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: -8px !important;
+    right: -8px !important;
+    width: 16px !important;
+    height: 16px !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.8) !important;
+    border-right: 2px solid rgba(255, 255, 255, 0.8) !important;
+    background: transparent !important;
+    animation: border-frame-appear 3s ease-in-out infinite !important;
+    animation-delay: 0.8s !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
+}
+
+/* Usar el contenedor para las otras dos esquinas */
+.hero__cta-main {
+    position: relative !important;
+}
+
+/* Marco esquina superior derecha - AFUERA */
+.hero__cta-main::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -8px !important;
+    right: -8px !important;
+    width: 16px !important;
+    height: 16px !important;
+    border-top: 2px solid rgba(220, 20, 60, 0.8) !important;
+    border-right: 2px solid rgba(220, 20, 60, 0.8) !important;
+    background: transparent !important;
+    animation: border-frame-appear 3s ease-in-out infinite !important;
+    animation-delay: 0.4s !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
+}
+
+/* Marco esquina inferior izquierda - AFUERA */
+.hero__cta-main::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: -8px !important;
+    left: -8px !important;
+    width: 16px !important;
+    height: 16px !important;
+    border-bottom: 2px solid rgba(220, 20, 60, 0.8) !important;
+    border-left: 2px solid rgba(220, 20, 60, 0.8) !important;
+    background: transparent !important;
+    animation: border-frame-appear 3s ease-in-out infinite !important;
+    animation-delay: 1.2s !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
+}
+
+/* Asegurar que el contenido esté visible */
+.btn--cta span,
+.btn--cta small {
+    position: relative !important;
+    z-index: 20 !important;
+    color: #ffffff !important;
+}
+
+/* Overflow visible para que se vean los marcos externos */
+.hero,
+.hero__container,
+.hero__content,
+.hero__cta-group,
+.hero__cta-main {
+    overflow: visible !important;
+}
+
+/* Efectos hover */
+@media (hover: hover) and (pointer: fine) {
+    .btn--cta:hover::before,
+    .btn--cta:hover::after,
+    .hero__cta-main:hover::before,
+    .hero__cta-main:hover::after {
+        animation-duration: 2s !important;
+        opacity: 1 !important;
+        border-width: 3px !important;
+    }
+}
+
+/* Efectos active */
+.btn--cta:active::before,
+.btn--cta:active::after,
+.hero__cta-main::before,
+.hero__cta-main::after {
+    animation-duration: 1s !important;
+    opacity: 1 !important;
+    border-width: 3px !important;
+}
+
+/* Deshabilitar en performance mode */
+.performance-mode .btn--cta::before,
+.performance-mode .btn--cta::after,
+.performance-mode .hero__cta-main::before,
+.performance-mode .hero__cta-main::after {
+    display: none !important;
+}
+
+/* Deshabilitar con reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .btn--cta::before,
+    .btn--cta::after,
+    .hero__cta-main::before,
+    .hero__cta-main::after {
+        display: none !important;
+    }
+}
 
 
 
