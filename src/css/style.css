@@ -4392,3 +4392,334 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
         animation: none !important;
     }
 }
+/* ===== ELIMINAR EFECTOS EXISTENTES Y AGREGAR SOLO BORDES QUE SE DESPRENDEN ===== */
+
+/* RESETEAR TODOS LOS EFECTOS EXISTENTES DE BOTONES */
+.btn--cta,
+.btn--footer,
+.nav__drawer-cta-btn,
+.videos__cta-buttons .btn--cta {
+    position: relative !important;
+    overflow: visible !important;
+    animation: none !important;
+    transform: none !important;
+}
+
+/* ELIMINAR TODOS LOS PSEUDO-ELEMENTOS EXISTENTES */
+.btn--cta::before,
+.btn--cta::after,
+.btn--footer::before,
+.btn--footer::after,
+.nav__drawer-cta-btn::before,
+.nav__drawer-cta-btn::after,
+.videos__cta-buttons .btn--cta::before,
+.videos__cta-buttons .btn--cta::after,
+.hero__cta-main .btn--cta::before,
+.hero__cta-main .btn--cta::after {
+    content: none !important;
+    display: none !important;
+    animation: none !important;
+}
+
+/* ELIMINAR PULSE RING */
+.pulse-ring {
+    display: none !important;
+    animation: none !important;
+}
+
+/* ELIMINAR WAVE EFFECTS */
+.wave-effect {
+    display: none !important;
+    animation: none !important;
+}
+
+/* ELIMINAR ANIMACIONES DE RESPIRACIÓN */
+.hero__cta-group .btn--cta {
+    animation: none !important;
+}
+
+/* ===== NUEVA ANIMACIÓN DE BORDES QUE SE DESPRENDEN LENTAMENTE ===== */
+
+/* Animación de bordes que se desprenden muy lentamente */
+@keyframes slow-detaching-border {
+    0% {
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) scale(1) !important;
+        border-width: 2px !important;
+    }
+    15% {
+        width: 105% !important;
+        height: 105% !important;
+        opacity: 0.95 !important;
+        transform: translate(-50%, -50%) scale(1.025) !important;
+        border-width: 2px !important;
+    }
+    30% {
+        width: 115% !important;
+        height: 115% !important;
+        opacity: 0.85 !important;
+        transform: translate(-50%, -50%) scale(1.075) !important;
+        border-width: 1.8px !important;
+    }
+    50% {
+        width: 130% !important;
+        height: 130% !important;
+        opacity: 0.7 !important;
+        transform: translate(-50%, -50%) scale(1.15) !important;
+        border-width: 1.5px !important;
+    }
+    70% {
+        width: 150% !important;
+        height: 150% !important;
+        opacity: 0.5 !important;
+        transform: translate(-50%, -50%) scale(1.25) !important;
+        border-width: 1px !important;
+    }
+    85% {
+        width: 175% !important;
+        height: 175% !important;
+        opacity: 0.25 !important;
+        transform: translate(-50%, -50%) scale(1.375) !important;
+        border-width: 0.5px !important;
+    }
+    100% {
+        width: 200% !important;
+        height: 200% !important;
+        opacity: 0 !important;
+        transform: translate(-50%, -50%) scale(1.5) !important;
+        border-width: 0px !important;
+    }
+}
+
+/* APLICAR SOLO EL EFECTO DE BORDES QUE SE DESPRENDEN */
+
+/* Primer borde que se desprende */
+.btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.8) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: slow-detaching-border 6s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+/* Segundo borde que se desprende */
+.btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: slow-detaching-border 6s ease-out infinite !important;
+    animation-delay: 1.5s !important;
+    display: block !important;
+}
+
+/* Efectos para botón footer */
+.btn--footer::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 255, 255, 0.7) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: slow-detaching-border 6.5s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.btn--footer::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.5) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: slow-detaching-border 6.5s ease-out infinite !important;
+    animation-delay: 1.6s !important;
+    display: block !important;
+}
+
+/* Efectos para botón del drawer móvil */
+.nav__drawer-cta-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 255, 255, 0.6) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: slow-detaching-border 5.5s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.nav__drawer-cta-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 69, 105, 0.5) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: slow-detaching-border 5.5s ease-out infinite !important;
+    animation-delay: 1.4s !important;
+    display: block !important;
+}
+
+/* Efectos para botones de videos */
+.videos__cta-buttons .btn--cta::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(220, 20, 60, 0.7) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: slow-detaching-border 6.2s ease-out infinite !important;
+    animation-delay: 0s !important;
+    display: block !important;
+}
+
+.videos__cta-buttons .btn--cta::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 2px solid rgba(255, 23, 68, 0.5) !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    transform: translate(-50%, -50) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    animation: slow-detaching-border 6.2s ease-out infinite !important;
+    animation-delay: 1.55s !important;
+    display: block !important;
+}
+
+/* Asegurar que el contenido del botón esté visible */
+.btn--cta span,
+.btn--cta small,
+.btn--cta .hero__cta-main,
+.btn--cta .hero__cta-main span,
+.btn--cta .hero__cta-main small,
+.btn--footer span,
+.btn--footer small,
+.nav__drawer-cta-btn .nav__drawer-cta-content,
+.nav__drawer-cta-btn .nav__drawer-cta-main,
+.nav__drawer-cta-btn .nav__drawer-cta-trial,
+.nav__drawer-cta-btn .nav__drawer-cta-icon {
+    position: relative !important;
+    z-index: 20 !important;
+    color: #ffffff !important;
+}
+
+/* EFECTOS HOVER PARA DESKTOP - BORDES MÁS RÁPIDOS */
+@media (hover: hover) and (pointer: fine) {
+    .btn--cta:hover::before,
+    .btn--cta:hover::after {
+        animation-duration: 4s !important;
+    }
+
+    .btn--footer:hover::before,
+    .btn--footer:hover::after {
+        animation-duration: 4.5s !important;
+    }
+
+    .nav__drawer-cta-btn:hover::before,
+    .nav__drawer-cta-btn:hover::after {
+        animation-duration: 3.8s !important;
+    }
+
+    .videos__cta-buttons .btn--cta:hover::before,
+    .videos__cta-buttons .btn--cta:hover::after {
+        animation-duration: 4.2s !important;
+    }
+}
+
+/* EFECTOS ACTIVE - BORDES QUE SE DESPRENDEN MÁS RÁPIDO AL HACER CLICK */
+.btn--cta:active::before,
+.btn--cta:active::after,
+.btn--footer:active::before,
+.btn--footer:active::after,
+.nav__drawer-cta-btn:active::before,
+.nav__drawer-cta-btn:active::after,
+.videos__cta-buttons .btn--cta:active::before,
+.videos__cta-buttons .btn--cta:active::after {
+    animation-duration: 2s !important;
+}
+
+/* DESHABILITAR EN PERFORMANCE MODE */
+.performance-mode .btn--cta::before,
+.performance-mode .btn--cta::after,
+.performance-mode .btn--footer::before,
+.performance-mode .btn--footer::after,
+.performance-mode .nav__drawer-cta-btn::before,
+.performance-mode .nav__drawer-cta-btn::after,
+.performance-mode .videos__cta-buttons .btn--cta::before,
+.performance-mode .videos__cta-buttons .btn--cta::after {
+    display: none !important;
+    animation: none !important;
+}
+
+/* DESHABILITAR CON REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+    .btn--cta::before,
+    .btn--cta::after,
+    .btn--footer::before,
+    .btn--footer::after,
+    .nav__drawer-cta-btn::before,
+    .nav__drawer-cta-btn::after,
+    .videos__cta-buttons .btn--cta::before,
+    .videos__cta-buttons .btn--cta::after {
+        display: none !important;
+        animation: none !important;
+    }
+}
