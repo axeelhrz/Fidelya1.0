@@ -81,8 +81,8 @@ const translationData = {
     en: {
         // Meta tags
         'page-title': 'StarFlex - Automate your Amazon Flex Blocks | Free Trial',
-        'page-description': 'Starflex revolutionizes Amazon Flex. Intelligent block automation, schedule optimization and maximum earnings. Join +15,000 successful drivers.',
-        'og-title': 'Starflex - The Amazon Flex Revolution',
+        'page-description': 'StarFlex revolutionizes Amazon Flex. Intelligent block automation, schedule optimization and maximum earnings. Join +15,000 successful drivers.',
+        'og-title': 'StarFlex for Amazon Flex',
         'og-description': 'Intelligent automation that multiplies your earnings. The tool every professional driver needs.',
         // Navegación
         'nav-home': 'Home',
@@ -95,7 +95,7 @@ const translationData = {
         'nav-drawer-cta-main': 'START NOW',
         'nav-drawer-cta-trial': '3 days free',
         // Hero Section
-        'hero-badge': 'Next-Gen Amazon Flex Revolution',
+        'hero-badge': 'Next-Gen Amazon Flex',
         'hero_title--main': 'MASTER THE',
         'hero_title--highlight': 'AMAZON FLEX',
         'hero_title--amazon': 'BLOCKS',
@@ -236,7 +236,7 @@ const translationData = {
         // Meta tags
         'page-title': 'StarFlex - Automatiza tus Bloques de Amazon Flex | Prueba Gratis',
         'page-description': 'Starflex revoluciona Amazon Flex. Automatización inteligente de bloques, optimización de horarios y máximas ganancias. Únete a +15,000 conductores exitosos.',
-        'og-title': 'Starflex - La Revolución de Amazon Flex',
+        'og-title': 'StarFlex para Amazon Flex',
         'og-description': 'Automatización inteligente que multiplica tus ganancias. La herramienta que todo conductor profesional necesita.',
         // Navegación
         'nav-home': 'Inicio',
@@ -249,7 +249,7 @@ const translationData = {
         'nav-drawer-cta-main': 'COMENZAR AHORA',
         'nav-drawer-cta-trial': '3 días gratis',
         // Hero Section
-        'hero-badge': 'Next-Gen Amazon Flex Revolution',
+        'hero-badge': 'Next-Gen Amazon Flex',
         'hero_title--main': 'DOMINA LOS',
         'hero_title--highlight': 'BLOQUES DE',
         'hero_title--amazon': 'AMAZON FLEX',
