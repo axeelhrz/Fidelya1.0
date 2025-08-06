@@ -14,27 +14,13 @@
     <meta name="bingbot" content="index, follow">
     <link rel="canonical" href="https://starflexapp.com">
     
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://starflexapp.com">
-    <meta property="og:title" data-translate="og-title" content="StarFlex - The Amazon Flex Revolution">
-    <meta property="og:description" data-translate="og-description" content="Intelligent automation that multiplies your earnings. The tool every professional driver needs.">
-    <meta property="og:image" content="https://starflexapp.com/assets/og-starflex-hero.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="StarFlex - Amazon Flex Automation Platform">
-    <meta property="og:site_name" content="StarFlex">
-    <meta property="og:locale" content="en_US">
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://starflexapp.com">
-    <meta name="twitter:title" data-translate="twitter-title" content="StarFlex - The Amazon Flex Revolution">
-    <meta name="twitter:description" data-translate="twitter-description" content="Intelligent automation that multiplies your earnings. The tool every professional driver needs.">
-    <meta name="twitter:image" content="https://starflexapp.com/assets/og-starflex-hero.jpg">
-    <meta name="twitter:image:alt" content="StarFlex - Amazon Flex Automation Platform">
-    <meta name="twitter:site" content="@starflexapp">
-    <meta name="twitter:creator" content="@starflexapp">
+<meta property="og:url" content="">
+<meta property="og:image" content="/assets/logo.webp">
+<meta name="twitter:url" content="">
+<meta name="twitter:image" content="/assets/logo.webp">
+<link rel="canonical" href="">
+
+
     
     <!-- Favicon y Icons -->
     <link rel="icon" type="image/png" href="./assets/icon.png">
@@ -72,11 +58,32 @@
         "publisher": {
             "@type": "Organization",
             "name": "StarFlex",
-            "url": "https://starflexapp.com",
-            "logo": "https://starflexapp.com/assets/logo.webp"
+"url": "https://optimizacionn-rd74.vercel.app/",
+"logo": "https://optimizacionn-rd74.vercel.app/assets/icon.png"
         }
     }
     </script>
+    <script>
+// Detectar dominio automáticamente
+const currentDomain = window.location.origin;
+const currentUrl = window.location.href;
+
+// Actualizar meta tags dinámicamente
+document.querySelector('meta[property="og:url"]').setAttribute('content', currentUrl);
+document.querySelector('meta[property="og:image"]').setAttribute('content', currentDomain + '/assets/logo.webp');
+document.querySelector('meta[name="twitter:url"]').setAttribute('content', currentUrl);
+document.querySelector('meta[name="twitter:image"]').setAttribute('content', currentDomain + '/assets/logo.webp');
+document.querySelector('link[rel="canonical"]').setAttribute('href', currentUrl);
+
+// Actualizar JSON-LD
+const jsonLd = document.querySelector('script[type="application/ld+json"]');
+const data = JSON.parse(jsonLd.textContent);
+data.url = currentDomain;
+data.publisher.url = currentDomain;
+data.publisher.logo = currentDomain + '/assets/logo.webp';
+jsonLd.textContent = JSON.stringify(data);
+</script>
+
     
     <!-- Preload critical resources -->
     <link rel="preload" href="./assets/phones/Hero.mp4" as="video" type="video/mp4">
