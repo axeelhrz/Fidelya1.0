@@ -489,16 +489,24 @@ filter:brightness(1.3) contrast(1.2);
     order: 1;
 }
 
-/* BOTÓN CTA DEL DRAWER MÓVIL */
+/* BOTÓN CTA DEL DRAWER MÓVIL - MOVIDO HACIA ABAJO */
+/* BOTÓN CTA DEL DRAWER MÓVIL - EN LA PARTE EXTREMA DE ABAJO */
 .nav__drawer-cta {
     padding: var(--space-md) var(--space-xl);
     border-top: 1px solid var(--border-subtle);
     border-bottom: none;
     flex-shrink: 0;
-    order: 2;
+    order: 999; /* Valor alto para asegurar que esté al final */
     margin-bottom: 0;
-    margin-top: var(--space-sm);
+    margin-top: auto; /* Esto empuja el botón hacia abajo automáticamente */
+    position: absolute; /* Posición absoluta */
+    bottom: 0; /* Pegado al fondo */
+    left: 0;
+    right: 0;
+    width: 100%; /* Ancho completo */
 }
+
+
 
 .nav__drawer-cta-btn {
     display: flex !important;
