@@ -20,11 +20,13 @@ import {
   Filter,
   Search,
   Download,
-  Settings
+  Settings,
+  Activity
 } from 'lucide-react';
 import { useSimpleNotifications } from '@/hooks/useSimpleNotifications';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'react-hot-toast';
+import { DeliveryStats } from './DeliveryStats';
 
 type TabType = 'dashboard' | 'send' | 'history';
 
@@ -49,6 +51,7 @@ export const ModernNotificationCenter = () => {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [showAdvancedStats, setShowAdvancedStats] = useState(false);
 
   // Form states for sending notifications
   const [notificationForm, setNotificationForm] = useState({
@@ -144,6 +147,18 @@ export const ModernNotificationCenter = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              {activeTab === 'dashboard' && (
+                <button
+                  onClick={() => setShowAdvancedStats(!showAdvancedStats)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    showAdvancedStats 
+                      ? 'bg-blue-100 text-blue-600' 
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  <Activity className="w-5 h-5" />
+                </button>
+              )}
               <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
                 <Settings className="w-5 h-5" />
               </button>
@@ -196,7 +211,12 @@ export const ModernNotificationCenter = () => {
             transition={{ duration: 0.2 }}
           >
             {activeTab === 'dashboard' && (
-              <DashboardTab stats={stats} notifications={notifications} recipients={recipients} />
+              <DashboardTab 
+                stats={stats} 
+                notifications={notifications} 
+                recipients={recipients}
+                showAdvancedStats={showAdvancedStats}
+              />
             )}
             {activeTab === 'send' && (
               <SendTab
@@ -225,12 +245,17 @@ export const ModernNotificationCenter = () => {
 };
 
 // Dashboard Tab Component
-const DashboardTab = ({ stats, notifications, recipients }: {
+const DashboardTab = ({ stats, notifications, recipients, showAdvancedStats }: {
   stats: NotificationStats;
   notifications: any[];
   recipients: any[];
+  showAdvancedStats: boolean;
 }) => {
   const recentNotifications = notifications.slice(0, 5);
+
+  if (showAdvancedStats) {
+    return <DeliveryStats notifications={notifications} recipients={recipients} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -268,37 +293,64 @@ const DashboardTab = ({ stats, notifications, recipients }: {
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Actividad Reciente</h3>
-          <div className="space-y-4">
-            {recentNotifications.map((notification, index) => (
-              <div key={notification.id} className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${
-                  notification.status === 'sent' ? 'bg-green-100' :
-                  notification.status === 'failed' ? 'bg-red-100' : 'bg-yellow-100'
-                }`}>
-                  {notification.status === 'sent' ? (
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                  ) : notification.status === 'failed' ? (
-                    <XCircle className="w-4 h-4 text-red-600" />
-                  ) : (
-                    <Clock className="w-4 h-4 text-yellow-600" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {notification.title}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(notification.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            ))}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Actividad Reciente</h3>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-xs text-gray-500">En tiempo real</span>
+            </div>
           </div>
-        </div>
+          <div className="space-y-4">
+            {recentNotifications.length > 0 ? (
+              recentNotifications.map((notification, index) => (
+                <motion.div
+                  key={notification.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className={`p-2 rounded-lg ${
+                    notification.status === 'sent' ? 'bg-green-100' :
+                    notification.status === 'failed' ? 'bg-red-100' : 'bg-yellow-100'
+                  }`}>
+                    {notification.status === 'sent' ? (
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                    ) : notification.status === 'failed' ? (
+                      <XCircle className="w-4 h-4 text-red-600" />
+                    ) : (
+                      <Clock className="w-4 h-4 text-yellow-600" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {notification.title}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(notification.createdAt).toLocaleDateString()} • {notification.channels?.join(', ')}
+                    </p>
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 text-sm">No hay actividad reciente</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Canales de Comunicación</h3>
           <div className="space-y-4">
             <ChannelCard
@@ -307,6 +359,7 @@ const DashboardTab = ({ stats, notifications, recipients }: {
               status="Activo"
               count={recipients.filter(r => r.email).length}
               color="text-blue-600"
+              bgColor="bg-blue-50"
             />
             <ChannelCard
               icon={Smartphone}
@@ -314,6 +367,7 @@ const DashboardTab = ({ stats, notifications, recipients }: {
               status="Activo"
               count={recipients.filter(r => r.phone).length}
               color="text-green-600"
+              bgColor="bg-green-50"
             />
             <ChannelCard
               icon={Bell}
@@ -321,9 +375,25 @@ const DashboardTab = ({ stats, notifications, recipients }: {
               status="Activo"
               count={recipients.length}
               color="text-purple-600"
+              bgColor="bg-purple-50"
             />
           </div>
-        </div>
+          
+          {/* Quick Actions */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h4 className="text-sm font-medium text-gray-700 mb-3">Acciones Rápidas</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <button className="flex items-center justify-center space-x-2 p-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
+                <Send className="w-4 h-4" />
+                <span className="text-sm font-medium">Enviar</span>
+              </button>
+              <button className="flex items-center justify-center space-x-2 p-3 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                <Download className="w-4 h-4" />
+                <span className="text-sm font-medium">Exportar</span>
+              </button>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -339,8 +409,20 @@ const SendTab = ({ form, setForm, recipients, onSend, sending }: {
 }) => {
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Crear Nueva Notificación</h2>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-xl shadow-sm border border-gray-200 p-8"
+      >
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="p-2 bg-green-100 rounded-lg">
+            <Send className="w-6 h-6 text-green-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Crear Nueva Notificación</h2>
+            <p className="text-sm text-gray-500">Envía mensajes personalizados a tus usuarios</p>
+          </div>
+        </div>
         
         <div className="space-y-6">
           {/* Title */}
@@ -352,7 +434,7 @@ const SendTab = ({ form, setForm, recipients, onSend, sending }: {
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               placeholder="Ingresa el título de la notificación"
             />
           </div>
@@ -366,9 +448,12 @@ const SendTab = ({ form, setForm, recipients, onSend, sending }: {
               value={form.message}
               onChange={(e) => setForm({ ...form, message: e.target.value })}
               rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
               placeholder="Escribe tu mensaje aquí..."
             />
+            <p className="text-xs text-gray-500 mt-1">
+              {form.message.length}/500 caracteres
+            </p>
           </div>
 
           {/* Channels */}
@@ -378,38 +463,45 @@ const SendTab = ({ form, setForm, recipients, onSend, sending }: {
             </label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { id: 'email', name: 'Email', icon: Mail, color: 'blue' },
-                { id: 'whatsapp', name: 'WhatsApp', icon: Smartphone, color: 'green' },
-                { id: 'app', name: 'In-App', icon: Bell, color: 'purple' }
+                { id: 'email', name: 'Email', icon: Mail, color: 'blue', description: 'Correo electrónico' },
+                { id: 'whatsapp', name: 'WhatsApp', icon: Smartphone, color: 'green', description: 'Mensaje de WhatsApp' },
+                { id: 'app', name: 'In-App', icon: Bell, color: 'purple', description: 'Notificación en la app' }
               ].map((channel) => {
                 const Icon = channel.icon;
                 const isSelected = form.channels.includes(channel.id);
                 
                 return (
-                  <button
+                  <motion.button
                     key={channel.id}
                     type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       const newChannels = isSelected
                         ? form.channels.filter((c: string) => c !== channel.id)
                         : [...form.channels, channel.id];
                       setForm({ ...form, channels: newChannels });
                     }}
-                    className={`p-4 border-2 rounded-lg transition-all ${
+                    className={`p-4 border-2 rounded-xl transition-all ${
                       isSelected
-                        ? `border-${channel.color}-500 bg-${channel.color}-50`
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? `border-${channel.color}-500 bg-${channel.color}-50 shadow-md`
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                     }`}
                   >
-                    <Icon className={`w-6 h-6 mx-auto mb-2 ${
+                    <Icon className={`w-8 h-8 mx-auto mb-3 ${
                       isSelected ? `text-${channel.color}-600` : 'text-gray-400'
                     }`} />
-                    <p className={`text-sm font-medium ${
+                    <p className={`text-sm font-medium mb-1 ${
                       isSelected ? `text-${channel.color}-900` : 'text-gray-600'
                     }`}>
                       {channel.name}
                     </p>
-                  </button>
+                    <p className={`text-xs ${
+                      isSelected ? `text-${channel.color}-700` : 'text-gray-500'
+                    }`}>
+                      {channel.description}
+                    </p>
+                  </motion.button>
                 );
               })}
             </div>
@@ -420,8 +512,8 @@ const SendTab = ({ form, setForm, recipients, onSend, sending }: {
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Destinatarios * ({recipients.length} disponibles)
             </label>
-            <div className="border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto">
-              <div className="flex items-center mb-3">
+            <div className="border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto bg-gray-50">
+              <div className="flex items-center mb-3 p-2 bg-white rounded-lg">
                 <input
                   type="checkbox"
                   checked={form.recipientIds.length === recipients.length}
@@ -433,13 +525,13 @@ const SendTab = ({ form, setForm, recipients, onSend, sending }: {
                   }}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <label className="ml-2 text-sm font-medium text-gray-700">
-                  Seleccionar todos
+                <label className="ml-3 text-sm font-medium text-gray-700">
+                  Seleccionar todos ({recipients.length})
                 </label>
               </div>
               <div className="space-y-2">
                 {recipients.map((recipient) => (
-                  <div key={recipient.id} className="flex items-center">
+                  <div key={recipient.id} className="flex items-center p-2 bg-white rounded-lg hover:bg-gray-50 transition-colors">
                     <input
                       type="checkbox"
                       checked={form.recipientIds.includes(recipient.id)}
@@ -451,9 +543,10 @@ const SendTab = ({ form, setForm, recipients, onSend, sending }: {
                       }}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <label className="ml-2 text-sm text-gray-700">
-                      {recipient.name} ({recipient.type})
-                    </label>
+                    <div className="ml-3 flex-1">
+                      <p className="text-sm font-medium text-gray-700">{recipient.name}</p>
+                      <p className="text-xs text-gray-500 capitalize">{recipient.type}</p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -461,11 +554,13 @@ const SendTab = ({ form, setForm, recipients, onSend, sending }: {
           </div>
 
           {/* Send Button */}
-          <div className="flex justify-end">
-            <button
+          <div className="flex justify-end pt-6 border-t border-gray-200">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={onSend}
               disabled={sending}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
             >
               {sending ? (
                 <div className="flex items-center space-x-2">
@@ -478,10 +573,10 @@ const SendTab = ({ form, setForm, recipients, onSend, sending }: {
                   <span>Enviar Notificación</span>
                 </div>
               )}
-            </button>
+            </motion.button>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
@@ -498,7 +593,11 @@ const HistoryTab = ({ notifications, searchTerm, setSearchTerm, filterStatus, se
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+      >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div className="flex-1 max-w-md">
             <div className="relative">
@@ -508,7 +607,7 @@ const HistoryTab = ({ notifications, searchTerm, setSearchTerm, filterStatus, se
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar notificaciones..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               />
             </div>
           </div>
@@ -516,40 +615,57 @@ const HistoryTab = ({ notifications, searchTerm, setSearchTerm, filterStatus, se
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             >
               <option value="all">Todos los estados</option>
               <option value="sent">Enviadas</option>
               <option value="failed">Fallidas</option>
               <option value="sending">Enviando</option>
             </select>
-            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            >
               <Download className="w-5 h-5" />
-            </button>
+            </motion.button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Notifications List */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-white rounded-xl shadow-sm border border-gray-200"
+      >
         {loading ? (
-          <div className="p-8 text-center">
+          <div className="p-12 text-center">
             <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-gray-500">Cargando historial...</p>
           </div>
         ) : notifications.length === 0 ? (
-          <div className="p-8 text-center">
-            <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No se encontraron notificaciones</p>
+          <div className="p-12 text-center">
+            <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron notificaciones</h3>
+            <p className="text-gray-500">Intenta ajustar los filtros o crear una nueva notificación</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {notifications.map((notification) => (
-              <NotificationItem key={notification.id} notification={notification} />
+            {notifications.map((notification, index) => (
+              <motion.div
+                key={notification.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <NotificationItem notification={notification} />
+              </motion.div>
             ))}
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };
@@ -562,7 +678,10 @@ const StatsCard = ({ title, value, icon: Icon, color, trend }: {
   color: string;
   trend: string;
 }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+  <motion.div
+    whileHover={{ scale: 1.02 }}
+    className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+  >
     <div className="flex items-center justify-between">
       <div>
         <p className="text-sm font-medium text-gray-600">{title}</p>
@@ -573,17 +692,21 @@ const StatsCard = ({ title, value, icon: Icon, color, trend }: {
         <Icon className="w-6 h-6 text-white" />
       </div>
     </div>
-  </div>
+  </motion.div>
 );
 
-const ChannelCard = ({ icon: Icon, name, status, count, color }: {
+const ChannelCard = ({ icon: Icon, name, status, count, color, bgColor }: {
   icon: any;
   name: string;
   status: string;
   count: number;
   color: string;
+  bgColor: string;
 }) => (
-  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+  <motion.div
+    whileHover={{ scale: 1.02 }}
+    className={`flex items-center justify-between p-4 ${bgColor} rounded-lg transition-all`}
+  >
     <div className="flex items-center space-x-3">
       <Icon className={`w-5 h-5 ${color}`} />
       <div>
@@ -591,8 +714,8 @@ const ChannelCard = ({ icon: Icon, name, status, count, color }: {
         <p className="text-xs text-gray-500">{status}</p>
       </div>
     </div>
-    <span className="text-sm font-medium text-gray-600">{count}</span>
-  </div>
+    <span className="text-sm font-semibold text-gray-900">{count}</span>
+  </motion.div>
 );
 
 const NotificationItem = ({ notification }: { notification: any }) => {
@@ -630,7 +753,7 @@ const NotificationItem = ({ notification }: { notification: any }) => {
             {getStatusIcon(notification.status)}
             <h3 className="text-lg font-medium text-gray-900">{notification.title}</h3>
           </div>
-          <p className="text-gray-600 mb-3">{notification.message}</p>
+          <p className="text-gray-600 mb-3 line-clamp-2">{notification.message}</p>
           <div className="flex items-center space-x-4 text-sm text-gray-500">
             <span>{new Date(notification.createdAt).toLocaleString()}</span>
             <span>•</span>
@@ -640,7 +763,7 @@ const NotificationItem = ({ notification }: { notification: any }) => {
           </div>
         </div>
         <div className="ml-4">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
             notification.status === 'sent' ? 'bg-green-100 text-green-800' :
             notification.status === 'failed' ? 'bg-red-100 text-red-800' :
             'bg-yellow-100 text-yellow-800'

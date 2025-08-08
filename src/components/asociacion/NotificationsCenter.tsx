@@ -51,7 +51,7 @@ import {
 import { useSimpleNotifications } from '../../hooks/useSimpleNotifications';
 import { NotificationTemplates } from '../notifications/NotificationTemplates';
 import NotificationAutomation from '../notifications/NotificationAutomation';
-import DeliveryStats from '../notifications/DeliveryStats';
+import { DeliveryStats } from '../notifications/DeliveryStats';
 import { SimpleNotificationSettingsComponent } from '../settings/SimpleNotificationSettings';
 import { SimpleNotificationSender } from '../notifications/SimpleNotificationSender';
 import { SimpleNotificationHistory } from '../notifications/SimpleNotificationHistory';
