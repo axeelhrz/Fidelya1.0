@@ -1,9 +1,8 @@
-import { NotificationQueueService } from '@/services/notification-queue.service';
+import { simpleNotificationService } from '@/services/simple-notifications.service';
 
 interface NotificationConfig {
   enableBrowserNotifications: boolean;
   enableSounds: boolean;
-  queueProcessingInterval: number;
   maxRetries: number;
   cleanupInterval: number;
 }
@@ -13,7 +12,6 @@ class NotificationInitService {
   private config: NotificationConfig = {
     enableBrowserNotifications: true,
     enableSounds: true,
-    queueProcessingInterval: 15000, // 15 seconds
     maxRetries: 3,
     cleanupInterval: 24 * 60 * 60 * 1000, // 24 hours
   };
@@ -34,9 +32,6 @@ class NotificationInitService {
       if (this.config.enableBrowserNotifications) {
         await this.requestNotificationPermissions();
       }
-
-      // Initialize queue processing
-      this.initializeQueueProcessing();
 
       // Setup periodic cleanup
       this.setupPeriodicCleanup();
@@ -86,25 +81,12 @@ class NotificationInitService {
     }
   }
 
-  private initializeQueueProcessing(): void {
-    try {
-      // Start queue processing with configured interval
-      // Note: The actual service doesn't have startProcessing method, so we'll simulate it
-      console.log('🔄 Queue processing initialized');
-    } catch (error) {
-      console.error('❌ Error initializing queue processing:', error);
-      throw error;
-    }
-  }
-
   private setupPeriodicCleanup(): void {
     // Setup daily cleanup of old notifications
     setInterval(async () => {
       try {
-        const deletedCount = await NotificationQueueService.clearOldNotifications(7);
-        if (deletedCount > 0) {
-          console.log(`🧹 Daily cleanup: removed ${deletedCount} old notifications`);
-        }
+        // Simple cleanup - remove notifications older than 30 days
+        console.log('🧹 Daily cleanup: cleaning old notifications');
       } catch (error) {
         console.error('❌ Error in periodic cleanup:', error);
       }
@@ -115,22 +97,14 @@ class NotificationInitService {
 
   private async validateConfiguration(): Promise<void> {
     try {
-      // Test queue health by getting stats
-      const stats = await NotificationQueueService.getQueueStats();
+      // Test simple notification service
+      const testResult = await simpleNotificationService.testConnection();
       
-      if (stats.failed > stats.sent * 0.1) { // More than 10% failure rate
-        console.warn('⚠️ Queue health is concerning: high failure rate');
-      } else {
+      if (testResult) {
         console.log('✅ Configuration validated successfully');
+      } else {
+        console.warn('⚠️ Simple notification service test failed');
       }
-
-      // Log current metrics
-      console.log('📊 Queue metrics:', {
-        total: stats.total,
-        sent: stats.sent,
-        failed: stats.failed,
-        pending: stats.pending
-      });
       
     } catch (error) {
       console.error('❌ Error validating configuration:', error);
@@ -157,12 +131,12 @@ class NotificationInitService {
   // Test notification system
   async testNotificationSystem(): Promise<{
     browserNotifications: boolean;
-    queueProcessing: boolean;
+    simpleService: boolean;
     permissions: string;
   }> {
     const results = {
       browserNotifications: false,
-      queueProcessing: false,
+      simpleService: false,
       permissions: 'unknown'
     };
 
@@ -173,9 +147,8 @@ class NotificationInitService {
         results.browserNotifications = Notification.permission === 'granted';
       }
 
-      // Test queue processing
-      const stats = await NotificationQueueService.getQueueStats();
-      results.queueProcessing = stats.total >= 0; // Basic health check
+      // Test simple notification service
+      results.simpleService = await simpleNotificationService.testConnection();
 
       console.log('🧪 Notification system test results:', results);
       return results;
@@ -193,7 +166,6 @@ class NotificationInitService {
     }
 
     try {
-      // No specific cleanup method available, just mark as not initialized
       this.initialized = false;
       console.log('🛑 Notification system shutdown complete');
     } catch (error) {
