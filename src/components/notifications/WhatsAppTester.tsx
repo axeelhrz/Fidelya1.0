@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { simpleNotificationService } from '@/services/simple-notifications.service';
 import { useAuth } from '@/hooks/useAuth';
 
 export const WhatsAppTester = () => {
@@ -11,12 +10,7 @@ export const WhatsAppTester = () => {
   const [testPhone, setTestPhone] = useState('');
   const [testMessage, setTestMessage] = useState('¡Hola! Este es un mensaje de prueba desde Fidelya 🚀');
 
-  const handleTest = async () => {
-    if (!user) {
-      toast.error('Debes estar autenticado');
-      return;
-    }
-
+  const handleDirectTest = async () => {
     if (!testPhone.trim()) {
       toast.error('Ingresa un número de teléfono');
       return;
@@ -25,47 +19,28 @@ export const WhatsAppTester = () => {
     setLoading(true);
     
     try {
-      // Crear una notificación de prueba
-      const notificationData = {
-        title: 'Prueba WhatsApp - Fidelya',
-        message: testMessage,
-        type: 'info' as const,
-        channels: ['whatsapp' as const],
-        recipientIds: ['test-recipient'] // ID ficticio para la prueba
-      };
+      console.log('🧪 Probando API directamente...');
+      
+      // Llamar directamente a la API de WhatsApp
+      const response = await fetch('/api/notifications/whatsapp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: testPhone,
+          message: `*Prueba Directa - Fidelya*\n\n${testMessage}\n\n_Enviado desde el probador 🧪_`
+        })
+      });
 
-      // Crear la notificación
-      const notificationId = await simpleNotificationService.createNotification(
-        notificationData,
-        user.uid
-      );
+      const result = await response.json();
 
-      // Simular un destinatario con el número de prueba
-      const originalGetRecipients = simpleNotificationService.getRecipients;
-      simpleNotificationService.getRecipients = async () => [
-        {
-          id: 'test-recipient',
-          name: 'Usuario de Prueba',
-          phone: testPhone,
-          type: 'socio' as const
-        }
-      ];
-
-      // Enviar la notificación
-      const result = await simpleNotificationService.sendNotification(
-        notificationId,
-        notificationData
-      );
-
-      // Restaurar el método original
-      simpleNotificationService.getRecipients = originalGetRecipients;
-
-      if (result.success) {
-        toast.success(`✅ WhatsApp enviado exitosamente!`);
-        console.log('🎉 Resultado de la prueba:', result);
+      if (response.ok && result.success) {
+        toast.success(`✅ WhatsApp enviado exitosamente! SID: ${result.sid}`);
+        console.log('🎉 Resultado de la prueba directa:', result);
       } else {
-        toast.error(`❌ Error enviando WhatsApp: ${result.errors.join(', ')}`);
-        console.error('💥 Errores:', result.errors);
+        toast.error(`❌ Error: ${result.error}`);
+        console.error('💥 Error en la prueba:', result);
       }
 
     } catch (error) {
@@ -76,21 +51,45 @@ export const WhatsAppTester = () => {
     }
   };
 
-  const handleServiceStatus = () => {
-    const status = simpleNotificationService.getServicesStatus();
-    console.log('🔧 Estado de servicios:', status);
-    
-    if (status.whatsapp.configured) {
-      toast.success('✅ Twilio WhatsApp está configurado correctamente');
-    } else {
-      toast.error('❌ Twilio WhatsApp NO está configurado');
+  const handleServiceTest = async () => {
+    try {
+      console.log('🔧 Verificando estado de la API...');
+      
+      // Hacer una llamada de prueba sin número para verificar configuración
+      const response = await fetch('/api/notifications/whatsapp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: '',
+          message: 'test'
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.debug) {
+        console.log('🔍 Estado de credenciales:', result.debug);
+        if (result.debug.accountSid === 'Present' && result.debug.authToken === 'Present') {
+          toast.success('✅ Credenciales de Twilio configuradas correctamente');
+        } else {
+          toast.error('❌ Credenciales de Twilio faltantes');
+        }
+      } else {
+        console.log('📊 Respuesta de la API:', result);
+      }
+      
+    } catch (error) {
+      console.error('💥 Error verificando servicio:', error);
+      toast.error('Error verificando el servicio');
     }
   };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
       <h3 className="text-lg font-semibold mb-4 text-gray-800">
-        🧪 Probador de WhatsApp
+        🧪 Probador de WhatsApp (API Route)
       </h3>
       
       <div className="space-y-4">
@@ -124,7 +123,7 @@ export const WhatsAppTester = () => {
 
         <div className="flex space-x-2">
           <button
-            onClick={handleTest}
+            onClick={handleDirectTest}
             disabled={loading}
             className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -132,20 +131,30 @@ export const WhatsAppTester = () => {
           </button>
           
           <button
-            onClick={handleServiceStatus}
+            onClick={handleServiceTest}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
           >
-            🔧 Estado
+            🔧 Verificar API
           </button>
         </div>
+      </div>
+
+      <div className="mt-4 p-3 bg-green-50 rounded-md">
+        <p className="text-xs text-green-800">
+          <strong>✅ Configuración Actualizada:</strong><br/>
+          • Ahora usa API Route (server-side)<br/>
+          • Las credenciales se manejan en el servidor<br/>
+          • Mejor seguridad y compatibilidad
+        </p>
       </div>
 
       <div className="mt-4 p-3 bg-yellow-50 rounded-md">
         <p className="text-xs text-yellow-800">
           <strong>📋 Instrucciones:</strong><br/>
-          1. Ingresa tu número con código de país<br/>
-          2. Para el sandbox de Twilio, primero envía "join orange-tiger" al +1 415 523 8886<br/>
-          3. Luego haz clic en "Enviar WhatsApp"
+          1. Envía "join orange-tiger" al +1 415 523 8886<br/>
+          2. Ingresa tu número con código de país<br/>
+          3. Haz clic en "Enviar WhatsApp"<br/>
+          4. Revisa la consola para logs detallados
         </p>
       </div>
     </div>
