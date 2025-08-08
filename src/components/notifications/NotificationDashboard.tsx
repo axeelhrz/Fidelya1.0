@@ -7,7 +7,6 @@ import {
   Container,
   Typography,
   Paper,
-  Grid,
   Card,
   CardContent,
   Avatar,
@@ -17,20 +16,13 @@ import {
   LinearProgress,
   CircularProgress,
   alpha,
-  useTheme,
-  useMediaQuery,
   Tooltip,
-  Divider,
   Stack,
   Alert,
-  Fade,
 } from '@mui/material';
 import {
   TrendingUp,
   TrendingDown,
-  Email,
-  Sms,
-  PhoneAndroid,
   Notifications,
   Speed,
   CheckCircle,
@@ -39,19 +31,10 @@ import {
   Info,
   Refresh,
   Download,
-  Settings,
-  Timeline,
-  Analytics,
   Campaign,
   Schedule,
-  Group,
-  AttachMoney,
-  Visibility,
-  ClickAwayListener,
 } from '@mui/icons-material';
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   BarChart,
@@ -65,8 +48,6 @@ import {
   Tooltip as RechartsTooltip,
   Legend,
   ResponsiveContainer,
-  RadialBarChart,
-  RadialBar,
 } from 'recharts';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -234,13 +215,11 @@ const MetricCard: React.FC<MetricCardProps> = ({
 export const NotificationDashboard: React.FC<NotificationDashboardProps> = ({
   loading: externalLoading = false
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   const [analytics, setAnalytics] = useState<NotificationAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState({
+  const [dateRange] = useState({
     start: startOfDay(subDays(new Date(), 30)),
     end: endOfDay(new Date()),
   });
@@ -254,7 +233,7 @@ export const NotificationDashboard: React.FC<NotificationDashboardProps> = ({
   const [refreshing, setRefreshing] = useState(false);
 
   // Load analytics data
-  const loadAnalytics = async () => {
+  const loadAnalytics = React.useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -267,12 +246,12 @@ export const NotificationDashboard: React.FC<NotificationDashboardProps> = ({
       setAnalytics(data);
     } catch (err) {
       console.error('Error loading analytics:', err);
-      setError(err instanceof Error ? err.message : 'Error al cargar los análisis');
+      setError((err as Error)?.message ?? 'Error al cargar los análisis');
       toast.error('Error al cargar los análisis');
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange.start, dateRange.end]);
 
   // Load real-time metrics
   const loadRealTimeMetrics = async () => {
@@ -288,7 +267,7 @@ export const NotificationDashboard: React.FC<NotificationDashboardProps> = ({
   useEffect(() => {
     loadAnalytics();
     loadRealTimeMetrics();
-  }, [dateRange]);
+  }, [loadAnalytics]);
 
   // Auto-refresh real-time metrics
   useEffect(() => {
@@ -302,7 +281,7 @@ export const NotificationDashboard: React.FC<NotificationDashboardProps> = ({
     try {
       await Promise.all([loadAnalytics(), loadRealTimeMetrics()]);
       toast.success('Datos actualizados');
-    } catch (err) {
+    } catch {
       toast.error('Error al actualizar');
     } finally {
       setRefreshing(false);
@@ -474,358 +453,349 @@ export const NotificationDashboard: React.FC<NotificationDashboardProps> = ({
       </Box>
 
       {/* Real-time Metrics */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            title="Notificaciones Activas"
-            value={realTimeMetrics.activeNotifications}
-            icon={<Notifications />}
-            color="#6366f1"
-            loading={isLoading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            title="Entregas Pendientes"
-            value={realTimeMetrics.pendingDeliveries}
-            icon={<Schedule />}
-            color="#f59e0b"
-            loading={isLoading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            title="Fallos Recientes"
-            value={realTimeMetrics.recentFailures}
-            icon={<Error />}
-            color="#ef4444"
-            loading={isLoading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            title="Rendimiento Actual"
-            value={`${realTimeMetrics.currentThroughput}/h`}
-            icon={<Speed />}
-            color={getHealthColor(realTimeMetrics.systemHealth)}
-            subtitle="Entregas por hora"
-            loading={isLoading}
-          />
-        </Grid>
-      </Grid>
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+        gap: 3,
+        mb: 4 
+      }}>
+        <MetricCard
+          title="Notificaciones Activas"
+          value={realTimeMetrics.activeNotifications}
+          icon={<Notifications />}
+          color="#6366f1"
+          loading={isLoading}
+        />
+        <MetricCard
+          title="Entregas Pendientes"
+          value={realTimeMetrics.pendingDeliveries}
+          icon={<Schedule />}
+          color="#f59e0b"
+          loading={isLoading}
+        />
+        <MetricCard
+          title="Fallos Recientes"
+          value={realTimeMetrics.recentFailures}
+          icon={<Error />}
+          color="#ef4444"
+          loading={isLoading}
+        />
+        <MetricCard
+          title="Rendimiento Actual"
+          value={`${realTimeMetrics.currentThroughput}/h`}
+          icon={<Speed />}
+          color={getHealthColor(realTimeMetrics.systemHealth)}
+          subtitle="Entregas por hora"
+          loading={isLoading}
+        />
+      </Box>
 
       {analytics && (
         <>
           {/* Main Metrics */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <MetricCard
-                title="Total Enviadas"
-                value={analytics.totalSent}
-                change={5.2}
-                trend="up"
-                icon={<Campaign />}
-                color="#3b82f6"
-                loading={isLoading}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <MetricCard
-                title="Tasa de Entrega"
-                value={`${analytics.deliveryRate.toFixed(1)}%`}
-                change={2.1}
-                trend="up"
-                icon={<CheckCircle />}
-                color="#10b981"
-                loading={isLoading}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <MetricCard
-                title="Tiempo Promedio"
-                value={`${(analytics.averageDeliveryTime / 1000).toFixed(1)}s`}
-                change={-8.3}
-                trend="down"
-                icon={<Speed />}
-                color="#8b5cf6"
-                subtitle="Tiempo de entrega"
-                loading={isLoading}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <MetricCard
-                title="Tasa de Fallos"
-                value={`${analytics.failureRate.toFixed(1)}%`}
-                change={-1.2}
-                trend="down"
-                icon={<Error />}
-                color="#ef4444"
-                loading={isLoading}
-              />
-            </Grid>
-          </Grid>
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+            gap: 3,
+            mb: 4 
+          }}>
+            <MetricCard
+              title="Total Enviadas"
+              value={analytics.totalSent}
+              change={5.2}
+              trend="up"
+              icon={<Campaign />}
+              color="#3b82f6"
+              loading={isLoading}
+            />
+            <MetricCard
+              title="Tasa de Entrega"
+              value={`${analytics.deliveryRate.toFixed(1)}%`}
+              change={2.1}
+              trend="up"
+              icon={<CheckCircle />}
+              color="#10b981"
+              loading={isLoading}
+            />
+            <MetricCard
+              title="Tiempo Promedio"
+              value={`${(analytics.averageDeliveryTime / 1000).toFixed(1)}s`}
+              change={-8.3}
+              trend="down"
+              icon={<Speed />}
+              color="#8b5cf6"
+              subtitle="Tiempo de entrega"
+              loading={isLoading}
+            />
+            <MetricCard
+              title="Tasa de Fallos"
+              value={`${analytics.failureRate.toFixed(1)}%`}
+              change={-1.2}
+              trend="down"
+              icon={<Error />}
+              color="#ef4444"
+              loading={isLoading}
+            />
+          </Box>
 
           {/* Charts Section */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' },
+            gap: 3,
+            mb: 4 
+          }}>
             {/* Daily Trends */}
-            <Grid item xs={12} lg={8}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 4,
-                  height: 400,
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                    Tendencias Diarias
-                  </Typography>
-                  <Chip
-                    label="Últimos 30 días"
-                    size="small"
-                    sx={{
-                      bgcolor: alpha('#6366f1', 0.1),
-                      color: '#6366f1',
-                      fontWeight: 600,
-                    }}
-                  />
-                </Box>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                border: '1px solid #f1f5f9',
+                borderRadius: 4,
+                height: 400,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                  Tendencias Diarias
+                </Typography>
+                <Chip
+                  label="Últimos 30 días"
+                  size="small"
+                  sx={{
+                    bgcolor: alpha('#6366f1', 0.1),
+                    color: '#6366f1',
+                    fontWeight: 600,
+                  }}
+                />
+              </Box>
 
-                {chartData && (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={chartData.dailyData}>
-                      <defs>
-                        <linearGradient id="colorEnviadas" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                        </linearGradient>
-                        <linearGradient id="colorEntregadas" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="#94a3b8"
-                        fontSize={12}
-                        tickLine={false}
-                      />
-                      <YAxis 
-                        stroke="#94a3b8"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <RechartsTooltip
-                        contentStyle={{
-                          backgroundColor: '#ffffff',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '12px',
-                          boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-                        }}
-                      />
-                      <Legend />
-                      <Area
-                        type="monotone"
-                        dataKey="enviadas"
-                        stroke="#3b82f6"
-                        strokeWidth={2}
-                        fillOpacity={1}
-                        fill="url(#colorEnviadas)"
-                        name="Enviadas"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="entregadas"
-                        stroke="#10b981"
-                        strokeWidth={2}
-                        fillOpacity={1}
-                        fill="url(#colorEntregadas)"
-                        name="Entregadas"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                )}
-              </Paper>
-            </Grid>
+              {chartData && (
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={chartData.dailyData}>
+                    <defs>
+                      <linearGradient id="colorEnviadas" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorEntregadas" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="#94a3b8"
+                      fontSize={12}
+                      tickLine={false}
+                    />
+                    <YAxis 
+                      stroke="#94a3b8"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <RechartsTooltip
+                      contentStyle={{
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                      }}
+                    />
+                    <Legend />
+                    <Area
+                      type="monotone"
+                      dataKey="enviadas"
+                      stroke="#3b82f6"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorEnviadas)"
+                      name="Enviadas"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="entregadas"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorEntregadas)"
+                      name="Entregadas"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </Paper>
 
             {/* Channel Performance */}
-            <Grid item xs={12} lg={4}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 4,
-                  height: 400,
-                }}
-              >
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
-                  Rendimiento por Canal
-                </Typography>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                border: '1px solid #f1f5f9',
+                borderRadius: 4,
+                height: 400,
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+                Rendimiento por Canal
+              </Typography>
 
-                {chartData && (
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={chartData.channelData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={40}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {chartData.channelData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip
-                        contentStyle={{
-                          backgroundColor: '#ffffff',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '8px',
+              {chartData && (
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={chartData.channelData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={40}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {chartData.channelData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip
+                      contentStyle={{
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+
+              <Stack spacing={2} sx={{ mt: 2 }}>
+                {chartData?.channelData.map((channel, index) => (
+                  <Box key={index} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          bgcolor: channel.color,
                         }}
                       />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
-
-                <Stack spacing={2} sx={{ mt: 2 }}>
-                  {chartData?.channelData.map((channel, index) => (
-                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                          sx={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: '50%',
-                            bgcolor: channel.color,
-                          }}
-                        />
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {channel.name}
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" sx={{ color: '#64748b' }}>
-                        {channel.rate.toFixed(1)}%
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {channel.name}
                       </Typography>
                     </Box>
-                  ))}
-                </Stack>
-              </Paper>
-            </Grid>
-          </Grid>
+                    <Typography variant="body2" sx={{ color: '#64748b' }}>
+                      {channel.rate.toFixed(1)}%
+                    </Typography>
+                  </Box>
+                ))}
+              </Stack>
+            </Paper>
+          </Box>
 
           {/* Hourly Distribution */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 4,
-                }}
-              >
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
-                  Distribución por Horas
-                </Typography>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: '1px solid #f1f5f9',
+              borderRadius: 4,
+              mb: 4,
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+              Distribución por Horas
+            </Typography>
 
-                {chartData && (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={chartData.hourlyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis 
-                        dataKey="hora" 
-                        stroke="#94a3b8"
-                        fontSize={12}
-                        tickLine={false}
-                      />
-                      <YAxis 
-                        stroke="#94a3b8"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <RechartsTooltip
-                        contentStyle={{
-                          backgroundColor: '#ffffff',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '12px',
-                          boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-                        }}
-                      />
-                      <Bar
-                        dataKey="enviadas"
-                        fill="#3b82f6"
-                        radius={[4, 4, 0, 0]}
-                        name="Enviadas"
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                )}
-              </Paper>
-            </Grid>
-          </Grid>
+            {chartData && (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData.hourlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis 
+                    dataKey="hora" 
+                    stroke="#94a3b8"
+                    fontSize={12}
+                    tickLine={false}
+                  />
+                  <YAxis 
+                    stroke="#94a3b8"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <RechartsTooltip
+                    contentStyle={{
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                    }}
+                  />
+                  <Bar
+                    dataKey="enviadas"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                    name="Enviadas"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </Paper>
 
           {/* Error Analysis */}
           {analytics.topErrors.length > 0 && (
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 3,
-                    border: '1px solid #f1f5f9',
-                    borderRadius: 4,
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
-                    Análisis de Errores
-                  </Typography>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                border: '1px solid #f1f5f9',
+                borderRadius: 4,
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+                Análisis de Errores
+              </Typography>
 
-                  <Grid container spacing={2}>
-                    {analytics.topErrors.slice(0, 3).map((error, index) => (
-                      <Grid item xs={12} md={4} key={index}>
-                        <Box
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+                gap: 2 
+              }}>
+                {analytics.topErrors.slice(0, 3).map((error, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      p: 2,
+                      border: '1px solid #fee2e2',
+                      borderRadius: 3,
+                      bgcolor: '#fef2f2',
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#dc2626', mb: 1 }}>
+                      {error.error}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#7f1d1d', mb: 1 }}>
+                      {error.count} ocurrencias ({error.percentage.toFixed(1)}%)
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                      {error.channels.map((channel, idx) => (
+                        <Chip
+                          key={idx}
+                          label={channel}
+                          size="small"
                           sx={{
-                            p: 2,
-                            border: '1px solid #fee2e2',
-                            borderRadius: 3,
-                            bgcolor: '#fef2f2',
+                            bgcolor: alpha('#dc2626', 0.1),
+                            color: '#dc2626',
+                            fontSize: '0.7rem',
                           }}
-                        >
-                          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#dc2626', mb: 1 }}>
-                            {error.error}
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: '#7f1d1d', mb: 1 }}>
-                            {error.count} ocurrencias ({error.percentage.toFixed(1)}%)
-                          </Typography>
-                          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                            {error.channels.map((channel, idx) => (
-                              <Chip
-                                key={idx}
-                                label={channel}
-                                size="small"
-                                sx={{
-                                  bgcolor: alpha('#dc2626', 0.1),
-                                  color: '#dc2626',
-                                  fontSize: '0.7rem',
-                                }}
-                              />
-                            ))}
-                          </Box>
-                        </Box>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Paper>
-              </Grid>
-            </Grid>
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Paper>
           )}
         </>
       )}
