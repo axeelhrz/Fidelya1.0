@@ -1,13 +1,12 @@
 'use client';
 
-import React from 'react';
-import { Box } from '@mui/material';
-import NotificationsCenter from '../../../../components/asociacion/NotificationsCenter';
+import { ModernNotificationCenter } from '@/components/notifications/ModernNotificationCenter';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
-export default function NotificacionesPage() {
+export default function NotificationsPage() {
   return (
-    <Box>
-      <NotificationsCenter />
-    </Box>
+    <ProtectedRoute allowedRoles={['asociacion']}>
+      <ModernNotificationCenter />
+    </ProtectedRoute>
   );
 }
