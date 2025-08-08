@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
@@ -23,10 +23,16 @@ import {
   Target,
   Activity,
   Eye,
-  RefreshCw
+  RefreshCw,
+  Store,
+  UserCheck,
+  X,
+  Plus
 } from 'lucide-react';
 import { useSimpleNotifications } from '@/hooks/useSimpleNotifications';
 import { useAuth } from '@/hooks/useAuth';
+import { useSocios } from '@/hooks/useSocios';
+import { useComercios } from '@/hooks/useComercios';
 import { toast } from 'react-hot-toast';
 
 // Interfaces
@@ -46,6 +52,15 @@ interface TabConfig {
   icon: React.ComponentType<{ className?: string }>;
   gradient: string;
   description: string;
+}
+
+interface Recipient {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  type: 'socio' | 'comercio';
+  status: string;
 }
 
 // Tab configurations
@@ -246,11 +261,224 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
   );
 };
 
+// Recipient Selector Component
+const RecipientSelector = ({ 
+  selectedRecipients, 
+  onRecipientsChange 
+}: { 
+  selectedRecipients: Recipient[], 
+  onRecipientsChange: (recipients: Recipient[]) => void 
+}) => {
+  const { socios } = useSocios();
+  const { comerciosVinculados } = useComercios();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState<'all' | 'socios' | 'comercios'>('all');
+  const [showSelector, setShowSelector] = useState(false);
+
+  // Convert socios and comercios to recipients format
+  const allRecipients: Recipient[] = [
+    ...socios
+      .filter(socio => socio.estado === 'activo')
+      .map(socio => ({
+        id: socio.id,
+        name: socio.nombre,
+        email: socio.email,
+        phone: socio.telefono,
+        type: 'socio' as const,
+        status: socio.estado
+      })),
+    ...comerciosVinculados
+      .filter(comercio => comercio.estado === 'activo')
+      .map(comercio => ({
+        id: comercio.uid,
+        name: comercio.nombreComercio,
+        email: comercio.email,
+        phone: comercio.telefono,
+        type: 'comercio' as const,
+        status: comercio.estado
+      }))
+  ];
+
+  // Filter recipients based on search and type
+  const filteredRecipients = allRecipients.filter(recipient => {
+    const matchesSearch = recipient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         recipient.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = selectedType === 'all' || 
+                       (selectedType === 'socios' && recipient.type === 'socio') ||
+                       (selectedType === 'comercios' && recipient.type === 'comercio');
+    
+    return matchesSearch && matchesType && !selectedRecipients.find(r => r.id === recipient.id);
+  });
+
+  const handleAddRecipient = (recipient: Recipient) => {
+    onRecipientsChange([...selectedRecipients, recipient]);
+  };
+
+  const handleRemoveRecipient = (recipientId: string) => {
+    onRecipientsChange(selectedRecipients.filter(r => r.id !== recipientId));
+  };
+
+  const handleSelectAll = () => {
+    const typeFilter = selectedType === 'all' ? allRecipients : 
+                      selectedType === 'socios' ? allRecipients.filter(r => r.type === 'socio') :
+                      allRecipients.filter(r => r.type === 'comercio');
+    
+    const newRecipients = typeFilter.filter(r => !selectedRecipients.find(sr => sr.id === r.id));
+    onRecipientsChange([...selectedRecipients, ...newRecipients]);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-semibold text-slate-700">
+          Destinatarios Específicos
+        </label>
+        <button
+          type="button"
+          onClick={() => setShowSelector(!showSelector)}
+          className="flex items-center gap-2 px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Seleccionar
+        </button>
+      </div>
+
+      {/* Selected Recipients */}
+      {selectedRecipients.length > 0 && (
+        <div className="bg-slate-50 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-slate-700">
+              {selectedRecipients.length} destinatario{selectedRecipients.length !== 1 ? 's' : ''} seleccionado{selectedRecipients.length !== 1 ? 's' : ''}
+            </span>
+            <button
+              type="button"
+              onClick={() => onRecipientsChange([])}
+              className="text-xs text-red-600 hover:text-red-700"
+            >
+              Limpiar todo
+            </button>
+          </div>
+          
+          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+            {selectedRecipients.map((recipient) => (
+              <div
+                key={recipient.id}
+                className="flex items-center gap-2 bg-white px-3 py-1 rounded-lg border border-slate-200"
+              >
+                <div className={`w-2 h-2 rounded-full ${
+                  recipient.type === 'socio' ? 'bg-blue-500' : 'bg-emerald-500'
+                }`} />
+                <span className="text-sm text-slate-700">{recipient.name}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveRecipient(recipient.id)}
+                  className="text-slate-400 hover:text-red-500 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recipient Selector Modal */}
+      {showSelector && (
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-slate-900">Seleccionar Destinatarios</h3>
+            <button
+              type="button"
+              onClick={() => setShowSelector(false)}
+              className="text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre o email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value as 'all' | 'socios' | 'comercios')}
+              className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Todos</option>
+              <option value="socios">Solo Socios</option>
+              <option value="comercios">Solo Comercios</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={handleSelectAll}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+            >
+              Seleccionar Todos
+            </button>
+          </div>
+
+          {/* Recipients List */}
+          <div className="max-h-64 overflow-y-auto space-y-2">
+            {filteredRecipients.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                <Users className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                <p>No se encontraron destinatarios</p>
+              </div>
+            ) : (
+              filteredRecipients.map((recipient) => (
+                <div
+                  key={recipient.id}
+                  className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      recipient.type === 'socio' ? 'bg-blue-100' : 'bg-emerald-100'
+                    }`}>
+                      {recipient.type === 'socio' ? 
+                        <UserCheck className="w-4 h-4 text-blue-600" /> : 
+                        <Store className="w-4 h-4 text-emerald-600" />
+                      }
+                    </div>
+                    <div>
+                      <div className="font-medium text-slate-900">{recipient.name}</div>
+                      <div className="text-sm text-slate-500">{recipient.email}</div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={() => handleAddRecipient(recipient)}
+                    className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                  >
+                    Agregar
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Send Notification Component
 const SendNotification = () => {
   const { sendNotification } = useSimpleNotifications();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [selectedRecipients, setSelectedRecipients] = useState<Recipient[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     message: '',
@@ -271,18 +499,31 @@ const SendNotification = () => {
       return;
     }
 
+    if (formData.recipients === 'specific' && selectedRecipients.length === 0) {
+      toast.error('Selecciona al menos un destinatario específico');
+      return;
+    }
+
     setLoading(true);
     try {
-      await sendNotification({
+      const notificationData = {
         title: formData.title,
         message: formData.message,
         channels: formData.channels,
         recipients: formData.recipients,
         priority: formData.priority as 'low' | 'normal' | 'high',
-        createdBy: user?.uid || 'unknown'
-      });
+        createdBy: user?.uid || 'unknown',
+        specificRecipients: formData.recipients === 'specific' ? selectedRecipients : undefined
+      };
+
+      await sendNotification(notificationData);
       
-      toast.success('Notificación enviada exitosamente');
+      toast.success(`Notificación enviada exitosamente a ${
+        formData.recipients === 'specific' 
+          ? `${selectedRecipients.length} destinatario${selectedRecipients.length !== 1 ? 's' : ''}`
+          : 'todos los usuarios seleccionados'
+      }`);
+      
       setFormData({
         title: '',
         message: '',
@@ -290,6 +531,7 @@ const SendNotification = () => {
         recipients: 'all',
         priority: 'normal'
       });
+      setSelectedRecipients([]);
     } catch (error) {
       console.error('Error sending notification:', error);
       toast.error('Error al enviar la notificación');
@@ -393,38 +635,53 @@ const SendNotification = () => {
             </div>
           </div>
 
-          {/* Recipients and Priority */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Destinatarios
-              </label>
+          {/* Recipients */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-3">
+              Destinatarios
+            </label>
+            <div className="space-y-4">
               <select
                 value={formData.recipients}
-                onChange={(e) => setFormData({ ...formData, recipients: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, recipients: e.target.value });
+                  if (e.target.value !== 'specific') {
+                    setSelectedRecipients([]);
+                  }
+                }}
                 className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">Todos los usuarios</option>
                 <option value="socios">Solo socios</option>
                 <option value="comercios">Solo comercios</option>
                 <option value="active">Usuarios activos</option>
+                <option value="specific">Seleccionar específicos</option>
               </select>
-            </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Prioridad
-              </label>
-              <select
-                value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="low">Baja</option>
-                <option value="normal">Normal</option>
-                <option value="high">Alta</option>
-              </select>
+              {/* Specific Recipients Selector */}
+              {formData.recipients === 'specific' && (
+                <RecipientSelector
+                  selectedRecipients={selectedRecipients}
+                  onRecipientsChange={setSelectedRecipients}
+                />
+              )}
             </div>
+          </div>
+
+          {/* Priority */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Prioridad
+            </label>
+            <select
+              value={formData.priority}
+              onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="low">Baja</option>
+              <option value="normal">Normal</option>
+              <option value="high">Alta</option>
+            </select>
           </div>
 
           {/* Action Buttons */}
