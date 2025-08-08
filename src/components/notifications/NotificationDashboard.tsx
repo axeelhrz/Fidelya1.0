@@ -1,503 +1,852 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
+  Container,
+  Typography,
+  Paper,
+  Grid,
   Card,
   CardContent,
-  Typography,
-  LinearProgress,
-  Chip,
   Avatar,
+  Chip,
   Button,
+  IconButton,
+  LinearProgress,
+  CircularProgress,
+  alpha,
+  useTheme,
+  useMediaQuery,
+  Tooltip,
+  Divider,
+  Stack,
   Alert,
+  Fade,
 } from '@mui/material';
 import {
   TrendingUp,
+  TrendingDown,
   Email,
   Sms,
   PhoneAndroid,
-  CheckCircle,
-  Refresh,
+  Notifications,
   Speed,
+  CheckCircle,
+  Error,
+  Warning,
+  Info,
+  Refresh,
+  Download,
+  Settings,
+  Timeline,
+  Analytics,
+  Campaign,
   Schedule,
+  Group,
+  AttachMoney,
+  Visibility,
+  ClickAwayListener,
 } from '@mui/icons-material';
-import { Bar, Doughnut } from 'react-chartjs-2';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip as ChartTooltip,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
   Legend,
-} from 'chart.js';
-import { notificationQueueService } from '@/services/notification-queue.service';
+  ResponsiveContainer,
+  RadialBarChart,
+  RadialBar,
+} from 'recharts';
+import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { es } from 'date-fns/locale';
+import toast from 'react-hot-toast';
+import { notificationAnalyticsService, NotificationAnalytics } from '@/services/notification-analytics.service';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  ChartTooltip,
-  Legend
-);
-
-interface DashboardStats {
-  totalSent: number;
-  successRate: number;
-  avgProcessingTime: number;
-  throughputPerHour: number;
-  byChannel: {
-    email: { sent: number; failed: number; rate: number };
-    sms: { sent: number; failed: number; rate: number };
-    push: { sent: number; failed: number; rate: number };
-  };
-  recentActivity: Array<{
-    timestamp: Date;
-    type: string;
-    status: string;
-    channel: string;
-  }>;
+interface NotificationDashboardProps {
+  loading?: boolean;
 }
 
-export const NotificationDashboard: React.FC = () => {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  
-  interface QueueHealth {
-    status: 'healthy' | 'warning' | 'critical';
-    issues: string[];
-    recommendations: string[];
-    metrics: {
-      avgProcessingTime: string;
-      successRate: string;
-      throughput: string;
-      oldestPending: string;
-    };
-  }
-  
-  const [queueHealth, setQueueHealth] = useState<QueueHealth | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+interface MetricCardProps {
+  title: string;
+  value: string | number;
+  change?: number;
+  trend?: 'up' | 'down' | 'stable';
+  icon: React.ReactNode;
+  color: string;
+  subtitle?: string;
+  loading?: boolean;
+}
 
-  const loadDashboardData = async () => {
+const MetricCard: React.FC<MetricCardProps> = ({
+  title,
+  value,
+  change,
+  trend,
+  icon,
+  color,
+  subtitle,
+  loading = false
+}) => {
+  const getTrendIcon = () => {
+    switch (trend) {
+      case 'up':
+        return <TrendingUp sx={{ fontSize: 16, color: '#10b981' }} />;
+      case 'down':
+        return <TrendingDown sx={{ fontSize: 16, color: '#ef4444' }} />;
+      default:
+        return null;
+    }
+  };
+
+  const getTrendColor = () => {
+    switch (trend) {
+      case 'up':
+        return '#10b981';
+      case 'down':
+        return '#ef4444';
+      default:
+        return '#6b7280';
+    }
+  };
+
+  return (
+    <Card
+      elevation={0}
+      sx={{
+        height: '100%',
+        border: '1px solid #f1f5f9',
+        borderRadius: 4,
+        position: 'relative',
+        overflow: 'hidden',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+          borderColor: alpha(color, 0.3),
+          transform: 'translateY(-2px)',
+          boxShadow: `0 8px 32px ${alpha(color, 0.15)}`,
+        }
+      }}
+    >
+      <CardContent sx={{ p: 3, height: '100%' }}>
+        {loading ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <CircularProgress size={24} sx={{ color }} />
+          </Box>
+        ) : (
+          <>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Avatar
+                sx={{
+                  width: 48,
+                  height: 48,
+                  bgcolor: alpha(color, 0.1),
+                  color,
+                }}
+              >
+                {icon}
+              </Avatar>
+              
+              {change !== undefined && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  {getTrendIcon()}
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: getTrendColor(),
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                    }}
+                  >
+                    {change > 0 ? '+' : ''}{change.toFixed(1)}%
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 900,
+                color: '#1e293b',
+                lineHeight: 1,
+                mb: 1,
+                fontSize: { xs: '1.75rem', md: '2.25rem' },
+              }}
+            >
+              {typeof value === 'number' ? value.toLocaleString() : value}
+            </Typography>
+
+            <Typography
+              variant="body2"
+              sx={{
+                color: '#64748b',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                fontSize: '0.75rem',
+                mb: subtitle ? 0.5 : 0,
+              }}
+            >
+              {title}
+            </Typography>
+
+            {subtitle && (
+              <Typography
+                variant="caption"
+                sx={{
+                  color: '#94a3b8',
+                  fontSize: '0.7rem',
+                }}
+              >
+                {subtitle}
+              </Typography>
+            )}
+          </>
+        )}
+      </CardContent>
+
+      {/* Background decoration */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: 100,
+          height: 100,
+          background: `radial-gradient(circle, ${alpha(color, 0.1)} 0%, transparent 70%)`,
+          pointerEvents: 'none',
+        }}
+      />
+    </Card>
+  );
+};
+
+export const NotificationDashboard: React.FC<NotificationDashboardProps> = ({
+  loading: externalLoading = false
+}) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  const [analytics, setAnalytics] = useState<NotificationAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState({
+    start: startOfDay(subDays(new Date(), 30)),
+    end: endOfDay(new Date()),
+  });
+  const [realTimeMetrics, setRealTimeMetrics] = useState({
+    activeNotifications: 0,
+    pendingDeliveries: 0,
+    recentFailures: 0,
+    currentThroughput: 0,
+    systemHealth: 'healthy' as 'healthy' | 'warning' | 'critical',
+  });
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Load analytics data
+  const loadAnalytics = async () => {
     try {
       setLoading(true);
-      const [queueStats, healthCheck] = await Promise.all([
-        notificationQueueService.getQueueStats(),
-        notificationQueueService.getQueueHealth()
-      ]);
-
-      // Simular datos de estadísticas (en producción vendrían de la base de datos)
-      const mockStats: DashboardStats = {
-        totalSent: queueStats.completed + queueStats.failed,
-        successRate: queueStats.totalProcessed > 0 ? (queueStats.completed / queueStats.totalProcessed) * 100 : 0,
-        avgProcessingTime: queueStats.averageProcessingTime,
-        throughputPerHour: queueStats.throughputPerHour,
-        byChannel: {
-          email: { sent: Math.floor(queueStats.completed * 0.6), failed: Math.floor(queueStats.failed * 0.4), rate: 85 },
-          sms: { sent: Math.floor(queueStats.completed * 0.2), failed: Math.floor(queueStats.failed * 0.3), rate: 92 },
-          push: { sent: Math.floor(queueStats.completed * 0.2), failed: Math.floor(queueStats.failed * 0.3), rate: 78 },
-        },
-        recentActivity: []
-      };
-
-      setStats(mockStats);
-      setQueueHealth(healthCheck);
-      setLastUpdate(new Date());
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      setError(null);
+      
+      const data = await notificationAnalyticsService.getAnalytics(
+        dateRange.start,
+        dateRange.end
+      );
+      
+      setAnalytics(data);
+    } catch (err) {
+      console.error('Error loading analytics:', err);
+      setError(err instanceof Error ? err.message : 'Error al cargar los análisis');
+      toast.error('Error al cargar los análisis');
     } finally {
       setLoading(false);
     }
   };
 
+  // Load real-time metrics
+  const loadRealTimeMetrics = async () => {
+    try {
+      const metrics = await notificationAnalyticsService.getRealTimeMetrics();
+      setRealTimeMetrics(metrics);
+    } catch (err) {
+      console.error('Error loading real-time metrics:', err);
+    }
+  };
+
+  // Initial load
   useEffect(() => {
-    loadDashboardData();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(loadDashboardData, 30000);
+    loadAnalytics();
+    loadRealTimeMetrics();
+  }, [dateRange]);
+
+  // Auto-refresh real-time metrics
+  useEffect(() => {
+    const interval = setInterval(loadRealTimeMetrics, 30000); // Every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
-  if (loading || !stats) {
+  // Handle refresh
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([loadAnalytics(), loadRealTimeMetrics()]);
+      toast.success('Datos actualizados');
+    } catch (err) {
+      toast.error('Error al actualizar');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Memoized chart data
+  const chartData = useMemo(() => {
+    if (!analytics) return null;
+
+    // Daily trends for line chart
+    const dailyData = analytics.dailyTrends.map(day => ({
+      date: format(new Date(day.date), 'dd/MM', { locale: es }),
+      enviadas: day.sent,
+      entregadas: day.delivered,
+      fallidas: day.failed,
+      tasa: day.deliveryRate,
+    }));
+
+    // Channel performance for pie chart
+    const channelData = Object.entries(analytics.channelStats).map(([channel, stats]) => ({
+      name: channel === 'email' ? 'Email' : 
+            channel === 'sms' ? 'SMS' : 
+            channel === 'push' ? 'Push' : 'App',
+      value: stats.sent,
+      delivered: stats.delivered,
+      rate: stats.deliveryRate,
+      color: channel === 'email' ? '#3b82f6' : 
+             channel === 'sms' ? '#f59e0b' : 
+             channel === 'push' ? '#8b5cf6' : '#10b981',
+    }));
+
+    // Hourly distribution for bar chart
+    const hourlyData = analytics.hourlyDistribution.map(hour => ({
+      hora: `${hour.hour}:00`,
+      enviadas: hour.sent,
+      entregadas: hour.delivered,
+      tasa: hour.deliveryRate,
+    }));
+
+    return { dailyData, channelData, hourlyData };
+  }, [analytics]);
+
+  // System health color
+  const getHealthColor = (health: string) => {
+    switch (health) {
+      case 'healthy':
+        return '#10b981';
+      case 'warning':
+        return '#f59e0b';
+      case 'critical':
+        return '#ef4444';
+      default:
+        return '#6b7280';
+    }
+  };
+
+  const getHealthIcon = (health: string) => {
+    switch (health) {
+      case 'healthy':
+        return <CheckCircle />;
+      case 'warning':
+        return <Warning />;
+      case 'critical':
+        return <Error />;
+      default:
+        return <Info />;
+    }
+  };
+
+  const isLoading = loading || externalLoading || refreshing;
+
+  if (error && !analytics) {
     return (
-      <Box sx={{ p: 3 }}>
-        <LinearProgress />
-        <Typography sx={{ mt: 2, textAlign: 'center' }}>
-          Cargando dashboard de notificaciones...
-        </Typography>
-      </Box>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert severity="error" sx={{ borderRadius: 3 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+            Error al cargar el dashboard
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+          <Button
+            onClick={handleRefresh}
+            variant="contained"
+            startIcon={<Refresh />}
+            size="small"
+          >
+            Reintentar
+          </Button>
+        </Alert>
+      </Container>
     );
   }
 
-  const channelData = {
-    labels: ['Email', 'SMS', 'Push'],
-    datasets: [
-      {
-        label: 'Enviados',
-        data: [stats.byChannel.email.sent, stats.byChannel.sms.sent, stats.byChannel.push.sent],
-        backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6'],
-      },
-      {
-        label: 'Fallidos',
-        data: [stats.byChannel.email.failed, stats.byChannel.sms.failed, stats.byChannel.push.failed],
-        backgroundColor: ['#ef4444', '#ef4444', '#ef4444'],
-      },
-    ],
-  };
-
-  const successRateData = {
-    labels: ['Exitosas', 'Fallidas'],
-    datasets: [
-      {
-        data: [stats.successRate, 100 - stats.successRate],
-        backgroundColor: ['#10b981', '#ef4444'],
-      },
-    ],
-  };
-
   return (
-    <Box sx={{ p: 3 }}>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
-            Dashboard de Notificaciones
-          </Typography>
-          <Typography variant="body1" sx={{ color: '#64748b' }}>
-            Monitoreo en tiempo real del sistema de notificaciones
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <Typography variant="caption" sx={{ color: '#64748b' }}>
-            Última actualización: {lastUpdate.toLocaleTimeString()}
-          </Typography>
-          <Button
-            variant="outlined"
-            onClick={loadDashboardData}
-            startIcon={<Refresh />}
-            disabled={loading}
-          >
-            Actualizar
-          </Button>
-        </Box>
-      </Box>
-
-      {/* Health Status */}
-      {queueHealth && (
-        <Alert
-          severity={queueHealth.status === 'healthy' ? 'success' : queueHealth.status === 'warning' ? 'warning' : 'error'}
-          sx={{ mb: 3 }}
-        >
-          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-            Estado del Sistema: {queueHealth.status === 'healthy' ? 'Saludable' : queueHealth.status === 'warning' ? 'Advertencia' : 'Crítico'}
-          </Typography>
-          {queueHealth.issues.length > 0 && (
-            <Typography variant="body2">
-              Problemas detectados: {queueHealth.issues.join(', ')}
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
+              Dashboard de Notificaciones
             </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b' }}>
+              Análisis y métricas de rendimiento en tiempo real
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Tooltip title="Actualizar datos">
+              <IconButton
+                onClick={handleRefresh}
+                disabled={isLoading}
+                sx={{
+                  bgcolor: alpha('#6366f1', 0.1),
+                  color: '#6366f1',
+                  '&:hover': {
+                    bgcolor: alpha('#6366f1', 0.2),
+                  }
+                }}
+              >
+                <Refresh sx={{ 
+                  animation: isLoading ? 'spin 1s linear infinite' : 'none',
+                  '@keyframes spin': {
+                    '0%': { transform: 'rotate(0deg)' },
+                    '100%': { transform: 'rotate(360deg)' },
+                  }
+                }} />
+              </IconButton>
+            </Tooltip>
+
+            <Button
+              startIcon={<Download />}
+              variant="outlined"
+              sx={{ borderRadius: 3 }}
+            >
+              Exportar
+            </Button>
+          </Box>
+        </Box>
+
+        {/* System Health Alert */}
+        <AnimatePresence>
+          {realTimeMetrics.systemHealth !== 'healthy' && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <Alert
+                severity={realTimeMetrics.systemHealth === 'critical' ? 'error' : 'warning'}
+                sx={{ borderRadius: 3, mb: 3 }}
+                icon={getHealthIcon(realTimeMetrics.systemHealth)}
+              >
+                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                  {realTimeMetrics.systemHealth === 'critical' ? 'Sistema Crítico' : 'Advertencia del Sistema'}
+                </Typography>
+                <Typography variant="body2">
+                  {realTimeMetrics.systemHealth === 'critical' 
+                    ? 'Se detectaron problemas críticos en el sistema de notificaciones'
+                    : 'El sistema presenta algunas advertencias que requieren atención'
+                  }
+                </Typography>
+              </Alert>
+            </motion.div>
           )}
-        </Alert>
-      )}
-
-      {/* KPI Cards */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: 3, 
-        mb: 4,
-        '& > *': {
-          flex: '1 1 250px',
-          minWidth: '250px'
-        }
-      }}>
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ bgcolor: '#3b82f6' }}>
-                <TrendingUp />
-              </Avatar>
-              <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                  {stats.totalSent.toLocaleString()}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b' }}>
-                  Total Enviadas
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ bgcolor: stats.successRate >= 90 ? '#10b981' : stats.successRate >= 70 ? '#f59e0b' : '#ef4444' }}>
-                <CheckCircle />
-              </Avatar>
-              <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                  {stats.successRate.toFixed(1)}%
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b' }}>
-                  Tasa de Éxito
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ bgcolor: '#8b5cf6' }}>
-                <Speed />
-              </Avatar>
-              <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                  {(stats.avgProcessingTime / 1000).toFixed(1)}s
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b' }}>
-                  Tiempo Promedio
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ bgcolor: '#f59e0b' }}>
-                <Schedule />
-              </Avatar>
-              <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                  {stats.throughputPerHour}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b' }}>
-                  Por Hora
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
+        </AnimatePresence>
       </Box>
 
-      {/* Charts */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: 3, 
-        mb: 4,
-        '& > *:first-of-type': {
-          flex: '2 1 500px',
-          minWidth: '500px'
-        },
-        '& > *:last-of-type': {
-          flex: '1 1 300px',
-          minWidth: '300px'
-        }
-      }}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
-              Notificaciones por Canal
-            </Typography>
-            <Bar
-              data={channelData}
-              options={{
-                responsive: true,
-                plugins: {
-                  legend: { position: 'top' },
-                  title: { display: false },
-                },
-                scales: {
-                  y: { beginAtZero: true },
-                },
-              }}
-            />
-          </CardContent>
-        </Card>
+      {/* Real-time Metrics */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Notificaciones Activas"
+            value={realTimeMetrics.activeNotifications}
+            icon={<Notifications />}
+            color="#6366f1"
+            loading={isLoading}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Entregas Pendientes"
+            value={realTimeMetrics.pendingDeliveries}
+            icon={<Schedule />}
+            color="#f59e0b"
+            loading={isLoading}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Fallos Recientes"
+            value={realTimeMetrics.recentFailures}
+            icon={<Error />}
+            color="#ef4444"
+            loading={isLoading}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Rendimiento Actual"
+            value={`${realTimeMetrics.currentThroughput}/h`}
+            icon={<Speed />}
+            color={getHealthColor(realTimeMetrics.systemHealth)}
+            subtitle="Entregas por hora"
+            loading={isLoading}
+          />
+        </Grid>
+      </Grid>
 
-        <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
-              Tasa de Éxito Global
-            </Typography>
-            <Doughnut
-              data={successRateData}
-              options={{
-                responsive: true,
-                plugins: {
-                  legend: { position: 'bottom' },
-                },
-              }}
-            />
-          </CardContent>
-        </Card>
-      </Box>
+      {analytics && (
+        <>
+          {/* Main Metrics */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <MetricCard
+                title="Total Enviadas"
+                value={analytics.totalSent}
+                change={5.2}
+                trend="up"
+                icon={<Campaign />}
+                color="#3b82f6"
+                loading={isLoading}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <MetricCard
+                title="Tasa de Entrega"
+                value={`${analytics.deliveryRate.toFixed(1)}%`}
+                change={2.1}
+                trend="up"
+                icon={<CheckCircle />}
+                color="#10b981"
+                loading={isLoading}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <MetricCard
+                title="Tiempo Promedio"
+                value={`${(analytics.averageDeliveryTime / 1000).toFixed(1)}s`}
+                change={-8.3}
+                trend="down"
+                icon={<Speed />}
+                color="#8b5cf6"
+                subtitle="Tiempo de entrega"
+                loading={isLoading}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <MetricCard
+                title="Tasa de Fallos"
+                value={`${analytics.failureRate.toFixed(1)}%`}
+                change={-1.2}
+                trend="down"
+                icon={<Error />}
+                color="#ef4444"
+                loading={isLoading}
+              />
+            </Grid>
+          </Grid>
 
-      {/* Channel Details */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: 3, 
-        mb: 4,
-        '& > *': {
-          flex: '1 1 300px',
-          minWidth: '300px'
-        }
-      }}>
-        {Object.entries(stats.byChannel).map(([channel, data]) => {
-          const channelConfig = {
-            email: { icon: <Email />, color: '#3b82f6', label: 'Email' },
-            sms: { icon: <Sms />, color: '#10b981', label: 'SMS' },
-            push: { icon: <PhoneAndroid />, color: '#8b5cf6', label: 'Push' },
-          }[channel];
-
-          return (
-            <Card key={channel}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                  <Avatar sx={{ bgcolor: channelConfig?.color }}>
-                    {channelConfig?.icon}
-                  </Avatar>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    {channelConfig?.label}
+          {/* Charts Section */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            {/* Daily Trends */}
+            <Grid item xs={12} lg={8}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  border: '1px solid #f1f5f9',
+                  borderRadius: 4,
+                  height: 400,
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                    Tendencias Diarias
                   </Typography>
-                </Box>
-                <Box sx={{ mb: 2 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography variant="body2">Tasa de Éxito</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {data.rate.toFixed(1)}%
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={data.rate}
+                  <Chip
+                    label="Últimos 30 días"
+                    size="small"
                     sx={{
-                      height: 8,
-                      borderRadius: 4,
-                      bgcolor: '#f1f5f9',
-                      '& .MuiLinearProgress-bar': {
-                        bgcolor: channelConfig?.color,
-                      }
+                      bgcolor: alpha('#6366f1', 0.1),
+                      color: '#6366f1',
+                      fontWeight: 600,
                     }}
                   />
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#10b981' }}>
-                      {data.sent}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#64748b' }}>
-                      Enviadas
-                    </Typography>
-                  </Box>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#ef4444' }}>
-                      {data.failed}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#64748b' }}>
-                      Fallidas
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </Box>
 
-      {/* Queue Status */}
-      {queueHealth && (
-        <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
-              Estado de la Cola de Procesamiento
-            </Typography>
-            <Box sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: 3,
-              '& > *': {
-                flex: '1 1 400px',
-                minWidth: '400px'
-              }
-            }}>
-              <Box>
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
-                    Métricas de Rendimiento
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2">Tiempo Promedio de Procesamiento:</Typography>
-                      <Chip label={queueHealth.metrics.avgProcessingTime} size="small" />
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2">Tasa de Éxito:</Typography>
-                      <Chip
-                        label={queueHealth.metrics.successRate}
-                        size="small"
-                        color={parseFloat(queueHealth.metrics.successRate) >= 90 ? 'success' : 'warning'}
+                {chartData && (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={chartData.dailyData}>
+                      <defs>
+                        <linearGradient id="colorEnviadas" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorEntregadas" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis 
+                        dataKey="date" 
+                        stroke="#94a3b8"
+                        fontSize={12}
+                        tickLine={false}
                       />
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2">Throughput:</Typography>
-                      <Chip label={queueHealth.metrics.throughput} size="small" />
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2">Pendiente más Antigua:</Typography>
-                      <Chip label={queueHealth.metrics.oldestPending} size="small" />
-                    </Box>
-                  </Box>
-                </Box>
-              </Box>
+                      <YAxis 
+                        stroke="#94a3b8"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                        }}
+                      />
+                      <Legend />
+                      <Area
+                        type="monotone"
+                        dataKey="enviadas"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#colorEnviadas)"
+                        name="Enviadas"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="entregadas"
+                        stroke="#10b981"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#colorEntregadas)"
+                        name="Entregadas"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </Paper>
+            </Grid>
 
-              <Box>
-                {queueHealth.issues.length > 0 && (
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: '#ef4444' }}>
-                      Problemas Detectados
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      {queueHealth.issues.map((issue: string, index: number) => (
-                        <Alert key={index} severity="warning" sx={{ py: 0.5 }}>
-                          <Typography variant="body2">{issue}</Typography>
-                        </Alert>
-                      ))}
-                    </Box>
-                  </Box>
+            {/* Channel Performance */}
+            <Grid item xs={12} lg={4}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  border: '1px solid #f1f5f9',
+                  borderRadius: 4,
+                  height: 400,
+                }}
+              >
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+                  Rendimiento por Canal
+                </Typography>
+
+                {chartData && (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={chartData.channelData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {chartData.channelData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 )}
-                
-                {queueHealth.recommendations.length > 0 && (
-                  <Box>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: '#3b82f6' }}>
-                      Recomendaciones
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      {queueHealth.recommendations.map((rec: string, index: number) => (
-                        <Alert key={index} severity="info" sx={{ py: 0.5 }}>
-                          <Typography variant="body2">{rec}</Typography>
-                        </Alert>
-                      ))}
+
+                <Stack spacing={2} sx={{ mt: 2 }}>
+                  {chartData?.channelData.map((channel, index) => (
+                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box
+                          sx={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            bgcolor: channel.color,
+                          }}
+                        />
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {channel.name}
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" sx={{ color: '#64748b' }}>
+                        {channel.rate.toFixed(1)}%
+                      </Typography>
                     </Box>
-                  </Box>
+                  ))}
+                </Stack>
+              </Paper>
+            </Grid>
+          </Grid>
+
+          {/* Hourly Distribution */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  border: '1px solid #f1f5f9',
+                  borderRadius: 4,
+                }}
+              >
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+                  Distribución por Horas
+                </Typography>
+
+                {chartData && (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={chartData.hourlyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis 
+                        dataKey="hora" 
+                        stroke="#94a3b8"
+                        fontSize={12}
+                        tickLine={false}
+                      />
+                      <YAxis 
+                        stroke="#94a3b8"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                        }}
+                      />
+                      <Bar
+                        dataKey="enviadas"
+                        fill="#3b82f6"
+                        radius={[4, 4, 0, 0]}
+                        name="Enviadas"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
                 )}
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
+              </Paper>
+            </Grid>
+          </Grid>
+
+          {/* Error Analysis */}
+          {analytics.topErrors.length > 0 && (
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    border: '1px solid #f1f5f9',
+                    borderRadius: 4,
+                  }}
+                >
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+                    Análisis de Errores
+                  </Typography>
+
+                  <Grid container spacing={2}>
+                    {analytics.topErrors.slice(0, 3).map((error, index) => (
+                      <Grid item xs={12} md={4} key={index}>
+                        <Box
+                          sx={{
+                            p: 2,
+                            border: '1px solid #fee2e2',
+                            borderRadius: 3,
+                            bgcolor: '#fef2f2',
+                          }}
+                        >
+                          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#dc2626', mb: 1 }}>
+                            {error.error}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#7f1d1d', mb: 1 }}>
+                            {error.count} ocurrencias ({error.percentage.toFixed(1)}%)
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                            {error.channels.map((channel, idx) => (
+                              <Chip
+                                key={idx}
+                                label={channel}
+                                size="small"
+                                sx={{
+                                  bgcolor: alpha('#dc2626', 0.1),
+                                  color: '#dc2626',
+                                  fontSize: '0.7rem',
+                                }}
+                              />
+                            ))}
+                          </Box>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Paper>
+              </Grid>
+            </Grid>
+          )}
+        </>
       )}
-    </Box>
+
+      {/* Loading overlay */}
+      {isLoading && (
+        <LinearProgress
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+            height: 3,
+            bgcolor: alpha('#6366f1', 0.1),
+            '& .MuiLinearProgress-bar': {
+              bgcolor: '#6366f1',
+            }
+          }}
+        />
+      )}
+    </Container>
   );
 };
