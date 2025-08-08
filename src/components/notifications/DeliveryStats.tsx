@@ -45,7 +45,7 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer
 } from 'recharts';
-import { NotificationQueueService, QueueStats } from '../../services/notification-queue.service';
+import { QueueStats } from '../../services/notification-queue.service';
 import { useAuth } from '../../hooks/useAuth';
 
 interface DeliveryStatsProps {
@@ -111,41 +111,35 @@ export default function DeliveryStats({ asociacionId, refreshInterval = 30000 }:
           '30d': new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
         };
 
-        const [queueStats, channelStats] = await Promise.all([
-          notificationQueueService.getQueueStats(currentAsociacionId, {
-            start: timeRanges[timeRange],
-            end: now
-          }),
-          notificationQueueService.getChannelPerformance(
-            currentAsociacionId,
-            timeRange === '1h' ? 1/24 : 
-            timeRange === '24h' ? 1 : 
-            timeRange === '7d' ? 7 : 30
-          ) as Promise<Record<string, ChannelStats>>
-        ]);
+        const queueStats = await NotificationQueueService.getQueueStats(currentAsociacionId, {
+          start: timeRanges[timeRange],
+          end: now
+        });
 
         setStats(queueStats);
 
-        setChannelPerformance(
-          Object.fromEntries(
-            Object.entries(channelStats as Record<string, ChannelStats>).map(([channel, data]) => [
-              channel,
-              {
-                channel,
-                icon: CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG]?.icon ?? null,
-                color: CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG]?.color ?? '#000',
-                total: typeof data?.total === 'number' ? data.total : 0,
-                sent: typeof data?.sent === 'number' ? data.sent : 0,
-                failed: typeof data?.failed === 'number' ? data.failed : 0,
-                pending: typeof data?.pending === 'number' ? data.pending : 0,
-                processing: typeof data?.processing === 'number' ? data.processing : 0,
-                cancelled: typeof data?.cancelled === 'number' ? data.cancelled : 0,
-                successRate: typeof data?.successRate === 'number' ? data.successRate : 0,
-                avgAttempts: typeof data?.avgAttempts === 'number' ? data.avgAttempts : 0,
-              } as ChannelStats
-            ])
-          )
-        );
+        // For now, we'll derive channel performance from the queue stats
+        // since getChannelPerformance method doesn't exist in the service
+        const channelStats: Record<string, ChannelStats> = {};
+        
+        Object.entries(queueStats.channelStats).forEach(([channel, stats]) => {
+          const total = stats.pending + stats.sent + stats.failed;
+          channelStats[channel] = {
+            channel,
+            icon: CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG]?.icon ?? null,
+            color: CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG]?.color ?? '#000',
+            total,
+            sent: stats.sent,
+            failed: stats.failed,
+            pending: stats.pending,
+            processing: 0, // Not available in current stats
+            cancelled: 0, // Not available in current stats
+            successRate: stats.successRate,
+            avgAttempts: 1, // Default value since not available
+          };
+        });
+
+        setChannelPerformance(channelStats);
       } catch (err) {
         console.error('Error loading delivery stats:', err);
         setError('Error al cargar las estadísticas de entrega');
