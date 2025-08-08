@@ -75,7 +75,7 @@ export const SimpleNotificationSettingsComponent: React.FC = () => {
       // Simular envío de notificación de prueba
       await new Promise(resolve => setTimeout(resolve, 2000));
       toast.success('Notificación de prueba enviada');
-    } catch (error) {
+    } catch{
       toast.error('Error al enviar notificación de prueba');
     } finally {
       setTestSending(false);
@@ -284,7 +284,7 @@ export const SimpleNotificationSettingsComponent: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <Alert severity="warning" sx={{ mt: 2, borderRadius: 3 }}>
-            Tienes cambios sin guardar. No olvides hacer clic en "Guardar Cambios".
+            Tienes cambios sin guardar. No olvides hacer clic en &quot;Guardar Cambios&quot;.
           </Alert>
         </motion.div>
       )}
