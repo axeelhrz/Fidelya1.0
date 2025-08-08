@@ -33,7 +33,7 @@ export const EmailTester = () => {
     setLoading(true);
     
     try {
-      console.log('🧪 Probando envío de email...');
+      console.log('🧪 Probando envío de email con credenciales configuradas...');
       
       // Crear una notificación de prueba
       const notificationData = {
@@ -92,6 +92,11 @@ export const EmailTester = () => {
     
     if (status.email.configured) {
       toast.success('✅ EmailJS está configurado correctamente');
+      console.log('📧 Credenciales EmailJS:', {
+        serviceId: 'service_r7dep5v',
+        templateId: 'template_mgmgrng',
+        publicKey: 'wp08DHZOgU6CgICb1'
+      });
     } else {
       toast.error('❌ EmailJS NO está configurado');
     }
@@ -100,7 +105,7 @@ export const EmailTester = () => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 max-w-lg mx-auto">
       <h3 className="text-lg font-semibold mb-4 text-gray-800">
-        📧 Probador de Email con Branding Fidelya
+        📧 Probador de Email - Fidelya
       </h3>
       
       <div className="space-y-4">
@@ -163,37 +168,34 @@ export const EmailTester = () => {
         </div>
       </div>
 
-      <div className="mt-4 p-3 bg-blue-50 rounded-md">
-        <p className="text-xs text-blue-800">
-          <strong>✅ Branding Personalizado:</strong><br/>
-          • Header con gradiente y logo Fidelya<br/>
-          • Diseño profesional y responsive<br/>
-          • Footer con información de la plataforma<br/>
-          • Formato HTML atractivo
+      <div className="mt-4 p-3 bg-green-50 rounded-md">
+        <p className="text-xs text-green-800">
+          <strong>✅ EmailJS Configurado:</strong><br/>
+          • Service ID: service_r7dep5v<br/>
+          • Template ID: template_mgmgrng<br/>
+          • Public Key: wp08DHZ...b1<br/>
+          • Estado: Listo para enviar
         </p>
       </div>
 
-      <div className="mt-4 p-3 bg-green-50 rounded-md">
-        <p className="text-xs text-green-800">
+      <div className="mt-4 p-3 bg-blue-50 rounded-md">
+        <p className="text-xs text-blue-800">
           <strong>📧 Vista Previa del Email:</strong><br/>
           <strong>Asunto:</strong> {testTitle} - Fidelya<br/>
-          <strong>De:</strong> Fidelya &lt;tu-email@gmail.com&gt;<br/>
-          <strong>Contenido:</strong> HTML con diseño profesional<br/>
-          • Header: 🚀 FIDELYA<br/>
-          • Título en grande<br/>
-          • Mensaje formateado<br/>
-          • Footer con info de contacto
+          <strong>De:</strong> Fidelya<br/>
+          <strong>Para:</strong> {testEmail || 'tu-email@ejemplo.com'}<br/>
+          <strong>Contenido:</strong> HTML con diseño profesional
         </p>
       </div>
 
       <div className="mt-4 p-3 bg-yellow-50 rounded-md">
         <p className="text-xs text-yellow-800">
           <strong>📋 Instrucciones:</strong><br/>
-          1. Configura EmailJS con tu cuenta de Gmail<br/>
-          2. Actualiza las variables en .env.local<br/>
-          3. Ingresa tu email para la prueba<br/>
+          1. ✅ EmailJS ya está configurado<br/>
+          2. Ingresa tu email para la prueba<br/>
+          3. Personaliza título y mensaje<br/>
           4. Haz clic en "Enviar Email"<br/>
-          5. Revisa tu bandeja de entrada
+          5. Revisa tu bandeja de entrada (y spam)
         </p>
       </div>
     </div>
