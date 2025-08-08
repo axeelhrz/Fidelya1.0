@@ -31,7 +31,6 @@ import {
   Stack,
   Alert,
   Tooltip,
-  Badge,
   alpha,
   useTheme,
   useMediaQuery,
@@ -45,21 +44,13 @@ import {
   Delete,
   ContentCopy,
   MoreVert,
-  Visibility,
   Send,
-  Schedule,
-  Star,
-  StarBorder,
   Code,
   Preview,
   Save,
-  Close,
   Refresh,
-  FilterList,
   Search,
-  Template,
   AutoAwesome,
-  Campaign,
   Email,
   Sms,
   PhoneAndroid,
@@ -480,7 +471,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
   });
   const [tagInput, setTagInput] = useState('');
   const [availableVariables, setAvailableVariables] = useState<Record<string, TemplateVariable>>({});
-  const [previewData, setPreviewData] = useState<Record<string, any>>({});
+  const [previewData, setPreviewData] = useState<Record<string, string | number | Date>>({});
 
   // Load available variables
   useEffect(() => {
@@ -488,7 +479,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
     setAvailableVariables(variables);
     
     // Set default preview data
-    const defaultPreview: Record<string, any> = {};
+    const defaultPreview: Record<string, string | number | Date> = {};
     Object.entries(variables).forEach(([key, variable]) => {
       switch (variable.type) {
         case 'text':
@@ -547,7 +538,10 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
     }
   }, [template, open]);
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (
+    field: keyof typeof formData,
+    value: string | boolean | string[] // Add other types as needed
+  ) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -626,7 +620,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
               color: '#6366f1',
             }}
           >
-            <Template />
+            <AutoAwesome />
           </Avatar>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
@@ -642,7 +636,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
       <DialogContent sx={{ pb: 2 }}>
         <Grid container spacing={3}>
           {/* Basic Information */}
-          <Grid item xs={12} md={6}>
+          <Grid xs={12} md={6}>
             <Stack spacing={3}>
               <TextField
                 fullWidth
@@ -662,7 +656,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
               />
 
               <Grid container spacing={2}>
-                <Grid item xs={4}>
+                <Grid xs={4}>
                   <FormControl fullWidth>
                     <InputLabel>Tipo</InputLabel>
                     <Select
@@ -681,7 +675,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                   </FormControl>
                 </Grid>
                 
-                <Grid item xs={4}>
+                <Grid xs={4}>
                   <FormControl fullWidth>
                     <InputLabel>Prioridad</InputLabel>
                     <Select
@@ -697,7 +691,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                   </FormControl>
                 </Grid>
                 
-                <Grid item xs={4}>
+                <Grid xs={4}>
                   <FormControl fullWidth>
                     <InputLabel>Categoría</InputLabel>
                     <Select
@@ -720,7 +714,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                   Canales de Envío
                 </Typography>
                 <Grid container spacing={1}>
-                  <Grid item xs={3}>
+                  <Grid xs={3}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -731,7 +725,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                       label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><Email sx={{ fontSize: 16 }} />Email</Box>}
                     />
                   </Grid>
-                  <Grid item xs={3}>
+                  <Grid xs={3}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -742,7 +736,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                       label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><Sms sx={{ fontSize: 16 }} />SMS</Box>}
                     />
                   </Grid>
-                  <Grid item xs={3}>
+                  <Grid xs={3}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -753,7 +747,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                       label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><PhoneAndroid sx={{ fontSize: 16 }} />Push</Box>}
                     />
                   </Grid>
-                  <Grid item xs={3}>
+                  <Grid xs={3}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -770,7 +764,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
           </Grid>
 
           {/* Content */}
-          <Grid item xs={12} md={6}>
+          <Grid xs={12} md={6}>
             <Stack spacing={3}>
               <TextField
                 fullWidth
@@ -793,7 +787,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
               />
 
               <Grid container spacing={2}>
-                <Grid item xs={6}>
+                <Grid xs={6}>
                   <TextField
                     fullWidth
                     label="URL de acción (opcional)"
@@ -801,7 +795,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                     onChange={(e) => handleInputChange('actionUrl', e.target.value)}
                   />
                 </Grid>
-                <Grid item xs={6}>
+                <Grid xs={6}>
                   <TextField
                     fullWidth
                     label="Texto del botón (opcional)"
@@ -855,7 +849,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
           </Grid>
 
           {/* Preview */}
-          <Grid item xs={12}>
+          <Grid xs={12}>
             <Paper
               elevation={0}
               sx={{
@@ -885,7 +879,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
           </Grid>
 
           {/* Available Variables */}
-          <Grid item xs={12}>
+          <Grid xs={12}>
             <Paper
               elevation={0}
               sx={{
@@ -901,7 +895,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
               
               <Grid container spacing={1}>
                 {Object.entries(availableVariables).slice(0, 12).map(([key, variable]) => (
-                  <Grid item xs={6} sm={4} md={3} key={key}>
+                  <Grid xs={6} sm={4} md={3} key={key}>
                     <Tooltip title={variable.description}>
                       <Chip
                         label={`{{${key}}}`}
@@ -1162,7 +1156,7 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
           }}
         >
           <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={4}>
+            <Grid xs={12} md={4}>
               <TextField
                 fullWidth
                 placeholder="Buscar plantillas..."
@@ -1179,7 +1173,7 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
               />
             </Grid>
             
-            <Grid item xs={12} md={2}>
+            <Grid xs={12} md={2}>
               <FormControl fullWidth>
                 <InputLabel>Tipo</InputLabel>
                 <Select
@@ -1196,7 +1190,7 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
               </FormControl>
             </Grid>
             
-            <Grid item xs={12} md={2}>
+            <Grid xs={12} md={2}>
               <FormControl fullWidth>
                 <InputLabel>Categoría</InputLabel>
                 <Select
@@ -1213,7 +1207,7 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
               </FormControl>
             </Grid>
             
-            <Grid item xs={12} md={4}>
+            <Grid xs={12} md={4}>
               <FormControlLabel
                 control={
                   <Switch
@@ -1258,7 +1252,7 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
               mb: 3,
             }}
           >
-            <Template sx={{ fontSize: 40 }} />
+            <AutoAwesome sx={{ fontSize: 40 }} />
           </Avatar>
           <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
             No se encontraron plantillas
@@ -1287,7 +1281,7 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
         <Grid container spacing={3}>
           <AnimatePresence>
             {filteredTemplates.map((template) => (
-              <Grid item xs={12} sm={6} lg={4} key={template.id}>
+              <Grid xs={12} sm={6} lg={4} key={template.id}>
                 <TemplateCard
                   template={template}
                   onEdit={handleEditTemplate}
