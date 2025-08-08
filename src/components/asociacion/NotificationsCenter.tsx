@@ -61,7 +61,7 @@ import { useSimpleNotifications } from '../../hooks/useSimpleNotifications';
 import { NotificationTemplates } from '../notifications/NotificationTemplates';
 import NotificationAutomation from '../notifications/NotificationAutomation';
 import DeliveryStats from '../notifications/DeliveryStats';
-import SimpleNotificationSettings from '../settings/SimpleNotificationSettings';
+import { SimpleNotificationSettingsComponent } from '../settings/SimpleNotificationSettings';
 import SimpleNotificationSender from '../notifications/SimpleNotificationSender';
 import SimpleNotificationHistory from '../notifications/SimpleNotificationHistory';
 
@@ -287,7 +287,7 @@ export default function NotificationsCenter() {
     { 
       label: 'Configuración', 
       icon: <Settings />, 
-      component: SimpleNotificationSettings,
+      component: SimpleNotificationSettingsComponent,
       badge: null
     }
   ];
