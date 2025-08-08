@@ -19,28 +19,18 @@ import {
   InputLabel,
   Chip,
   IconButton,
-  Tooltip,
   Alert,
   Divider,
   Stack,
   Slider,
   FormControlLabel,
   Checkbox,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Tab,
   Tabs,
-  TabPanel,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  Badge
 } from '@mui/material';
 import {
   Settings,
@@ -48,24 +38,12 @@ import {
   Sms,
   NotificationsActive,
   PhoneAndroid,
-  Schedule,
   Speed,
   Security,
-  Analytics,
-  ExpandMore,
   Add,
   Edit,
-  Delete,
   Save,
-  Cancel,
-  Warning,
-  CheckCircle,
-  Info,
-  Tune,
-  VolumeUp,
-  VolumeOff,
   AccessTime,
-  Group,
   FilterList,
   Refresh
 } from '@mui/icons-material';
@@ -117,12 +95,12 @@ interface NotificationRule {
 interface RuleCondition {
   field: string;
   operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'in' | 'not_in';
-  value: any;
+  value: string | number | boolean;
 }
 
 interface RuleAction {
   type: 'block' | 'throttle' | 'redirect' | 'modify' | 'approve';
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }
 
 interface QuietHours {
@@ -161,7 +139,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export default function EnhancedNotificationSettings() {
-  const { user } = useAuth();
+  useAuth();
   const [activeTab, setActiveTab] = useState(0);
   const [channels, setChannels] = useState<NotificationChannel[]>([]);
   const [rules, setRules] = useState<NotificationRule[]>([]);
@@ -177,9 +155,8 @@ export default function EnhancedNotificationSettings() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [editingChannel, setEditingChannel] = useState<NotificationChannel | null>(null);
-  const [editingRule, setEditingRule] = useState<NotificationRule | null>(null);
   const [channelDialogOpen, setChannelDialogOpen] = useState(false);
-  const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
+  // const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
 
   // Cargar configuración inicial
   useEffect(() => {
@@ -544,7 +521,8 @@ export default function EnhancedNotificationSettings() {
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => setRuleDialogOpen(true)}
+              // onClick={() => setRuleDialogOpen(true)}
+              disabled
             >
               Nueva Regla
             </Button>

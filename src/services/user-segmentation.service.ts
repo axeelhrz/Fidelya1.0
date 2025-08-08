@@ -52,7 +52,7 @@ export interface SegmentCriteria {
     notificationOpenRate?: { min: number; max: number };
     appUsageFrequency?: 'daily' | 'weekly' | 'monthly' | 'rarely';
   };
-  customFields?: Record<string, any>;
+  customFields?: Record<string, unknown>;
 }
 
 export interface SegmentUser {
@@ -62,7 +62,7 @@ export interface SegmentUser {
   email: string;
   phone?: string;
   lastActivity: Timestamp;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 class UserSegmentationService {
@@ -283,7 +283,7 @@ class UserSegmentationService {
     return users.filter(user => {
       // Filtro por ubicación
       if (criteria.location) {
-        const userLocation = user.metadata.ubicacion || {};
+        const userLocation = user.metadata.ubicacion as { ciudad?: string; estado?: string; pais?: string } || {};
         if (criteria.location.city && userLocation.ciudad !== criteria.location.city) return false;
         if (criteria.location.state && userLocation.estado !== criteria.location.state) return false;
         if (criteria.location.country && userLocation.pais !== criteria.location.country) return false;
@@ -297,21 +297,26 @@ class UserSegmentationService {
 
       // Filtro por rango de validaciones
       if (criteria.activity?.validationsCount) {
-        const validationsCount = user.metadata.validacionesCount || 0;
-        if (validationsCount < criteria.activity.validationsCount.min || 
-            validationsCount > criteria.activity.validationsCount.max) return false;
+        const validationsCount = typeof user.metadata.validacionesCount === 'number' ? user.metadata.validacionesCount : 0;
+        const min = criteria.activity.validationsCount.min ?? Number.MIN_SAFE_INTEGER;
+        const max = criteria.activity.validationsCount.max ?? Number.MAX_SAFE_INTEGER;
+        if (validationsCount < min || validationsCount > max) return false;
       }
 
       // Filtro por beneficios usados
       if (criteria.activity?.benefitsUsed) {
-        const benefitsUsed = user.metadata.beneficiosUsados || 0;
-        if (benefitsUsed < criteria.activity.benefitsUsed.min || 
-            benefitsUsed > criteria.activity.benefitsUsed.max) return false;
+        const benefitsUsed = typeof user.metadata.beneficiosUsados === 'number' ? user.metadata.beneficiosUsados : 0;
+        const min = criteria.activity.benefitsUsed.min ?? Number.MIN_SAFE_INTEGER;
+        const max = criteria.activity.benefitsUsed.max ?? Number.MAX_SAFE_INTEGER;
+        if (benefitsUsed < min || benefitsUsed > max) return false;
       }
 
       // Filtro por tiempo de membresía
       if (criteria.membership?.memberSince) {
-        const monthsSinceMember = this.getMonthsSince(user.metadata.createdAt);
+        let monthsSinceMember = 0;
+        if (user.metadata.createdAt && typeof (user.metadata.createdAt as Timestamp).toDate === 'function') {
+          monthsSinceMember = this.getMonthsSince(user.metadata.createdAt as Timestamp);
+        }
         if (monthsSinceMember < criteria.membership.memberSince.months) return false;
       }
 

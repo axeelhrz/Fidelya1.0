@@ -3,15 +3,12 @@ import {
   doc,
   addDoc,
   updateDoc,
-  deleteDoc,
   getDocs,
   query,
   where,
   orderBy,
-  limit,
   serverTimestamp,
   Timestamp,
-  writeBatch
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
@@ -24,7 +21,7 @@ export interface ABTest {
   variants: ABTestVariant[];
   trafficSplit: number[]; // Porcentaje para cada variante
   targetSegmentId?: string;
-  targetCriteria?: any;
+  targetCriteria?: Record<string, unknown>;
   metrics: ABTestMetrics;
   startDate: Timestamp;
   endDate?: Timestamp;
@@ -42,7 +39,7 @@ export interface ABTestVariant {
   templateId: string;
   subject?: string;
   content: string;
-  variables?: Record<string, any>;
+  variables?: Record<string, unknown>;
   isControl: boolean;
   color: string;
 }
@@ -235,7 +232,6 @@ class NotificationABTestingService {
     testId: string,
     variantId: string,
     eventType: 'sent' | 'delivered' | 'opened' | 'clicked' | 'converted',
-    userId: string
   ): Promise<void> {
     try {
       const testRef = doc(db, this.COLLECTION, testId);
@@ -254,7 +250,14 @@ class NotificationABTestingService {
       
       // Actualizar métricas
       const updatedMetrics = { ...testData.metrics };
-      updatedMetrics[`total${eventType.charAt(0).toUpperCase() + eventType.slice(1)}`]++;
+      const totalKeyMap: Record<typeof eventType, keyof ABTestMetrics> = {
+        sent: 'totalSent',
+        delivered: 'totalDelivered',
+        opened: 'totalOpened',
+        clicked: 'totalClicked',
+        converted: 'totalConverted'
+      };
+      updatedMetrics[totalKeyMap[eventType]]++;
       updatedMetrics.variants[variantId][eventType]++;
 
       // Recalcular tasas
@@ -348,8 +351,7 @@ class NotificationABTestingService {
       // Calcular significancia estadística usando test z
       const confidence = this.calculateStatisticalSignificance(
         controlMetrics,
-        variantMetrics,
-        testData.confidenceLevel
+        variantMetrics
       );
 
       const improvement = ((variantMetrics.conversionRate - controlMetrics.conversionRate) / controlMetrics.conversionRate) * 100;
@@ -393,7 +395,6 @@ class NotificationABTestingService {
   private calculateStatisticalSignificance(
     controlMetrics: VariantMetrics,
     variantMetrics: VariantMetrics,
-    confidenceLevel: number
   ): number {
     const n1 = controlMetrics.sent;
     const n2 = variantMetrics.sent;

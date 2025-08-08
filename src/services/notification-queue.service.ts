@@ -76,7 +76,7 @@ export interface RetryConfig {
   maxDelay: number; // en minutos
 }
 
-class NotificationQueueService {
+class NotificationQueueServiceImpl {
   private readonly COLLECTION = 'notification_queue';
   private readonly DEFAULT_RETRY_CONFIG: RetryConfig = {
     maxAttempts: 3,
@@ -228,12 +228,12 @@ class NotificationQueueService {
       }
 
       return result;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error processing notification:', error);
-      await this.markAsFailed(queueId, error.message);
+      await this.markAsFailed(queueId, (error instanceof Error ? error.message : String(error)));
       return {
         success: false,
-        error: error.message,
+        error: (error instanceof Error ? error.message : String(error)),
         timestamp: new Date()
       };
     }
@@ -551,28 +551,45 @@ class NotificationQueueService {
   private getRecipientContact(notification: QueuedNotification): string {
     // En un caso real, esto buscaría en la base de datos el contacto del destinatario
     // Por ahora, simulamos que está en los metadatos
-    return notification.metadata.variables?.email || 
-           notification.metadata.variables?.phone || 
-           notification.metadata.variables?.whatsapp || 
-           'unknown@example.com';
+    const variables = notification.metadata.variables || {};
+    if (typeof variables.email === 'string' && variables.email) {
+      return variables.email;
+    }
+    if (typeof variables.phone === 'string' && variables.phone) {
+      return variables.phone;
+    }
+    if (typeof variables.whatsapp === 'string' && variables.whatsapp) {
+      return variables.whatsapp;
+    }
+    return 'unknown@example.com';
   }
 
   private generateSubject(notification: QueuedNotification): string {
     const template = notification.metadata.variables?.subject || 'Notificación de {{asociacion}}';
-    return this.replaceVariables(template, notification.metadata.variables || {});
+    return this.replaceVariables(
+      String(template),
+      notification.metadata.variables as Record<string, string | number | boolean | undefined> || {}
+    );
   }
 
   private generateContent(notification: QueuedNotification): string {
     const template = notification.metadata.variables?.content || 'Tienes una nueva notificación de {{asociacion}}';
-    return this.replaceVariables(template, notification.metadata.variables || {});
+    return this.replaceVariables(
+      String(template),
+      notification.metadata.variables as Record<string, string | number | boolean | undefined> || {}
+    );
   }
 
   private generateHtmlContent(notification: QueuedNotification): string {
-    const template = notification.metadata.variables?.htmlContent || this.generateContent(notification);
-    return this.replaceVariables(template, notification.metadata.variables || {});
+    const htmlContent = notification.metadata.variables?.htmlContent;
+    const template = typeof htmlContent === 'string' ? htmlContent : this.generateContent(notification);
+    return this.replaceVariables(
+      String(template),
+      notification.metadata.variables as Record<string, string | number | boolean | undefined> || {}
+    );
   }
 
-  private replaceVariables(template: string, variables: Record<string, any>): string {
+  private replaceVariables(template: string, variables: Record<string, string | number | boolean | undefined>): string {
     let result = template;
     Object.entries(variables).forEach(([key, value]) => {
       result = result.replace(new RegExp(`{{${key}}}`, 'g'), String(value));
@@ -594,4 +611,4 @@ class NotificationQueueService {
   }
 }
 
-export const NotificationQueueService = new NotificationQueueService();
+export const NotificationQueueService = new NotificationQueueServiceImpl();

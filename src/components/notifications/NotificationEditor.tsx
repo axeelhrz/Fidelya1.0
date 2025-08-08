@@ -18,48 +18,30 @@ import {
   InputLabel,
   Chip,
   IconButton,
-  Tooltip,
   Alert,
   Divider,
   Stack,
-  Switch,
   FormControlLabel,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Tabs,
-  Tab,
-  Badge,
   Avatar,
-  LinearProgress
+  LinearProgress,
+  Checkbox
 } from '@mui/material';
 import {
-  Add,
-  Edit,
   Delete,
   Save,
   Preview,
   Send,
-  Schedule,
   Image,
-  Link,
-  FormatBold,
-  FormatItalic,
-  FormatUnderlined,
-  FormatColorText,
   FormatSize,
-  Palette,
   DragIndicator,
   ExpandMore,
-  Visibility,
   VisibilityOff,
   Code,
   SmartButton,
@@ -67,26 +49,21 @@ import {
   Sms,
   NotificationsActive,
   PhoneAndroid,
-  Group,
-  Person,
-  Business,
-  LocationOn,
-  AccessTime,
-  TrendingUp,
-  AttachMoney,
-  Star,
+  WhatsApp,
   Warning,
-  CheckCircle,
-  Info,
-  Error
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
-import { NotificationTemplatesService } from '../../services/notification-templates.service';
 
 interface NotificationElement {
   id: string;
   type: 'text' | 'image' | 'button' | 'divider' | 'variable' | 'conditional';
-  content: any;
+  content: 
+    | { text: string } // text
+    | { url: string; alt: string } // image
+    | { text: string; url: string; color: string; backgroundColor: string } // button
+    | { color: string; height: string } // divider
+    | { variable: string } // variable
+    | { condition: string; content: string }; // conditional
   style: ElementStyle;
   position: number;
 }
@@ -101,47 +78,27 @@ interface ElementStyle {
   textAlign?: 'left' | 'center' | 'right';
   borderRadius?: string;
   border?: string;
+  fontStyle?: string;
 }
 
 interface NotificationPreview {
-  channel: 'email' | 'sms' | 'push' | 'app';
+  channel: 'email' | 'sms' | 'whatsapp' | 'push' | 'app';
   subject?: string;
   content: string;
-  variables: Record<string, any>;
+  variables: Record<string, string>;
 }
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`editor-tabpanel-${index}`}
-      aria-labelledby={`editor-tab-${index}`}
-      {...other}
-    >
-      {value === index && children}
-    </div>
-  );
-}
 
 export default function NotificationEditor() {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState(0);
+  useAuth();
   const [elements, setElements] = useState<NotificationElement[]>([]);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
-  const [previewChannel, setPreviewChannel] = useState<'email' | 'sms' | 'push' | 'app'>('email');
+  const [previewChannel, setPreviewChannel] = useState<'email' | 'sms' | 'whatsapp' | 'push' | 'app'>('email');
   const [templateName, setTemplateName] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [templateCategory, setTemplateCategory] = useState('general');
   const [templateChannels, setTemplateChannels] = useState<string[]>(['email']);
-  const [variables, setVariables] = useState<Record<string, any>>({
+  const [variables] = useState<Record<string, string>>({
     nombre: 'Juan Pérez',
     asociacion: 'Mi Asociación',
     fecha: new Date().toLocaleDateString(),
@@ -286,7 +243,7 @@ export default function NotificationEditor() {
 
     const newElement: NotificationElement = {
       id: Date.now().toString(),
-      type: draggedElement as any,
+      type: draggedElement as NotificationElement['type'],
       content: getDefaultContent(draggedElement),
       style: getDefaultStyle(draggedElement),
       position: elements.length
@@ -296,7 +253,13 @@ export default function NotificationEditor() {
     setDraggedElement(null);
   };
 
-  const getDefaultContent = (type: string) => {
+  const getDefaultContent = (type: string): 
+    { text: string } |
+    { url: string; alt: string } |
+    { text: string; url: string; color: string; backgroundColor: string } |
+    { color: string; height: string } |
+    { variable: string } |
+    { condition: string; content: string } => {
     switch (type) {
       case 'text':
         return { text: 'Nuevo texto' };
@@ -311,7 +274,8 @@ export default function NotificationEditor() {
       case 'conditional':
         return { condition: 'user.type === "premium"', content: 'Contenido para usuarios premium' };
       default:
-        return {};
+        // Fallback to a valid type (e.g., text)
+        return { text: '' };
     }
   };
 
@@ -379,24 +343,34 @@ export default function NotificationEditor() {
       .forEach(element => {
         switch (element.type) {
           case 'text':
-            content += replaceVariables(element.content.text) + '\n\n';
+            if ('text' in element.content) {
+              content += replaceVariables(element.content.text) + '\n\n';
+            }
             break;
           case 'image':
             if (previewChannel === 'email') {
-              content += `[Imagen: ${element.content.alt}]\n\n`;
+              if ('alt' in element.content) {
+                content += `[Imagen: ${element.content.alt}]\n\n`;
+              }
             }
             break;
           case 'button':
-            content += `[${element.content.text}: ${element.content.url}]\n\n`;
+            if ('text' in element.content && 'url' in element.content) {
+              content += `[${element.content.text}: ${element.content.url}]\n\n`;
+            }
             break;
           case 'divider':
             content += '---\n\n';
             break;
           case 'variable':
-            content += replaceVariables(`{{${element.content.variable}}}`) + '\n\n';
+            if ('variable' in element.content) {
+              content += replaceVariables(`{{${element.content.variable}}}`) + '\n\n';
+            }
             break;
           case 'conditional':
-            content += `[Condicional: ${element.content.condition}]\n${element.content.content}\n\n`;
+            if ('condition' in element.content && 'content' in element.content) {
+              content += `[Condicional: ${element.content.condition}]\n${element.content.content}\n\n`;
+            }
             break;
         }
       });
@@ -422,16 +396,16 @@ export default function NotificationEditor() {
       setLoading(true);
       setError(null);
 
-      const template = {
-        name: templateName,
-        description: templateDescription,
-        category: templateCategory,
-        channels: templateChannels,
-        elements,
-        variables: Object.keys(variables),
-        createdBy: user?.uid || 'unknown',
-        createdAt: new Date()
-      };
+      // const template = {
+      //   name: templateName,
+      //   description: templateDescription,
+      //   category: templateCategory,
+      //   channels: templateChannels,
+      //   elements,
+      //   variables: Object.keys(variables),
+      //   createdBy: user?.uid || 'unknown',
+      //   createdAt: new Date()
+      // };
 
       // Simular guardado
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -514,7 +488,7 @@ export default function NotificationEditor() {
         </Box>
 
         {/* Contenido del elemento */}
-        {element.type === 'text' && (
+        {element.type === 'text' && 'text' in element.content && (
           <Typography 
             style={element.style}
             dangerouslySetInnerHTML={{ 
@@ -523,13 +497,15 @@ export default function NotificationEditor() {
           />
         )}
 
-        {element.type === 'image' && (
+        {element.type === 'image' && 'url' in element.content && 'alt' in element.content && (
           <Box sx={{ textAlign: element.style.textAlign || 'center' }}>
-            <img 
-              src={element.content.url} 
+            <img
+              src={element.content.url}
               alt={element.content.alt}
-              style={{ 
-                maxWidth: '100%', 
+              width={300}
+              height={200}
+              style={{
+                maxWidth: '100%',
                 height: 'auto',
                 borderRadius: element.style.borderRadius || '4px'
               }}
@@ -537,7 +513,7 @@ export default function NotificationEditor() {
           </Box>
         )}
 
-        {element.type === 'button' && (
+        {element.type === 'button' && 'backgroundColor' in element.content && 'color' in element.content && (
           <Box sx={{ textAlign: element.style.textAlign || 'center' }}>
             <Button
               variant="contained"
@@ -555,14 +531,14 @@ export default function NotificationEditor() {
         {element.type === 'divider' && (
           <Divider 
             style={{
-              backgroundColor: element.content.color,
-              height: element.content.height,
+              backgroundColor: element.type === 'divider' && 'color' in element.content ? element.content.color : undefined,
+              height: element.type === 'divider' && 'height' in element.content ? element.content.height : undefined,
               margin: element.style.margin
             }}
           />
         )}
 
-        {element.type === 'variable' && (
+        {element.type === 'variable' && 'variable' in element.content && (
           <Chip
             label={`{{${element.content.variable}}}`}
             color="primary"
@@ -574,10 +550,10 @@ export default function NotificationEditor() {
         {element.type === 'conditional' && (
           <Alert severity="info" style={element.style}>
             <Typography variant="caption" display="block">
-              Condición: {element.content.condition}
+              Condición: {'condition' in element.content ? element.content.condition : ''}
             </Typography>
             <Typography variant="body2">
-              {replaceVariables(element.content.content)}
+              {'content' in element.content ? replaceVariables(element.content.content) : ''}
             </Typography>
           </Alert>
         )}
@@ -607,9 +583,12 @@ export default function NotificationEditor() {
                   label="Texto"
                   multiline
                   rows={3}
-                  value={element.content.text}
+                  value={'text' in element.content ? element.content.text : ''}
                   onChange={(e) => handleElementUpdate(element.id, {
-                    content: { ...element.content, text: e.target.value }
+                    content: { 
+                      ...element.content, 
+                      ...(typeof element.content === 'object' && 'text' in element.content ? { text: e.target.value } : {}) 
+                    }
                   })}
                   fullWidth
                 />
@@ -635,7 +614,7 @@ export default function NotificationEditor() {
                   <Select
                     value={element.style.textAlign || 'left'}
                     onChange={(e) => handleElementUpdate(element.id, {
-                      style: { ...element.style, textAlign: e.target.value as any }
+                      style: { ...element.style, textAlign: e.target.value as 'left' | 'center' | 'right' }
                     })}
                   >
                     <MenuItem value="left">Izquierda</MenuItem>
@@ -650,7 +629,7 @@ export default function NotificationEditor() {
               <>
                 <TextField
                   label="Texto del botón"
-                  value={element.content.text}
+                  value={'text' in element.content ? element.content.text : ''}
                   onChange={(e) => handleElementUpdate(element.id, {
                     content: { ...element.content, text: e.target.value }
                   })}
@@ -658,7 +637,7 @@ export default function NotificationEditor() {
                 />
                 <TextField
                   label="URL"
-                  value={element.content.url}
+                  value={'url' in element.content ? element.content.url : ''}
                   onChange={(e) => handleElementUpdate(element.id, {
                     content: { ...element.content, url: e.target.value }
                   })}
@@ -668,7 +647,11 @@ export default function NotificationEditor() {
                   <TextField
                     label="Color del texto"
                     type="color"
-                    value={element.content.color || '#ffffff'}
+                    value={
+                      'color' in element.content
+                        ? element.content.color
+                        : '#ffffff'
+                    }
                     onChange={(e) => handleElementUpdate(element.id, {
                       content: { ...element.content, color: e.target.value }
                     })}
@@ -676,7 +659,11 @@ export default function NotificationEditor() {
                   <TextField
                     label="Color de fondo"
                     type="color"
-                    value={element.content.backgroundColor || '#1976d2'}
+                    value={
+                      'backgroundColor' in element.content
+                        ? element.content.backgroundColor
+                        : '#1976d2'
+                    }
                     onChange={(e) => handleElementUpdate(element.id, {
                       content: { ...element.content, backgroundColor: e.target.value }
                     })}
@@ -689,15 +676,18 @@ export default function NotificationEditor() {
               <>
                 <TextField
                   label="URL de la imagen"
-                  value={element.content.url}
+                  value={'url' in element.content ? element.content.url : ''}
                   onChange={(e) => handleElementUpdate(element.id, {
-                    content: { ...element.content, url: e.target.value }
+                    content: { 
+                      ...element.content, 
+                      ...(typeof element.content === 'object' && 'url' in element.content ? { url: e.target.value } : {}) 
+                    }
                   })}
                   fullWidth
                 />
                 <TextField
                   label="Texto alternativo"
-                  value={element.content.alt}
+                  value={'alt' in element.content ? element.content.alt : ''}
                   onChange={(e) => handleElementUpdate(element.id, {
                     content: { ...element.content, alt: e.target.value }
                   })}
@@ -710,7 +700,11 @@ export default function NotificationEditor() {
               <FormControl fullWidth>
                 <InputLabel>Variable</InputLabel>
                 <Select
-                  value={element.content.variable}
+                  value={
+                    'variable' in element.content
+                      ? element.content.variable
+                      : ''
+                  }
                   onChange={(e) => handleElementUpdate(element.id, {
                     content: { ...element.content, variable: e.target.value }
                   })}
@@ -783,7 +777,7 @@ export default function NotificationEditor() {
             <InputLabel>Canal</InputLabel>
             <Select
               value={previewChannel}
-              onChange={(e) => setPreviewChannel(e.target.value as any)}
+              onChange={(e) => setPreviewChannel(e.target.value as 'email' | 'sms' | 'whatsapp' | 'push' | 'app')}
             >
               <MenuItem value="email">
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -795,6 +789,12 @@ export default function NotificationEditor() {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Sms fontSize="small" />
                   SMS
+                </Box>
+              </MenuItem>
+              <MenuItem value="whatsapp">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <WhatsApp fontSize="small" />
+                  WhatsApp
                 </Box>
               </MenuItem>
               <MenuItem value="push">
@@ -936,6 +936,32 @@ export default function NotificationEditor() {
                 </Box>
               )}
 
+              {previewChannel === 'whatsapp' && (
+                <Box sx={{ 
+                  backgroundColor: '#dcf8c6', 
+                  p: 2, 
+                  borderRadius: 2,
+                  maxWidth: 350,
+                  mx: 'auto',
+                  position: 'relative'
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Avatar sx={{ width: 24, height: 24, backgroundColor: '#25d366' }}>
+                      <WhatsApp fontSize="small" />
+                    </Avatar>
+                    <Typography variant="body2" fontWeight="bold">
+                      {variables.asociacion}
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {generatePreview().content}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'right', mt: 1 }}>
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </Typography>
+                </Box>
+              )}
+
               {(previewChannel === 'push' || previewChannel === 'app') && (
                 <Box sx={{ 
                   backgroundColor: '#fff', 
@@ -1068,7 +1094,7 @@ export default function NotificationEditor() {
                 Canales compatibles
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap">
-                {['email', 'sms', 'push', 'app'].map((channel) => (
+                {['email', 'sms', 'whatsapp', 'push', 'app'].map((channel) => (
                   <FormControlLabel
                     key={channel}
                     control={

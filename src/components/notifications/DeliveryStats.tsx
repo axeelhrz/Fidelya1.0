@@ -95,54 +95,66 @@ export default function DeliveryStats({ asociacionId, refreshInterval = 30000 }:
   const currentAsociacionId = asociacionId || user?.asociacionId;
 
   // Cargar estadísticas
-  const loadStats = React.useCallback(async () => {
-    if (!currentAsociacionId) return;
+  const loadStats = React.useCallback(
+    async () => {
+      if (!currentAsociacionId) return;
 
-    try {
-      setLoading(true);
-      setError(null);
+      try {
+        setLoading(true);
+        setError(null);
 
-      const now = new Date();
-      const timeRanges = {
-        '1h': new Date(now.getTime() - 60 * 60 * 1000),
-        '24h': new Date(now.getTime() - 24 * 60 * 60 * 1000),
-        '7d': new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-        '30d': new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-      };
+        const now = new Date();
+        const timeRanges = {
+          '1h': new Date(now.getTime() - 60 * 60 * 1000),
+          '24h': new Date(now.getTime() - 24 * 60 * 60 * 1000),
+          '7d': new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+          '30d': new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        };
 
-      const [queueStats, channelStats] = await Promise.all([
-        notificationQueueService.getQueueStats(currentAsociacionId, {
-          start: timeRanges[timeRange],
-          end: now
-        }),
-        notificationQueueService.getChannelPerformance(currentAsociacionId, 
-          timeRange === '1h' ? 1/24 : 
-          timeRange === '24h' ? 1 : 
-          timeRange === '7d' ? 7 : 30
-        )
-      ]);
+        const [queueStats, channelStats] = await Promise.all([
+          notificationQueueService.getQueueStats(currentAsociacionId, {
+            start: timeRanges[timeRange],
+            end: now
+          }),
+          notificationQueueService.getChannelPerformance(
+            currentAsociacionId,
+            timeRange === '1h' ? 1/24 : 
+            timeRange === '24h' ? 1 : 
+            timeRange === '7d' ? 7 : 30
+          ) as Promise<Record<string, ChannelStats>>
+        ]);
 
-      setStats(queueStats);
-      setChannelPerformance(
-        Object.fromEntries(
-          Object.entries(channelStats).map(([channel, data]) => [
-            channel,
-            {
+        setStats(queueStats);
+
+        setChannelPerformance(
+          Object.fromEntries(
+            Object.entries(channelStats as Record<string, ChannelStats>).map(([channel, data]) => [
               channel,
-              icon: CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG]?.icon ?? null,
-              color: CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG]?.color ?? '#000',
-              ...data
-            }
-          ])
-        )
-      );
-    } catch (err) {
-      console.error('Error loading delivery stats:', err);
-      setError('Error al cargar las estadísticas de entrega');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentAsociacionId, timeRange]);
+              {
+                channel,
+                icon: CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG]?.icon ?? null,
+                color: CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG]?.color ?? '#000',
+                total: typeof data?.total === 'number' ? data.total : 0,
+                sent: typeof data?.sent === 'number' ? data.sent : 0,
+                failed: typeof data?.failed === 'number' ? data.failed : 0,
+                pending: typeof data?.pending === 'number' ? data.pending : 0,
+                processing: typeof data?.processing === 'number' ? data.processing : 0,
+                cancelled: typeof data?.cancelled === 'number' ? data.cancelled : 0,
+                successRate: typeof data?.successRate === 'number' ? data.successRate : 0,
+                avgAttempts: typeof data?.avgAttempts === 'number' ? data.avgAttempts : 0,
+              } as ChannelStats
+            ])
+          )
+        );
+      } catch (err) {
+        console.error('Error loading delivery stats:', err);
+        setError('Error al cargar las estadísticas de entrega');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [currentAsociacionId, timeRange]
+  );
 
   // Auto-refresh
   useEffect(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
@@ -15,7 +15,6 @@ import {
   Tab,
   Badge,
   IconButton,
-  Tooltip,
   Alert,
   Divider,
   Stack,
@@ -30,34 +29,23 @@ import {
   useTheme,
   Drawer,
   List,
-  ListItem,
   ListItemIcon,
   ListItemText,
   ListItemButton
 } from '@mui/material';
 import {
   Dashboard,
-  Template,
   Campaign,
   Analytics,
   Settings,
   AutoMode,
-  Science,
-  Group,
   Send,
   Schedule,
-  Notifications,
-  TrendingUp,
-  Speed,
   CheckCircle,
-  Warning,
-  Error,
   Info,
   Add,
   Edit,
   Refresh,
-  FilterList,
-  Search,
   MoreVert,
   Close,
   Menu,
@@ -112,12 +100,10 @@ export default function NotificationsCenter() {
   const {
     templates,
     campaigns,
-    metrics,
     queueStats,
     loadingTemplates,
     loadingCampaigns,
     loadingMetrics,
-    loadingQueue,
     error,
     success,
     clearMessages,
@@ -143,7 +129,7 @@ export default function NotificationsCenter() {
     },
     { 
       label: 'Plantillas', 
-      icon: <Template />, 
+      icon: <Email />, 
       component: NotificationTemplates,
       badge: templates.length
     },
@@ -183,7 +169,7 @@ export default function NotificationsCenter() {
   const quickActions: QuickAction[] = [
     {
       label: 'Nueva Plantilla',
-      icon: <Template />,
+      icon: <Email />,
       color: '#1976d2',
       action: () => setActiveTab(2) // Editor tab
     },
@@ -227,7 +213,8 @@ export default function NotificationsCenter() {
   const getSystemHealthStatus = () => {
     if (!queueStats) return { status: 'unknown', color: '#9e9e9e', label: 'Desconocido' };
     
-    const errorRate = queueStats.failed / (queueStats.processed || 1);
+    const failed = typeof queueStats.failed === 'number' ? queueStats.failed : 0;
+    const errorRate = failed / (typeof queueStats.processed === 'number' ? queueStats.processed : 1);
     
     if (errorRate < 0.01) return { status: 'healthy', color: '#4caf50', label: 'Saludable' };
     if (errorRate < 0.05) return { status: 'warning', color: '#ff9800', label: 'Advertencia' };
@@ -304,7 +291,7 @@ export default function NotificationsCenter() {
                 
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="h4" color="info.main">
-                    {queueStats?.pending || 0}
+                    {`${queueStats?.pending ?? 0}`}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     En Cola
@@ -333,11 +320,14 @@ export default function NotificationsCenter() {
                   </Box>
                   <LinearProgress 
                     variant="determinate" 
-                    value={queueStats.processed / (queueStats.total || 1) * 100}
+                    value={
+                      (typeof queueStats.processed === 'number' ? queueStats.processed : 0) / 
+                      (typeof queueStats.total === 'number' && queueStats.total > 0 ? queueStats.total : 1) * 100
+                    }
                     sx={{ height: 8, borderRadius: 4 }}
                   />
                   <Typography variant="caption" color="text.secondary">
-                    {queueStats.processed} / {queueStats.total} procesadas
+                    {(typeof queueStats?.processed === 'number' ? queueStats.processed : 0)} / {(typeof queueStats?.total === 'number' ? queueStats.total : 0)} procesadas
                   </Typography>
                 </Box>
               )}
@@ -370,7 +360,7 @@ export default function NotificationsCenter() {
           <ListItemButton
             key={index}
             selected={activeTab === index}
-            onClick={() => handleTabChange({} as any, index)}
+            onClick={(event) => handleTabChange(event, index)}
           >
             <ListItemIcon>
               <Badge badgeContent={tab.badge} color="primary">

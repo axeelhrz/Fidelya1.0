@@ -18,7 +18,6 @@ import {
   InputLabel,
   Chip,
   IconButton,
-  Tooltip,
   Alert,
   Divider,
   Stack,
@@ -28,15 +27,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemSecondaryAction,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Badge,
   Avatar,
   LinearProgress,
   Stepper,
@@ -48,45 +38,16 @@ import {
   Add,
   Edit,
   Delete,
-  Save,
   PlayArrow,
   Pause,
-  Stop,
-  Schedule,
   AutoMode,
-  SmartToy,
-  TrendingUp,
   Group,
   Person,
-  Business,
-  LocationOn,
-  AccessTime,
-  AttachMoney,
-  Star,
-  Warning,
-  CheckCircle,
-  Info,
-  Error,
-  ExpandMore,
   Refresh,
   Settings,
-  Timeline,
-  FilterList,
-  Analytics,
   Notifications,
-  Email,
-  Sms,
-  NotificationsActive,
-  PhoneAndroid,
-  EventNote,
-  Repeat,
   Timer,
-  Speed,
-  Psychology,
-  Science
 } from '@mui/icons-material';
-import { useAuth } from '../../hooks/useAuth';
-import { NotificationSchedulerService } from '../../services/notification-scheduler.service';
 
 interface AutomationRule {
   id: string;
@@ -107,19 +68,19 @@ interface AutomationTrigger {
   event?: string;
   schedule?: string;
   webhook?: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }
 
 interface AutomationCondition {
   field: string;
   operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'in' | 'not_in';
-  value: any;
+  value: string | number | boolean | Date | string[] | number[];
   logicalOperator?: 'AND' | 'OR';
 }
 
 interface AutomationAction {
   type: 'send_notification' | 'create_segment' | 'update_user' | 'webhook' | 'delay';
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }
 
 interface AutomationSchedule {
@@ -142,7 +103,6 @@ interface AutomationStats {
 }
 
 export default function NotificationAutomation() {
-  const { user } = useAuth();
   const [automationRules, setAutomationRules] = useState<AutomationRule[]>([]);
   const [selectedRule, setSelectedRule] = useState<AutomationRule | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -684,7 +644,7 @@ export default function NotificationAutomation() {
                 value={newRule.trigger?.type || 'event'}
                 onChange={(e) => setNewRule(prev => ({
                   ...prev,
-                  trigger: { ...prev.trigger!, type: e.target.value as any }
+                  trigger: { ...prev.trigger!, type: e.target.value as 'event' | 'schedule' | 'condition' | 'webhook' }
                 }))}
               >
                 <MenuItem value="event">Evento</MenuItem>
@@ -770,7 +730,7 @@ export default function NotificationAutomation() {
                         value={condition.operator}
                         onChange={(e) => {
                           const newConditions = [...(newRule.conditions || [])];
-                          newConditions[index].operator = e.target.value as any;
+                          newConditions[index].operator = e.target.value as AutomationCondition['operator'];
                           setNewRule(prev => ({ ...prev, conditions: newConditions }));
                         }}
                       >
@@ -832,7 +792,7 @@ export default function NotificationAutomation() {
                       value={action.type}
                       onChange={(e) => {
                         const newActions = [...(newRule.actions || [])];
-                        newActions[index].type = e.target.value as any;
+                        newActions[index].type = e.target.value as AutomationAction["type"];
                         setNewRule(prev => ({ ...prev, actions: newActions }));
                       }}
                     >
@@ -966,7 +926,7 @@ export default function NotificationAutomation() {
               <InputLabel>Filtrar</InputLabel>
               <Select
                 value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as any)}
+                onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'inactive')}
               >
                 <MenuItem value="all">Todas</MenuItem>
                 <MenuItem value="active">Activas</MenuItem>
