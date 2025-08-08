@@ -13,25 +13,36 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { 
+  notificationProvidersService, 
+  EmailProvider, 
+  WhatsAppProvider, 
+  SMSProvider,
+  NotificationPayload,
+  DeliveryResult
+} from './notification-providers.service';
 
 export interface QueuedNotification {
   id?: string;
   notificationId: string;
   recipientId: string;
   recipientType: 'socio' | 'comercio' | 'asociacion';
-  channel: 'email' | 'sms' | 'push' | 'app';
+  channel: 'email' | 'sms' | 'whatsapp' | 'push' | 'app';
   priority: 'low' | 'normal' | 'high' | 'urgent';
-  status: 'pending' | 'processing' | 'sent' | 'failed' | 'cancelled';
+  status: 'pending' | 'processing' | 'sent' | 'failed' | 'cancelled' | 'paused';
   scheduledFor: Timestamp;
   attempts: number;
   maxAttempts: number;
   lastAttempt?: Timestamp;
   errorMessage?: string;
+  deliveryResult?: DeliveryResult;
   metadata: {
     templateId?: string;
     variables?: Record<string, unknown>;
     segmentId?: string;
     campaignId?: string;
+    asociacionId?: string;
+    providerConfig?: EmailProvider | WhatsAppProvider | SMSProvider;
   };
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -43,9 +54,19 @@ export interface QueueStats {
   sent: number;
   failed: number;
   cancelled: number;
+  paused: number;
   total: number;
+  processed: number;
   avgProcessingTime: number;
   successRate: number;
+  isProcessing: boolean;
+  lastProcessed?: Date;
+  channelStats: Record<string, {
+    pending: number;
+    sent: number;
+    failed: number;
+    successRate: number;
+  }>;
 }
 
 export interface RetryConfig {
@@ -62,6 +83,29 @@ class NotificationQueueService {
     backoffMultiplier: 2,
     initialDelay: 5,
     maxDelay: 60
+  };
+
+  // Configuraciones por defecto de proveedores
+  private readonly DEFAULT_PROVIDERS = {
+    email: {
+      name: 'resend' as const,
+      apiKey: process.env.RESEND_API_KEY || '',
+      fromEmail: process.env.FROM_EMAIL || 'noreply@asociacion.com',
+      fromName: process.env.FROM_NAME || 'Mi Asociación'
+    },
+    whatsapp: {
+      name: 'meta' as const,
+      apiKey: process.env.WHATSAPP_API_KEY || '',
+      phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || '',
+      accessToken: process.env.WHATSAPP_ACCESS_TOKEN || ''
+    },
+    sms: {
+      name: 'twilio' as const,
+      apiKey: process.env.TWILIO_API_KEY || '',
+      accountSid: process.env.TWILIO_ACCOUNT_SID || '',
+      authToken: process.env.TWILIO_AUTH_TOKEN || '',
+      fromNumber: process.env.TWILIO_FROM_NUMBER || ''
+    }
   };
 
   // Agregar notificación a la cola
@@ -139,6 +183,100 @@ class NotificationQueueService {
     }
   }
 
+  // Procesar una notificación específica
+  async processNotification(queueId: string): Promise<DeliveryResult> {
+    try {
+      // Marcar como procesándose
+      await this.markAsProcessing(queueId);
+
+      // Obtener la notificación
+      const queueDoc = await getDocs(query(
+        collection(db, this.COLLECTION),
+        where('__name__', '==', queueId)
+      ));
+
+      if (queueDoc.empty) {
+        throw new Error('Queue item not found');
+      }
+
+      const queueData = queueDoc.docs[0].data() as QueuedNotification;
+      
+      // Preparar el payload
+      const payload: NotificationPayload = {
+        to: this.getRecipientContact(queueData),
+        subject: this.generateSubject(queueData),
+        content: this.generateContent(queueData),
+        htmlContent: this.generateHtmlContent(queueData),
+        variables: queueData.metadata.variables || {}
+      };
+
+      // Obtener configuración del proveedor
+      const provider = queueData.metadata.providerConfig || this.getDefaultProvider(queueData.channel);
+
+      // Enviar notificación
+      const result = await notificationProvidersService.sendNotification(
+        queueData.channel,
+        provider,
+        payload
+      );
+
+      // Actualizar estado según resultado
+      if (result.success) {
+        await this.markAsSent(queueId, result);
+      } else {
+        await this.markAsFailed(queueId, result.error || 'Unknown error');
+      }
+
+      return result;
+    } catch (error: any) {
+      console.error('Error processing notification:', error);
+      await this.markAsFailed(queueId, error.message);
+      return {
+        success: false,
+        error: error.message,
+        timestamp: new Date()
+      };
+    }
+  }
+
+  // Procesar cola automáticamente
+  async processQueue(batchSize: number = 10): Promise<{
+    processed: number;
+    successful: number;
+    failed: number;
+    results: DeliveryResult[];
+  }> {
+    try {
+      const notifications = await this.getNextNotifications(batchSize);
+      const results: DeliveryResult[] = [];
+      let successful = 0;
+      let failed = 0;
+
+      for (const notification of notifications) {
+        if (notification.id) {
+          const result = await this.processNotification(notification.id);
+          results.push(result);
+          
+          if (result.success) {
+            successful++;
+          } else {
+            failed++;
+          }
+        }
+      }
+
+      return {
+        processed: notifications.length,
+        successful,
+        failed,
+        results
+      };
+    } catch (error) {
+      console.error('Error processing queue:', error);
+      throw error;
+    }
+  }
+
   // Marcar notificación como procesándose
   async markAsProcessing(queueId: string): Promise<void> {
     try {
@@ -154,13 +292,13 @@ class NotificationQueueService {
   }
 
   // Marcar notificación como enviada
-  async markAsSent(queueId: string, deliveryInfo?: Record<string, unknown>): Promise<void> {
+  async markAsSent(queueId: string, deliveryResult: DeliveryResult): Promise<void> {
     try {
       const queueRef = doc(db, this.COLLECTION, queueId);
       await updateDoc(queueRef, {
         status: 'sent',
-        updatedAt: serverTimestamp(),
-        deliveryInfo
+        deliveryResult,
+        updatedAt: serverTimestamp()
       });
     } catch (error) {
       console.error('Error marking notification as sent:', error);
@@ -235,22 +373,59 @@ class NotificationQueueService {
     }
   }
 
-  // Cancelar múltiples notificaciones
-  async cancelNotifications(queueIds: string[]): Promise<void> {
+  // Pausar/reanudar procesamiento de cola
+  async pauseProcessing(asociacionId?: string): Promise<void> {
     try {
+      let q = query(
+        collection(db, this.COLLECTION),
+        where('status', '==', 'pending')
+      );
+
+      if (asociacionId) {
+        q = query(q, where('metadata.asociacionId', '==', asociacionId));
+      }
+
+      const snapshot = await getDocs(q);
       const batch = writeBatch(db);
 
-      for (const queueId of queueIds) {
-        const queueRef = doc(db, this.COLLECTION, queueId);
-        batch.update(queueRef, {
-          status: 'cancelled',
+      snapshot.docs.forEach(doc => {
+        batch.update(doc.ref, {
+          status: 'paused',
           updatedAt: serverTimestamp()
         });
-      }
+      });
 
       await batch.commit();
     } catch (error) {
-      console.error('Error cancelling notifications:', error);
+      console.error('Error pausing processing:', error);
+      throw error;
+    }
+  }
+
+  async resumeProcessing(asociacionId?: string): Promise<void> {
+    try {
+      let q = query(
+        collection(db, this.COLLECTION),
+        where('status', '==', 'paused')
+      );
+
+      if (asociacionId) {
+        q = query(q, where('metadata.asociacionId', '==', asociacionId));
+      }
+
+      const snapshot = await getDocs(q);
+      const batch = writeBatch(db);
+
+      snapshot.docs.forEach(doc => {
+        batch.update(doc.ref, {
+          status: 'pending',
+          updatedAt: serverTimestamp()
+        });
+      });
+
+      await batch.commit();
+    } catch (error) {
+      console.error('Error resuming processing:', error);
       throw error;
     }
   }
@@ -274,15 +449,19 @@ class NotificationQueueService {
       const snapshot = await getDocs(q);
       const notifications = snapshot.docs.map(doc => doc.data() as QueuedNotification);
 
-      const stats = {
+      const stats: QueueStats = {
         pending: 0,
         processing: 0,
         sent: 0,
         failed: 0,
         cancelled: 0,
+        paused: 0,
         total: notifications.length,
+        processed: 0,
         avgProcessingTime: 0,
-        successRate: 0
+        successRate: 0,
+        isProcessing: false,
+        channelStats: {}
       };
 
       let totalProcessingTime = 0;
@@ -291,12 +470,31 @@ class NotificationQueueService {
       notifications.forEach(notification => {
         stats[notification.status]++;
 
+        // Estadísticas por canal
+        if (!stats.channelStats[notification.channel]) {
+          stats.channelStats[notification.channel] = {
+            pending: 0,
+            sent: 0,
+            failed: 0,
+            successRate: 0
+          };
+        }
+
+        const channelStat = stats.channelStats[notification.channel];
+        if (notification.status === 'pending') channelStat.pending++;
+        if (notification.status === 'sent') channelStat.sent++;
+        if (notification.status === 'failed') channelStat.failed++;
+
         if (notification.status === 'sent' && notification.lastAttempt) {
           const processingTime = notification.lastAttempt.toMillis() - notification.createdAt.toMillis();
           totalProcessingTime += processingTime;
           processedCount++;
         }
       });
+
+      // Calcular estadísticas finales
+      stats.processed = stats.sent + stats.failed;
+      stats.isProcessing = stats.processing > 0;
 
       if (processedCount > 0) {
         stats.avgProcessingTime = totalProcessingTime / processedCount / 1000 / 60; // en minutos
@@ -306,6 +504,15 @@ class NotificationQueueService {
         stats.successRate = (stats.sent / stats.total) * 100;
       }
 
+      // Calcular success rate por canal
+      Object.keys(stats.channelStats).forEach(channel => {
+        const channelStat = stats.channelStats[channel];
+        const channelTotal = channelStat.pending + channelStat.sent + channelStat.failed;
+        if (channelTotal > 0) {
+          channelStat.successRate = (channelStat.sent / channelTotal) * 100;
+        }
+      });
+
       return stats;
     } catch (error) {
       console.error('Error getting queue stats:', error);
@@ -313,37 +520,8 @@ class NotificationQueueService {
     }
   }
 
-  // Obtener notificaciones por estado
-  async getNotificationsByStatus(
-    status: QueuedNotification['status'],
-    asociacionId?: string,
-    limitCount: number = 50
-  ): Promise<QueuedNotification[]> {
-    try {
-      let q = query(
-        collection(db, this.COLLECTION),
-        where('status', '==', status),
-        orderBy('createdAt', 'desc'),
-        limit(limitCount)
-      );
-
-      if (asociacionId) {
-        q = query(q, where('metadata.asociacionId', '==', asociacionId));
-      }
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as QueuedNotification));
-    } catch (error) {
-      console.error('Error getting notifications by status:', error);
-      throw error;
-    }
-  }
-
   // Limpiar notificaciones antiguas
-  async cleanupOldNotifications(daysOld: number = 30): Promise<number> {
+  async clearOldNotifications(daysOld: number = 30): Promise<number> {
     try {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysOld);
@@ -369,179 +547,51 @@ class NotificationQueueService {
     }
   }
 
-  // Reenviar notificaciones fallidas
-  async retryFailedNotifications(asociacionId?: string, maxAge?: number): Promise<number> {
-    try {
-      let q = query(
-        collection(db, this.COLLECTION),
-        where('status', '==', 'failed')
-      );
-
-      if (asociacionId) {
-        q = query(q, where('metadata.asociacionId', '==', asociacionId));
-      }
-
-      if (maxAge) {
-        const cutoffDate = new Date();
-        cutoffDate.setHours(cutoffDate.getHours() - maxAge);
-        q = query(q, where('createdAt', '>=', Timestamp.fromDate(cutoffDate)));
-      }
-
-      const snapshot = await getDocs(q);
-      const batch = writeBatch(db);
-      let retryCount = 0;
-
-      snapshot.docs.forEach(doc => {
-        const data = doc.data() as QueuedNotification;
-        
-        // Solo reintentar si no ha excedido el máximo de intentos
-        if (data.attempts < data.maxAttempts) {
-          batch.update(doc.ref, {
-            status: 'pending',
-            scheduledFor: serverTimestamp(),
-            errorMessage: null,
-            updatedAt: serverTimestamp()
-          });
-          retryCount++;
-        }
-      });
-
-      await batch.commit();
-      return retryCount;
-    } catch (error) {
-      console.error('Error retrying failed notifications:', error);
-      throw error;
-    }
+  // Métodos auxiliares privados
+  private getRecipientContact(notification: QueuedNotification): string {
+    // En un caso real, esto buscaría en la base de datos el contacto del destinatario
+    // Por ahora, simulamos que está en los metadatos
+    return notification.metadata.variables?.email || 
+           notification.metadata.variables?.phone || 
+           notification.metadata.variables?.whatsapp || 
+           'unknown@example.com';
   }
 
-  // Obtener métricas de rendimiento por canal
-  async getChannelPerformance(
-    asociacionId?: string,
-    days: number = 7
-  ): Promise<Record<string, {
-    total: number;
-    sent: number;
-    failed: number;
-    pending: number;
-    processing: number;
-    cancelled: number;
-    avgAttempts: number;
-    successRate: number;
-  }>> {
-    try {
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
-
-      let q = query(
-        collection(db, this.COLLECTION),
-        where('createdAt', '>=', Timestamp.fromDate(startDate))
-      );
-
-      if (asociacionId) {
-        q = query(q, where('metadata.asociacionId', '==', asociacionId));
-      }
-
-      const snapshot = await getDocs(q);
-      const notifications = snapshot.docs.map(doc => doc.data() as QueuedNotification);
-
-      const channelStats: Record<string, {
-        total: number;
-        sent: number;
-        failed: number;
-        pending: number;
-        processing: number;
-        cancelled: number;
-        avgAttempts: number;
-        successRate: number;
-      }> = {};
-
-      notifications.forEach(notification => {
-        const channel = notification.channel;
-        
-        if (!channelStats[channel]) {
-          channelStats[channel] = {
-            total: 0,
-            sent: 0,
-            failed: 0,
-            pending: 0,
-            processing: 0,
-            cancelled: 0,
-            avgAttempts: 0,
-            successRate: 0
-          };
-        }
-
-        channelStats[channel].total++;
-        channelStats[channel][notification.status]++;
-        channelStats[channel].avgAttempts += notification.attempts;
-      });
-
-      // Calcular promedios y tasas de éxito
-      Object.keys(channelStats).forEach(channel => {
-        const stats = channelStats[channel];
-        stats.avgAttempts = stats.avgAttempts / stats.total;
-        stats.successRate = (stats.sent / stats.total) * 100;
-      });
-
-      return channelStats;
-    } catch (error) {
-      console.error('Error getting channel performance:', error);
-      throw error;
-    }
+  private generateSubject(notification: QueuedNotification): string {
+    const template = notification.metadata.variables?.subject || 'Notificación de {{asociacion}}';
+    return this.replaceVariables(template, notification.metadata.variables || {});
   }
 
-  // Pausar/reanudar procesamiento de cola
-  async pauseQueue(asociacionId: string): Promise<void> {
-    try {
-      // Marcar todas las notificaciones pendientes como pausadas
-      const q = query(
-        collection(db, this.COLLECTION),
-        where('status', '==', 'pending'),
-        where('metadata.asociacionId', '==', asociacionId)
-      );
-
-      const snapshot = await getDocs(q);
-      const batch = writeBatch(db);
-
-      snapshot.docs.forEach(doc => {
-        batch.update(doc.ref, {
-          status: 'paused',
-          updatedAt: serverTimestamp()
-        });
-      });
-
-      await batch.commit();
-    } catch (error) {
-      console.error('Error pausing queue:', error);
-      throw error;
-    }
+  private generateContent(notification: QueuedNotification): string {
+    const template = notification.metadata.variables?.content || 'Tienes una nueva notificación de {{asociacion}}';
+    return this.replaceVariables(template, notification.metadata.variables || {});
   }
 
-  async resumeQueue(asociacionId: string): Promise<void> {
-    try {
-      // Reanudar todas las notificaciones pausadas
-      const q = query(
-        collection(db, this.COLLECTION),
-        where('status', '==', 'paused'),
-        where('metadata.asociacionId', '==', asociacionId)
-      );
+  private generateHtmlContent(notification: QueuedNotification): string {
+    const template = notification.metadata.variables?.htmlContent || this.generateContent(notification);
+    return this.replaceVariables(template, notification.metadata.variables || {});
+  }
 
-      const snapshot = await getDocs(q);
-      const batch = writeBatch(db);
+  private replaceVariables(template: string, variables: Record<string, any>): string {
+    let result = template;
+    Object.entries(variables).forEach(([key, value]) => {
+      result = result.replace(new RegExp(`{{${key}}}`, 'g'), String(value));
+    });
+    return result;
+  }
 
-      snapshot.docs.forEach(doc => {
-        batch.update(doc.ref, {
-          status: 'pending',
-          updatedAt: serverTimestamp()
-        });
-      });
-
-      await batch.commit();
-    } catch (error) {
-      console.error('Error resuming queue:', error);
-      throw error;
+  private getDefaultProvider(channel: string): EmailProvider | WhatsAppProvider | SMSProvider {
+    switch (channel) {
+      case 'email':
+        return this.DEFAULT_PROVIDERS.email;
+      case 'whatsapp':
+        return this.DEFAULT_PROVIDERS.whatsapp;
+      case 'sms':
+        return this.DEFAULT_PROVIDERS.sms;
+      default:
+        throw new Error(`No default provider for channel: ${channel}`);
     }
   }
 }
 
-export const notificationQueueService = new NotificationQueueService();
+export const NotificationQueueService = new NotificationQueueService();
