@@ -46,8 +46,8 @@ class SimpleEmailService {
             subject: subject,
           }],
           from: {
-            email: process.env.FROM_EMAIL || 'noreply@fidelita.com',
-            name: process.env.FROM_NAME || 'Fidelita'
+            email: process.env.FROM_EMAIL || 'noreply@fidelya.com',
+            name: process.env.FROM_NAME || 'Fidelya'
           },
           content: [{
             type: 'text/html',
@@ -57,7 +57,7 @@ class SimpleEmailService {
                 <p style="color: #666; line-height: 1.6;">${message.replace(/\n/g, '<br>')}</p>
                 <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
                 <p style="color: #999; font-size: 12px;">
-                  Este mensaje fue enviado desde Fidelita
+                  Este mensaje fue enviado desde Fidelya
                 </p>
               </div>
             `
@@ -73,7 +73,7 @@ class SimpleEmailService {
   }
 }
 
-// Servicio de WhatsApp con Twilio
+// Servicio de WhatsApp con Twilio - CONFIGURADO CORRECTAMENTE
 class SimpleWhatsAppService {
   private accountSid: string;
   private authToken: string;
@@ -85,22 +85,41 @@ class SimpleWhatsAppService {
     this.fromNumber = process.env.TWILIO_WHATSAPP_FROM || 'whatsapp:+14155238886';
   }
 
+  // Función para formatear número de teléfono
+  private formatPhoneNumber(phone: string): string {
+    // Remover todos los caracteres no numéricos
+    let cleanPhone = phone.replace(/\D/g, '');
+    
+    // Si no empieza con código de país, asumir que es de Argentina (+54)
+    if (!cleanPhone.startsWith('54') && cleanPhone.length === 10) {
+      cleanPhone = '54' + cleanPhone;
+    }
+    
+    // Agregar el prefijo de WhatsApp
+    return `whatsapp:+${cleanPhone}`;
+  }
+
   async sendWhatsApp(to: string, message: string): Promise<boolean> {
     if (!this.accountSid || !this.authToken) {
-      console.warn('Twilio WhatsApp credentials not configured');
+      console.warn('🚫 Twilio WhatsApp credentials not configured');
       return false;
     }
 
     try {
-      // Formatear número de teléfono para WhatsApp
-      const formattedTo = to.startsWith('whatsapp:') ? to : `whatsapp:${to}`;
+      // Formatear número de teléfono
+      const formattedTo = this.formatPhoneNumber(to);
       
-      // Crear el cuerpo de la petición
+      console.log(`📱 Enviando WhatsApp a: ${formattedTo}`);
+      
+      // Crear el cuerpo de la petición para Twilio
       const body = new URLSearchParams({
         From: this.fromNumber,
         To: formattedTo,
         Body: message
       });
+
+      // Crear la autorización básica para Twilio
+      const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString('base64');
 
       // Enviar mensaje usando Twilio API
       const response = await fetch(
@@ -108,7 +127,7 @@ class SimpleWhatsAppService {
         {
           method: 'POST',
           headers: {
-            'Authorization': `Basic ${Buffer.from(`${this.accountSid}:${this.authToken}`).toString('base64')}`,
+            'Authorization': `Basic ${auth}`,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
           body: body.toString()
@@ -117,17 +136,33 @@ class SimpleWhatsAppService {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ WhatsApp enviado via Twilio:', result.sid);
+        console.log(`✅ WhatsApp enviado exitosamente via Twilio. SID: ${result.sid}`);
+        console.log(`📊 Estado: ${result.status}, Precio: ${result.price} ${result.price_unit}`);
         return true;
       } else {
         const error = await response.json();
         console.error('❌ Error Twilio WhatsApp:', error);
+        console.error(`🔍 Detalles: ${error.message} (Código: ${error.code})`);
         return false;
       }
     } catch (error) {
-      console.error('Error sending WhatsApp via Twilio:', error);
+      console.error('💥 Error crítico enviando WhatsApp via Twilio:', error);
       return false;
     }
+  }
+
+  // Método para verificar la configuración
+  isConfigured(): boolean {
+    return !!(this.accountSid && this.authToken);
+  }
+
+  // Método para obtener información de configuración (sin exponer credenciales)
+  getConfigInfo() {
+    return {
+      configured: this.isConfigured(),
+      fromNumber: this.fromNumber,
+      accountSidPrefix: this.accountSid ? this.accountSid.substring(0, 8) + '...' : 'No configurado'
+    };
   }
 }
 
@@ -139,6 +174,11 @@ export class SimpleNotificationService {
   constructor() {
     this.emailService = new SimpleEmailService();
     this.whatsappService = new SimpleWhatsAppService();
+    
+    // Log de configuración al inicializar
+    console.log('🔧 Configuración de servicios de notificación:');
+    console.log('📧 Email (SendGrid):', this.emailService.constructor.name);
+    console.log('📱 WhatsApp (Twilio):', this.whatsappService.getConfigInfo());
   }
 
   // Obtener información de destinatarios
@@ -228,10 +268,13 @@ export class SimpleNotificationService {
       const allRecipients = await this.getRecipients();
       const recipients = allRecipients.filter(r => data.recipientIds.includes(r.id));
 
-      console.log(`📤 Enviando notificación a ${recipients.length} destinatarios`);
+      console.log(`📤 Enviando notificación "${data.title}" a ${recipients.length} destinatarios`);
+      console.log(`📋 Canales seleccionados: ${data.channels.join(', ')}`);
 
       // Enviar por cada canal seleccionado
       for (const recipient of recipients) {
+        console.log(`👤 Procesando destinatario: ${recipient.name} (${recipient.type})`);
+        
         for (const channel of data.channels) {
           try {
             let sent = false;
@@ -246,24 +289,30 @@ export class SimpleNotificationService {
                   );
                   if (sent) {
                     console.log(`✅ Email enviado a ${recipient.name} (${recipient.email})`);
+                  } else {
+                    console.log(`❌ Falló email a ${recipient.name} (${recipient.email})`);
                   }
                 } else {
                   result.errors.push(`${recipient.name} no tiene email configurado`);
+                  console.log(`⚠️ ${recipient.name} no tiene email`);
                 }
                 break;
 
               case 'whatsapp':
                 if (recipient.phone) {
-                  const whatsappMessage = `*${data.title}*\n\n${data.message}\n\n_Enviado desde Fidelita_`;
+                  const whatsappMessage = `*${data.title}*\n\n${data.message}\n\n_Enviado desde Fidelya 🚀_`;
                   sent = await this.whatsappService.sendWhatsApp(
                     recipient.phone,
                     whatsappMessage
                   );
                   if (sent) {
                     console.log(`✅ WhatsApp enviado a ${recipient.name} (${recipient.phone})`);
+                  } else {
+                    console.log(`❌ Falló WhatsApp a ${recipient.name} (${recipient.phone})`);
                   }
                 } else {
                   result.errors.push(`${recipient.name} no tiene teléfono configurado`);
+                  console.log(`⚠️ ${recipient.name} no tiene teléfono`);
                 }
                 break;
 
@@ -287,16 +336,18 @@ export class SimpleNotificationService {
               result.sentCount++;
             } else {
               result.failedCount++;
-              result.errors.push(`Error enviando ${channel} a ${recipient.name}`);
+              if (!result.errors.some(e => e.includes(recipient.name))) {
+                result.errors.push(`Error enviando ${channel} a ${recipient.name}`);
+              }
             }
 
             // Pequeña pausa entre envíos para evitar rate limits
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 200));
 
           } catch (error) {
             result.failedCount++;
             result.errors.push(`Error enviando ${channel} a ${recipient.name}: ${error}`);
-            console.error(`❌ Error enviando ${channel} a ${recipient.name}:`, error);
+            console.error(`💥 Error crítico enviando ${channel} a ${recipient.name}:`, error);
           }
         }
       }
@@ -312,10 +363,13 @@ export class SimpleNotificationService {
       result.success = result.sentCount > 0;
       
       console.log(`📊 Resultado final: ${result.sentCount} enviadas, ${result.failedCount} fallidas`);
+      if (result.errors.length > 0) {
+        console.log(`🚨 Errores encontrados:`, result.errors);
+      }
 
       return result;
     } catch (error) {
-      console.error('Error sending notification:', error);
+      console.error('💥 Error crítico enviando notificación:', error);
       
       // Actualizar estado a fallido
       await updateDoc(doc(db, 'simpleNotifications', notificationId), {
@@ -428,6 +482,17 @@ export class SimpleNotificationService {
       console.error('Error saving user settings:', error);
       throw error;
     }
+  }
+
+  // Método para verificar configuración de servicios
+  getServicesStatus() {
+    return {
+      whatsapp: this.whatsappService.getConfigInfo(),
+      email: {
+        configured: !!process.env.SENDGRID_API_KEY,
+        service: 'SendGrid'
+      }
+    };
   }
 }
 
