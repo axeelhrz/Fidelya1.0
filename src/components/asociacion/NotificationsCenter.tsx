@@ -1,996 +1,661 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
   Container,
   Typography,
-  Button,
   Paper,
-  Avatar,
-  IconButton,
-  alpha,
-  Divider,
-  Checkbox,
-  FormControlLabel,
-  Menu,
-  MenuItem,
+  Card,
+  CardContent,
+  CardHeader,
+  Button,
+  Tabs,
+  Tab,
   Badge,
+  IconButton,
   Tooltip,
+  Alert,
+  Divider,
+  Stack,
+  Chip,
+  Avatar,
   LinearProgress,
   Fab,
-  Zoom,
-  useTheme,
+  SpeedDial,
+  SpeedDialAction,
+  SpeedDialIcon,
   useMediaQuery,
+  useTheme,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  ListItemButton
 } from '@mui/material';
 import {
-  Notifications,
-  Add,
-  MoreVert,
-  CheckCircle,
-  Archive,
-  Delete,
-  SelectAll,
-  MarkEmailRead,
-  Refresh,
+  Dashboard,
+  Template,
+  Campaign,
+  Analytics,
   Settings,
+  AutoMode,
+  Science,
+  Group,
+  Send,
+  Schedule,
+  Notifications,
   TrendingUp,
-  NotificationsActive,
-  VolumeUp,
-  VolumeOff,
+  Speed,
+  CheckCircle,
+  Warning,
+  Error,
+  Info,
+  Add,
+  Edit,
+  Refresh,
   FilterList,
+  Search,
+  MoreVert,
+  Close,
+  Menu,
+  Email,
+  Sms,
+  NotificationsActive,
+  PhoneAndroid,
+  PlayArrow,
+  Pause,
+  Stop
 } from '@mui/icons-material';
-import toast from 'react-hot-toast';
-import { useNotifications } from '@/hooks/useNotifications';
-import { NotificationCard } from './NotificationCard';
-import { NotificationFilters } from './NotificationFilters';
-import { CreateNotificationDialog } from './CreateNotificationDialog';
-import { RealTimeNotifications } from './RealTimeNotifications';
-import { NotificationFormData } from '@/types/notification';
+import { useEnhancedNotifications } from '../../hooks/useEnhancedNotifications';
+import NotificationDashboard from '../notifications/NotificationDashboard';
+import NotificationTemplates from '../notifications/NotificationTemplates';
+import NotificationEditor from '../notifications/NotificationEditor';
+import NotificationAutomation from '../notifications/NotificationAutomation';
+import DeliveryStats from '../notifications/DeliveryStats';
+import EnhancedNotificationSettings from '../settings/EnhancedNotificationSettings';
 
-interface NotificationsCenterProps {
-  loading?: boolean;
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
 }
 
-export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
-  loading: externalLoading = false
-}) => {
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`notifications-tabpanel-${index}`}
+      aria-labelledby={`notifications-tab-${index}`}
+      {...other}
+    >
+      {value === index && children}
+    </div>
+  );
+}
+
+interface QuickAction {
+  label: string;
+  icon: React.ReactNode;
+  color: string;
+  action: () => void;
+}
+
+export default function NotificationsCenter() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   const {
-    notifications,
-    allNotifications,
-    loading,
+    templates,
+    campaigns,
+    metrics,
+    queueStats,
+    loadingTemplates,
+    loadingCampaigns,
+    loadingMetrics,
+    loadingQueue,
     error,
-    stats,
-    filters,
-    newNotificationCount,
-    setFilters,
-    createNotification,
-    markAsRead,
-    markAsUnread,
-    archiveNotification,
-    deleteNotification,
-    markAllAsRead,
-    bulkAction,
-    clearNewNotificationCount,
-    refreshStats,
-  } = useNotifications();
+    success,
+    clearMessages,
+    refresh,
+    sendTestNotification,
+    pauseQueue,
+    resumeQueue,
+    clearQueue
+  } = useEnhancedNotifications();
 
-  const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [bulkMenuAnchor, setBulkMenuAnchor] = useState<null | HTMLElement>(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [showFilters, setShowFilters] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [speedDialOpen, setSpeedDialOpen] = useState(false);
+  const [quickStatsExpanded, setQuickStatsExpanded] = useState(true);
 
-  // Auto-refresh stats every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refreshStats();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [refreshStats]);
-
-  // Clear new notification count when user interacts
-  useEffect(() => {
-    if (selectedNotifications.length > 0 || createDialogOpen) {
-      clearNewNotificationCount();
+  // Tabs configuration
+  const tabs = [
+    { 
+      label: 'Dashboard', 
+      icon: <Dashboard />, 
+      component: NotificationDashboard,
+      badge: null
+    },
+    { 
+      label: 'Plantillas', 
+      icon: <Template />, 
+      component: NotificationTemplates,
+      badge: templates.length
+    },
+    { 
+      label: 'Editor', 
+      icon: <Edit />, 
+      component: NotificationEditor,
+      badge: null
+    },
+    { 
+      label: 'Campañas', 
+      icon: <Campaign />, 
+      component: () => <CampaignsView />,
+      badge: campaigns.filter(c => c.status === 'scheduled').length
+    },
+    { 
+      label: 'Automatización', 
+      icon: <AutoMode />, 
+      component: NotificationAutomation,
+      badge: null
+    },
+    { 
+      label: 'Estadísticas', 
+      icon: <Analytics />, 
+      component: DeliveryStats,
+      badge: null
+    },
+    { 
+      label: 'Configuración', 
+      icon: <Settings />, 
+      component: EnhancedNotificationSettings,
+      badge: null
     }
-  }, [selectedNotifications, createDialogOpen, clearNewNotificationCount]);
+  ];
 
-  const handleSelectNotification = (id: string, selected: boolean) => {
-    setSelectedNotifications(prev => 
-      selected 
-        ? [...prev, id]
-        : prev.filter(notificationId => notificationId !== id)
-    );
-  };
-
-  const handleSelectAll = () => {
-    if (selectedNotifications.length === notifications.length) {
-      setSelectedNotifications([]);
-    } else {
-      setSelectedNotifications(notifications.map(n => n.id));
+  // Quick actions for speed dial
+  const quickActions: QuickAction[] = [
+    {
+      label: 'Nueva Plantilla',
+      icon: <Template />,
+      color: '#1976d2',
+      action: () => setActiveTab(2) // Editor tab
+    },
+    {
+      label: 'Nueva Campaña',
+      icon: <Campaign />,
+      color: '#388e3c',
+      action: () => setActiveTab(3) // Campaigns tab
+    },
+    {
+      label: 'Enviar Prueba',
+      icon: <Send />,
+      color: '#f57c00',
+      action: () => handleQuickTest()
+    },
+    {
+      label: 'Ver Analytics',
+      icon: <Analytics />,
+      color: '#7b1fa2',
+      action: () => setActiveTab(5) // Analytics tab
     }
-  };
+  ];
 
-  const handleBulkAction = async (action: 'read' | 'unread' | 'archive' | 'delete') => {
-    if (selectedNotifications.length === 0) return;
-
-    setActionLoading(true);
+  const handleQuickTest = async () => {
     try {
-      await bulkAction(selectedNotifications, action);
-      setSelectedNotifications([]);
-      toast.success(`${selectedNotifications.length} notificaciones procesadas`);
-    } catch (error) {
-      console.error('Bulk action error:', error);
-      toast.error('Error al procesar las notificaciones');
-    } finally {
-      setActionLoading(false);
-      setBulkMenuAnchor(null);
+      if (templates.length > 0) {
+        await sendTestNotification(templates[0].id, 'test@example.com', 'email');
+      }
+    } catch (err) {
+      console.error('Error sending quick test:', err);
     }
   };
 
-  const handleCreateNotification = async (data: NotificationFormData) => {
-    setActionLoading(true);
-    try {
-      await createNotification(data);
-      setCreateDialogOpen(false);
-      toast.success('Notificación creada exitosamente');
-    } catch (error) {
-      console.error('Create notification error:', error);
-      toast.error('Error al crear la notificación');
-      throw error;
-    } finally {
-      setActionLoading(false);
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+    if (isMobile) {
+      setMobileDrawerOpen(false);
     }
   };
 
-  const handleMarkAllAsRead = async () => {
-    setActionLoading(true);
-    try {
-      await markAllAsRead();
-      toast.success('Todas las notificaciones marcadas como leídas');
-    } catch (error) {
-      console.error('Mark all as read error:', error);
-      toast.error('Error al marcar como leídas');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleAction = (url: string) => {
-    window.open(url, '_blank');
-  };
-
-  const clearFilters = () => {
-    setFilters({});
-    toast.success('Filtros limpiados');
-  };
-
-  const handleRefresh = async () => {
-    setActionLoading(true);
-    try {
-      await refreshStats();
-      toast.success('Notificaciones actualizadas');
-    } catch {
-      toast.error('Error al actualizar');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Enhanced stats with trends
-  const enhancedStats = useMemo(() => {
-    const total = stats.total;
-    const unread = stats.unread;
-    const read = stats.read;
-    const archived = stats.archived;
+  const getSystemHealthStatus = () => {
+    if (!queueStats) return { status: 'unknown', color: '#9e9e9e', label: 'Desconocido' };
     
-    // Calculate percentages
-    const unreadPercentage = total > 0 ? Math.round((unread / total) * 100) : 0;
-    const readPercentage = total > 0 ? Math.round((read / total) * 100) : 0;
+    const errorRate = queueStats.failed / (queueStats.processed || 1);
     
-    return {
-      total: { value: total, trend: '+12%', color: '#64748b' },
-      unread: { value: unread, trend: unread > 0 ? `${unreadPercentage}%` : 'Al día', color: '#ef4444' },
-      read: { value: read, trend: `${readPercentage}%`, color: '#10b981' },
-      archived: { value: archived, trend: 'Estable', color: '#f59e0b' },
-    };
-  }, [stats]);
+    if (errorRate < 0.01) return { status: 'healthy', color: '#4caf50', label: 'Saludable' };
+    if (errorRate < 0.05) return { status: 'warning', color: '#ff9800', label: 'Advertencia' };
+    return { status: 'error', color: '#f44336', label: 'Error' };
+  };
 
-  const isLoading = loading || externalLoading || actionLoading;
+  const systemHealth = getSystemHealthStatus();
 
-  if (error) {
-    return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Paper
-          elevation={0}
-          sx={{
-            p: 8,
-            textAlign: 'center',
-            border: '1px solid #fee2e2',
-            borderRadius: 4,
-            bgcolor: '#fef2f2',
-          }}
-        >
-          <Avatar
-            sx={{
-              width: 80,
-              height: 80,
-              bgcolor: alpha('#ef4444', 0.1),
-              color: '#ef4444',
-              mx: 'auto',
-              mb: 3,
-            }}
-          >
-            <Notifications sx={{ fontSize: 40 }} />
-          </Avatar>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#dc2626', mb: 2 }}>
-            Error al cargar notificaciones
-          </Typography>
-          <Typography variant="body1" sx={{ color: '#7f1d1d', mb: 4 }}>
-            {error}
-          </Typography>
-          <Button
-            onClick={handleRefresh}
-            variant="contained"
-            startIcon={<Refresh />}
-            sx={{
-              borderRadius: 3,
-              px: 4,
-              py: 1.5,
-              fontWeight: 600,
-              bgcolor: '#ef4444',
-              '&:hover': { bgcolor: '#dc2626' }
-            }}
-          >
-            Reintentar
-          </Button>
-        </Paper>
-      </Container>
-    );
-  }
-
-  return (
-    <>
-      <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
-        {/* Header */}
-        <Box
-          component={motion.div}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          sx={{ mb: { xs: 4, md: 6 } }}
-        >
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: { xs: 'flex-start', sm: 'center' }, 
-            gap: { xs: 2, md: 3 }, 
-            mb: { xs: 3, md: 4 } 
-          }}>
-            <Badge
-              badgeContent={newNotificationCount}
-              color="error"
-              max={99}
-              sx={{
-                '& .MuiBadge-badge': {
-                  animation: newNotificationCount > 0 ? 'pulse 2s infinite' : 'none',
-                  '@keyframes pulse': {
-                    '0%': { transform: 'scale(1)' },
-                    '50%': { transform: 'scale(1.2)' },
-                    '100%': { transform: 'scale(1)' },
-                  },
-                },
+  // Quick stats component
+  const QuickStats = () => (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6">Estado del Sistema</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip
+              size="small"
+              label={systemHealth.label}
+              sx={{ 
+                backgroundColor: systemHealth.color,
+                color: 'white',
+                fontWeight: 'bold'
               }}
-            >
-              <Avatar
-                sx={{
-                  width: { xs: 56, md: 64 },
-                  height: { xs: 56, md: 64 },
-                  borderRadius: 4,
-                  background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-                  boxShadow: '0 12px 40px rgba(236, 72, 153, 0.3)',
-                }}
-              >
-                <NotificationsActive sx={{ fontSize: { xs: 28, md: 32 } }} />
-              </Avatar>
-            </Badge>
-            
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography 
-                variant="h3" 
-                sx={{ 
-                  fontWeight: 900, 
-                  color: '#0f172a', 
-                  mb: 1,
-                  fontSize: { xs: '1.75rem', sm: '2.25rem', md: '3rem' },
-                  lineHeight: 1.2,
-                }}
-              >
-                Centro de Notificaciones
-                {isLoading && (
-                  <LinearProgress
-                    sx={{
-                      mt: 1,
-                      borderRadius: 2,
-                      height: 4,
-                      bgcolor: alpha('#ec4899', 0.1),
-                      '& .MuiLinearProgress-bar': {
-                        bgcolor: '#ec4899',
-                      }
-                    }}
-                  />
-                )}
-              </Typography>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  color: '#64748b', 
-                  fontWeight: 600,
-                  fontSize: { xs: '1rem', md: '1.25rem' },
-                }}
-              >
-                Gestiona todas las comunicaciones y alertas del sistema
-              </Typography>
-            </Box>
-
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 1,
-              width: { xs: '100%', sm: 'auto' },
-              justifyContent: { xs: 'space-between', sm: 'flex-end' },
-            }}>
-              {!isMobile && (
-                <>
-                  <Tooltip title={soundEnabled ? 'Silenciar sonidos' : 'Activar sonidos'}>
-                    <IconButton
-                      onClick={() => setSoundEnabled(!soundEnabled)}
-                      sx={{
-                        color: soundEnabled ? '#10b981' : '#94a3b8',
-                        bgcolor: alpha(soundEnabled ? '#10b981' : '#94a3b8', 0.1),
-                      }}
-                    >
-                      {soundEnabled ? <VolumeUp /> : <VolumeOff />}
-                    </IconButton>
-                  </Tooltip>
-
-                  <Tooltip title="Actualizar">
-                    <IconButton
-                      onClick={handleRefresh}
-                      disabled={isLoading}
-                      sx={{
-                        color: '#6366f1',
-                        bgcolor: alpha('#6366f1', 0.1),
-                        '&:hover': {
-                          bgcolor: alpha('#6366f1', 0.2),
-                        }
-                      }}
-                    >
-                      <Refresh sx={{ 
-                        animation: isLoading ? 'spin 1s linear infinite' : 'none',
-                        '@keyframes spin': {
-                          '0%': { transform: 'rotate(0deg)' },
-                          '100%': { transform: 'rotate(360deg)' },
-                        }
-                      }} />
-                    </IconButton>
-                  </Tooltip>
-
-                  <Tooltip title="Filtros">
-                    <IconButton
-                      onClick={() => setShowFilters(!showFilters)}
-                      sx={{
-                        color: showFilters ? '#ec4899' : '#94a3b8',
-                        bgcolor: alpha(showFilters ? '#ec4899' : '#94a3b8', 0.1),
-                      }}
-                    >
-                      <FilterList />
-                    </IconButton>
-                  </Tooltip>
-                </>
-              )}
-
-              <Button
-                onClick={() => setCreateDialogOpen(true)}
-                variant="contained"
-                startIcon={<Add />}
-                size={isMobile ? "medium" : "large"}
-                sx={{
-                  py: { xs: 1.5, md: 2 },
-                  px: { xs: 3, md: 4 },
-                  borderRadius: 4,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  fontSize: { xs: '0.875rem', md: '1rem' },
-                  background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-                  boxShadow: '0 8px 32px rgba(236, 72, 153, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #be185d 0%, #9d174d 100%)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 12px 40px rgba(236, 72, 153, 0.4)',
-                  },
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                {isMobile ? 'Nueva' : 'Nueva Notificación'}
-              </Button>
-            </Box>
+            />
+            <IconButton size="small" onClick={() => setQuickStatsExpanded(!quickStatsExpanded)}>
+              {quickStatsExpanded ? <Close /> : <Info />}
+            </IconButton>
           </Box>
+        </Box>
 
-          {/* Enhanced Stats Cards - Using CSS Grid instead of Material-UI Grid */}
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: 'repeat(2, 1fr)',
-                sm: 'repeat(4, 1fr)',
-              },
-              gap: { xs: 2, md: 3 },
-              mb: { xs: 3, md: 4 },
-            }}
-          >
-            {[
-              { 
-                key: 'total',
-                label: 'Total', 
-                value: enhancedStats.total.value, 
-                color: enhancedStats.total.color,
-                icon: <Notifications />,
-                trend: enhancedStats.total.trend,
-                gradient: 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
-              },
-              { 
-                key: 'unread',
-                label: 'No leídas', 
-                value: enhancedStats.unread.value, 
-                color: enhancedStats.unread.color,
-                icon: <NotificationsActive />,
-                trend: enhancedStats.unread.trend,
-                gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-              },
-              { 
-                key: 'read',
-                label: 'Leídas', 
-                value: enhancedStats.read.value, 
-                color: enhancedStats.read.color,
-                icon: <CheckCircle />,
-                trend: enhancedStats.read.trend,
-                gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              },
-              { 
-                key: 'archived',
-                label: 'Archivadas', 
-                value: enhancedStats.archived.value, 
-                color: enhancedStats.archived.color,
-                icon: <Archive />,
-                trend: enhancedStats.archived.trend,
-                gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              },
-            ].map((stat, index) => (
-              <Box
-                key={stat.key}
-                component={motion.div}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: { xs: 2.5, md: 4 },
-                    border: '1px solid #f1f5f9',
-                    borderRadius: 4,
-                    position: 'relative',
-                    overflow: 'hidden',
-                    transition: 'all 0.3s ease',
-                    height: '100%',
-                    '&:hover': {
-                      borderColor: alpha(stat.color, 0.3),
-                      transform: 'translateY(-4px)',
-                      boxShadow: `0 12px 40px ${alpha(stat.color, 0.15)}`,
-                    }
-                  }}
-                >
-                  {/* Background gradient */}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      right: 0,
-                      width: { xs: 80, md: 100 },
-                      height: { xs: 80, md: 100 },
-                      background: `radial-gradient(circle, ${alpha(stat.color, 0.1)} 0%, transparent 70%)`,
-                    }}
+        <AnimatePresence>
+          {quickStatsExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, 
+                gap: 2 
+              }}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="primary">
+                    {templates.length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Plantillas
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="success.main">
+                    {campaigns.filter(c => c.status === 'sent').length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Campañas Enviadas
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="warning.main">
+                    {campaigns.filter(c => c.status === 'scheduled').length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Programadas
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="info.main">
+                    {queueStats?.pending || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    En Cola
+                  </Typography>
+                </Box>
+              </Box>
+
+              {queueStats && (
+                <Box sx={{ mt: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="body2">
+                      Procesamiento de Cola
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <IconButton 
+                        size="small" 
+                        onClick={queueStats.isProcessing ? pauseQueue : resumeQueue}
+                        color={queueStats.isProcessing ? 'warning' : 'success'}
+                      >
+                        {queueStats.isProcessing ? <Pause /> : <PlayArrow />}
+                      </IconButton>
+                      <IconButton size="small" onClick={clearQueue} color="error">
+                        <Stop />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={queueStats.processed / (queueStats.total || 1) * 100}
+                    sx={{ height: 8, borderRadius: 4 }}
                   />
-                  
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between', 
-                    mb: { xs: 1.5, md: 2 },
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    gap: { xs: 1, sm: 0 },
-                  }}>
-                    <Avatar
-                      sx={{
-                        width: { xs: 40, md: 48 },
-                        height: { xs: 40, md: 48 },
-                        background: stat.gradient,
-                        color: 'white',
-                        order: { xs: 2, sm: 1 },
-                      }}
-                    >
-                      {stat.icon}
+                  <Typography variant="caption" color="text.secondary">
+                    {queueStats.processed} / {queueStats.total} procesadas
+                  </Typography>
+                </Box>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Paper>
+    </motion.div>
+  );
+
+  // Mobile navigation drawer
+  const MobileDrawer = () => (
+    <Drawer
+      anchor="left"
+      open={mobileDrawerOpen}
+      onClose={() => setMobileDrawerOpen(false)}
+      PaperProps={{
+        sx: { width: 280 }
+      }}
+    >
+      <Box sx={{ p: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          Centro de Notificaciones
+        </Typography>
+        <Divider />
+      </Box>
+      
+      <List>
+        {tabs.map((tab, index) => (
+          <ListItemButton
+            key={index}
+            selected={activeTab === index}
+            onClick={() => handleTabChange({} as any, index)}
+          >
+            <ListItemIcon>
+              <Badge badgeContent={tab.badge} color="primary">
+                {tab.icon}
+              </Badge>
+            </ListItemIcon>
+            <ListItemText primary={tab.label} />
+          </ListItemButton>
+        ))}
+      </List>
+    </Drawer>
+  );
+
+  // Campaigns view component
+  const CampaignsView = () => (
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Campañas de Notificaciones
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Gestiona y monitorea tus campañas de notificaciones
+        </Typography>
+      </Box>
+
+      {loadingCampaigns ? (
+        <LinearProgress />
+      ) : (
+        <Box sx={{ display: 'grid', gap: 3 }}>
+          {campaigns.map((campaign) => (
+            <motion.div
+              key={campaign.id}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Card>
+                <CardHeader
+                  avatar={
+                    <Avatar sx={{ 
+                      backgroundColor: campaign.status === 'sent' ? '#4caf50' : 
+                                     campaign.status === 'scheduled' ? '#ff9800' : 
+                                     campaign.status === 'sending' ? '#2196f3' : '#9e9e9e'
+                    }}>
+                      {campaign.status === 'sent' ? <CheckCircle /> :
+                       campaign.status === 'scheduled' ? <Schedule /> :
+                       campaign.status === 'sending' ? <Send /> : <Campaign />}
                     </Avatar>
-                    
-                    <Box sx={{ textAlign: { xs: 'center', sm: 'right' }, order: { xs: 1, sm: 2 } }}>
-                      <Typography
-                        variant="h3"
-                        sx={{
-                          fontWeight: 900,
-                          color: stat.color,
-                          lineHeight: 1,
-                          fontSize: { xs: '1.75rem', md: '2.5rem' },
-                        }}
-                      >
-                        {stat.value}
+                  }
+                  title={campaign.name}
+                  subheader={campaign.description}
+                  action={
+                    <Stack direction="row" spacing={1}>
+                      <Chip
+                        size="small"
+                        label={campaign.status}
+                        color={
+                          campaign.status === 'sent' ? 'success' :
+                          campaign.status === 'scheduled' ? 'warning' :
+                          campaign.status === 'sending' ? 'info' : 'default'
+                        }
+                      />
+                      <IconButton>
+                        <MoreVert />
+                      </IconButton>
+                    </Stack>
+                  }
+                />
+                <CardContent>
+                  <Box sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, 
+                    gap: 2, 
+                    mb: 2 
+                  }}>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Destinatarios
                       </Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: '#10b981',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 0.5,
-                          justifyContent: { xs: 'center', sm: 'flex-end' },
-                          fontSize: { xs: '0.7rem', md: '0.75rem' },
-                        }}
-                      >
-                        <TrendingUp sx={{ fontSize: { xs: 10, md: 12 } }} />
-                        {stat.trend}
+                      <Typography variant="h6">
+                        {campaign.stats.totalRecipients.toLocaleString()}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Enviados
+                      </Typography>
+                      <Typography variant="h6">
+                        {campaign.stats.sent.toLocaleString()}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Entregados
+                      </Typography>
+                      <Typography variant="h6">
+                        {campaign.stats.delivered.toLocaleString()}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Abiertos
+                      </Typography>
+                      <Typography variant="h6">
+                        {campaign.stats.opened.toLocaleString()}
                       </Typography>
                     </Box>
                   </Box>
-                  
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: '#64748b',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.1em',
-                      textAlign: { xs: 'center', sm: 'left' },
-                      fontSize: { xs: '0.7rem', md: '0.75rem' },
-                    }}
-                  >
-                    {stat.label}
-                  </Typography>
-                </Paper>
-              </Box>
-            ))}
-          </Box>
+
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Stack direction="row" spacing={1}>
+                      {campaign.channels.map((channel) => (
+                        <Chip
+                          key={channel}
+                          size="small"
+                          variant="outlined"
+                          icon={
+                            channel === 'email' ? <Email /> :
+                            channel === 'sms' ? <Sms /> :
+                            channel === 'push' ? <NotificationsActive /> :
+                            <PhoneAndroid />
+                          }
+                          label={channel.toUpperCase()}
+                        />
+                      ))}
+                    </Stack>
+                    
+                    <Typography variant="body2" color="text.secondary">
+                      {new Date(campaign.createdAt).toLocaleDateString()}
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </Box>
+      )}
+    </Container>
+  );
 
-        {/* Mobile Controls */}
-        {isMobile && (
-          <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
-            <Button
-              onClick={() => setShowFilters(!showFilters)}
-              startIcon={<FilterList />}
-              variant={showFilters ? "contained" : "outlined"}
-              size="small"
-              sx={{ 
-                borderRadius: 3,
-                textTransform: 'none',
-                fontWeight: 600,
-              }}
-            >
-              Filtros
-            </Button>
-            <Button
-              onClick={handleRefresh}
-              startIcon={<Refresh />}
-              variant="outlined"
-              size="small"
-              disabled={isLoading}
-              sx={{ 
-                borderRadius: 3,
-                textTransform: 'none',
-                fontWeight: 600,
-              }}
-            >
-              Actualizar
-            </Button>
-            <Button
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              startIcon={soundEnabled ? <VolumeUp /> : <VolumeOff />}
-              variant="outlined"
-              size="small"
-              sx={{ 
-                borderRadius: 3,
-                textTransform: 'none',
-                fontWeight: 600,
-                color: soundEnabled ? '#10b981' : '#94a3b8',
-              }}
-            >
-              {soundEnabled ? 'Sonido' : 'Silencio'}
-            </Button>
+  return (
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+      {/* Mobile Header */}
+      {isMobile && (
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <IconButton onClick={() => setMobileDrawerOpen(true)}>
+              <Menu />
+            </IconButton>
+            <Typography variant="h6">
+              {tabs[activeTab].label}
+            </Typography>
+            <IconButton onClick={refresh}>
+              <Refresh />
+            </IconButton>
           </Box>
-        )}
+        </Paper>
+      )}
 
-        {/* Filters */}
-        {(showFilters || !isMobile) && (
-          <NotificationFilters
-            filters={{
-              ...filters,
-              dateRange: filters.dateRange
-                ? { from: filters.dateRange.start, to: filters.dateRange.end }
-                : undefined
-            }}
-            onFiltersChange={(newFilters) => {
-              setFilters({
-                ...newFilters,
-                dateRange: newFilters.dateRange
-                  ? { start: newFilters.dateRange.from, end: newFilters.dateRange.to }
-                  : undefined
-              });
-            }}
-            onClearFilters={clearFilters}
-            loading={isLoading}
-          />
-        )}
+      {/* Desktop Navigation */}
+      {!isMobile && (
+        <Paper sx={{ mb: 3 }}>
+          <Container maxWidth="xl">
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2 }}>
+              <Typography variant="h5" component="h1">
+                Centro de Notificaciones
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<Refresh />}
+                onClick={refresh}
+                disabled={loadingTemplates || loadingCampaigns || loadingMetrics}
+              >
+                Actualizar
+              </Button>
+            </Box>
+            
+            <Tabs 
+              value={activeTab} 
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+            >
+              {tabs.map((tab, index) => (
+                <Tab
+                  key={index}
+                  label={tab.label}
+                  icon={
+                    <Badge badgeContent={tab.badge} color="primary">
+                      {tab.icon}
+                    </Badge>
+                  }
+                  iconPosition="start"
+                />
+              ))}
+            </Tabs>
+          </Container>
+        </Paper>
+      )}
 
-        {/* Bulk Actions Bar */}
+      {/* Alerts */}
+      <Container maxWidth="xl">
         <AnimatePresence>
-          {selectedNotifications.length > 0 && (
-            <Box
-              component={motion.div}
+          {error && (
+            <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
             >
-              <Paper
-                elevation={0}
-                sx={{
-                  p: { xs: 2, md: 3 },
-                  mb: 3,
-                  border: '2px solid #6366f1',
-                  borderRadius: 4,
-                  bgcolor: alpha('#6366f1', 0.02),
-                  backdropFilter: 'blur(10px)',
-                }}
-              >
-                <Box sx={{ 
-                  display: 'flex', 
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  alignItems: { xs: 'flex-start', sm: 'center' }, 
-                  justifyContent: 'space-between',
-                  gap: 2,
-                }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Checkbox
-                      checked={selectedNotifications.length === notifications.length}
-                      indeterminate={selectedNotifications.length > 0 && selectedNotifications.length < notifications.length}
-                      onChange={handleSelectAll}
-                      sx={{ color: '#6366f1' }}
-                    />
-                    <Typography variant="body1" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                      {selectedNotifications.length} notificación{selectedNotifications.length > 1 ? 'es' : ''} seleccionada{selectedNotifications.length > 1 ? 's' : ''}
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 1,
-                    flexWrap: 'wrap',
-                    width: { xs: '100%', sm: 'auto' },
-                  }}>
-                    <Button
-                      onClick={() => handleBulkAction('read')}
-                      startIcon={<CheckCircle />}
-                      size="small"
-                      disabled={actionLoading}
-                      sx={{ 
-                        color: '#10b981',
-                        '&:hover': { bgcolor: alpha('#10b981', 0.1) },
-                        textTransform: 'none',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Marcar leídas
-                    </Button>
-                    <Button
-                      onClick={() => handleBulkAction('archive')}
-                      startIcon={<Archive />}
-                      size="small"
-                      disabled={actionLoading}
-                      sx={{ 
-                        color: '#f59e0b',
-                        '&:hover': { bgcolor: alpha('#f59e0b', 0.1) },
-                        textTransform: 'none',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Archivar
-                    </Button>
-                    <Button
-                      onClick={() => handleBulkAction('delete')}
-                      startIcon={<Delete />}
-                      size="small"
-                      disabled={actionLoading}
-                      sx={{ 
-                        color: '#ef4444',
-                        '&:hover': { bgcolor: alpha('#ef4444', 0.1) },
-                        textTransform: 'none',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Eliminar
-                    </Button>
-                    <IconButton
-                      onClick={(e) => setBulkMenuAnchor(e.currentTarget)}
-                      size="small"
-                      sx={{ color: '#64748b' }}
-                    >
-                      <MoreVert />
-                    </IconButton>
-                  </Box>
-                </Box>
-              </Paper>
-            </Box>
+              <Alert severity="error" sx={{ mb: 3 }} onClose={clearMessages}>
+                {error}
+              </Alert>
+            </motion.div>
+          )}
+          
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <Alert severity="success" sx={{ mb: 3 }} onClose={clearMessages}>
+                {success}
+              </Alert>
+            </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Action Bar */}
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: { xs: 'flex-start', sm: 'center' }, 
-          justifyContent: 'space-between', 
-          mb: 3,
-          gap: 2,
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={selectedNotifications.length === notifications.length && notifications.length > 0}
-                  indeterminate={selectedNotifications.length > 0 && selectedNotifications.length < notifications.length}
-                  onChange={handleSelectAll}
-                />
-              }
-              label="Seleccionar todo"
-              sx={{ color: '#64748b' }}
-            />
-            
-            {stats.unread > 0 && (
-              <Button
-                onClick={handleMarkAllAsRead}
-                startIcon={<MarkEmailRead />}
-                size="small"
-                disabled={actionLoading}
-                sx={{
-                  color: '#6366f1',
-                  '&:hover': {
-                    bgcolor: alpha('#6366f1', 0.1),
-                  },
-                  textTransform: 'none',
-                  fontWeight: 600,
-                }}
-              >
-                Marcar todas como leídas ({stats.unread})
-              </Button>
-            )}
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body2" sx={{ color: '#64748b' }}>
-              {notifications.length} de {stats.total} notificaciones
-            </Typography>
-            
-            {!isMobile && (
-              <Tooltip title="Configuración">
-                <IconButton
-                  size="small"
-                  sx={{
-                    color: '#64748b',
-                    '&:hover': {
-                      bgcolor: alpha('#6366f1', 0.1),
-                      color: '#6366f1',
-                    }
-                  }}
-                >
-                  <Settings />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Box>
-        </Box>
-
-        {/* Notifications List */}
-        <Box>
-          {isLoading && notifications.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 8 }}>
-              <Box
-                sx={{
-                  width: 60,
-                  height: 60,
-                  border: '4px solid #f1f5f9',
-                  borderRadius: '50%',
-                  borderTopColor: '#6366f1',
-                  animation: 'spin 1s linear infinite',
-                  mx: 'auto',
-                  mb: 3,
-                  '@keyframes spin': {
-                    '0%': { transform: 'rotate(0deg)' },
-                    '100%': { transform: 'rotate(360deg)' },
-                  },
-                }}
-              />
-              <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
-                Cargando notificaciones...
-              </Typography>
-            </Box>
-          ) : notifications.length === 0 ? (
-            <Paper
-              elevation={0}
-              sx={{
-                p: { xs: 6, md: 8 },
-                textAlign: 'center',
-                border: '1px solid #f1f5f9',
-                borderRadius: 4,
-              }}
-            >
-              <Avatar
-                sx={{
-                  width: { xs: 60, md: 80 },
-                  height: { xs: 60, md: 80 },
-                  bgcolor: alpha('#ec4899', 0.1),
-                  color: '#ec4899',
-                  mx: 'auto',
-                  mb: 3,
-                }}
-              >
-                <Notifications sx={{ fontSize: { xs: 30, md: 40 } }} />
-              </Avatar>
-              <Typography 
-                variant="h5" 
-                sx={{ 
-                  fontWeight: 700, 
-                  color: '#1e293b', 
-                  mb: 2,
-                  fontSize: { xs: '1.25rem', md: '1.5rem' },
-                }}
-              >
-                No hay notificaciones
-              </Typography>
-              <Typography 
-                variant="body1" 
-                sx={{ 
-                  color: '#64748b', 
-                  mb: 4,
-                  fontSize: { xs: '0.875rem', md: '1rem' },
-                }}
-              >
-                No se encontraron notificaciones que coincidan con los filtros aplicados.
-              </Typography>
-              <Button
-                onClick={() => setCreateDialogOpen(true)}
-                variant="contained"
-                startIcon={<Add />}
-                sx={{
-                  borderRadius: 3,
-                  px: 4,
-                  py: 1.5,
-                  fontWeight: 600,
-                  background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-                }}
-              >
-                Crear primera notificación
-              </Button>
-            </Paper>
-          ) : (
-            <AnimatePresence>
-              {notifications.map((notification) => (
-                <NotificationCard
-                  key={notification.id}
-                  notification={notification}
-                  onMarkAsRead={markAsRead}
-                  onMarkAsUnread={markAsUnread}
-                  onArchive={archiveNotification}
-                  onDelete={deleteNotification}
-                  onAction={handleAction}
-                  selected={selectedNotifications.includes(notification.id)}
-                  onSelect={handleSelectNotification}
-                />
-              ))}
-            </AnimatePresence>
-          )}
-        </Box>
-
-        {/* Bulk Actions Menu */}
-        <Menu
-          anchorEl={bulkMenuAnchor}
-          open={Boolean(bulkMenuAnchor)}
-          onClose={() => setBulkMenuAnchor(null)}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-          PaperProps={{
-            sx: {
-              borderRadius: 3,
-              boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-              border: '1px solid #f1f5f9',
-              minWidth: 200,
-            }
-          }}
-        >
-          <MenuItem onClick={() => handleBulkAction('unread')}>
-            <Badge sx={{ mr: 2 }} />
-            Marcar como no leídas
-          </MenuItem>
-          <Divider />
-          <MenuItem onClick={() => setSelectedNotifications([])}>
-            <SelectAll sx={{ mr: 2, transform: 'scaleX(-1)' }} />
-            Deseleccionar todo
-          </MenuItem>
-        </Menu>
-
-        {/* Create Notification Dialog */}
-        <CreateNotificationDialog
-          open={createDialogOpen}
-          onClose={() => setCreateDialogOpen(false)}
-          onSave={handleCreateNotification}
-          loading={actionLoading}
-        />
+        {/* Quick Stats */}
+        {activeTab === 0 && <QuickStats />}
       </Container>
 
-      {/* Floating Action Button */}
-      <Zoom in={!createDialogOpen}>
+      {/* Tab Content */}
+      {tabs.map((tab, index) => (
+        <TabPanel key={index} value={activeTab} index={index}>
+          <tab.component />
+        </TabPanel>
+      ))}
+
+      {/* Mobile Drawer */}
+      <MobileDrawer />
+
+      {/* Speed Dial for Quick Actions */}
+      {!isMobile && (
+        <SpeedDial
+          ariaLabel="Acciones rápidas"
+          sx={{ position: 'fixed', bottom: 24, right: 24 }}
+          icon={<SpeedDialIcon />}
+          open={speedDialOpen}
+          onOpen={() => setSpeedDialOpen(true)}
+          onClose={() => setSpeedDialOpen(false)}
+        >
+          {quickActions.map((action) => (
+            <SpeedDialAction
+              key={action.label}
+              icon={action.icon}
+              tooltipTitle={action.label}
+              onClick={() => {
+                action.action();
+                setSpeedDialOpen(false);
+              }}
+              sx={{ 
+                '& .MuiSpeedDialAction-fab': {
+                  backgroundColor: action.color,
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: action.color,
+                    filter: 'brightness(0.9)'
+                  }
+                }
+              }}
+            />
+          ))}
+        </SpeedDial>
+      )}
+
+      {/* Mobile FAB */}
+      {isMobile && (
         <Fab
-          onClick={() => setCreateDialogOpen(true)}
-          sx={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-            color: 'white',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #be185d 0%, #9d174d 100%)',
-              transform: 'scale(1.1)',
-            },
-            transition: 'all 0.3s ease',
-            zIndex: 1000,
-          }}
+          color="primary"
+          sx={{ position: 'fixed', bottom: 24, right: 24 }}
+          onClick={() => setActiveTab(2)} // Go to editor
         >
           <Add />
         </Fab>
-      </Zoom>
-
-      {/* Real-time Notifications */}
-      <RealTimeNotifications
-        notifications={allNotifications.filter(n => n.status === 'unread')}
-        onNotificationClick={(notification) => {
-          markAsRead(notification.id);
-          if (notification.actionUrl) {
-            handleAction(notification.actionUrl);
-          }
-        }}
-        onNotificationDismiss={(id) => {
-          markAsRead(id);
-        }}
-        maxVisible={3}
-        position="top-right"
-      />
-    </>
+      )}
+    </Box>
   );
-};
+}
