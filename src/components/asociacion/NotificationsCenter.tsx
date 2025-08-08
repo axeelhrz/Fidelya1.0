@@ -59,7 +59,7 @@ import {
 } from '@mui/icons-material';
 import { useEnhancedNotifications } from '../../hooks/useEnhancedNotifications';
 import { NotificationDashboard } from '../notifications/NotificationDashboard';
-import NotificationTemplates from '../notifications/NotificationTemplates';
+import { NotificationTemplates } from '../notifications/NotificationTemplates';
 import NotificationEditor from '../notifications/NotificationEditor';
 import NotificationAutomation from '../notifications/NotificationAutomation';
 import DeliveryStats from '../notifications/DeliveryStats';
