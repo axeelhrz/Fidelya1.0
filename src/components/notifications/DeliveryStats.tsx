@@ -21,7 +21,7 @@ import {
   TrendingUp,
   TrendingDown,
   Email,
-  Sms,
+  WhatsApp,
   NotificationsActive,
   CheckCircle,
   Error,
@@ -63,137 +63,90 @@ interface ChannelStats {
   successRate: number;
 }
 
-interface SimpleStats {
-  total: number;
-  sent: number;
-  failed: number;
-  pending: number;
-  processing: number;
-  cancelled: number;
-  successRate: number;
-  avgProcessingTime: number;
-  channelStats: Record<string, {
-    sent: number;
-    failed: number;
-    pending: number;
-    successRate: number;
-  }>;
-}
-
 const CHANNEL_CONFIG = {
   email: { icon: <Email />, color: '#1976d2', name: 'Email' },
-  whatsapp: { icon: <Sms />, color: '#25d366', name: 'WhatsApp' },
-  app: { icon: <NotificationsActive />, color: '#9c27b0', name: 'App' }
+  whatsapp: { icon: <WhatsApp />, color: '#25d366', name: 'WhatsApp' },
+  app: { icon: <NotificationsActive />, color: '#7b1fa2', name: 'App' }
 };
 
 const STATUS_CONFIG = {
   sent: { icon: <CheckCircle />, color: '#4caf50', name: 'Enviadas' },
   failed: { icon: <Error />, color: '#f44336', name: 'Fallidas' },
   pending: { icon: <Schedule />, color: '#ff9800', name: 'Pendientes' },
-  processing: { icon: <PlayArrow />, color: '#2196f3', name: 'Procesando' },
-  cancelled: { icon: <Cancel />, color: '#9e9e9e', name: 'Canceladas' }
+  draft: { icon: <Cancel />, color: '#9e9e9e', name: 'Borradores' }
 };
 
-export default function DeliveryStats({ refreshInterval = 30000 }: DeliveryStatsProps) {
-  useAuth();
-  const { notifications, loading: notificationsLoading, refreshNotifications } = useSimpleNotifications();
-  
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function DeliveryStats({ asociacionId, refreshInterval = 30000 }: DeliveryStatsProps) {
+  const { user } = useAuth();
+  const { 
+    notifications, 
+    stats, 
+    loading, 
+    error, 
+    refreshNotifications 
+  } = useSimpleNotifications();
+
+  const [channelPerformance, setChannelPerformance] = useState<Record<string, ChannelStats>>({});
   const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  // Generate enhanced stats from simple notifications
-  const enhancedStats = useMemo((): SimpleStats => {
-    const now = new Date();
-    const timeRanges = {
-      '1h': new Date(now.getTime() - 60 * 60 * 1000),
-      '24h': new Date(now.getTime() - 24 * 60 * 60 * 1000),
-      '7d': new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-      '30d': new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-    };
+  // Calculate channel performance from notifications
+  useEffect(() => {
+    if (notifications.length === 0) return;
 
-    const filteredNotifications = notifications.filter(n => 
-      new Date(n.createdAt) >= timeRanges[timeRange]
-    );
-
-    const total = filteredNotifications.length;
-    const sent = filteredNotifications.filter(n => n.status === 'sent').length;
-    const failed = filteredNotifications.filter(n => n.status === 'failed').length;
-    const pending = filteredNotifications.filter(n => n.status === 'pending').length;
-    const processing = filteredNotifications.filter(n => n.status === 'sending').length;
-    const cancelled = 0; // Not available in simple notifications
-
-    const successRate = total > 0 ? (sent / total) * 100 : 0;
-    const avgProcessingTime = 2.5; // Mock average processing time
-
-    // Calculate channel stats
-    const channelStats: Record<string, { sent: number; failed: number; pending: number; successRate: number }> = {};
+    const channelStats: Record<string, ChannelStats> = {};
     
-    ['email', 'whatsapp', 'app'].forEach(channel => {
-      const channelNotifications = filteredNotifications.filter(n => 
-        n.channels.includes(channel as any)
-      );
-      
-      const channelSent = channelNotifications.filter(n => n.status === 'sent').length;
-      const channelFailed = channelNotifications.filter(n => n.status === 'failed').length;
-      const channelPending = channelNotifications.filter(n => n.status === 'pending').length;
-      const channelTotal = channelNotifications.length;
-      
+    // Initialize channel stats
+    Object.keys(CHANNEL_CONFIG).forEach(channel => {
       channelStats[channel] = {
-        sent: channelSent,
-        failed: channelFailed,
-        pending: channelPending,
-        successRate: channelTotal > 0 ? (channelSent / channelTotal) * 100 : 0
+        channel,
+        icon: CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG].icon,
+        color: CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG].color,
+        total: 0,
+        sent: 0,
+        failed: 0,
+        pending: 0,
+        successRate: 0,
       };
     });
 
-    return {
-      total,
-      sent,
-      failed,
-      pending,
-      processing,
-      cancelled,
-      successRate,
-      avgProcessingTime,
-      channelStats
-    };
-  }, [notifications, timeRange]);
+    // Calculate stats from notifications
+    notifications.forEach(notification => {
+      notification.channels.forEach(channel => {
+        if (channelStats[channel]) {
+          channelStats[channel].total++;
+          
+          switch (notification.status) {
+            case 'sent':
+              channelStats[channel].sent++;
+              break;
+            case 'failed':
+              channelStats[channel].failed++;
+              break;
+            case 'pending':
+            case 'sending':
+              channelStats[channel].pending++;
+              break;
+          }
+        }
+      });
+    });
 
-  const channelPerformance = useMemo((): Record<string, ChannelStats> => {
-    const channelStats: Record<string, ChannelStats> = {};
-    
-    Object.entries(enhancedStats.channelStats).forEach(([channel, stats]) => {
-      const config = CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG];
-      if (config) {
-        const total = stats.sent + stats.failed + stats.pending;
-        channelStats[channel] = {
-          channel,
-          icon: config.icon,
-          color: config.color,
-          total,
-          sent: stats.sent,
-          failed: stats.failed,
-          pending: stats.pending,
-          successRate: stats.successRate
-        };
+    // Calculate success rates
+    Object.keys(channelStats).forEach(channel => {
+      const stats = channelStats[channel];
+      if (stats.total > 0) {
+        stats.successRate = (stats.sent / stats.total) * 100;
       }
     });
 
-    return channelStats;
-  }, [enhancedStats]);
+    setChannelPerformance(channelStats);
+  }, [notifications]);
 
   // Auto-refresh
   useEffect(() => {
-    setLoading(notificationsLoading);
-  }, [notificationsLoading]);
-
-  useEffect(() => {
     if (autoRefresh) {
-      const interval = setInterval(() => {
-        refreshNotifications();
-      }, refreshInterval);
+      const interval = setInterval(refreshNotifications, refreshInterval);
       return () => clearInterval(interval);
     }
   }, [autoRefresh, refreshInterval, refreshNotifications]);
@@ -201,12 +154,12 @@ export default function DeliveryStats({ refreshInterval = 30000 }: DeliveryStats
   // Preparar datos para gráficos
   const chartData = useMemo(() => {
     return [
-      { name: 'Enviadas', value: enhancedStats.sent, color: '#4caf50' },
-      { name: 'Fallidas', value: enhancedStats.failed, color: '#f44336' },
-      { name: 'Pendientes', value: enhancedStats.pending, color: '#ff9800' },
-      { name: 'Procesando', value: enhancedStats.processing, color: '#2196f3' }
+      { name: 'Enviadas', value: stats.sent, color: '#4caf50' },
+      { name: 'Fallidas', value: stats.failed, color: '#f44336' },
+      { name: 'Pendientes', value: stats.pending, color: '#ff9800' },
+      { name: 'Borradores', value: stats.draft, color: '#9e9e9e' }
     ].filter(item => item.value > 0);
-  }, [enhancedStats]);
+  }, [stats]);
 
   const channelData = useMemo(() => {
     return Object.entries(channelPerformance).map(([channel, data]) => ({
@@ -223,8 +176,9 @@ export default function DeliveryStats({ refreshInterval = 30000 }: DeliveryStats
   const handleExportStats = async () => {
     try {
       const data = {
-        stats: enhancedStats,
+        stats,
         channelPerformance,
+        notifications: notifications.slice(0, 100), // Export only last 100
         timeRange,
         exportedAt: new Date().toISOString()
       };
@@ -243,7 +197,7 @@ export default function DeliveryStats({ refreshInterval = 30000 }: DeliveryStats
     }
   };
 
-  if (loading && enhancedStats.total === 0) {
+  if (loading && notifications.length === 0) {
     return (
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
@@ -267,6 +221,8 @@ export default function DeliveryStats({ refreshInterval = 30000 }: DeliveryStats
     );
   }
 
+  const successRate = stats.total > 0 ? (stats.sent / stats.total) * 100 : 0;
+
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
@@ -276,7 +232,7 @@ export default function DeliveryStats({ refreshInterval = 30000 }: DeliveryStats
             Estadísticas de Entrega
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Monitoreo del sistema de notificaciones
+            Monitoreo del sistema de notificaciones simples
           </Typography>
         </Box>
 
@@ -328,18 +284,13 @@ export default function DeliveryStats({ refreshInterval = 30000 }: DeliveryStats
           gap: 3, 
           mb: 4 
         }}>
-          {[
-            { key: 'sent', value: enhancedStats.sent },
-            { key: 'failed', value: enhancedStats.failed },
-            { key: 'pending', value: enhancedStats.pending },
-            { key: 'processing', value: enhancedStats.processing }
-          ].map(({ key, value }) => {
-            const config = STATUS_CONFIG[key as keyof typeof STATUS_CONFIG];
-            const percentage = enhancedStats.total > 0 ? (value / enhancedStats.total) * 100 : 0;
+          {Object.entries(STATUS_CONFIG).map(([status, config]) => {
+            const value = stats[status as keyof typeof stats] as number;
+            const percentage = stats.total > 0 ? (value / stats.total) * 100 : 0;
             
             return (
               <motion.div
-                key={key}
+                key={status}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -392,16 +343,16 @@ export default function DeliveryStats({ refreshInterval = 30000 }: DeliveryStats
                 <Typography variant="h6">Tasa de Éxito</Typography>
               </Box>
               <Typography variant="h3" color="primary" gutterBottom>
-                {enhancedStats.successRate.toFixed(1)}%
+                {successRate.toFixed(1)}%
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                {enhancedStats.successRate >= 90 ? (
+                {successRate >= 90 ? (
                   <TrendingUp sx={{ color: '#4caf50', mr: 1 }} />
                 ) : (
                   <TrendingDown sx={{ color: '#f44336', mr: 1 }} />
                 )}
                 <Typography variant="body2" color="text.secondary">
-                  {enhancedStats.sent} de {enhancedStats.total} notificaciones
+                  {stats.sent} de {stats.total} notificaciones
                 </Typography>
               </Box>
             </CardContent>
@@ -411,13 +362,13 @@ export default function DeliveryStats({ refreshInterval = 30000 }: DeliveryStats
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Schedule sx={{ color: '#2196f3', mr: 1 }} />
-                <Typography variant="h6">Tiempo Promedio</Typography>
+                <Typography variant="h6">Canales Activos</Typography>
               </Box>
               <Typography variant="h3" color="primary" gutterBottom>
-                {enhancedStats.avgProcessingTime.toFixed(1)}m
+                {Object.keys(CHANNEL_CONFIG).length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Tiempo de procesamiento
+                Email, WhatsApp, App
               </Typography>
             </CardContent>
           </Card>
@@ -429,10 +380,10 @@ export default function DeliveryStats({ refreshInterval = 30000 }: DeliveryStats
                 <Typography variant="h6">Total Procesadas</Typography>
               </Box>
               <Typography variant="h3" color="primary" gutterBottom>
-                {enhancedStats.total.toLocaleString()}
+                {stats.total.toLocaleString()}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                En {timeRange}
+                Todas las notificaciones
               </Typography>
             </CardContent>
           </Card>
@@ -452,37 +403,25 @@ export default function DeliveryStats({ refreshInterval = 30000 }: DeliveryStats
                 Distribución de Estados
               </Typography>
               <Box sx={{ height: 300 }}>
-                {chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={chartData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    height: '100%',
-                    color: 'text.secondary'
-                  }}>
-                    <Typography>No hay datos para mostrar</Typography>
-                  </Box>
-                )}
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip />
+                  </PieChart>
+                </ResponsiveContainer>
               </Box>
             </CardContent>
           </Card>
@@ -494,27 +433,15 @@ export default function DeliveryStats({ refreshInterval = 30000 }: DeliveryStats
                 Rendimiento por Canal
               </Typography>
               <Box sx={{ height: 300 }}>
-                {channelData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={channelData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="channelName" />
-                      <YAxis />
-                      <RechartsTooltip />
-                      <Bar dataKey="successRate" fill="#4caf50" name="Tasa de Éxito %" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    height: '100%',
-                    color: 'text.secondary'
-                  }}>
-                    <Typography>No hay datos por canal</Typography>
-                  </Box>
-                )}
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={channelData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="channelName" />
+                    <YAxis />
+                    <RechartsTooltip />
+                    <Bar dataKey="successRate" fill="#4caf50" name="Tasa de Éxito %" />
+                  </BarChart>
+                </ResponsiveContainer>
               </Box>
             </CardContent>
           </Card>
@@ -528,12 +455,12 @@ export default function DeliveryStats({ refreshInterval = 30000 }: DeliveryStats
             </Typography>
             <Box sx={{ 
               display: 'grid', 
-              gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, 
+              gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, 
               gap: 2 
             }}>
               {Object.entries(channelPerformance).map(([channel, data]) => {
                 const config = CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG];
-                if (!config) return null;
+                if (!config || data.total === 0) return null;
 
                 return (
                   <motion.div
