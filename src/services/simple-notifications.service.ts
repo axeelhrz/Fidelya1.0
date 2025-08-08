@@ -73,95 +73,58 @@ class SimpleEmailService {
   }
 }
 
-// Servicio de WhatsApp con Twilio - CONFIGURADO CORRECTAMENTE
+// Servicio de WhatsApp usando API Route - SOLUCIONADO
 class SimpleWhatsAppService {
-  private accountSid: string;
-  private authToken: string;
-  private fromNumber: string;
-
   constructor() {
-    this.accountSid = process.env.TWILIO_ACCOUNT_SID || '';
-    this.authToken = process.env.TWILIO_AUTH_TOKEN || '';
-    this.fromNumber = process.env.TWILIO_WHATSAPP_FROM || 'whatsapp:+14155238886';
-  }
-
-  // Función para formatear número de teléfono
-  private formatPhoneNumber(phone: string): string {
-    // Remover todos los caracteres no numéricos
-    let cleanPhone = phone.replace(/\D/g, '');
-    
-    // Si no empieza con código de país, asumir que es de Argentina (+54)
-    if (!cleanPhone.startsWith('54') && cleanPhone.length === 10) {
-      cleanPhone = '54' + cleanPhone;
-    }
-    
-    // Agregar el prefijo de WhatsApp
-    return `whatsapp:+${cleanPhone}`;
+    // No necesitamos credenciales aquí, se manejan en la API route
   }
 
   async sendWhatsApp(to: string, message: string): Promise<boolean> {
-    if (!this.accountSid || !this.authToken) {
-      console.warn('🚫 Twilio WhatsApp credentials not configured');
-      return false;
-    }
-
     try {
-      // Formatear número de teléfono
-      const formattedTo = this.formatPhoneNumber(to);
+      console.log(`📱 Cliente: Enviando WhatsApp a: ${to}`);
       
-      console.log(`📱 Enviando WhatsApp a: ${formattedTo}`);
-      
-      // Crear el cuerpo de la petición para Twilio
-      const body = new URLSearchParams({
-        From: this.fromNumber,
-        To: formattedTo,
-        Body: message
+      // Llamar a nuestra API route que maneja Twilio
+      const response = await fetch('/api/notifications/whatsapp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: to,
+          message: message
+        })
       });
 
-      // Crear la autorización básica para Twilio
-      const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString('base64');
+      const result = await response.json();
 
-      // Enviar mensaje usando Twilio API
-      const response = await fetch(
-        `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Messages.json`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Basic ${auth}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: body.toString()
-        }
-      );
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log(`✅ WhatsApp enviado exitosamente via Twilio. SID: ${result.sid}`);
-        console.log(`📊 Estado: ${result.status}, Precio: ${result.price} ${result.price_unit}`);
+      if (response.ok && result.success) {
+        console.log(`✅ Cliente: WhatsApp enviado exitosamente. SID: ${result.sid}`);
+        console.log(`📊 Cliente: Estado: ${result.status}, Precio: ${result.price} ${result.priceUnit}`);
         return true;
       } else {
-        const error = await response.json();
-        console.error('❌ Error Twilio WhatsApp:', error);
-        console.error(`🔍 Detalles: ${error.message} (Código: ${error.code})`);
+        console.error('❌ Cliente: Error enviando WhatsApp:', result.error);
+        if (result.code) {
+          console.error(`🔍 Cliente: Código de error Twilio: ${result.code}`);
+        }
         return false;
       }
     } catch (error) {
-      console.error('💥 Error crítico enviando WhatsApp via Twilio:', error);
+      console.error('💥 Cliente: Error crítico enviando WhatsApp:', error);
       return false;
     }
   }
 
-  // Método para verificar la configuración
+  // Método para verificar la configuración (ahora siempre retorna true ya que se verifica en la API)
   isConfigured(): boolean {
-    return !!(this.accountSid && this.authToken);
+    return true; // La verificación real se hace en la API route
   }
 
-  // Método para obtener información de configuración (sin exponer credenciales)
+  // Método para obtener información de configuración
   getConfigInfo() {
     return {
-      configured: this.isConfigured(),
-      fromNumber: this.fromNumber,
-      accountSidPrefix: this.accountSid ? this.accountSid.substring(0, 8) + '...' : 'No configurado'
+      configured: true,
+      fromNumber: 'whatsapp:+14155238886',
+      method: 'API Route (Server-side)'
     };
   }
 }
@@ -178,7 +141,7 @@ export class SimpleNotificationService {
     // Log de configuración al inicializar
     console.log('🔧 Configuración de servicios de notificación:');
     console.log('📧 Email (SendGrid):', this.emailService.constructor.name);
-    console.log('📱 WhatsApp (Twilio):', this.whatsappService.getConfigInfo());
+    console.log('📱 WhatsApp (Twilio via API):', this.whatsappService.getConfigInfo());
   }
 
   // Obtener información de destinatarios
