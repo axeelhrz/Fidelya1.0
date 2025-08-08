@@ -266,10 +266,11 @@ export class SimpleNotificationService {
 
               case 'whatsapp':
                 if (recipient.phone) {
-                  const whatsappMessage = `*${data.title}*\n\n${data.message}\n\n_Enviado desde Fidelya 🚀_`;
+                  // Pasar el título para el branding personalizado
                   sent = await this.whatsappService.sendWhatsApp(
                     recipient.phone,
-                    whatsappMessage
+                    data.message,
+                    data.title
                   );
                   if (sent) {
                     console.log(`✅ WhatsApp enviado a ${recipient.name} (${recipient.phone})`);
