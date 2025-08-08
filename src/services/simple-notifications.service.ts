@@ -17,59 +17,81 @@ import {
   RecipientInfo,
   SimpleNotificationChannel
 } from '@/types/simple-notification';
+import emailjs from '@emailjs/browser';
 
-// Servicio de Email simplificado
+// Servicio de Email con EmailJS - CONFIGURADO
 class SimpleEmailService {
-  private apiKey: string;
-  private baseUrl = 'https://api.sendgrid.com/v3/mail/send';
+  private serviceId: string;
+  private templateId: string;
+  private publicKey: string;
 
   constructor() {
-    this.apiKey = process.env.SENDGRID_API_KEY || '';
+    this.serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || '';
+    this.templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || '';
+    this.publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || '';
+    
+    // Inicializar EmailJS
+    if (this.publicKey) {
+      emailjs.init(this.publicKey);
+    }
   }
 
   async sendEmail(to: string, subject: string, message: string): Promise<boolean> {
-    if (!this.apiKey) {
-      console.warn('SendGrid API key not configured');
+    if (!this.serviceId || !this.templateId || !this.publicKey) {
+      console.warn('📧 EmailJS credentials not configured');
+      console.warn('Missing:', {
+        serviceId: !this.serviceId,
+        templateId: !this.templateId,
+        publicKey: !this.publicKey
+      });
       return false;
     }
 
     try {
-      const response = await fetch(this.baseUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          personalizations: [{
-            to: [{ email: to }],
-            subject: subject,
-          }],
-          from: {
-            email: process.env.FROM_EMAIL || 'noreply@fidelya.com',
-            name: process.env.FROM_NAME || 'Fidelya'
-          },
-          content: [{
-            type: 'text/html',
-            value: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #333;">${subject}</h2>
-                <p style="color: #666; line-height: 1.6;">${message.replace(/\n/g, '<br>')}</p>
-                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-                <p style="color: #999; font-size: 12px;">
-                  Este mensaje fue enviado desde Fidelya
-                </p>
-              </div>
-            `
-          }]
-        })
-      });
+      console.log(`📧 Cliente: Enviando email a: ${to}`);
+      
+      // Parámetros para el template de EmailJS
+      const templateParams = {
+        to_email: to,
+        title: subject,
+        message: message,
+        from_name: 'Fidelya',
+        reply_to: 'noreply@fidelya.com'
+      };
 
-      return response.ok;
+      const response = await emailjs.send(
+        this.serviceId,
+        this.templateId,
+        templateParams
+      );
+
+      if (response.status === 200) {
+        console.log(`✅ Cliente: Email enviado exitosamente via EmailJS`);
+        console.log(`📊 Cliente: Response:`, response.text);
+        return true;
+      } else {
+        console.error('❌ Cliente: Error enviando email:', response);
+        return false;
+      }
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error('💥 Cliente: Error crítico enviando email:', error);
       return false;
     }
+  }
+
+  // Método para verificar la configuración
+  isConfigured(): boolean {
+    return !!(this.serviceId && this.templateId && this.publicKey);
+  }
+
+  // Método para obtener información de configuración
+  getConfigInfo() {
+    return {
+      configured: this.isConfigured(),
+      service: 'EmailJS',
+      serviceId: this.serviceId ? this.serviceId.substring(0, 8) + '...' : 'No configurado',
+      templateId: this.templateId ? this.templateId.substring(0, 8) + '...' : 'No configurado'
+    };
   }
 }
 
@@ -101,7 +123,6 @@ class SimpleWhatsAppService {
       if (response.ok && result.success) {
         console.log(`✅ Cliente: WhatsApp enviado exitosamente. SID: ${result.sid}`);
         console.log(`📊 Cliente: Estado: ${result.status}, Precio: ${result.price} ${result.priceUnit}`);
-        console.log(`📝 Cliente: Mensaje con branding:`, result.formattedMessage);
         return true;
       } else {
         console.error('❌ Cliente: Error enviando WhatsApp:', result.error);
@@ -143,7 +164,7 @@ export class SimpleNotificationService {
     
     // Log de configuración al inicializar
     console.log('🔧 Configuración de servicios de notificación:');
-    console.log('📧 Email (SendGrid):', this.emailService.constructor.name);
+    console.log('📧 Email (EmailJS):', this.emailService.getConfigInfo());
     console.log('📱 WhatsApp (Twilio via API):', this.whatsappService.getConfigInfo());
   }
 
@@ -455,10 +476,7 @@ export class SimpleNotificationService {
   getServicesStatus() {
     return {
       whatsapp: this.whatsappService.getConfigInfo(),
-      email: {
-        configured: !!process.env.SENDGRID_API_KEY,
-        service: 'SendGrid'
-      }
+      email: this.emailService.getConfigInfo()
     };
   }
 }
