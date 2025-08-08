@@ -8,7 +8,8 @@ export const WhatsAppTester = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [testPhone, setTestPhone] = useState('');
-  const [testMessage, setTestMessage] = useState('¡Hola! Este es un mensaje de prueba desde Fidelya 🚀');
+  const [testTitle, setTestTitle] = useState('Bienvenido a Fidelya');
+  const [testMessage, setTestMessage] = useState('¡Hola! Este es un mensaje de prueba desde tu plataforma de fidelización favorita.');
 
   const handleDirectTest = async () => {
     if (!testPhone.trim()) {
@@ -19,9 +20,9 @@ export const WhatsAppTester = () => {
     setLoading(true);
     
     try {
-      console.log('🧪 Probando API directamente...');
+      console.log('🧪 Probando API con branding Fidelya...');
       
-      // Llamar directamente a la API de WhatsApp
+      // Llamar directamente a la API de WhatsApp con título
       const response = await fetch('/api/notifications/whatsapp', {
         method: 'POST',
         headers: {
@@ -29,7 +30,8 @@ export const WhatsAppTester = () => {
         },
         body: JSON.stringify({
           to: testPhone,
-          message: `*Prueba Directa - Fidelya*\n\n${testMessage}\n\n_Enviado desde el probador 🧪_`
+          message: testMessage,
+          title: testTitle
         })
       });
 
@@ -38,6 +40,7 @@ export const WhatsAppTester = () => {
       if (response.ok && result.success) {
         toast.success(`✅ WhatsApp enviado exitosamente! SID: ${result.sid}`);
         console.log('🎉 Resultado de la prueba directa:', result);
+        console.log('📝 Mensaje formateado enviado:', result.formattedMessage);
       } else {
         toast.error(`❌ Error: ${result.error}`);
         console.error('💥 Error en la prueba:', result);
@@ -87,9 +90,9 @@ export const WhatsAppTester = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
+    <div className="bg-white rounded-lg shadow-md p-6 max-w-lg mx-auto">
       <h3 className="text-lg font-semibold mb-4 text-gray-800">
-        🧪 Probador de WhatsApp (API Route)
+        🧪 Probador de WhatsApp con Branding Fidelya
       </h3>
       
       <div className="space-y-4">
@@ -107,6 +110,19 @@ export const WhatsAppTester = () => {
           <p className="text-xs text-gray-500 mt-1">
             Formato: +54 para Argentina, +1 para USA, etc.
           </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Título del mensaje
+          </label>
+          <input
+            type="text"
+            value={testTitle}
+            onChange={(e) => setTestTitle(e.target.value)}
+            placeholder="Título de la notificación"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
 
         <div>
@@ -141,10 +157,23 @@ export const WhatsAppTester = () => {
 
       <div className="mt-4 p-3 bg-green-50 rounded-md">
         <p className="text-xs text-green-800">
-          <strong>✅ Configuración Actualizada:</strong><br/>
-          • Ahora usa API Route (server-side)<br/>
-          • Las credenciales se manejan en el servidor<br/>
-          • Mejor seguridad y compatibilidad
+          <strong>✅ Branding Personalizado:</strong><br/>
+          • Header: 🚀 *FIDELYA* 🚀<br/>
+          • Título en negrita<br/>
+          • Footer con info de la plataforma<br/>
+          • Separadores visuales
+        </p>
+      </div>
+
+      <div className="mt-4 p-3 bg-blue-50 rounded-md">
+        <p className="text-xs text-blue-800">
+          <strong>📱 Vista Previa del Mensaje:</strong><br/>
+          🚀 *FIDELYA* 🚀<br/><br/>
+          *{testTitle}*<br/><br/>
+          {testMessage}<br/><br/>
+          ━━━━━━━━━━━━━━━━━━━━<br/>
+          📱 *Fidelya* - Tu plataforma de fidelización<br/>
+          🌐 www.fidelya.com
         </p>
       </div>
 
@@ -153,8 +182,8 @@ export const WhatsAppTester = () => {
           <strong>📋 Instrucciones:</strong><br/>
           1. Envía "join orange-tiger" al +1 415 523 8886<br/>
           2. Ingresa tu número con código de país<br/>
-          3. Haz clic en "Enviar WhatsApp"<br/>
-          4. Revisa la consola para logs detallados
+          3. Personaliza el título y mensaje<br/>
+          4. Haz clic en "Enviar WhatsApp"
         </p>
       </div>
     </div>
