@@ -14,33 +14,29 @@ import {
 } from 'lucide-react';
 
 // Lazy load heavy components for optimal performance
-// Note: For named exports, we need to destructure the component from the module
+// Fixed lazy loading for components with different export types
 const OptimizedOverviewDashboard = lazy(() => import('@/components/asociacion/OptimizedOverviewDashboard'));
 const EnhancedMemberManagement = lazy(() => 
   import('@/components/asociacion/EnhancedMemberManagement').then(module => ({ 
-    default: module.EnhancedMemberManagement 
+    default: module.EnhancedMemberManagement || module.default
   }))
 );
 const ComercioManagement = lazy(() => 
   import('@/components/asociacion/ComercioManagement').then(module => ({ 
-    default: module.ComercioManagement 
+    default: module.ComercioManagement || module.default
   }))
 );
 const BeneficiosManagement = lazy(() => 
   import('@/components/asociacion/BeneficiosManagement').then(module => ({ 
-    default: module.BeneficiosManagement 
+    default: module.BeneficiosManagement || module.default
   }))
 );
 const AdvancedAnalytics = lazy(() => 
   import('@/components/asociacion/AdvancedAnalytics').then(module => ({ 
-    default: module.AdvancedAnalytics 
+    default: module.AdvancedAnalytics || module.default
   }))
 );
-const NotificationsCenter = lazy(() => 
-  import('@/components/asociacion/NotificationsCenter').then(module => ({ 
-    default: module.NotificationsCenter 
-  }))
-);
+const NotificationsCenter = lazy(() => import('@/components/asociacion/NotificationsCenter'));
 
 // Tab configuration with optimized structure
 interface TabConfig {
