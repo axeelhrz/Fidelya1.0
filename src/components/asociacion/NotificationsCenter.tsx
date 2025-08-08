@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
@@ -10,7 +10,6 @@ import {
   Users,
   MessageSquare,
   Mail,
-  Smartphone,
   TrendingUp,
   TrendingDown,
   Clock,
@@ -21,12 +20,9 @@ import {
   Search,
   Calendar,
   Download,
-  Settings,
-  Zap,
   Target,
   Activity,
   Eye,
-  Plus,
   RefreshCw
 } from 'lucide-react';
 import { useSimpleNotifications } from '@/hooks/useSimpleNotifications';
@@ -194,7 +190,7 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
         >
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Distribución por Canal</h3>
           <div className="space-y-4">
-            {channelStats.map((channel, index) => (
+            {channelStats.map((channel) => (
               <div key={channel.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 bg-${channel.color}-100 rounded-lg flex items-center justify-center`}>
@@ -206,7 +202,7 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
                   <div className="w-24 bg-slate-100 rounded-full h-2">
                     <div 
                       className={`h-2 bg-${channel.color}-500 rounded-full transition-all duration-500`}
-                      style={{ width: `${(channel.count / stats.sent) * 100}%` }}
+                      style={{ width: `${stats.sent > 0 ? (channel.count / stats.sent) * 100 : 0}%` }}
                     />
                   </div>
                   <span className="text-sm font-semibold text-slate-900 w-8">{channel.count}</span>
@@ -261,9 +257,7 @@ const SendNotification = () => {
     message: '',
     channels: ['email'],
     recipients: 'all',
-    priority: 'normal',
-    scheduleDate: '',
-    scheduleTime: ''
+    priority: 'normal'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -290,9 +284,7 @@ const SendNotification = () => {
         message: '',
         channels: ['email'],
         recipients: 'all',
-        priority: 'normal',
-        scheduleDate: '',
-        scheduleTime: ''
+        priority: 'normal'
       });
     } catch (error) {
       console.error('Error sending notification:', error);
