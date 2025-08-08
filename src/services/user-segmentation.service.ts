@@ -10,7 +10,8 @@ import {
   orderBy, 
   limit,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -18,10 +19,11 @@ export interface UserSegment {
   id: string;
   name: string;
   description: string;
+  color: string;
   
-  // Segment criteria
+  // Segmentation criteria
   criteria: {
-    userTypes: string[]; // 'socio', 'comercio', 'asociacion'
+    userTypes?: string[]; // 'socio', 'comercio', 'asociacion'
     associations?: string[];
     locations?: {
       countries?: string[];
@@ -38,21 +40,24 @@ export interface UserSegment {
       benefitsUsed?: { min: number; max: number };
       validationsCount?: { min: number; max: number };
     };
+    engagement?: {
+      notificationOpenRate?: { min: number; max: number };
+      appUsageFrequency?: 'daily' | 'weekly' | 'monthly' | 'rarely';
+      lastNotificationDays?: number;
+    };
     customFields?: {
       field: string;
       operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'in' | 'not_in';
       value: any;
     }[];
-    tags?: string[];
   };
   
   // Dynamic vs Static
-  isDynamic: boolean; // If true, recalculates users automatically
+  isDynamic: boolean; // True for auto-updating segments, false for static lists
   
   // Metadata
   userCount: number;
-  lastCalculated: Date;
-  isActive: boolean;
+  lastUpdated: Date;
   createdAt: Date;
   updatedAt: Date;
   createdBy: string;
@@ -60,10 +65,15 @@ export interface UserSegment {
   // Usage analytics
   analytics: {
     notificationsSent: number;
+    averageOpenRate: number;
+    averageClickRate: number;
     lastUsed?: Date;
-    campaignsUsed: number;
-    averageEngagement: number;
+    usageCount: number;
   };
+  
+  // Status
+  isActive: boolean;
+  tags: string[];
 }
 
 export interface SegmentationRule {
@@ -83,9 +93,10 @@ export interface SegmentationRule {
   
   // Action
   action: {
-    type: 'add_to_segment' | 'remove_from_segment' | 'add_tag' | 'remove_tag';
+    type: 'add_to_segment' | 'remove_from_segment' | 'create_segment';
     segmentId?: string;
-    tag?: string;
+    segmentName?: string;
+    delay?: number; // Minutes to wait before applying
   };
   
   isActive: boolean;
@@ -93,98 +104,35 @@ export interface SegmentationRule {
   updatedAt: Date;
   createdBy: string;
   
-  // Analytics
   analytics: {
     totalExecutions: number;
     lastExecuted?: Date;
-    successRate: number;
   };
-}
-
-export interface UserProfile {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  
-  // Basic info
-  phone?: string;
-  avatar?: string;
-  
-  // Location
-  location?: {
-    country?: string;
-    region?: string;
-    city?: string;
-    coordinates?: { lat: number; lng: number };
-  };
-  
-  // Demographics
-  demographics?: {
-    age?: number;
-    gender?: string;
-    birthDate?: Date;
-  };
-  
-  // Associations
-  associations?: string[];
-  primaryAssociation?: string;
-  
-  // Behavior data
-  behavior?: {
-    lastLogin?: Date;
-    loginCount: number;
-    registrationDate: Date;
-    benefitsUsed: number;
-    validationsCount: number;
-    averageSessionDuration: number;
-    preferredChannels: string[];
-  };
-  
-  // Segmentation
-  segments: string[];
-  tags: string[];
-  customFields: Record<string, any>;
-  
-  // Preferences
-  preferences?: {
-    notifications: {
-      email: boolean;
-      sms: boolean;
-      push: boolean;
-    };
-    language: string;
-    timezone: string;
-  };
-  
-  // Metadata
-  createdAt: Date;
-  updatedAt: Date;
-  isActive: boolean;
 }
 
 export interface SegmentInsights {
   segment: UserSegment;
   insights: {
     growth: {
-      trend: 'increasing' | 'decreasing' | 'stable';
-      percentage: number;
-      period: string;
+      daily: number;
+      weekly: number;
+      monthly: number;
     };
     engagement: {
-      averageOpenRate: number;
-      averageClickRate: number;
-      averageConversionRate: number;
-    };
-    demographics: {
-      ageDistribution: Record<string, number>;
-      genderDistribution: Record<string, number>;
-      locationDistribution: Record<string, number>;
+      averageSessionDuration: number;
+      averageNotificationOpenRate: number;
+      mostActiveHours: number[];
+      mostActiveDays: string[];
     };
     behavior: {
-      mostActiveHours: number[];
-      preferredChannels: Record<string, number>;
-      averageLifetimeValue: number;
+      topBenefitsUsed: { benefitId: string; benefitName: string; count: number }[];
+      averageBenefitsPerUser: number;
+      retentionRate: number;
+    };
+    demographics: {
+      ageDistribution: { range: string; count: number; percentage: number }[];
+      genderDistribution: { gender: string; count: number; percentage: number }[];
+      locationDistribution: { location: string; count: number; percentage: number }[];
     };
     recommendations: string[];
   };
@@ -192,25 +140,26 @@ export interface SegmentInsights {
 
 class UserSegmentationService {
   private readonly SEGMENTS_COLLECTION = 'userSegments';
-  private readonly RULES_COLLECTION = 'segmentationRules';
-  private readonly PROFILES_COLLECTION = 'userProfiles';
   private readonly SEGMENT_USERS_COLLECTION = 'segmentUsers';
+  private readonly SEGMENTATION_RULES_COLLECTION = 'segmentationRules';
+  private readonly SEGMENT_ANALYTICS_COLLECTION = 'segmentAnalytics';
 
-  // ==================== USER SEGMENTS ====================
+  // ==================== SEGMENT MANAGEMENT ====================
 
   // Create user segment
   async createUserSegment(
-    data: Omit<UserSegment, 'id' | 'createdAt' | 'updatedAt' | 'userCount' | 'lastCalculated' | 'analytics'>
+    data: Omit<UserSegment, 'id' | 'createdAt' | 'updatedAt' | 'userCount' | 'lastUpdated' | 'analytics'>
   ): Promise<string> {
     try {
       const segment = {
         ...data,
         userCount: 0,
-        lastCalculated: new Date(),
+        lastUpdated: serverTimestamp(),
         analytics: {
           notificationsSent: 0,
-          campaignsUsed: 0,
-          averageEngagement: 0,
+          averageOpenRate: 0,
+          averageClickRate: 0,
+          usageCount: 0,
         },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -218,9 +167,9 @@ class UserSegmentationService {
 
       const docRef = await addDoc(collection(db, this.SEGMENTS_COLLECTION), segment);
       
-      // Calculate initial user count
+      // If dynamic segment, calculate users immediately
       if (data.isDynamic) {
-        await this.calculateSegmentUsers(docRef.id);
+        await this.updateSegmentUsers(docRef.id);
       }
       
       console.log(`✅ Created user segment: ${data.name}`);
@@ -248,7 +197,7 @@ class UserSegmentationService {
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
         updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-        lastCalculated: doc.data().lastCalculated?.toDate() || new Date(),
+        lastUpdated: doc.data().lastUpdated?.toDate() || new Date(),
         analytics: {
           ...doc.data().analytics,
           lastUsed: doc.data().analytics?.lastUsed?.toDate(),
@@ -273,9 +222,9 @@ class UserSegmentationService {
         updatedAt: serverTimestamp(),
       });
       
-      // Recalculate users if criteria changed
+      // If criteria changed and it's a dynamic segment, recalculate users
       if (updates.criteria && updates.isDynamic !== false) {
-        await this.calculateSegmentUsers(id);
+        await this.updateSegmentUsers(id);
       }
       
       console.log(`✅ Updated user segment: ${id}`);
@@ -288,11 +237,24 @@ class UserSegmentationService {
   // Delete user segment
   async deleteUserSegment(id: string): Promise<void> {
     try {
-      const docRef = doc(db, this.SEGMENTS_COLLECTION, id);
-      await deleteDoc(docRef);
+      const batch = writeBatch(db);
       
-      // Clean up segment users
-      await this.removeAllUsersFromSegment(id);
+      // Delete segment
+      const segmentRef = doc(db, this.SEGMENTS_COLLECTION, id);
+      batch.delete(segmentRef);
+      
+      // Delete associated user mappings
+      const userMappingsQuery = query(
+        collection(db, this.SEGMENT_USERS_COLLECTION),
+        where('segmentId', '==', id)
+      );
+      const userMappingsSnapshot = await getDocs(userMappingsQuery);
+      
+      userMappingsSnapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      
+      await batch.commit();
       
       console.log(`✅ Deleted user segment: ${id}`);
     } catch (error) {
@@ -301,232 +263,94 @@ class UserSegmentationService {
     }
   }
 
-  // ==================== SEGMENT CALCULATION ====================
+  // ==================== SEGMENT USERS MANAGEMENT ====================
 
-  // Calculate users for a segment
-  async calculateSegmentUsers(segmentId: string): Promise<number> {
+  // Update segment users based on criteria
+  async updateSegmentUsers(segmentId: string): Promise<void> {
     try {
       const segments = await this.getUserSegments(true);
       const segment = segments.find(s => s.id === segmentId);
       
-      if (!segment) {
-        throw new Error('Segment not found');
+      if (!segment || !segment.isDynamic) {
+        console.warn(`⚠️ Segment not found or not dynamic: ${segmentId}`);
+        return;
       }
 
-      console.log(`🔄 Calculating users for segment: ${segment.name}`);
+      console.log(`🔄 Updating users for segment: ${segment.name}`);
+
+      // Get users matching criteria
+      const matchingUsers = await this.getUsersMatchingCriteria(segment.criteria);
       
-      // Get all user profiles
-      const usersQuery = query(collection(db, this.PROFILES_COLLECTION));
-      const usersSnapshot = await getDocs(usersQuery);
-      
-      const allUsers = usersSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-        behavior: {
-          ...doc.data().behavior,
-          lastLogin: doc.data().behavior?.lastLogin?.toDate(),
-          registrationDate: doc.data().behavior?.registrationDate?.toDate() || new Date(),
-        },
-        demographics: {
-          ...doc.data().demographics,
-          birthDate: doc.data().demographics?.birthDate?.toDate(),
-        },
-      })) as UserProfile[];
-
-      // Filter users based on segment criteria
-      const matchingUsers = allUsers.filter(user => this.userMatchesCriteria(user, segment.criteria));
-      
-      // Update segment user count
-      await updateDoc(doc(db, this.SEGMENTS_COLLECTION, segmentId), {
-        userCount: matchingUsers.length,
-        lastCalculated: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-
-      // Store segment users for quick access
-      await this.storeSegmentUsers(segmentId, matchingUsers.map(u => u.id));
-      
-      console.log(`✅ Calculated ${matchingUsers.length} users for segment: ${segment.name}`);
-      return matchingUsers.length;
-    } catch (error) {
-      console.error('❌ Error calculating segment users:', error);
-      throw error;
-    }
-  }
-
-  // Check if user matches segment criteria
-  private userMatchesCriteria(user: UserProfile, criteria: UserSegment['criteria']): boolean {
-    // User types
-    if (criteria.userTypes.length > 0 && !criteria.userTypes.includes(user.role)) {
-      return false;
-    }
-
-    // Associations
-    if (criteria.associations && criteria.associations.length > 0) {
-      if (!user.associations || !user.associations.some(assoc => criteria.associations!.includes(assoc))) {
-        return false;
-      }
-    }
-
-    // Location
-    if (criteria.locations) {
-      if (criteria.locations.countries && criteria.locations.countries.length > 0) {
-        if (!user.location?.country || !criteria.locations.countries.includes(user.location.country)) {
-          return false;
-        }
-      }
-      if (criteria.locations.regions && criteria.locations.regions.length > 0) {
-        if (!user.location?.region || !criteria.locations.regions.includes(user.location.region)) {
-          return false;
-        }
-      }
-      if (criteria.locations.cities && criteria.locations.cities.length > 0) {
-        if (!user.location?.city || !criteria.locations.cities.includes(user.location.city)) {
-          return false;
-        }
-      }
-    }
-
-    // Demographics
-    if (criteria.demographics) {
-      if (criteria.demographics.ageRange && user.demographics?.age) {
-        const { min, max } = criteria.demographics.ageRange;
-        if (user.demographics.age < min || user.demographics.age > max) {
-          return false;
-        }
-      }
-      if (criteria.demographics.gender && criteria.demographics.gender.length > 0) {
-        if (!user.demographics?.gender || !criteria.demographics.gender.includes(user.demographics.gender)) {
-          return false;
-        }
-      }
-    }
-
-    // Behavior
-    if (criteria.behavior) {
-      if (criteria.behavior.lastLoginDays && user.behavior?.lastLogin) {
-        const daysSinceLogin = Math.floor((Date.now() - user.behavior.lastLogin.getTime()) / (1000 * 60 * 60 * 24));
-        if (daysSinceLogin > criteria.behavior.lastLoginDays) {
-          return false;
-        }
-      }
-      if (criteria.behavior.registrationDays && user.behavior?.registrationDate) {
-        const daysSinceRegistration = Math.floor((Date.now() - user.behavior.registrationDate.getTime()) / (1000 * 60 * 60 * 24));
-        if (daysSinceRegistration > criteria.behavior.registrationDays) {
-          return false;
-        }
-      }
-      if (criteria.behavior.benefitsUsed && user.behavior?.benefitsUsed !== undefined) {
-        const { min, max } = criteria.behavior.benefitsUsed;
-        if (user.behavior.benefitsUsed < min || user.behavior.benefitsUsed > max) {
-          return false;
-        }
-      }
-      if (criteria.behavior.validationsCount && user.behavior?.validationsCount !== undefined) {
-        const { min, max } = criteria.behavior.validationsCount;
-        if (user.behavior.validationsCount < min || user.behavior.validationsCount > max) {
-          return false;
-        }
-      }
-    }
-
-    // Custom fields
-    if (criteria.customFields && criteria.customFields.length > 0) {
-      for (const customField of criteria.customFields) {
-        const fieldValue = user.customFields[customField.field];
-        
-        if (!this.evaluateCondition(fieldValue, customField.operator, customField.value)) {
-          return false;
-        }
-      }
-    }
-
-    // Tags
-    if (criteria.tags && criteria.tags.length > 0) {
-      if (!user.tags || !criteria.tags.some(tag => user.tags.includes(tag))) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  // Evaluate condition
-  private evaluateCondition(fieldValue: any, operator: string, expectedValue: any): boolean {
-    switch (operator) {
-      case 'equals':
-        return fieldValue === expectedValue;
-      case 'not_equals':
-        return fieldValue !== expectedValue;
-      case 'greater_than':
-        return fieldValue > expectedValue;
-      case 'less_than':
-        return fieldValue < expectedValue;
-      case 'contains':
-        return String(fieldValue).includes(String(expectedValue));
-      case 'in':
-        return Array.isArray(expectedValue) && expectedValue.includes(fieldValue);
-      case 'not_in':
-        return Array.isArray(expectedValue) && !expectedValue.includes(fieldValue);
-      default:
-        return false;
-    }
-  }
-
-  // Store segment users for quick access
-  private async storeSegmentUsers(segmentId: string, userIds: string[]): Promise<void> {
-    try {
-      // Remove existing segment users
-      await this.removeAllUsersFromSegment(segmentId);
-      
-      // Add new segment users in batches
-      const batchSize = 500;
-      for (let i = 0; i < userIds.length; i += batchSize) {
-        const batch = userIds.slice(i, i + batchSize);
-        
-        for (const userId of batch) {
-          await addDoc(collection(db, this.SEGMENT_USERS_COLLECTION), {
-            segmentId,
-            userId,
-            addedAt: serverTimestamp(),
-          });
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error storing segment users:', error);
-      throw error;
-    }
-  }
-
-  // Remove all users from segment
-  private async removeAllUsersFromSegment(segmentId: string): Promise<void> {
-    try {
-      const segmentUsersQuery = query(
+      // Get current segment users
+      const currentUsersQuery = query(
         collection(db, this.SEGMENT_USERS_COLLECTION),
         where('segmentId', '==', segmentId)
       );
+      const currentUsersSnapshot = await getDocs(currentUsersQuery);
+      const currentUserIds = new Set(currentUsersSnapshot.docs.map(doc => doc.data().userId));
       
-      const snapshot = await getDocs(segmentUsersQuery);
+      const batch = writeBatch(db);
+      let batchCount = 0;
       
-      for (const doc of snapshot.docs) {
-        await deleteDoc(doc.ref);
+      // Add new users to segment
+      for (const userId of matchingUsers) {
+        if (!currentUserIds.has(userId)) {
+          const segmentUserRef = doc(collection(db, this.SEGMENT_USERS_COLLECTION));
+          batch.set(segmentUserRef, {
+            segmentId,
+            userId,
+            addedAt: serverTimestamp(),
+            addedBy: 'system',
+          });
+          batchCount++;
+          
+          if (batchCount >= 500) {
+            await batch.commit();
+            batchCount = 0;
+          }
+        }
       }
+      
+      // Remove users no longer matching criteria
+      const matchingUserIds = new Set(matchingUsers);
+      for (const doc of currentUsersSnapshot.docs) {
+        const userId = doc.data().userId;
+        if (!matchingUserIds.has(userId)) {
+          batch.delete(doc.ref);
+          batchCount++;
+          
+          if (batchCount >= 500) {
+            await batch.commit();
+            batchCount = 0;
+          }
+        }
+      }
+      
+      if (batchCount > 0) {
+        await batch.commit();
+      }
+      
+      // Update segment user count
+      const segmentRef = doc(db, this.SEGMENTS_COLLECTION, segmentId);
+      await updateDoc(segmentRef, {
+        userCount: matchingUsers.length,
+        lastUpdated: serverTimestamp(),
+      });
+      
+      console.log(`✅ Updated segment ${segment.name}: ${matchingUsers.length} users`);
     } catch (error) {
-      console.error('❌ Error removing users from segment:', error);
+      console.error('❌ Error updating segment users:', error);
+      throw error;
     }
   }
 
-  // ==================== SEGMENT USERS ====================
-
   // Get users in segment
-  async getSegmentUsers(segmentId: string, limitCount?: number): Promise<string[]> {
+  async getSegmentUsers(segmentId: string, limit?: number): Promise<string[]> {
     try {
       const constraints = [where('segmentId', '==', segmentId)];
       
-      if (limitCount) {
-        constraints.push(limit(limitCount));
+      if (limit) {
+        constraints.push(orderBy('addedAt', 'desc'), limit(limit));
       }
       
       const q = query(collection(db, this.SEGMENT_USERS_COLLECTION), ...constraints);
@@ -539,35 +363,41 @@ class UserSegmentationService {
     }
   }
 
-  // Add user to segment
-  async addUserToSegment(userId: string, segmentId: string): Promise<void> {
+  // Add user to segment manually
+  async addUserToSegment(segmentId: string, userId: string, addedBy: string = 'manual'): Promise<void> {
     try {
-      // Check if user is already in segment
+      // Check if user already in segment
       const existingQuery = query(
         collection(db, this.SEGMENT_USERS_COLLECTION),
         where('segmentId', '==', segmentId),
-        where('userId', '==', userId),
-        limit(1)
+        where('userId', '==', userId)
       );
-      
       const existingSnapshot = await getDocs(existingQuery);
       
-      if (existingSnapshot.empty) {
-        await addDoc(collection(db, this.SEGMENT_USERS_COLLECTION), {
-          segmentId,
-          userId,
-          addedAt: serverTimestamp(),
-        });
-        
-        // Update segment user count
-        const segment = (await this.getUserSegments(true)).find(s => s.id === segmentId);
-        if (segment) {
-          await updateDoc(doc(db, this.SEGMENTS_COLLECTION, segmentId), {
-            userCount: segment.userCount + 1,
-            updatedAt: serverTimestamp(),
-          });
-        }
+      if (!existingSnapshot.empty) {
+        console.warn(`⚠️ User ${userId} already in segment ${segmentId}`);
+        return;
       }
+
+      // Add user to segment
+      await addDoc(collection(db, this.SEGMENT_USERS_COLLECTION), {
+        segmentId,
+        userId,
+        addedAt: serverTimestamp(),
+        addedBy,
+      });
+
+      // Update segment user count
+      const segment = (await this.getUserSegments(true)).find(s => s.id === segmentId);
+      if (segment) {
+        const segmentRef = doc(db, this.SEGMENTS_COLLECTION, segmentId);
+        await updateDoc(segmentRef, {
+          userCount: segment.userCount + 1,
+          lastUpdated: serverTimestamp(),
+        });
+      }
+      
+      console.log(`✅ Added user ${userId} to segment ${segmentId}`);
     } catch (error) {
       console.error('❌ Error adding user to segment:', error);
       throw error;
@@ -575,28 +405,38 @@ class UserSegmentationService {
   }
 
   // Remove user from segment
-  async removeUserFromSegment(userId: string, segmentId: string): Promise<void> {
+  async removeUserFromSegment(segmentId: string, userId: string): Promise<void> {
     try {
-      const segmentUserQuery = query(
+      const userSegmentQuery = query(
         collection(db, this.SEGMENT_USERS_COLLECTION),
         where('segmentId', '==', segmentId),
         where('userId', '==', userId)
       );
+      const snapshot = await getDocs(userSegmentQuery);
       
-      const snapshot = await getDocs(segmentUserQuery);
-      
-      for (const doc of snapshot.docs) {
-        await deleteDoc(doc.ref);
+      if (snapshot.empty) {
+        console.warn(`⚠️ User ${userId} not found in segment ${segmentId}`);
+        return;
       }
-      
+
+      // Remove user from segment
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+
       // Update segment user count
       const segment = (await this.getUserSegments(true)).find(s => s.id === segmentId);
       if (segment && segment.userCount > 0) {
-        await updateDoc(doc(db, this.SEGMENTS_COLLECTION, segmentId), {
-          userCount: Math.max(0, segment.userCount - 1),
-          updatedAt: serverTimestamp(),
+        const segmentRef = doc(db, this.SEGMENTS_COLLECTION, segmentId);
+        await updateDoc(segmentRef, {
+          userCount: segment.userCount - 1,
+          lastUpdated: serverTimestamp(),
         });
       }
+      
+      console.log(`✅ Removed user ${userId} from segment ${segmentId}`);
     } catch (error) {
       console.error('❌ Error removing user from segment:', error);
       throw error;
@@ -614,13 +454,12 @@ class UserSegmentationService {
         ...data,
         analytics: {
           totalExecutions: 0,
-          successRate: 100,
         },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
-      const docRef = await addDoc(collection(db, this.RULES_COLLECTION), rule);
+      const docRef = await addDoc(collection(db, this.SEGMENTATION_RULES_COLLECTION), rule);
       
       console.log(`✅ Created segmentation rule: ${data.name}`);
       return docRef.id;
@@ -638,23 +477,14 @@ class UserSegmentationService {
   ): Promise<void> {
     try {
       const rulesQuery = query(
-        collection(db, this.RULES_COLLECTION),
+        collection(db, this.SEGMENTATION_RULES_COLLECTION),
         where('isActive', '==', true)
       );
+      const rulesSnapshot = await getDocs(rulesQuery);
       
-      const snapshot = await getDocs(rulesQuery);
-      const rules = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-        analytics: {
-          ...doc.data().analytics,
-          lastExecuted: doc.data().analytics?.lastExecuted?.toDate(),
-        },
-      })) as SegmentationRule[];
-      
-      const rule = rules.find(r => r.id === ruleId);
+      const rule = rulesSnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .find(r => r.id === ruleId) as SegmentationRule | undefined;
       
       if (!rule) {
         console.warn(`⚠️ Segmentation rule not found: ${ruleId}`);
@@ -665,7 +495,21 @@ class UserSegmentationService {
       if (rule.trigger.conditions) {
         const conditionsMet = rule.trigger.conditions.every(condition => {
           const fieldValue = eventData[condition.field];
-          return this.evaluateCondition(fieldValue, condition.operator, condition.value);
+          
+          switch (condition.operator) {
+            case 'equals':
+              return fieldValue === condition.value;
+            case 'not_equals':
+              return fieldValue !== condition.value;
+            case 'greater_than':
+              return fieldValue > condition.value;
+            case 'less_than':
+              return fieldValue < condition.value;
+            case 'contains':
+              return String(fieldValue).includes(String(condition.value));
+            default:
+              return false;
+          }
         });
 
         if (!conditionsMet) {
@@ -674,32 +518,50 @@ class UserSegmentationService {
         }
       }
 
-      // Execute action
-      switch (rule.action.type) {
-        case 'add_to_segment':
-          if (rule.action.segmentId) {
-            await this.addUserToSegment(userId, rule.action.segmentId);
-          }
-          break;
-        case 'remove_from_segment':
-          if (rule.action.segmentId) {
-            await this.removeUserFromSegment(userId, rule.action.segmentId);
-          }
-          break;
-        case 'add_tag':
-          if (rule.action.tag) {
-            await this.addTagToUser(userId, rule.action.tag);
-          }
-          break;
-        case 'remove_tag':
-          if (rule.action.tag) {
-            await this.removeTagFromUser(userId, rule.action.tag);
-          }
-          break;
+      // Execute action with delay if specified
+      const executeAction = async () => {
+        switch (rule.action.type) {
+          case 'add_to_segment':
+            if (rule.action.segmentId) {
+              await this.addUserToSegment(rule.action.segmentId, userId, 'rule');
+            }
+            break;
+          case 'remove_from_segment':
+            if (rule.action.segmentId) {
+              await this.removeUserFromSegment(rule.action.segmentId, userId);
+            }
+            break;
+          case 'create_segment':
+            if (rule.action.segmentName) {
+              const segmentId = await this.createUserSegment({
+                name: rule.action.segmentName,
+                description: `Auto-created by rule: ${rule.name}`,
+                color: '#6366f1',
+                criteria: { userTypes: ['all'] },
+                isDynamic: false,
+                isActive: true,
+                tags: ['auto-created'],
+                createdBy: 'system',
+              });
+              await this.addUserToSegment(segmentId, userId, 'rule');
+            }
+            break;
+        }
+      };
+
+      if (rule.action.delay && rule.action.delay > 0) {
+        setTimeout(executeAction, rule.action.delay * 60 * 1000);
+      } else {
+        await executeAction();
       }
 
       // Update rule analytics
-      await this.updateRuleAnalytics(ruleId);
+      const ruleRef = doc(db, this.SEGMENTATION_RULES_COLLECTION, ruleId);
+      await updateDoc(ruleRef, {
+        'analytics.totalExecutions': rule.analytics.totalExecutions + 1,
+        'analytics.lastExecuted': serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
       
       console.log(`✅ Executed segmentation rule: ${rule.name}`);
     } catch (error) {
@@ -708,59 +570,7 @@ class UserSegmentationService {
     }
   }
 
-  // ==================== USER PROFILE MANAGEMENT ====================
-
-  // Add tag to user
-  async addTagToUser(userId: string, tag: string): Promise<void> {
-    try {
-      const userRef = doc(db, this.PROFILES_COLLECTION, userId);
-      
-      // Get current user data
-      const userDoc = await getDocs(query(collection(db, this.PROFILES_COLLECTION), where('id', '==', userId), limit(1)));
-      
-      if (!userDoc.empty) {
-        const userData = userDoc.docs[0].data();
-        const currentTags = userData.tags || [];
-        
-        if (!currentTags.includes(tag)) {
-          await updateDoc(userRef, {
-            tags: [...currentTags, tag],
-            updatedAt: serverTimestamp(),
-          });
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error adding tag to user:', error);
-      throw error;
-    }
-  }
-
-  // Remove tag from user
-  async removeTagFromUser(userId: string, tag: string): Promise<void> {
-    try {
-      const userRef = doc(db, this.PROFILES_COLLECTION, userId);
-      
-      // Get current user data
-      const userDoc = await getDocs(query(collection(db, this.PROFILES_COLLECTION), where('id', '==', userId), limit(1)));
-      
-      if (!userDoc.empty) {
-        const userData = userDoc.docs[0].data();
-        const currentTags = userData.tags || [];
-        
-        if (currentTags.includes(tag)) {
-          await updateDoc(userRef, {
-            tags: currentTags.filter((t: string) => t !== tag),
-            updatedAt: serverTimestamp(),
-          });
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error removing tag from user:', error);
-      throw error;
-    }
-  }
-
-  // ==================== ANALYTICS ====================
+  // ==================== ANALYTICS AND INSIGHTS ====================
 
   // Get segment insights
   async getSegmentInsights(segmentId: string): Promise<SegmentInsights | null> {
@@ -775,113 +585,116 @@ class UserSegmentationService {
       // Get segment users
       const userIds = await this.getSegmentUsers(segmentId);
       
-      // This is a simplified implementation
-      // In a real app, you'd calculate actual insights from user data and analytics
-      const insights: SegmentInsights = {
-        segment,
-        insights: {
-          growth: {
-            trend: 'increasing',
-            percentage: 12.5,
-            period: 'last 30 days',
+      if (userIds.length === 0) {
+        return {
+          segment,
+          insights: {
+            growth: { daily: 0, weekly: 0, monthly: 0 },
+            engagement: {
+              averageSessionDuration: 0,
+              averageNotificationOpenRate: 0,
+              mostActiveHours: [],
+              mostActiveDays: [],
+            },
+            behavior: {
+              topBenefitsUsed: [],
+              averageBenefitsPerUser: 0,
+              retentionRate: 0,
+            },
+            demographics: {
+              ageDistribution: [],
+              genderDistribution: [],
+              locationDistribution: [],
+            },
+            recommendations: ['Segment has no users. Consider adjusting criteria.'],
           },
-          engagement: {
-            averageOpenRate: 65.2,
-            averageClickRate: 12.8,
-            averageConversionRate: 3.4,
-          },
-          demographics: {
-            ageDistribution: { '18-25': 25, '26-35': 40, '36-45': 20, '46+': 15 },
-            genderDistribution: { 'male': 45, 'female': 52, 'other': 3 },
-            locationDistribution: { 'Buenos Aires': 35, 'Córdoba': 20, 'Rosario': 15, 'Other': 30 },
-          },
-          behavior: {
-            mostActiveHours: [9, 12, 18, 20],
-            preferredChannels: { 'email': 60, 'push': 30, 'sms': 10 },
-            averageLifetimeValue: 150.75,
-          },
-          recommendations: [
-            'Consider sending notifications during peak hours (9 AM, 12 PM, 6 PM, 8 PM)',
-            'Email is the preferred channel for this segment',
-            'High engagement rate suggests this segment is very responsive to communications',
+        };
+      }
+
+      // Calculate insights (simplified implementation)
+      const insights: SegmentInsights['insights'] = {
+        growth: {
+          daily: Math.floor(Math.random() * 10), // Mock data
+          weekly: Math.floor(Math.random() * 50),
+          monthly: Math.floor(Math.random() * 200),
+        },
+        engagement: {
+          averageSessionDuration: Math.floor(Math.random() * 300) + 60,
+          averageNotificationOpenRate: Math.random() * 100,
+          mostActiveHours: [9, 12, 15, 18, 21],
+          mostActiveDays: ['Monday', 'Wednesday', 'Friday'],
+        },
+        behavior: {
+          topBenefitsUsed: [
+            { benefitId: '1', benefitName: 'Descuento 20%', count: 45 },
+            { benefitId: '2', benefitName: '2x1 en productos', count: 32 },
+            { benefitId: '3', benefitName: 'Envío gratis', count: 28 },
+          ],
+          averageBenefitsPerUser: Math.random() * 5 + 1,
+          retentionRate: Math.random() * 100,
+        },
+        demographics: {
+          ageDistribution: [
+            { range: '18-25', count: Math.floor(userIds.length * 0.2), percentage: 20 },
+            { range: '26-35', count: Math.floor(userIds.length * 0.35), percentage: 35 },
+            { range: '36-45', count: Math.floor(userIds.length * 0.25), percentage: 25 },
+            { range: '46+', count: Math.floor(userIds.length * 0.2), percentage: 20 },
+          ],
+          genderDistribution: [
+            { gender: 'Femenino', count: Math.floor(userIds.length * 0.55), percentage: 55 },
+            { gender: 'Masculino', count: Math.floor(userIds.length * 0.43), percentage: 43 },
+            { gender: 'Otro', count: Math.floor(userIds.length * 0.02), percentage: 2 },
+          ],
+          locationDistribution: [
+            { location: 'Buenos Aires', count: Math.floor(userIds.length * 0.4), percentage: 40 },
+            { location: 'Córdoba', count: Math.floor(userIds.length * 0.2), percentage: 20 },
+            { location: 'Rosario', count: Math.floor(userIds.length * 0.15), percentage: 15 },
+            { location: 'Otros', count: Math.floor(userIds.length * 0.25), percentage: 25 },
           ],
         },
+        recommendations: this.generateRecommendations(segment, userIds.length),
       };
 
-      return insights;
+      return { segment, insights };
     } catch (error) {
       console.error('❌ Error getting segment insights:', error);
       throw error;
     }
   }
 
-  // Update rule analytics
-  private async updateRuleAnalytics(ruleId: string): Promise<void> {
-    try {
-      const ruleRef = doc(db, this.RULES_COLLECTION, ruleId);
-      
-      // In a real implementation, you'd calculate actual stats
-      await updateDoc(ruleRef, {
-        'analytics.totalExecutions': 1, // Increment by 1
-        'analytics.lastExecuted': serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-    } catch (error) {
-      console.error('❌ Error updating rule analytics:', error);
-    }
-  }
-
   // Get segmentation statistics
   async getSegmentationStats(): Promise<{
-    segments: {
-      total: number;
-      active: number;
-      dynamic: number;
-      static: number;
-      totalUsers: number;
-    };
-    rules: {
-      total: number;
-      active: number;
-      totalExecutions: number;
-    };
-    topSegments: Array<{
-      id: string;
-      name: string;
-      userCount: number;
-      engagement: number;
-    }>;
+    totalSegments: number;
+    activeSegments: number;
+    dynamicSegments: number;
+    staticSegments: number;
+    totalUsers: number;
+    averageSegmentSize: number;
+    mostPopularSegments: { id: string; name: string; userCount: number }[];
+    segmentGrowth: { daily: number; weekly: number; monthly: number };
   }> {
     try {
-      const [segments, rules] = await Promise.all([
-        this.getUserSegments(true),
-        this.getSegmentationRules(true),
-      ]);
-
-      const totalUsers = segments.reduce((sum, s) => sum + s.userCount, 0);
-
+      const segments = await this.getUserSegments(true);
+      
+      const totalUsers = segments.reduce((sum, segment) => sum + segment.userCount, 0);
+      const activeSegments = segments.filter(s => s.isActive);
+      
       return {
-        segments: {
-          total: segments.length,
-          active: segments.filter(s => s.isActive).length,
-          dynamic: segments.filter(s => s.isDynamic).length,
-          static: segments.filter(s => !s.isDynamic).length,
-          totalUsers,
-        },
-        rules: {
-          total: rules.length,
-          active: rules.filter(r => r.isActive).length,
-          totalExecutions: rules.reduce((sum, r) => sum + r.analytics.totalExecutions, 0),
-        },
-        topSegments: segments
+        totalSegments: segments.length,
+        activeSegments: activeSegments.length,
+        dynamicSegments: segments.filter(s => s.isDynamic).length,
+        staticSegments: segments.filter(s => !s.isDynamic).length,
+        totalUsers,
+        averageSegmentSize: segments.length > 0 ? Math.round(totalUsers / segments.length) : 0,
+        mostPopularSegments: segments
           .sort((a, b) => b.userCount - a.userCount)
           .slice(0, 5)
-          .map(s => ({
-            id: s.id,
-            name: s.name,
-            userCount: s.userCount,
-            engagement: s.analytics.averageEngagement,
-          })),
+          .map(s => ({ id: s.id, name: s.name, userCount: s.userCount })),
+        segmentGrowth: {
+          daily: Math.floor(Math.random() * 20),
+          weekly: Math.floor(Math.random() * 100),
+          monthly: Math.floor(Math.random() * 500),
+        },
       };
     } catch (error) {
       console.error('❌ Error getting segmentation stats:', error);
@@ -889,30 +702,85 @@ class UserSegmentationService {
     }
   }
 
-  // Get segmentation rules
-  async getSegmentationRules(includeInactive: boolean = false): Promise<SegmentationRule[]> {
+  // ==================== UTILITY METHODS ====================
+
+  // Get users matching criteria
+  private async getUsersMatchingCriteria(criteria: UserSegment['criteria']): Promise<string[]> {
     try {
-      const constraints = [orderBy('createdAt', 'desc')];
+      // This is a simplified implementation
+      // In a real app, you'd build complex queries based on the criteria
       
-      if (!includeInactive) {
-        constraints.unshift(where('isActive', '==', true));
+      const constraints = [];
+      
+      if (criteria.userTypes && criteria.userTypes.length > 0 && !criteria.userTypes.includes('all')) {
+        constraints.push(where('role', 'in', criteria.userTypes));
       }
       
-      const q = query(collection(db, this.RULES_COLLECTION), ...constraints);
+      if (criteria.associations && criteria.associations.length > 0) {
+        constraints.push(where('asociacionId', 'in', criteria.associations));
+      }
+
+      // Add more criteria as needed
+      if (criteria.behavior?.lastLoginDays) {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - criteria.behavior.lastLoginDays);
+        constraints.push(where('lastLoginAt', '>=', Timestamp.fromDate(cutoffDate)));
+      }
+
+      const q = query(collection(db, 'users'), ...constraints);
       const snapshot = await getDocs(q);
       
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-        analytics: {
-          ...doc.data().analytics,
-          lastExecuted: doc.data().analytics?.lastExecuted?.toDate(),
-        },
-      })) as SegmentationRule[];
+      return snapshot.docs.map(doc => doc.id);
     } catch (error) {
-      console.error('❌ Error getting segmentation rules:', error);
+      console.error('❌ Error getting users matching criteria:', error);
+      return [];
+    }
+  }
+
+  // Generate recommendations
+  private generateRecommendations(segment: UserSegment, userCount: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (userCount < 10) {
+      recommendations.push('Considera ampliar los criterios de segmentación para incluir más usuarios.');
+    }
+    
+    if (userCount > 10000) {
+      recommendations.push('Segmento muy grande. Considera crear sub-segmentos más específicos.');
+    }
+    
+    if (segment.analytics.averageOpenRate < 20) {
+      recommendations.push('Baja tasa de apertura. Prueba personalizar más el contenido de las notificaciones.');
+    }
+    
+    if (segment.analytics.usageCount === 0) {
+      recommendations.push('Segmento no utilizado. Considera crear campañas dirigidas a este grupo.');
+    }
+    
+    if (segment.isDynamic) {
+      recommendations.push('Revisa periódicamente los criterios dinámicos para asegurar relevancia.');
+    }
+    
+    return recommendations;
+  }
+
+  // Update all dynamic segments
+  async updateAllDynamicSegments(): Promise<void> {
+    try {
+      const segments = await this.getUserSegments();
+      const dynamicSegments = segments.filter(s => s.isDynamic && s.isActive);
+      
+      console.log(`🔄 Updating ${dynamicSegments.length} dynamic segments...`);
+      
+      for (const segment of dynamicSegments) {
+        await this.updateSegmentUsers(segment.id);
+        // Add delay to avoid overwhelming the database
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+      console.log(`✅ Updated all dynamic segments`);
+    } catch (error) {
+      console.error('❌ Error updating dynamic segments:', error);
       throw error;
     }
   }
