@@ -1,12 +1,9 @@
 import { 
   collection, 
-  doc, 
   getDocs, 
   query, 
   where, 
   orderBy, 
-  limit,
-  startAfter,
   Timestamp,
   addDoc,
   serverTimestamp
@@ -155,7 +152,7 @@ export interface CampaignAnalytics {
   targetAudience: {
     total: number;
     segments: string[];
-    filters: Record<string, any>;
+    filters: Record<string, unknown>;
   };
   
   // Performance
@@ -230,13 +227,22 @@ class NotificationAnalyticsService {
       const q = query(collection(db, this.DELIVERIES_COLLECTION), ...constraints);
       const snapshot = await getDocs(q);
       
-      const deliveries: NotificationDelivery[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        sentAt: doc.data().sentAt?.toDate(),
-        deliveredAt: doc.data().deliveredAt?.toDate(),
-      })) as NotificationDelivery[];
+      const deliveries: NotificationDelivery[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          notificationId: data.notificationId,
+          recipientId: data.recipientId,
+          channel: data.channel,
+          status: data.status,
+          retryCount: data.retryCount ?? 0,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          sentAt: data.sentAt?.toDate(),
+          deliveredAt: data.deliveredAt?.toDate(),
+          failureReason: data.failureReason,
+          metadata: data.metadata,
+        } as NotificationDelivery;
+      });
       
       console.log(`📈 Processing ${deliveries.length} delivery records`);
       
@@ -313,7 +319,7 @@ class NotificationAnalyticsService {
   // Calculate channel-specific statistics
   private calculateChannelStats(deliveries: NotificationDelivery[]): NotificationAnalytics['channelStats'] {
     const channels = ['email', 'sms', 'push', 'app'];
-    const stats: any = {};
+    const stats: Record<string, ChannelStats> = {};
     
     channels.forEach(channel => {
       const channelDeliveries = deliveries.filter(d => d.channel === channel);
@@ -341,7 +347,12 @@ class NotificationAnalyticsService {
       };
     });
     
-    return stats;
+    return {
+      email: stats.email,
+      sms: stats.sms,
+      push: stats.push,
+      app: stats.app,
+    };
   }
 
   // Calculate hourly distribution
@@ -643,7 +654,12 @@ class NotificationAnalyticsService {
     analytics: NotificationAnalytics,
     startDate: Date,
     endDate: Date,
-    filters?: any
+    filters?: {
+      channels?: string[];
+      types?: string[];
+      priorities?: string[];
+      templateIds?: string[];
+    }
   ): Promise<void> {
     try {
       await addDoc(collection(db, this.ANALYTICS_COLLECTION), {
@@ -719,7 +735,6 @@ class NotificationAnalyticsService {
   async generatePerformanceReport(
     startDate: Date,
     endDate: Date,
-    format: 'summary' | 'detailed' = 'summary'
   ): Promise<{
     summary: string;
     recommendations: string[];

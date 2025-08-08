@@ -45,7 +45,7 @@ export interface NotificationTemplate {
   targeting?: {
     userTypes?: string[];
     associations?: string[];
-    customFilters?: Record<string, any>;
+    customFilters?: Record<string, unknown>;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -250,13 +250,19 @@ class NotificationTemplatesService {
   // Get all templates
   async getTemplates(includeInactive: boolean = false): Promise<NotificationTemplate[]> {
     try {
-      const constraints = [orderBy('name', 'asc')];
-      
+      let q;
       if (!includeInactive) {
-        constraints.unshift(where('isActive', '==', true));
+        q = query(
+          collection(db, this.COLLECTION_NAME),
+          where('isActive', '==', true),
+          orderBy('name', 'asc')
+        );
+      } else {
+        q = query(
+          collection(db, this.COLLECTION_NAME),
+          orderBy('name', 'asc')
+        );
       }
-      
-      const q = query(collection(db, this.COLLECTION_NAME), ...constraints);
       const snapshot = await getDocs(q);
       
       return snapshot.docs.map(doc => ({
@@ -365,7 +371,7 @@ class NotificationTemplatesService {
   }
 
   // Parse template with variables
-  parseTemplate(template: string, variables: Record<string, any>): string {
+  parseTemplate(template: string, variables: Record<string, string | number | boolean | Date | undefined>): string {
     let parsed = template;
     
     // Replace variables in format {{variable_name}}
@@ -475,7 +481,7 @@ class NotificationTemplatesService {
         throw new Error('Template not found');
       }
       
-      const duplicatedTemplate = {
+      const duplicatedTemplate: Partial<NotificationTemplate> = {
         ...template,
         name: newName,
         isSystem: false,
@@ -483,13 +489,13 @@ class NotificationTemplatesService {
       };
       
       // Remove fields that shouldn't be duplicated
-      delete (duplicatedTemplate as any).id;
-      delete (duplicatedTemplate as any).createdAt;
-      delete (duplicatedTemplate as any).updatedAt;
-      delete (duplicatedTemplate as any).usageCount;
-      delete (duplicatedTemplate as any).lastUsed;
+      delete duplicatedTemplate.id;
+      delete duplicatedTemplate.createdAt;
+      delete duplicatedTemplate.updatedAt;
+      delete duplicatedTemplate.usageCount;
+      delete duplicatedTemplate.lastUsed;
       
-      return await this.createTemplate(duplicatedTemplate);
+      return await this.createTemplate(duplicatedTemplate as Omit<NotificationTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount' | 'lastUsed'>);
     } catch (error) {
       console.error('❌ Error duplicating template:', error);
       throw error;

@@ -7,7 +7,6 @@ import {
   Container,
   Typography,
   Paper,
-  Grid,
   Card,
   CardContent,
   CardActions,
@@ -37,6 +36,7 @@ import {
   Fab,
   Zoom,
   LinearProgress,
+  CircularProgress,
 } from '@mui/material';
 import {
   Add,
@@ -62,10 +62,10 @@ import {
   Announcement,
 } from '@mui/icons-material';
 import toast from 'react-hot-toast';
-import { 
-  notificationTemplatesService, 
-  NotificationTemplate, 
-  TemplateVariable 
+import {
+  notificationTemplatesService,
+  NotificationTemplate,
+  TemplateVariable
 } from '@/services/notification-templates.service';
 import { NotificationType, NotificationPriority, NotificationCategory } from '@/types/notification';
 
@@ -175,7 +175,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
               >
                 {typeInfo.icon}
               </Avatar>
-              
+
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                   <Typography
@@ -193,7 +193,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
                   >
                     {template.name}
                   </Typography>
-                  
+
                   {template.isSystem && (
                     <Chip
                       label="Sistema"
@@ -207,7 +207,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
                     />
                   )}
                 </Box>
-                
+
                 <Typography
                   variant="caption"
                   sx={{
@@ -369,7 +369,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
           >
             Vista Previa
           </Button>
-          
+
           <Button
             size="small"
             startIcon={<Send />}
@@ -416,7 +416,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
           </MenuItem>
           <Divider />
           {!template.isSystem && (
-            <MenuItem 
+            <MenuItem
               onClick={() => { onDelete(template.id); handleMenuClose(); }}
               sx={{ color: '#ef4444' }}
             >
@@ -450,6 +450,9 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
   onSave,
   loading = false,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -477,7 +480,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
   useEffect(() => {
     const variables = notificationTemplatesService.getAvailableVariables();
     setAvailableVariables(variables);
-    
+
     // Set default preview data
     const defaultPreview: Record<string, string | number | Date> = {};
     Object.entries(variables).forEach(([key, variable]) => {
@@ -634,9 +637,9 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
       </DialogTitle>
 
       <DialogContent sx={{ pb: 2 }}>
-        <Grid container spacing={3}>
+        <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 3 }}>
           {/* Basic Information */}
-          <Grid xs={12} md={6}>
+          <Box sx={{ flex: 1 }}>
             <Stack spacing={3}>
               <TextField
                 fullWidth
@@ -645,7 +648,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 required
               />
-              
+
               <TextField
                 fullWidth
                 label="Descripción"
@@ -655,8 +658,8 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                 rows={2}
               />
 
-              <Grid container spacing={2}>
-                <Grid xs={4}>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: 1, minWidth: 120 }}>
                   <FormControl fullWidth>
                     <InputLabel>Tipo</InputLabel>
                     <Select
@@ -673,9 +676,9 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                       ))}
                     </Select>
                   </FormControl>
-                </Grid>
-                
-                <Grid xs={4}>
+                </Box>
+
+                <Box sx={{ flex: 1, minWidth: 120 }}>
                   <FormControl fullWidth>
                     <InputLabel>Prioridad</InputLabel>
                     <Select
@@ -689,9 +692,9 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                       ))}
                     </Select>
                   </FormControl>
-                </Grid>
-                
-                <Grid xs={4}>
+                </Box>
+
+                <Box sx={{ flex: 1, minWidth: 120 }}>
                   <FormControl fullWidth>
                     <InputLabel>Categoría</InputLabel>
                     <Select
@@ -705,66 +708,58 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                       ))}
                     </Select>
                   </FormControl>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
 
               {/* Channels */}
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
                   Canales de Envío
                 </Typography>
-                <Grid container spacing={1}>
-                  <Grid xs={3}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={formData.channels.email}
-                          onChange={(e) => handleChannelChange('email', e.target.checked)}
-                        />
-                      }
-                      label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><Email sx={{ fontSize: 16 }} />Email</Box>}
-                    />
-                  </Grid>
-                  <Grid xs={3}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={formData.channels.sms}
-                          onChange={(e) => handleChannelChange('sms', e.target.checked)}
-                        />
-                      }
-                      label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><Sms sx={{ fontSize: 16 }} />SMS</Box>}
-                    />
-                  </Grid>
-                  <Grid xs={3}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={formData.channels.push}
-                          onChange={(e) => handleChannelChange('push', e.target.checked)}
-                        />
-                      }
-                      label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><PhoneAndroid sx={{ fontSize: 16 }} />Push</Box>}
-                    />
-                  </Grid>
-                  <Grid xs={3}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={formData.channels.app}
-                          onChange={(e) => handleChannelChange('app', e.target.checked)}
-                        />
-                      }
-                      label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><Notifications sx={{ fontSize: 16 }} />App</Box>}
-                    />
-                  </Grid>
-                </Grid>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.channels.email}
+                        onChange={(e) => handleChannelChange('email', e.target.checked)}
+                      />
+                    }
+                    label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><Email sx={{ fontSize: 16 }} />Email</Box>}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.channels.sms}
+                        onChange={(e) => handleChannelChange('sms', e.target.checked)}
+                      />
+                    }
+                    label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><Sms sx={{ fontSize: 16 }} />SMS</Box>}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.channels.push}
+                        onChange={(e) => handleChannelChange('push', e.target.checked)}
+                      />
+                    }
+                    label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><PhoneAndroid sx={{ fontSize: 16 }} />Push</Box>}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.channels.app}
+                        onChange={(e) => handleChannelChange('app', e.target.checked)}
+                      />
+                    }
+                    label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><Notifications sx={{ fontSize: 16 }} />App</Box>}
+                  />
+                </Box>
               </Box>
             </Stack>
-          </Grid>
+          </Box>
 
           {/* Content */}
-          <Grid xs={12} md={6}>
+          <Box sx={{ flex: 1 }}>
             <Stack spacing={3}>
               <TextField
                 fullWidth
@@ -774,7 +769,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                 required
                 helperText="Usa {{variable}} para insertar variables dinámicas"
               />
-              
+
               <TextField
                 fullWidth
                 label="Mensaje"
@@ -786,24 +781,20 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                 helperText="Usa {{variable}} para insertar variables dinámicas"
               />
 
-              <Grid container spacing={2}>
-                <Grid xs={6}>
-                  <TextField
-                    fullWidth
-                    label="URL de acción (opcional)"
-                    value={formData.actionUrl}
-                    onChange={(e) => handleInputChange('actionUrl', e.target.value)}
-                  />
-                </Grid>
-                <Grid xs={6}>
-                  <TextField
-                    fullWidth
-                    label="Texto del botón (opcional)"
-                    value={formData.actionLabel}
-                    onChange={(e) => handleInputChange('actionLabel', e.target.value)}
-                  />
-                </Grid>
-              </Grid>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                  fullWidth
+                  label="URL de acción (opcional)"
+                  value={formData.actionUrl}
+                  onChange={(e) => handleInputChange('actionUrl', e.target.value)}
+                />
+                <TextField
+                  fullWidth
+                  label="Texto del botón (opcional)"
+                  value={formData.actionLabel}
+                  onChange={(e) => handleInputChange('actionLabel', e.target.value)}
+                />
+              </Box>
 
               {/* Tags */}
               <Box>
@@ -846,81 +837,79 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                 )}
               </Box>
             </Stack>
-          </Grid>
+          </Box>
+        </Box>
 
-          {/* Preview */}
-          <Grid xs={12}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 3,
-                border: '1px solid #e2e8f0',
-                borderRadius: 3,
-                bgcolor: '#f8fafc',
-              }}
-            >
-              <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Preview />
-                Vista Previa
-              </Typography>
-              
-              <Alert
-                severity={formData.type === 'error' ? 'error' : formData.type === 'warning' ? 'warning' : formData.type === 'success' ? 'success' : 'info'}
-                sx={{ borderRadius: 2 }}
-              >
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-                  {previewTitle || 'Título de la notificación'}
-                </Typography>
-                <Typography variant="body2">
-                  {previewMessage || 'Mensaje de la notificación'}
-                </Typography>
-              </Alert>
-            </Paper>
-          </Grid>
+        {/* Preview */}
+        <Box sx={{ mt: 3 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: '1px solid #e2e8f0',
+              borderRadius: 3,
+              bgcolor: '#f8fafc',
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Preview />
+              Vista Previa
+            </Typography>
 
-          {/* Available Variables */}
-          <Grid xs={12}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 3,
-                border: '1px solid #e2e8f0',
-                borderRadius: 3,
-              }}
+            <Alert
+              severity={formData.type === 'error' ? 'error' : formData.type === 'warning' ? 'warning' : formData.type === 'success' ? 'success' : 'info'}
+              sx={{ borderRadius: 2 }}
             >
-              <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Code />
-                Variables Disponibles
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                {previewTitle || 'Título de la notificación'}
               </Typography>
-              
-              <Grid container spacing={1}>
-                {Object.entries(availableVariables).slice(0, 12).map(([key, variable]) => (
-                  <Grid xs={6} sm={4} md={3} key={key}>
-                    <Tooltip title={variable.description}>
-                      <Chip
-                        label={`{{${key}}}`}
-                        size="small"
-                        variant="outlined"
-                        onClick={() => {
-                          // Copy to clipboard
-                          navigator.clipboard.writeText(`{{${key}}}`);
-                          toast.success('Variable copiada');
-                        }}
-                        sx={{
-                          cursor: 'pointer',
-                          fontSize: '0.7rem',
-                          '&:hover': {
-                            bgcolor: alpha('#6366f1', 0.1),
-                          }
-                        }}
-                      />
-                    </Tooltip>
-                  </Grid>
-                ))}
-              </Grid>
-            </Paper>
-          </Grid>
-        </Grid>
+              <Typography variant="body2">
+                {previewMessage || 'Mensaje de la notificación'}
+              </Typography>
+            </Alert>
+          </Paper>
+        </Box>
+
+        {/* Available Variables */}
+        <Box sx={{ mt: 3 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: '1px solid #e2e8f0',
+              borderRadius: 3,
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Code />
+              Variables Disponibles
+            </Typography>
+
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {Object.entries(availableVariables).slice(0, 12).map(([key, variable]) => (
+                <Tooltip key={key} title={variable.description}>
+                  <Chip
+                    label={`{{${key}}}`}
+                    size="small"
+                    variant="outlined"
+                    onClick={() => {
+                      // Copy to clipboard
+                      navigator.clipboard.writeText(`{{${key}}}`);
+                      toast.success('Variable copiada');
+                    }}
+                    sx={{
+                      cursor: 'pointer',
+                      fontSize: '0.7rem',
+                      '&:hover': {
+                        bgcolor: alpha('#6366f1', 0.1),
+                      }
+                    }}
+                  />
+                </Tooltip>
+              ))}
+            </Box>
+          </Paper>
+        </Box>
       </DialogContent>
 
       <DialogActions sx={{ p: 3, pt: 2 }}>
@@ -931,7 +920,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
           onClick={handleSave}
           variant="contained"
           disabled={loading || !formData.name.trim() || !formData.title.trim() || !formData.message.trim()}
-          startIcon={loading ? <LinearProgress size={16} /> : <Save />}
+          startIcon={loading ? <CircularProgress size={16} /> : <Save />}
         >
           {template ? 'Actualizar' : 'Crear'} Plantilla
         </Button>
@@ -943,9 +932,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
 export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
   loading: externalLoading = false
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+
   const [templates, setTemplates] = useState<NotificationTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -964,12 +951,16 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
     try {
       setLoading(true);
       setError(null);
-      
+
       const data = await notificationTemplatesService.getTemplates(true);
       setTemplates(data);
     } catch (err) {
       console.error('Error loading templates:', err);
-      setError(err instanceof Error ? err.message : 'Error al cargar las plantillas');
+      setError((err && typeof err === 'object' && 'message' in err)
+        ? typeof (err as { message?: unknown }).message === 'string'
+          ? (err as { message: string }).message
+          : 'Error al cargar las plantillas'
+        : 'Error al cargar las plantillas');
       toast.error('Error al cargar las plantillas');
     } finally {
       setLoading(false);
@@ -986,8 +977,8 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
     return templates.filter(template => {
       // Search filter
       if (searchTerm && !template.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-          !template.description.toLowerCase().includes(searchTerm.toLowerCase()) &&
-          !template.title.toLowerCase().includes(searchTerm.toLowerCase())) {
+        !template.description.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !template.title.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
 
@@ -1054,20 +1045,20 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
     }
   };
 
-  const handlePreviewTemplate = (template: NotificationTemplate) => {
+  const handlePreviewTemplate = () => {
     // TODO: Implement preview modal
-    toast.info('Vista previa próximamente');
+    toast('Vista previa próximamente');
   };
 
-  const handleUseTemplate = (template: NotificationTemplate) => {
+  const handleUseTemplate = () => {
     // TODO: Implement use template (redirect to create notification with template)
-    toast.info('Usar plantilla próximamente');
+    toast('Usar plantilla próximamente');
   };
 
   const handleSaveTemplate = async (templateData: Omit<NotificationTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount' | 'lastUsed'>) => {
     try {
       setActionLoading(true);
-      
+
       if (templateDialog.template) {
         await notificationTemplatesService.updateTemplate(templateDialog.template.id, templateData);
         toast.success('Plantilla actualizada exitosamente');
@@ -1075,7 +1066,7 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
         await notificationTemplatesService.createTemplate(templateData);
         toast.success('Plantilla creada exitosamente');
       }
-      
+
       setTemplateDialog({ open: false });
       await loadTemplates();
     } catch (err) {
@@ -1116,7 +1107,7 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
           <Box>
             <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
               Plantillas de Notificaciones
@@ -1155,8 +1146,8 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
             mb: 3,
           }}
         >
-          <Grid container spacing={3} alignItems="center">
-            <Grid xs={12} md={4}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, alignItems: 'center' }}>
+            <Box sx={{ flex: 1, minWidth: 200 }}>
               <TextField
                 fullWidth
                 placeholder="Buscar plantillas..."
@@ -1171,9 +1162,9 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
                   }
                 }}
               />
-            </Grid>
-            
-            <Grid xs={12} md={2}>
+            </Box>
+
+            <Box sx={{ minWidth: 120 }}>
               <FormControl fullWidth>
                 <InputLabel>Tipo</InputLabel>
                 <Select
@@ -1188,9 +1179,9 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
                   ))}
                 </Select>
               </FormControl>
-            </Grid>
-            
-            <Grid xs={12} md={2}>
+            </Box>
+
+            <Box sx={{ minWidth: 120 }}>
               <FormControl fullWidth>
                 <InputLabel>Categoría</InputLabel>
                 <Select
@@ -1205,20 +1196,18 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
                   ))}
                 </Select>
               </FormControl>
-            </Grid>
-            
-            <Grid xs={12} md={4}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={showSystemTemplates}
-                    onChange={(e) => setShowSystemTemplates(e.target.checked)}
-                  />
-                }
-                label="Mostrar plantillas del sistema"
-              />
-            </Grid>
-          </Grid>
+            </Box>
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showSystemTemplates}
+                  onChange={(e) => setShowSystemTemplates(e.target.checked)}
+                />
+              }
+              label="Mostrar plantillas del sistema"
+            />
+          </Box>
         </Paper>
       </Box>
 
@@ -1258,7 +1247,7 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
             No se encontraron plantillas
           </Typography>
           <Typography variant="body1" sx={{ color: '#64748b', mb: 4 }}>
-            {searchTerm || filterType !== 'all' || filterCategory !== 'all' 
+            {searchTerm || filterType !== 'all' || filterCategory !== 'all'
               ? 'No hay plantillas que coincidan con los filtros aplicados.'
               : 'Aún no tienes plantillas creadas. Crea tu primera plantilla para comenzar.'
             }
@@ -1278,22 +1267,31 @@ export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
           </Button>
         </Paper>
       ) : (
-        <Grid container spacing={3}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(3, 1fr)',
+            },
+            gap: 3,
+          }}
+        >
           <AnimatePresence>
             {filteredTemplates.map((template) => (
-              <Grid xs={12} sm={6} lg={4} key={template.id}>
-                <TemplateCard
-                  template={template}
-                  onEdit={handleEditTemplate}
-                  onDelete={handleDeleteTemplate}
-                  onDuplicate={handleDuplicateTemplate}
-                  onPreview={handlePreviewTemplate}
-                  onUse={handleUseTemplate}
-                />
-              </Grid>
+              <TemplateCard
+                key={template.id}
+                template={template}
+                onEdit={handleEditTemplate}
+                onDelete={handleDeleteTemplate}
+                onDuplicate={handleDuplicateTemplate}
+                onPreview={handlePreviewTemplate}
+                onUse={handleUseTemplate}
+              />
             ))}
           </AnimatePresence>
-        </Grid>
+        </Box>
       )}
 
       {/* Floating Action Button */}

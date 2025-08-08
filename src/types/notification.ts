@@ -128,4 +128,5 @@ export interface NotificationDelivery {
   failureReason?: string;
   retryCount: number;
   metadata?: Record<string, unknown>;
+  createdAt: Date;
 }
