@@ -3,7 +3,6 @@ import {
   doc,
   addDoc,
   updateDoc,
-  deleteDoc,
   getDocs,
   query,
   where,
@@ -30,7 +29,7 @@ export interface QueuedNotification {
   errorMessage?: string;
   metadata: {
     templateId?: string;
-    variables?: Record<string, any>;
+    variables?: Record<string, unknown>;
     segmentId?: string;
     campaignId?: string;
   };
@@ -110,21 +109,24 @@ class NotificationQueueService {
   }
 
   // Obtener próximas notificaciones para procesar
-  async getNextNotifications(limit: number = 10, channel?: string): Promise<QueuedNotification[]> {
+  async getNextNotifications(limitCount: number = 10, channel?: string): Promise<QueuedNotification[]> {
     try {
-      let q = query(
-        collection(db, this.COLLECTION),
+      const constraints = [
         where('status', '==', 'pending'),
         where('scheduledFor', '<=', new Date()),
         orderBy('scheduledFor', 'asc'),
-        orderBy('priority', 'desc')
-      );
+        orderBy('priority', 'desc'),
+        limit(limitCount)
+      ];
 
       if (channel) {
-        q = query(q, where('channel', '==', channel));
+        constraints.push(where('channel', '==', channel));
       }
 
-      q = query(q, limit(limit));
+      const q = query(
+        collection(db, this.COLLECTION),
+        ...constraints
+      );
 
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({
@@ -152,7 +154,7 @@ class NotificationQueueService {
   }
 
   // Marcar notificación como enviada
-  async markAsSent(queueId: string, deliveryInfo?: Record<string, any>): Promise<void> {
+  async markAsSent(queueId: string, deliveryInfo?: Record<string, unknown>): Promise<void> {
     try {
       const queueRef = doc(db, this.COLLECTION, queueId);
       await updateDoc(queueRef, {
@@ -413,7 +415,19 @@ class NotificationQueueService {
   }
 
   // Obtener métricas de rendimiento por canal
-  async getChannelPerformance(asociacionId?: string, days: number = 7): Promise<Record<string, any>> {
+  async getChannelPerformance(
+    asociacionId?: string,
+    days: number = 7
+  ): Promise<Record<string, {
+    total: number;
+    sent: number;
+    failed: number;
+    pending: number;
+    processing: number;
+    cancelled: number;
+    avgAttempts: number;
+    successRate: number;
+  }>> {
     try {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
@@ -430,7 +444,16 @@ class NotificationQueueService {
       const snapshot = await getDocs(q);
       const notifications = snapshot.docs.map(doc => doc.data() as QueuedNotification);
 
-      const channelStats: Record<string, any> = {};
+      const channelStats: Record<string, {
+        total: number;
+        sent: number;
+        failed: number;
+        pending: number;
+        processing: number;
+        cancelled: number;
+        avgAttempts: number;
+        successRate: number;
+      }> = {};
 
       notifications.forEach(notification => {
         const channel = notification.channel;

@@ -1,369 +1,530 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
   Box,
+  Container,
+  Typography,
+  Paper,
   Card,
   CardContent,
-  Typography,
-  Avatar,
-  LinearProgress,
-  Chip,
-  Tooltip,
+  Button,
   IconButton,
-  alpha,
-  Divider,
+  Tooltip,
+  Alert,
+  LinearProgress,
+  Stack,
 } from '@mui/material';
 import {
+  Refresh,
+  TrendingUp,
+  TrendingDown,
   Email,
   Sms,
+  NotificationsActive,
   PhoneAndroid,
   CheckCircle,
   Error,
   Schedule,
-  Refresh,
-  TrendingUp,
-  Send,
+  Cancel,
+  PlayArrow,
+  Pause,
+  Download,
+  Analytics
 } from '@mui/icons-material';
-import { useNotifications } from '@/hooks/useNotifications';
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer
+} from 'recharts';
+import { notificationQueueService, QueueStats } from '../../services/notification-queue.service';
+import { useAuth } from '../../hooks/useAuth';
 
 interface DeliveryStatsProps {
-  notificationId: string;
-  onRefresh?: () => void;
+  asociacionId?: string;
+  refreshInterval?: number;
 }
 
-interface DeliveryStatsData {
+interface ChannelStats {
+  channel: string;
+  icon: React.ReactNode;
+  color: string;
   total: number;
   sent: number;
-  delivered: number;
   failed: number;
-  byChannel: Record<string, number>;
+  pending: number;
+  processing: number;
+  cancelled: number;
+  successRate: number;
+  avgAttempts: number;
 }
 
-export const DeliveryStats: React.FC<DeliveryStatsProps> = ({
-  notificationId,
-  onRefresh
-}) => {
-  const { getDeliveryStats } = useNotifications();
-  const [stats, setStats] = useState<DeliveryStatsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
+const CHANNEL_CONFIG = {
+  email: { icon: <Email />, color: '#1976d2', name: 'Email' },
+  sms: { icon: <Sms />, color: '#388e3c', name: 'SMS' },
+  push: { icon: <NotificationsActive />, color: '#f57c00', name: 'Push' },
+  app: { icon: <PhoneAndroid />, color: '#7b1fa2', name: 'App' }
+};
+
+const STATUS_CONFIG = {
+  sent: { icon: <CheckCircle />, color: '#4caf50', name: 'Enviadas' },
+  failed: { icon: <Error />, color: '#f44336', name: 'Fallidas' },
+  pending: { icon: <Schedule />, color: '#ff9800', name: 'Pendientes' },
+  processing: { icon: <PlayArrow />, color: '#2196f3', name: 'Procesando' },
+  cancelled: { icon: <Cancel />, color: '#9e9e9e', name: 'Canceladas' }
+};
+
+export default function DeliveryStats({ asociacionId, refreshInterval = 30000 }: DeliveryStatsProps) {
+  const { user } = useAuth();
+  const [stats, setStats] = useState<QueueStats | null>(null);
+  const [channelPerformance, setChannelPerformance] = useState<Record<string, ChannelStats>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
+  const [autoRefresh, setAutoRefresh] = useState(true);
+
+  const currentAsociacionId = asociacionId || user?.asociacionId;
+
+  // Cargar estadísticas
   const loadStats = React.useCallback(async () => {
+    if (!currentAsociacionId) return;
+
     try {
       setLoading(true);
-      const deliveryStats = await getDeliveryStats(notificationId);
-      if (deliveryStats) {
-        setStats(deliveryStats);
-      }
-    } catch (error) {
-      console.error('Error loading delivery stats:', error);
+      setError(null);
+
+      const now = new Date();
+      const timeRanges = {
+        '1h': new Date(now.getTime() - 60 * 60 * 1000),
+        '24h': new Date(now.getTime() - 24 * 60 * 60 * 1000),
+        '7d': new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+        '30d': new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      };
+
+      const [queueStats, channelStats] = await Promise.all([
+        notificationQueueService.getQueueStats(currentAsociacionId, {
+          start: timeRanges[timeRange],
+          end: now
+        }),
+        notificationQueueService.getChannelPerformance(currentAsociacionId, 
+          timeRange === '1h' ? 1/24 : 
+          timeRange === '24h' ? 1 : 
+          timeRange === '7d' ? 7 : 30
+        )
+      ]);
+
+      setStats(queueStats);
+      setChannelPerformance(
+        Object.fromEntries(
+          Object.entries(channelStats).map(([channel, data]) => [
+            channel,
+            {
+              channel,
+              icon: CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG]?.icon ?? null,
+              color: CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG]?.color ?? '#000',
+              ...data
+            }
+          ])
+        )
+      );
+    } catch (err) {
+      console.error('Error loading delivery stats:', err);
+      setError('Error al cargar las estadísticas de entrega');
     } finally {
       setLoading(false);
     }
-  }, [getDeliveryStats, notificationId]);
+  }, [currentAsociacionId, timeRange]);
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadStats();
-    setRefreshing(false);
-    onRefresh?.();
-  };
-
+  // Auto-refresh
   useEffect(() => {
-    if (notificationId) {
-      loadStats();
+    loadStats();
+    
+    if (autoRefresh) {
+      const interval = setInterval(loadStats, refreshInterval);
+      return () => clearInterval(interval);
     }
-  }, [notificationId, loadStats]);
+  }, [currentAsociacionId, timeRange, autoRefresh, refreshInterval, loadStats]);
 
-  if (loading) {
+  // Preparar datos para gráficos
+  const chartData = useMemo(() => {
+    if (!stats) return [];
+
+    return [
+      { name: 'Enviadas', value: stats.sent, color: '#4caf50' },
+      { name: 'Fallidas', value: stats.failed, color: '#f44336' },
+      { name: 'Pendientes', value: stats.pending, color: '#ff9800' },
+      { name: 'Procesando', value: stats.processing, color: '#2196f3' },
+      { name: 'Canceladas', value: stats.cancelled, color: '#9e9e9e' }
+    ].filter(item => item.value > 0);
+  }, [stats]);
+
+  const channelData = useMemo(() => {
+    return Object.entries(channelPerformance).map(([channel, data]) => ({
+      channelKey: channel,
+      channelName: CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG]?.name || channel,
+      ...data
+    }));
+  }, [channelPerformance]);
+
+  const handleRefresh = () => {
+    loadStats();
+  };
+
+  const handleExportStats = async () => {
+    try {
+      // Implementar exportación de estadísticas
+      const data = {
+        stats,
+        channelPerformance,
+        timeRange,
+        exportedAt: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `delivery-stats-${timeRange}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exporting stats:', err);
+    }
+  };
+
+  if (loading && !stats) {
     return (
-      <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3 }}>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Avatar sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1' }}>
-              <Send />
-            </Avatar>
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              Estadísticas de Entrega
-            </Typography>
-          </Box>
-          <LinearProgress sx={{ borderRadius: 2 }} />
-          <Typography variant="body2" sx={{ color: '#64748b', mt: 2 }}>
-            Cargando estadísticas...
-          </Typography>
-        </CardContent>
-      </Card>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <LinearProgress sx={{ flexGrow: 1 }} />
+        </Box>
+      </Container>
     );
   }
 
-  if (!stats) {
+  if (error) {
     return (
-      <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3 }}>
-        <CardContent sx={{ p: 3, textAlign: 'center' }}>
-          <Typography variant="body2" sx={{ color: '#64748b' }}>
-            No hay estadísticas de entrega disponibles
-          </Typography>
-        </CardContent>
-      </Card>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert severity="error" action={
+          <Button color="inherit" size="small" onClick={handleRefresh}>
+            Reintentar
+          </Button>
+        }>
+          {error}
+        </Alert>
+      </Container>
     );
   }
-
-  const successRate = stats.total > 0 ? (stats.sent / stats.total) * 100 : 0;
-  const deliveryRate = stats.sent > 0 ? (stats.delivered / stats.sent) * 100 : 0;
-  const failureRate = stats.total > 0 ? (stats.failed / stats.total) * 100 : 0;
-
-  const channelIcons = {
-    email: <Email />,
-    sms: <Sms />,
-    push: <PhoneAndroid />,
-    app: <PhoneAndroid />
-  };
-
-  const channelColors = {
-    email: '#6366f1',
-    sms: '#f59e0b',
-    push: '#8b5cf6',
-    app: '#10b981'
-  };
-
-  const channelLabels = {
-    email: 'Email',
-    sms: 'SMS',
-    push: 'Push',
-    app: 'App'
-  };
 
   return (
-    <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3 }}>
-      <CardContent sx={{ p: 4 }}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1' }}>
-              <Send />
-            </Avatar>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                Estadísticas de Entrega
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#64748b' }}>
-                Estado actual del envío de notificaciones
-              </Typography>
-            </Box>
-          </Box>
-          
-          <Tooltip title="Actualizar estadísticas">
-            <IconButton
-              onClick={handleRefresh}
-              disabled={refreshing}
-              sx={{
-                color: '#6366f1',
-                bgcolor: alpha('#6366f1', 0.1),
-                '&:hover': { bgcolor: alpha('#6366f1', 0.2) }
-              }}
-            >
-              <Refresh sx={{ 
-                animation: refreshing ? 'spin 1s linear infinite' : 'none',
-                '@keyframes spin': {
-                  '0%': { transform: 'rotate(0deg)' },
-                  '100%': { transform: 'rotate(360deg)' },
-                }
-              }} />
-            </IconButton>
-          </Tooltip>
-        </Box>
-
-        {/* Overview Stats */}
-        <Box sx={{ 
-          display: 'flex', 
-          flexWrap: 'wrap',
-          gap: 3,
-          mb: 4,
-          '& > *': {
-            flex: '1 1 calc(50% - 12px)',
-            minWidth: '120px',
-            '@media (min-width: 600px)': {
-              flex: '1 1 calc(25% - 18px)',
-            }
-          }
-        }}>
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
-              {stats.total}
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-              Total Enviados
-            </Typography>
-          </Box>
-          
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4" sx={{ fontWeight: 900, color: '#10b981', mb: 1 }}>
-              {stats.sent}
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-              Exitosos
-            </Typography>
-          </Box>
-          
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4" sx={{ fontWeight: 900, color: '#6366f1', mb: 1 }}>
-              {stats.delivered}
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-              Entregados
-            </Typography>
-          </Box>
-          
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4" sx={{ fontWeight: 900, color: '#ef4444', mb: 1 }}>
-              {stats.failed}
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>
-              Fallidos
-            </Typography>
-          </Box>
-        </Box>
-
-        <Divider sx={{ my: 3 }} />
-
-        {/* Success Rate */}
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1e293b' }}>
-              Tasa de Éxito
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <TrendingUp sx={{ color: successRate >= 80 ? '#10b981' : successRate >= 60 ? '#f59e0b' : '#ef4444', fontSize: 20 }} />
-              <Typography variant="h6" sx={{ 
-                fontWeight: 900, 
-                color: successRate >= 80 ? '#10b981' : successRate >= 60 ? '#f59e0b' : '#ef4444'
-              }}>
-                {successRate.toFixed(1)}%
-              </Typography>
-            </Box>
-          </Box>
-          
-          <LinearProgress
-            variant="determinate"
-            value={successRate}
-            sx={{
-              height: 8,
-              borderRadius: 4,
-              bgcolor: alpha('#e5e7eb', 0.3),
-              '& .MuiLinearProgress-bar': {
-                borderRadius: 4,
-                bgcolor: successRate >= 80 ? '#10b981' : successRate >= 60 ? '#f59e0b' : '#ef4444',
-              }
-            }}
-          />
-        </Box>
-
-        {/* Channel Breakdown */}
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Box>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
-            Distribución por Canal
+          <Typography variant="h4" component="h1" gutterBottom>
+            Estadísticas de Entrega
           </Typography>
-          
-          <Box sx={{ 
-            display: 'flex', 
-            flexWrap: 'wrap',
-            gap: 2,
-            '& > *': {
-              flex: '1 1 calc(50% - 8px)',
-              minWidth: '140px',
-              '@media (min-width: 600px)': {
-                flex: '1 1 calc(25% - 12px)',
-              }
-            }
-          }}>
-            {Object.entries(stats.byChannel).map(([channel, count]) => (
-              <Card
-                key={channel}
-                elevation={0}
-                sx={{
-                  p: 2,
-                  border: '1px solid #f1f5f9',
-                  borderRadius: 3,
-                  textAlign: 'center',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    borderColor: alpha(channelColors[channel as keyof typeof channelColors] || '#6366f1', 0.3),
-                    transform: 'translateY(-2px)',
-                    boxShadow: `0 8px 32px ${alpha(channelColors[channel as keyof typeof channelColors] || '#6366f1', 0.15)}`,
-                  }
-                }}
+          <Typography variant="body1" color="text.secondary">
+            Monitoreo en tiempo real del sistema de notificaciones
+          </Typography>
+        </Box>
+
+        <Stack direction="row" spacing={2}>
+          {/* Selector de rango de tiempo */}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {(['1h', '24h', '7d', '30d'] as const).map((range) => (
+              <Button
+                key={range}
+                variant={timeRange === range ? 'contained' : 'outlined'}
+                size="small"
+                onClick={() => setTimeRange(range)}
               >
-                <Avatar
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    bgcolor: alpha(channelColors[channel as keyof typeof channelColors] || '#6366f1', 0.1),
-                    color: channelColors[channel as keyof typeof channelColors] || '#6366f1',
-                    mx: 'auto',
-                    mb: 2,
-                  }}
-                >
-                  {channelIcons[channel as keyof typeof channelIcons] || <Send />}
-                </Avatar>
-                
-                <Typography variant="h5" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
-                  {count}
-                </Typography>
-                
-                <Typography variant="caption" sx={{ 
-                  color: '#64748b', 
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em'
-                }}>
-                  {channelLabels[channel as keyof typeof channelLabels] || channel}
-                </Typography>
-              </Card>
+                {range}
+              </Button>
             ))}
           </Box>
-        </Box>
 
-        {/* Status Indicators */}
-        <Box sx={{ display: 'flex', gap: 1, mt: 3, flexWrap: 'wrap' }}>
-          <Chip
-            icon={<CheckCircle />}
-            label={`${successRate.toFixed(1)}% Éxito`}
-            size="small"
-            sx={{
-              bgcolor: alpha('#10b981', 0.1),
-              color: '#10b981',
-              fontWeight: 600,
-            }}
-          />
-          
-          {failureRate > 0 && (
-            <Chip
-              icon={<Error />}
-              label={`${failureRate.toFixed(1)}% Fallos`}
-              size="small"
-              sx={{
-                bgcolor: alpha('#ef4444', 0.1),
-                color: '#ef4444',
-                fontWeight: 600,
-              }}
-            />
-          )}
-          
-          {stats.delivered > 0 && (
-            <Chip
-              icon={<Schedule />}
-              label={`${deliveryRate.toFixed(1)}% Entregados`}
-              size="small"
-              sx={{
-                bgcolor: alpha('#6366f1', 0.1),
-                color: '#6366f1',
-                fontWeight: 600,
-              }}
-            />
-          )}
-        </Box>
-      </CardContent>
-    </Card>
+          {/* Controles */}
+          <Tooltip title={autoRefresh ? 'Pausar auto-actualización' : 'Activar auto-actualización'}>
+            <IconButton onClick={() => setAutoRefresh(!autoRefresh)}>
+              {autoRefresh ? <Pause /> : <PlayArrow />}
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Actualizar">
+            <IconButton onClick={handleRefresh} disabled={loading}>
+              <Refresh />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Exportar estadísticas">
+            <IconButton onClick={handleExportStats}>
+              <Download />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      </Box>
+
+      {stats && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Métricas principales */}
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, 
+            gap: 3, 
+            mb: 4 
+          }}>
+            {Object.entries(STATUS_CONFIG).map(([status, config]) => {
+              const value = stats[status as keyof QueueStats] as number;
+              const percentage = stats.total > 0 ? (value / stats.total) * 100 : 0;
+              
+              return (
+                <motion.div
+                  key={status}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Card sx={{ height: '100%' }}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Box sx={{ color: config.color, mr: 1 }}>
+                          {config.icon}
+                        </Box>
+                        <Typography variant="h6" component="div">
+                          {value.toLocaleString()}
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        {config.name}
+                      </Typography>
+                      <LinearProgress
+                        variant="determinate"
+                        value={percentage}
+                        sx={{
+                          height: 6,
+                          borderRadius: 3,
+                          backgroundColor: 'rgba(0,0,0,0.1)',
+                          '& .MuiLinearProgress-bar': {
+                            backgroundColor: config.color
+                          }
+                        }}
+                      />
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+                        {percentage.toFixed(1)}% del total
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </Box>
+
+          {/* Métricas de rendimiento */}
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, 
+            gap: 3, 
+            mb: 4 
+          }}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Analytics sx={{ color: '#4caf50', mr: 1 }} />
+                  <Typography variant="h6">Tasa de Éxito</Typography>
+                </Box>
+                <Typography variant="h3" color="primary" gutterBottom>
+                  {stats.successRate.toFixed(1)}%
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  {stats.successRate >= 90 ? (
+                    <TrendingUp sx={{ color: '#4caf50', mr: 1 }} />
+                  ) : (
+                    <TrendingDown sx={{ color: '#f44336', mr: 1 }} />
+                  )}
+                  <Typography variant="body2" color="text.secondary">
+                    {stats.sent} de {stats.total} notificaciones
+                  </Typography>
+                </Box>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Schedule sx={{ color: '#2196f3', mr: 1 }} />
+                  <Typography variant="h6">Tiempo Promedio</Typography>
+                </Box>
+                <Typography variant="h3" color="primary" gutterBottom>
+                  {stats.avgProcessingTime.toFixed(1)}m
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Tiempo de procesamiento
+                </Typography>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <NotificationsActive sx={{ color: '#ff9800', mr: 1 }} />
+                  <Typography variant="h6">Total Procesadas</Typography>
+                </Box>
+                <Typography variant="h3" color="primary" gutterBottom>
+                  {stats.total.toLocaleString()}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  En {timeRange}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* Gráficos */}
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, 
+            gap: 3, 
+            mb: 4 
+          }}>
+            {/* Gráfico de distribución */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Distribución de Estados
+                </Typography>
+                <Box sx={{ height: 300 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Rendimiento por canal */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Rendimiento por Canal
+                </Typography>
+                <Box sx={{ height: 300 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={channelData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="channel" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Bar dataKey="successRate" fill="#4caf50" name="Tasa de Éxito %" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* Detalles por canal */}
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Detalles por Canal
+              </Typography>
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, 
+                gap: 2 
+              }}>
+                {Object.entries(channelPerformance).map(([channel, data]) => {
+                  const config = CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG];
+                  if (!config) return null;
+
+                  return (
+                    <motion.div
+                      key={channel}
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <Paper sx={{ p: 2, height: '100%' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <Box sx={{ color: config.color, mr: 1 }}>
+                            {config.icon}
+                          </Box>
+                          <Typography variant="subtitle1">
+                            {config.name}
+                          </Typography>
+                        </Box>
+
+                        <Stack spacing={1}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2">Total:</Typography>
+                            <Typography variant="body2" fontWeight="bold">
+                              {data.total}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2">Éxito:</Typography>
+                            <Typography variant="body2" color="success.main">
+                              {data.successRate.toFixed(1)}%
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2">Intentos promedio:</Typography>
+                            <Typography variant="body2">
+                              {data.avgAttempts.toFixed(1)}
+                            </Typography>
+                          </Box>
+                        </Stack>
+
+                        <LinearProgress
+                          variant="determinate"
+                          value={data.successRate}
+                          sx={{
+                            mt: 2,
+                            height: 6,
+                            borderRadius: 3,
+                            backgroundColor: 'rgba(0,0,0,0.1)',
+                            '& .MuiLinearProgress-bar': {
+                              backgroundColor: config.color
+                            }
+                          }}
+                        />
+                      </Paper>
+                    </motion.div>
+                  );
+                })}
+              </Box>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+    </Container>
   );
-};
+}

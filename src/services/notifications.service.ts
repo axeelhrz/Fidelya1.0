@@ -356,7 +356,8 @@ export class NotificationService {
       channel,
       status,
       retryCount: 0,
-      metadata: {}
+      metadata: {},
+      createdAt: new Date()
     };
 
     if (status === 'sent') {
