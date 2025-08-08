@@ -9,7 +9,6 @@ import {
   Paper,
   Card,
   CardContent,
-  CardHeader,
   Button,
   Tabs,
   Tab,
@@ -17,7 +16,6 @@ import {
   IconButton,
   Alert,
   Divider,
-  Stack,
   Chip,
   Avatar,
   LinearProgress,
@@ -35,7 +33,6 @@ import {
 } from '@mui/material';
 import {
   Dashboard,
-  Campaign,
   Analytics,
   Settings,
   AutoMode,
@@ -46,24 +43,18 @@ import {
   Add,
   Edit,
   Refresh,
-  MoreVert,
   Close,
   Menu,
   Email,
-  Sms,
   NotificationsActive,
-  PhoneAndroid,
-  PlayArrow,
-  Pause,
-  Stop
 } from '@mui/icons-material';
 import { useSimpleNotifications } from '../../hooks/useSimpleNotifications';
 import { NotificationTemplates } from '../notifications/NotificationTemplates';
 import NotificationAutomation from '../notifications/NotificationAutomation';
 import DeliveryStats from '../notifications/DeliveryStats';
 import { SimpleNotificationSettingsComponent } from '../settings/SimpleNotificationSettings';
-import SimpleNotificationSender from '../notifications/SimpleNotificationSender';
-import SimpleNotificationHistory from '../notifications/SimpleNotificationHistory';
+import { SimpleNotificationSender } from '../notifications/SimpleNotificationSender';
+import { SimpleNotificationHistory } from '../notifications/SimpleNotificationHistory';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -95,7 +86,15 @@ interface QuickAction {
 
 // Simple Dashboard Component
 const SimpleDashboard = () => {
-  const { notifications, stats, loading } = useSimpleNotifications();
+  const { notifications, loading } = useSimpleNotifications();
+
+  // Calculate stats from notifications array
+  const stats = {
+    total: notifications.length,
+    sent: notifications.filter(n => n.status === 'sent').length,
+    pending: notifications.filter(n => n.status === 'sending').length,
+    failed: notifications.filter(n => n.status === 'failed').length,
+  };
 
   if (loading) {
     return (
@@ -215,7 +214,7 @@ const SimpleDashboard = () => {
                   label={notification.status}
                   color={
                     notification.status === 'sent' ? 'success' :
-                    notification.status === 'pending' ? 'warning' :
+                    notification.status === 'sending' ? 'warning' :
                     notification.status === 'failed' ? 'error' : 'default'
                   }
                 />
@@ -234,12 +233,18 @@ export default function NotificationsCenter() {
   
   const {
     notifications,
-    stats,
     loading,
     error,
-    sendNotification,
-    refreshNotifications
+    refresh // Use the correct function name from the hook
   } = useSimpleNotifications();
+
+  // Calculate stats from notifications array
+  const stats = {
+    total: notifications.length,
+    sent: notifications.filter(n => n.status === 'sent').length,
+    pending: notifications.filter(n => n.status === 'sending').length,
+    failed: notifications.filter(n => n.status === 'failed').length,
+  };
 
   const [activeTab, setActiveTab] = useState(0);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -264,7 +269,7 @@ export default function NotificationsCenter() {
       label: 'Historial', 
       icon: <Email />, 
       component: SimpleNotificationHistory,
-      badge: notifications.filter(n => n.status === 'pending').length
+      badge: notifications.filter(n => n.status === 'sending').length
     },
     { 
       label: 'Plantillas', 
@@ -461,7 +466,7 @@ export default function NotificationsCenter() {
             <Typography variant="h6">
               {tabs[activeTab].label}
             </Typography>
-            <IconButton onClick={refreshNotifications}>
+            <IconButton onClick={refresh}>
               <Refresh />
             </IconButton>
           </Box>
@@ -479,7 +484,7 @@ export default function NotificationsCenter() {
               <Button
                 variant="outlined"
                 startIcon={<Refresh />}
-                onClick={refreshNotifications}
+                onClick={refresh}
                 disabled={loading}
               >
                 Actualizar

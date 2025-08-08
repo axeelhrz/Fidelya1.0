@@ -18,22 +18,22 @@ import {
 const OptimizedOverviewDashboard = lazy(() => import('@/components/asociacion/OptimizedOverviewDashboard'));
 const EnhancedMemberManagement = lazy(() => 
   import('@/components/asociacion/EnhancedMemberManagement').then(module => ({ 
-    default: module.EnhancedMemberManagement || module.default
+    default: module.EnhancedMemberManagement
   }))
 );
 const ComercioManagement = lazy(() => 
   import('@/components/asociacion/ComercioManagement').then(module => ({ 
-    default: module.ComercioManagement || module.default
+    default: module.ComercioManagement
   }))
 );
 const BeneficiosManagement = lazy(() => 
   import('@/components/asociacion/BeneficiosManagement').then(module => ({ 
-    default: module.BeneficiosManagement || module.default
+    default: module.BeneficiosManagement
   }))
 );
 const AdvancedAnalytics = lazy(() => 
   import('@/components/asociacion/AdvancedAnalytics').then(module => ({ 
-    default: module.AdvancedAnalytics || module.default
+    default: module.AdvancedAnalytics
   }))
 );
 const NotificationsCenter = lazy(() => import('@/components/asociacion/NotificationsCenter'));
