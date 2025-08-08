@@ -73,17 +73,17 @@ class SimpleEmailService {
   }
 }
 
-// Servicio de WhatsApp usando API Route - SOLUCIONADO
+// Servicio de WhatsApp usando API Route - CON BRANDING FIDELYA
 class SimpleWhatsAppService {
   constructor() {
     // No necesitamos credenciales aquí, se manejan en la API route
   }
 
-  async sendWhatsApp(to: string, message: string): Promise<boolean> {
+  async sendWhatsApp(to: string, message: string, title?: string): Promise<boolean> {
     try {
       console.log(`📱 Cliente: Enviando WhatsApp a: ${to}`);
       
-      // Llamar a nuestra API route que maneja Twilio
+      // Llamar a nuestra API route que maneja Twilio con branding
       const response = await fetch('/api/notifications/whatsapp', {
         method: 'POST',
         headers: {
@@ -91,7 +91,8 @@ class SimpleWhatsAppService {
         },
         body: JSON.stringify({
           to: to,
-          message: message
+          message: message,
+          title: title
         })
       });
 
@@ -100,6 +101,7 @@ class SimpleWhatsAppService {
       if (response.ok && result.success) {
         console.log(`✅ Cliente: WhatsApp enviado exitosamente. SID: ${result.sid}`);
         console.log(`📊 Cliente: Estado: ${result.status}, Precio: ${result.price} ${result.priceUnit}`);
+        console.log(`📝 Cliente: Mensaje con branding:`, result.formattedMessage);
         return true;
       } else {
         console.error('❌ Cliente: Error enviando WhatsApp:', result.error);
@@ -124,7 +126,8 @@ class SimpleWhatsAppService {
     return {
       configured: true,
       fromNumber: 'whatsapp:+14155238886',
-      method: 'API Route (Server-side)'
+      method: 'API Route (Server-side)',
+      branding: 'Fidelya ✅'
     };
   }
 }
