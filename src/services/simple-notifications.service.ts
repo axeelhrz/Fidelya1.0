@@ -73,44 +73,59 @@ class SimpleEmailService {
   }
 }
 
-// Servicio de WhatsApp simplificado
+// Servicio de WhatsApp con Twilio
 class SimpleWhatsAppService {
-  private apiKey: string;
-  private phoneNumberId: string;
-  private baseUrl: string;
+  private accountSid: string;
+  private authToken: string;
+  private fromNumber: string;
 
   constructor() {
-    this.apiKey = process.env.WHATSAPP_API_KEY || '';
-    this.phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
-    this.baseUrl = `https://graph.facebook.com/v18.0/${this.phoneNumberId}/messages`;
+    this.accountSid = process.env.TWILIO_ACCOUNT_SID || '';
+    this.authToken = process.env.TWILIO_AUTH_TOKEN || '';
+    this.fromNumber = process.env.TWILIO_WHATSAPP_FROM || 'whatsapp:+14155238886';
   }
 
   async sendWhatsApp(to: string, message: string): Promise<boolean> {
-    if (!this.apiKey || !this.phoneNumberId) {
-      console.warn('WhatsApp API credentials not configured');
+    if (!this.accountSid || !this.authToken) {
+      console.warn('Twilio WhatsApp credentials not configured');
       return false;
     }
 
     try {
-      const response = await fetch(this.baseUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: to.replace(/\D/g, ''), // Remove non-digits
-          type: 'text',
-          text: {
-            body: message
-          }
-        })
+      // Formatear número de teléfono para WhatsApp
+      const formattedTo = to.startsWith('whatsapp:') ? to : `whatsapp:${to}`;
+      
+      // Crear el cuerpo de la petición
+      const body = new URLSearchParams({
+        From: this.fromNumber,
+        To: formattedTo,
+        Body: message
       });
 
-      return response.ok;
+      // Enviar mensaje usando Twilio API
+      const response = await fetch(
+        `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Messages.json`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${Buffer.from(`${this.accountSid}:${this.authToken}`).toString('base64')}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: body.toString()
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ WhatsApp enviado via Twilio:', result.sid);
+        return true;
+      } else {
+        const error = await response.json();
+        console.error('❌ Error Twilio WhatsApp:', error);
+        return false;
+      }
     } catch (error) {
-      console.error('Error sending WhatsApp:', error);
+      console.error('Error sending WhatsApp via Twilio:', error);
       return false;
     }
   }
