@@ -117,9 +117,8 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
   ];
 
   const channelStats = [
-    { name: 'WhatsApp', count: Math.floor(stats.sent * 0.6), color: 'emerald', icon: MessageSquare },
-    { name: 'Email', count: Math.floor(stats.sent * 0.3), color: 'blue', icon: Mail },
-    { name: 'In-App', count: Math.floor(stats.sent * 0.1), color: 'purple', icon: Bell }
+    { name: 'WhatsApp', count: Math.floor(stats.sent * 0.7), color: 'emerald', icon: MessageSquare },
+    { name: 'Email', count: Math.floor(stats.sent * 0.3), color: 'blue', icon: Mail }
   ];
 
   return (
@@ -222,8 +221,8 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Actividad Reciente</h3>
           <div className="space-y-4">
             {[
-              { time: '10:30', action: 'Notificación enviada', count: 45, status: 'success' },
-              { time: '09:15', action: 'Campaña programada', count: 120, status: 'pending' },
+              { time: '10:30', action: 'WhatsApp enviado', count: 45, status: 'success' },
+              { time: '09:15', action: 'Email programado', count: 120, status: 'pending' },
               { time: '08:45', action: 'Template actualizado', count: 1, status: 'info' },
               { time: '08:20', action: 'Error en envío', count: 3, status: 'error' }
             ].map((activity, index) => (
@@ -267,6 +266,11 @@ const SendNotification = () => {
       return;
     }
 
+    if (formData.channels.length === 0) {
+      toast.error('Selecciona al menos un canal de envío');
+      return;
+    }
+
     setLoading(true);
     try {
       await sendNotification({
@@ -296,8 +300,7 @@ const SendNotification = () => {
 
   const channelOptions = [
     { id: 'email', label: 'Email', icon: Mail, color: 'blue' },
-    { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, color: 'emerald' },
-    { id: 'inapp', label: 'In-App', icon: Bell, color: 'purple' }
+    { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, color: 'emerald' }
   ];
 
   return (
@@ -346,13 +349,13 @@ const SendNotification = () => {
           {/* Channels */}
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-3">
-              Canales de Envío
+              Canales de Envío *
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {channelOptions.map((channel) => (
                 <label
                   key={channel.id}
-                  className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                  className={`flex items-center gap-4 p-6 border-2 rounded-xl cursor-pointer transition-all ${
                     formData.channels.includes(channel.id)
                       ? `border-${channel.color}-500 bg-${channel.color}-50`
                       : 'border-slate-200 hover:border-slate-300'
@@ -376,10 +379,15 @@ const SendNotification = () => {
                     }}
                     className="sr-only"
                   />
-                  <div className={`w-8 h-8 bg-${channel.color}-100 rounded-lg flex items-center justify-center`}>
-                    <channel.icon className={`w-4 h-4 text-${channel.color}-600`} />
+                  <div className={`w-12 h-12 bg-${channel.color}-100 rounded-xl flex items-center justify-center`}>
+                    <channel.icon className={`w-6 h-6 text-${channel.color}-600`} />
                   </div>
-                  <span className="font-medium text-slate-700">{channel.label}</span>
+                  <div>
+                    <span className="font-semibold text-slate-900">{channel.label}</span>
+                    <p className="text-sm text-slate-600">
+                      {channel.id === 'email' ? 'Envío por correo electrónico' : 'Envío por WhatsApp Business'}
+                    </p>
+                  </div>
                 </label>
               ))}
             </div>
@@ -548,7 +556,6 @@ const NotificationHistory = () => {
             <option value="all">Todos los canales</option>
             <option value="email">Email</option>
             <option value="whatsapp">WhatsApp</option>
-            <option value="inapp">In-App</option>
           </select>
           
           <button className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors">
@@ -610,7 +617,6 @@ const NotificationHistory = () => {
                             <div key={channel} className="flex items-center gap-1">
                               {channel === 'email' && <Mail className="w-3 h-3" />}
                               {channel === 'whatsapp' && <MessageSquare className="w-3 h-3" />}
-                              {channel === 'inapp' && <Bell className="w-3 h-3" />}
                               <span className="capitalize">{channel}</span>
                             </div>
                           ))}
