@@ -1,593 +1,757 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Box,
-  Container,
-  Typography,
-  Paper,
-  Card,
-  CardContent,
-  Button,
-  Tabs,
-  Tab,
-  Badge,
-  IconButton,
-  Alert,
-  Divider,
-  Chip,
-  Avatar,
-  LinearProgress,
-  Fab,
-  SpeedDial,
-  SpeedDialAction,
-  SpeedDialIcon,
-  useMediaQuery,
-  useTheme,
-  Drawer,
-  List,
-  ListItemIcon,
-  ListItemText,
-  ListItemButton
-} from '@mui/material';
-import {
-  Dashboard,
-  Analytics,
-  Settings,
-  AutoMode,
+  Bell,
   Send,
-  Schedule,
+  History,
+  BarChart3,
+  Users,
+  MessageSquare,
+  Mail,
+  Smartphone,
+  TrendingUp,
+  TrendingDown,
+  Clock,
   CheckCircle,
-  Info,
-  Add,
-  Edit,
-  Refresh,
-  Close,
-  Menu,
-  Email,
-  NotificationsActive,
-} from '@mui/icons-material';
-import { useSimpleNotifications } from '../../hooks/useSimpleNotifications';
-import { NotificationTemplates } from '../notifications/NotificationTemplates';
-import NotificationAutomation from '../notifications/NotificationAutomation';
-import { DeliveryStats } from '../notifications/DeliveryStats';
-import { SimpleNotificationSettingsComponent } from '../settings/SimpleNotificationSettings';
-import { SimpleNotificationSender } from '../notifications/SimpleNotificationSender';
-import { SimpleNotificationHistory } from '../notifications/SimpleNotificationHistory';
+  XCircle,
+  AlertCircle,
+  Filter,
+  Search,
+  Calendar,
+  Download,
+  Settings,
+  Zap,
+  Target,
+  Activity,
+  Eye,
+  Plus,
+  RefreshCw
+} from 'lucide-react';
+import { useSimpleNotifications } from '@/hooks/useSimpleNotifications';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'react-hot-toast';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
+// Interfaces
+interface NotificationStats {
+  total: number;
+  sent: number;
+  pending: number;
+  failed: number;
+  todayCount: number;
+  weekCount: number;
+  successRate: number;
 }
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+interface TabConfig {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  gradient: string;
+  description: string;
+}
+
+// Tab configurations
+const tabs: TabConfig[] = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: BarChart3,
+    gradient: 'from-blue-500 to-blue-600',
+    description: 'Vista general y estadísticas'
+  },
+  {
+    id: 'enviar',
+    label: 'Enviar',
+    icon: Send,
+    gradient: 'from-emerald-500 to-emerald-600',
+    description: 'Crear y enviar notificaciones'
+  },
+  {
+    id: 'historial',
+    label: 'Historial',
+    icon: History,
+    gradient: 'from-purple-500 to-purple-600',
+    description: 'Registro de notificaciones enviadas'
+  }
+];
+
+// Dashboard Component
+const Dashboard = ({ stats }: { stats: NotificationStats }) => {
+  const [timeRange, setTimeRange] = useState('7d');
+  
+  const statCards = [
+    {
+      title: 'Total Enviadas',
+      value: stats.total,
+      change: '+12%',
+      trend: 'up',
+      icon: Bell,
+      color: 'blue',
+      gradient: 'from-blue-500 to-blue-600'
+    },
+    {
+      title: 'Exitosas',
+      value: stats.sent,
+      change: '+8%',
+      trend: 'up',
+      icon: CheckCircle,
+      color: 'emerald',
+      gradient: 'from-emerald-500 to-emerald-600'
+    },
+    {
+      title: 'Tasa de Éxito',
+      value: `${stats.successRate}%`,
+      change: '+2%',
+      trend: 'up',
+      icon: Target,
+      color: 'purple',
+      gradient: 'from-purple-500 to-purple-600'
+    },
+    {
+      title: 'Esta Semana',
+      value: stats.weekCount,
+      change: '+15%',
+      trend: 'up',
+      icon: Calendar,
+      color: 'orange',
+      gradient: 'from-orange-500 to-orange-600'
+    }
+  ];
+
+  const channelStats = [
+    { name: 'WhatsApp', count: Math.floor(stats.sent * 0.6), color: 'emerald', icon: MessageSquare },
+    { name: 'Email', count: Math.floor(stats.sent * 0.3), color: 'blue', icon: Mail },
+    { name: 'In-App', count: Math.floor(stats.sent * 0.1), color: 'purple', icon: Bell }
+  ];
+
   return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`notifications-tabpanel-${index}`}
-      aria-labelledby={`notifications-tab-${index}`}
-      {...other}
-    >
-      {value === index && children}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Dashboard de Notificaciones</h2>
+          <p className="text-slate-600">Monitorea el rendimiento de tus comunicaciones</p>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <select 
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+            className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="24h">Últimas 24h</option>
+            <option value="7d">Últimos 7 días</option>
+            <option value="30d">Últimos 30 días</option>
+          </select>
+          
+          <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors">
+            <RefreshCw className="w-4 h-4" />
+            <span className="text-sm font-medium">Actualizar</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map((stat, index) => (
+          <motion.div
+            key={stat.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 hover:shadow-xl transition-shadow"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-12 h-12 bg-gradient-to-r ${stat.gradient} rounded-xl flex items-center justify-center`}>
+                <stat.icon className="w-6 h-6 text-white" />
+              </div>
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                stat.trend === 'up' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+              }`}>
+                {stat.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                {stat.change}
+              </div>
+            </div>
+            
+            <div>
+              <div className="text-2xl font-bold text-slate-900 mb-1">{stat.value}</div>
+              <div className="text-sm text-slate-600">{stat.title}</div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Channel Distribution */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100"
+        >
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Distribución por Canal</h3>
+          <div className="space-y-4">
+            {channelStats.map((channel, index) => (
+              <div key={channel.name} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 bg-${channel.color}-100 rounded-lg flex items-center justify-center`}>
+                    <channel.icon className={`w-4 h-4 text-${channel.color}-600`} />
+                  </div>
+                  <span className="font-medium text-slate-700">{channel.name}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-24 bg-slate-100 rounded-full h-2">
+                    <div 
+                      className={`h-2 bg-${channel.color}-500 rounded-full transition-all duration-500`}
+                      style={{ width: `${(channel.count / stats.sent) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-semibold text-slate-900 w-8">{channel.count}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Activity Timeline */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100"
+        >
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Actividad Reciente</h3>
+          <div className="space-y-4">
+            {[
+              { time: '10:30', action: 'Notificación enviada', count: 45, status: 'success' },
+              { time: '09:15', action: 'Campaña programada', count: 120, status: 'pending' },
+              { time: '08:45', action: 'Template actualizado', count: 1, status: 'info' },
+              { time: '08:20', action: 'Error en envío', count: 3, status: 'error' }
+            ].map((activity, index) => (
+              <div key={index} className="flex items-center gap-4">
+                <div className="text-sm text-slate-500 w-12">{activity.time}</div>
+                <div className={`w-2 h-2 rounded-full ${
+                  activity.status === 'success' ? 'bg-emerald-500' :
+                  activity.status === 'pending' ? 'bg-orange-500' :
+                  activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                }`} />
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-slate-700">{activity.action}</div>
+                  <div className="text-xs text-slate-500">{activity.count} destinatarios</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
-}
+};
 
-interface QuickAction {
-  label: string;
-  icon: React.ReactNode;
-  color: string;
-  action: () => void;
-}
+// Send Notification Component
+const SendNotification = () => {
+  const { sendNotification } = useSimpleNotifications();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    message: '',
+    channels: ['email'],
+    recipients: 'all',
+    priority: 'normal',
+    scheduleDate: '',
+    scheduleTime: ''
+  });
 
-// Simple Dashboard Component
-const SimpleDashboard = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title || !formData.message) {
+      toast.error('Por favor completa todos los campos requeridos');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await sendNotification({
+        title: formData.title,
+        message: formData.message,
+        channels: formData.channels,
+        recipients: formData.recipients,
+        priority: formData.priority as 'low' | 'normal' | 'high',
+        createdBy: user?.uid || 'unknown'
+      });
+      
+      toast.success('Notificación enviada exitosamente');
+      setFormData({
+        title: '',
+        message: '',
+        channels: ['email'],
+        recipients: 'all',
+        priority: 'normal',
+        scheduleDate: '',
+        scheduleTime: ''
+      });
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      toast.error('Error al enviar la notificación');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const channelOptions = [
+    { id: 'email', label: 'Email', icon: Mail, color: 'blue' },
+    { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, color: 'emerald' },
+    { id: 'inapp', label: 'In-App', icon: Bell, color: 'purple' }
+  ];
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Enviar Notificación</h2>
+        <p className="text-slate-600">Crea y envía notificaciones a tus usuarios</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 shadow-lg border border-slate-100">
+        <div className="space-y-6">
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Título *
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Ingresa el título de la notificación"
+              required
+            />
+          </div>
+
+          {/* Message */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Mensaje *
+            </label>
+            <textarea
+              value={formData.message}
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              rows={4}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              placeholder="Escribe tu mensaje aquí..."
+              required
+            />
+            <div className="text-xs text-slate-500 mt-1">
+              {formData.message.length}/500 caracteres
+            </div>
+          </div>
+
+          {/* Channels */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-3">
+              Canales de Envío
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {channelOptions.map((channel) => (
+                <label
+                  key={channel.id}
+                  className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                    formData.channels.includes(channel.id)
+                      ? `border-${channel.color}-500 bg-${channel.color}-50`
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData.channels.includes(channel.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData({
+                          ...formData,
+                          channels: [...formData.channels, channel.id]
+                        });
+                      } else {
+                        setFormData({
+                          ...formData,
+                          channels: formData.channels.filter(c => c !== channel.id)
+                        });
+                      }
+                    }}
+                    className="sr-only"
+                  />
+                  <div className={`w-8 h-8 bg-${channel.color}-100 rounded-lg flex items-center justify-center`}>
+                    <channel.icon className={`w-4 h-4 text-${channel.color}-600`} />
+                  </div>
+                  <span className="font-medium text-slate-700">{channel.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Recipients and Priority */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Destinatarios
+              </label>
+              <select
+                value={formData.recipients}
+                onChange={(e) => setFormData({ ...formData, recipients: e.target.value })}
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">Todos los usuarios</option>
+                <option value="socios">Solo socios</option>
+                <option value="comercios">Solo comercios</option>
+                <option value="active">Usuarios activos</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Prioridad
+              </label>
+              <select
+                value={formData.priority}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="low">Baja</option>
+                <option value="normal">Normal</option>
+                <option value="high">Alta</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 pt-6">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  Enviar Ahora
+                </>
+              )}
+            </button>
+            
+            <button
+              type="button"
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              <Clock className="w-4 h-4" />
+              Programar
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+// History Component
+const NotificationHistory = () => {
   const { notifications, loading } = useSimpleNotifications();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [channelFilter, setChannelFilter] = useState('all');
 
-  // Calculate stats from notifications array
-  const stats = {
-    total: notifications.length,
-    sent: notifications.filter(n => n.status === 'sent').length,
-    pending: notifications.filter(n => n.status === 'sending').length,
-    failed: notifications.filter(n => n.status === 'failed').length,
+  const filteredNotifications = notifications.filter(notification => {
+    const matchesSearch = notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         notification.message.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || notification.status === statusFilter;
+    const matchesChannel = channelFilter === 'all' || notification.channels?.includes(channelFilter);
+    
+    return matchesSearch && matchesStatus && matchesChannel;
+  });
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'sent': return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+      case 'failed': return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'sending': return <Clock className="w-4 h-4 text-orange-500" />;
+      default: return <AlertCircle className="w-4 h-4 text-slate-500" />;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const styles = {
+      sent: 'bg-emerald-100 text-emerald-700',
+      failed: 'bg-red-100 text-red-700',
+      sending: 'bg-orange-100 text-orange-700',
+      pending: 'bg-blue-100 text-blue-700'
+    };
+    
+    return styles[status as keyof typeof styles] || 'bg-slate-100 text-slate-700';
   };
 
   if (loading) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <LinearProgress />
-      </Container>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-600">Cargando historial...</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Dashboard de Notificaciones
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Resumen general del sistema de notificaciones
-        </Typography>
-      </Box>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Historial de Notificaciones</h2>
+          <p className="text-slate-600">Revisa todas las notificaciones enviadas</p>
+        </div>
+        
+        <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-colors">
+          <Download className="w-4 h-4" />
+          <span className="text-sm font-medium">Exportar</span>
+        </button>
+      </div>
 
-      {/* Stats Cards */}
-      <Box sx={{ 
-        display: 'grid', 
-        gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
-        gap: 3,
-        mb: 4 
-      }}>
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ bgcolor: 'primary.main' }}>
-                <NotificationsActive />
-              </Avatar>
-              <Box>
-                <Typography variant="h4">{stats.total}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Total Notificaciones
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
+      {/* Filters */}
+      <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Buscar notificaciones..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">Todos los estados</option>
+            <option value="sent">Enviadas</option>
+            <option value="sending">Enviando</option>
+            <option value="failed">Fallidas</option>
+          </select>
+          
+          <select
+            value={channelFilter}
+            onChange={(e) => setChannelFilter(e.target.value)}
+            className="px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">Todos los canales</option>
+            <option value="email">Email</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="inapp">In-App</option>
+          </select>
+          
+          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors">
+            <Filter className="w-4 h-4" />
+            <span className="text-sm font-medium">Filtros</span>
+          </button>
+        </div>
+      </div>
 
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ bgcolor: 'success.main' }}>
-                <CheckCircle />
-              </Avatar>
-              <Box>
-                <Typography variant="h4">{stats.sent}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Enviadas
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ bgcolor: 'info.main' }}>
-                <Schedule />
-              </Avatar>
-              <Box>
-                <Typography variant="h4">{stats.pending}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Pendientes
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ bgcolor: 'warning.main' }}>
-                <Info />
-              </Avatar>
-              <Box>
-                <Typography variant="h4">{stats.failed}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Fallidas
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-      </Box>
-
-      {/* Recent Notifications */}
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Notificaciones Recientes
-        </Typography>
-        <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
-          {notifications.slice(0, 10).map((notification) => (
-            <Box
-              key={notification.id}
-              sx={{
-                p: 2,
-                borderBottom: '1px solid #f0f0f0',
-                '&:last-child': { borderBottom: 'none' }
-              }}
-            >
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                  <Typography variant="subtitle2">{notification.title}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {notification.message}
-                  </Typography>
-                </Box>
-                <Chip
-                  size="small"
-                  label={notification.status}
-                  color={
-                    notification.status === 'sent' ? 'success' :
-                    notification.status === 'sending' ? 'warning' :
-                    notification.status === 'failed' ? 'error' : 'default'
-                  }
-                />
-              </Box>
-            </Box>
-          ))}
-        </Box>
-      </Paper>
-    </Container>
+      {/* Notifications List */}
+      <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
+        {filteredNotifications.length === 0 ? (
+          <div className="text-center py-12">
+            <Bell className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">No hay notificaciones</h3>
+            <p className="text-slate-600">No se encontraron notificaciones con los filtros aplicados</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {filteredNotifications.map((notification, index) => (
+              <motion.div
+                key={notification.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="p-6 hover:bg-slate-50 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-semibold text-slate-900">{notification.title}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(notification.status)}`}>
+                        {notification.status}
+                      </span>
+                    </div>
+                    
+                    <p className="text-slate-600 mb-3 line-clamp-2">{notification.message}</p>
+                    
+                    <div className="flex items-center gap-4 text-sm text-slate-500">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {new Date(notification.createdAt).toLocaleDateString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                      
+                      <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        {notification.recipientCount || 0} destinatarios
+                      </div>
+                      
+                      {notification.channels && (
+                        <div className="flex items-center gap-2">
+                          {notification.channels.map((channel: string) => (
+                            <div key={channel} className="flex items-center gap-1">
+                              {channel === 'email' && <Mail className="w-3 h-3" />}
+                              {channel === 'whatsapp' && <MessageSquare className="w-3 h-3" />}
+                              {channel === 'inapp' && <Bell className="w-3 h-3" />}
+                              <span className="capitalize">{channel}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(notification.status)}
+                    <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
+// Main Component
 export default function NotificationsCenter() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
-  const {
-    notifications,
-    loading,
-    error,
-    refresh // Use the correct function name from the hook
-  } = useSimpleNotifications();
+  const { notifications, loading } = useSimpleNotifications();
+  const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Calculate stats from notifications array
-  const stats = {
+  // Calculate stats
+  const stats: NotificationStats = {
     total: notifications.length,
     sent: notifications.filter(n => n.status === 'sent').length,
     pending: notifications.filter(n => n.status === 'sending').length,
     failed: notifications.filter(n => n.status === 'failed').length,
+    todayCount: notifications.filter(n => {
+      const today = new Date();
+      const notificationDate = new Date(n.createdAt);
+      return notificationDate.toDateString() === today.toDateString();
+    }).length,
+    weekCount: notifications.filter(n => {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return new Date(n.createdAt) >= weekAgo;
+    }).length,
+    successRate: notifications.length > 0 ? Math.round((notifications.filter(n => n.status === 'sent').length / notifications.length) * 100) : 0
   };
 
-  const [activeTab, setActiveTab] = useState(0);
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [speedDialOpen, setSpeedDialOpen] = useState(false);
-  const [quickStatsExpanded, setQuickStatsExpanded] = useState(true);
-
-  // Tabs configuration
-  const tabs = [
-    { 
-      label: 'Dashboard', 
-      icon: <Dashboard />, 
-      component: SimpleDashboard,
-      badge: null
-    },
-    { 
-      label: 'Enviar', 
-      icon: <Send />, 
-      component: SimpleNotificationSender,
-      badge: null
-    },
-    { 
-      label: 'Historial', 
-      icon: <Email />, 
-      component: SimpleNotificationHistory,
-      badge: notifications.filter(n => n.status === 'sending').length
-    },
-    { 
-      label: 'Plantillas', 
-      icon: <Edit />, 
-      component: NotificationTemplates,
-      badge: null
-    },
-    { 
-      label: 'Automatización', 
-      icon: <AutoMode />, 
-      component: NotificationAutomation,
-      badge: null
-    },
-    { 
-      label: 'Estadísticas', 
-      icon: <Analytics />, 
-      component: DeliveryStats,
-      badge: null
-    },
-    { 
-      label: 'Configuración', 
-      icon: <Settings />, 
-      component: SimpleNotificationSettingsComponent,
-      badge: null
-    }
-  ];
-
-  // Quick actions for speed dial
-  const quickActions: QuickAction[] = [
-    {
-      label: 'Enviar Notificación',
-      icon: <Send />,
-      color: '#1976d2',
-      action: () => setActiveTab(1) // Sender tab
-    },
-    {
-      label: 'Ver Historial',
-      icon: <Email />,
-      color: '#388e3c',
-      action: () => setActiveTab(2) // History tab
-    },
-    {
-      label: 'Ver Estadísticas',
-      icon: <Analytics />,
-      color: '#7b1fa2',
-      action: () => setActiveTab(5) // Analytics tab
-    }
-  ];
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-    if (isMobile) {
-      setMobileDrawerOpen(false);
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <Dashboard stats={stats} />;
+      case 'enviar':
+        return <SendNotification />;
+      case 'historial':
+        return <NotificationHistory />;
+      default:
+        return <Dashboard stats={stats} />;
     }
   };
 
-  const getSystemHealthStatus = () => {
-    const errorRate = stats.failed / (stats.total || 1);
-    
-    if (errorRate < 0.01) return { status: 'healthy', color: '#4caf50', label: 'Saludable' };
-    if (errorRate < 0.05) return { status: 'warning', color: '#ff9800', label: 'Advertencia' };
-    return { status: 'error', color: '#f44336', label: 'Error' };
-  };
-
-  const systemHealth = getSystemHealthStatus();
-
-  // Quick stats component
-  const QuickStats = () => (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">Estado del Sistema</Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Chip
-              size="small"
-              label={systemHealth.label}
-              sx={{ 
-                backgroundColor: systemHealth.color,
-                color: 'white',
-                fontWeight: 'bold'
-              }}
-            />
-            <IconButton size="small" onClick={() => setQuickStatsExpanded(!quickStatsExpanded)}>
-              {quickStatsExpanded ? <Close /> : <Info />}
-            </IconButton>
-          </Box>
-        </Box>
-
-        <AnimatePresence>
-          {quickStatsExpanded && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Box sx={{ 
-                display: 'grid', 
-                gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, 
-                gap: 2 
-              }}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="primary">
-                    {stats.total}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total
-                  </Typography>
-                </Box>
-                
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="success.main">
-                    {stats.sent}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Enviadas
-                  </Typography>
-                </Box>
-                
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="warning.main">
-                    {stats.pending}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Pendientes
-                  </Typography>
-                </Box>
-                
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="error.main">
-                    {stats.failed}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Fallidas
-                  </Typography>
-                </Box>
-              </Box>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Paper>
-    </motion.div>
-  );
-
-  // Mobile navigation drawer
-  const MobileDrawer = () => (
-    <Drawer
-      anchor="left"
-      open={mobileDrawerOpen}
-      onClose={() => setMobileDrawerOpen(false)}
-      PaperProps={{
-        sx: { width: 280 }
-      }}
-    >
-      <Box sx={{ p: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Centro de Notificaciones
-        </Typography>
-        <Divider />
-      </Box>
-      
-      <List>
-        {tabs.map((tab, index) => (
-          <ListItemButton
-            key={index}
-            selected={activeTab === index}
-            onClick={(event) => handleTabChange(event, index)}
-          >
-            <ListItemIcon>
-              <Badge badgeContent={tab.badge} color="primary">
-                {tab.icon}
-              </Badge>
-            </ListItemIcon>
-            <ListItemText primary={tab.label} />
-          </ListItemButton>
-        ))}
-      </List>
-    </Drawer>
-  );
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-600">Cargando centro de notificaciones...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* Mobile Header */}
-      {isMobile && (
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <IconButton onClick={() => setMobileDrawerOpen(true)}>
-              <Menu />
-            </IconButton>
-            <Typography variant="h6">
-              {tabs[activeTab].label}
-            </Typography>
-            <IconButton onClick={refresh}>
-              <Refresh />
-            </IconButton>
-          </Box>
-        </Paper>
-      )}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <Bell className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Centro de Notificaciones</h1>
+              <p className="text-slate-600">Gestiona todas tus comunicaciones desde aquí</p>
+            </div>
+          </div>
 
-      {/* Desktop Navigation */}
-      {!isMobile && (
-        <Paper sx={{ mb: 3 }}>
-          <Container maxWidth="xl">
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2 }}>
-              <Typography variant="h5" component="h1">
-                Centro de Notificaciones
-              </Typography>
-              <Button
-                variant="outlined"
-                startIcon={<Refresh />}
-                onClick={refresh}
-                disabled={loading}
-              >
-                Actualizar
-              </Button>
-            </Box>
-            
-            <Tabs 
-              value={activeTab} 
-              onChange={handleTabChange}
-              variant="scrollable"
-              scrollButtons="auto"
+          <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
+            <Activity className="w-4 h-4 text-emerald-600" />
+            <span className="text-sm font-medium text-emerald-700">Sistema Activo</span>
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex flex-wrap gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-semibold transition-all ${
+                activeTab === tab.id
+                  ? `bg-gradient-to-r ${tab.gradient} text-white shadow-lg scale-105`
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
             >
-              {tabs.map((tab, index) => (
-                <Tab
-                  key={index}
-                  label={tab.label}
-                  icon={
-                    <Badge badgeContent={tab.badge} color="primary">
-                      {tab.icon}
-                    </Badge>
-                  }
-                  iconPosition="start"
-                />
-              ))}
-            </Tabs>
-          </Container>
-        </Paper>
-      )}
-
-      {/* Alerts */}
-      <Container maxWidth="xl">
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <Alert severity="error" sx={{ mb: 3 }}>
-                {error}
-              </Alert>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Quick Stats */}
-        {activeTab === 0 && <QuickStats />}
-      </Container>
-
-      {/* Tab Content */}
-      {tabs.map((tab, index) => (
-        <TabPanel key={index} value={activeTab} index={index}>
-          <tab.component />
-        </TabPanel>
-      ))}
-
-      {/* Mobile Drawer */}
-      <MobileDrawer />
-
-      {/* Speed Dial for Quick Actions */}
-      {!isMobile && (
-        <SpeedDial
-          ariaLabel="Acciones rápidas"
-          sx={{ position: 'fixed', bottom: 24, right: 24 }}
-          icon={<SpeedDialIcon />}
-          open={speedDialOpen}
-          onOpen={() => setSpeedDialOpen(true)}
-          onClose={() => setSpeedDialOpen(false)}
-        >
-          {quickActions.map((action) => (
-            <SpeedDialAction
-              key={action.label}
-              icon={action.icon}
-              tooltipTitle={action.label}
-              onClick={() => {
-                action.action();
-                setSpeedDialOpen(false);
-              }}
-              sx={{ 
-                '& .MuiSpeedDialAction-fab': {
-                  backgroundColor: action.color,
-                  color: 'white',
-                  '&:hover': {
-                    backgroundColor: action.color,
-                    filter: 'brightness(0.9)'
-                  }
-                }
-              }}
-            />
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
+                activeTab === tab.id ? 'bg-white/20' : 'bg-slate-100'
+              }`}>
+                <tab.icon className={`w-5 h-5 ${
+                  activeTab === tab.id ? 'text-white' : 'text-slate-600'
+                }`} />
+              </div>
+              <span className="text-sm font-medium">{tab.label}</span>
+            </button>
           ))}
-        </SpeedDial>
-      )}
+        </div>
+      </div>
 
-      {/* Mobile FAB */}
-      {isMobile && (
-        <Fab
-          color="primary"
-          sx={{ position: 'fixed', bottom: 24, right: 24 }}
-          onClick={() => setActiveTab(1)} // Go to sender
-        >
-          <Add />
-        </Fab>
-      )}
-    </Box>
+      {/* Content */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-3xl border border-white/20 shadow-xl p-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {renderContent()}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
   );
 }
