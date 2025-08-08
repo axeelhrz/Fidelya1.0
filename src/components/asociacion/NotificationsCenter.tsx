@@ -446,8 +446,8 @@ const RecipientSelector = ({
                       recipient.type === 'socio' ? 'bg-blue-100' : 'bg-emerald-100'
                     }`}>
                       {recipient.type === 'socio' ? 
-                        <UserCheck className="w-4 h-4 text-blue-600" /> : 
-                        <Store className="w-4 h-4 text-emerald-600" />
+                        <UserCheck className={`w-4 h-4 text-blue-600`} /> : 
+                        <Store className={`w-4 h-4 text-emerald-600`} />
                       }
                     </div>
                     <div>
@@ -684,32 +684,24 @@ const SendNotification = () => {
             </select>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 pt-6">
+          {/* Action Button */}
+          <div className="pt-6">
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-4 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
             >
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   Enviando...
                 </>
               ) : (
                 <>
-                  <Send className="w-4 h-4" />
-                  Enviar Ahora
+                  <Send className="w-5 h-5" />
+                  Enviar Notificación
                 </>
               )}
-            </button>
-            
-            <button
-              type="button"
-              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
-            >
-              <Clock className="w-4 h-4" />
-              Programar
             </button>
           </div>
         </div>
