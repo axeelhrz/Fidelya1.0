@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 interface WhatsAppRequest {
   to: string;
   message: string;
+  title?: string;
 }
 
 // Función para formatear número de teléfono
@@ -19,9 +20,18 @@ function formatPhoneNumber(phone: string): string {
   return `whatsapp:+${cleanPhone}`;
 }
 
+// Función para formatear el mensaje con branding de Fidelya
+function formatFidelyaMessage(title: string, message: string): string {
+  const header = "🚀 *FIDELYA* 🚀";
+  const separator = "━━━━━━━━━━━━━━━━━━━━";
+  const footer = `${separator}\n📱 *Fidelya* - Tu plataforma de fidelización\n🌐 www.fidelya.com`;
+  
+  return `${header}\n\n*${title}*\n\n${message}\n\n${footer}`;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { to, message }: WhatsAppRequest = await request.json();
+    const { to, message, title }: WhatsAppRequest = await request.json();
 
     // Verificar credenciales
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -46,14 +56,20 @@ export async function POST(request: NextRequest) {
     // Formatear número de teléfono
     const formattedTo = formatPhoneNumber(to);
     
+    // Formatear mensaje con branding de Fidelya
+    const formattedMessage = title 
+      ? formatFidelyaMessage(title, message)
+      : `🚀 *FIDELYA*\n\n${message}\n\n━━━━━━━━━━━━━━━━━━━━\n📱 *Fidelya* - Tu plataforma de fidelización`;
+    
     console.log(`📱 API: Enviando WhatsApp a: ${formattedTo}`);
     console.log(`🔧 API: Using Account SID: ${accountSid.substring(0, 8)}...`);
+    console.log(`📝 API: Mensaje formateado con branding Fidelya`);
     
     // Crear el cuerpo de la petición para Twilio
     const body = new URLSearchParams({
       From: fromNumber,
       To: formattedTo,
-      Body: message
+      Body: formattedMessage
     });
 
     // Crear la autorización básica para Twilio
@@ -82,7 +98,8 @@ export async function POST(request: NextRequest) {
         sid: result.sid,
         status: result.status,
         price: result.price,
-        priceUnit: result.price_unit
+        priceUnit: result.price_unit,
+        formattedMessage: formattedMessage
       });
     } else {
       const error = await response.json();
