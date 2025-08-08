@@ -45,7 +45,7 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer
 } from 'recharts';
-import { QueueStats } from '../../services/notification-queue.service';
+import { NotificationQueueService, QueueStats } from '../../services/notification-queue.service';
 import { useAuth } from '../../hooks/useAuth';
 
 interface DeliveryStatsProps {
