@@ -4,6 +4,7 @@ import { NotificationAnalyticsService } from '../services/notification-analytics
 import { UserSegmentationService } from '../services/user-segmentation.service';
 import { NotificationQueueService } from '../services/notification-queue.service';
 import { NotificationABTestingService } from '../services/notification-ab-testing.service';
+import { useAuth } from './useAuth';
 
 interface NotificationTemplate {
   id: string;
@@ -164,6 +165,8 @@ interface UseEnhancedNotificationsReturn {
 }
 
 export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
+  const { user } = useAuth();
+  
   // State
   const [templates, setTemplates] = useState<NotificationTemplate[]>([]);
   const [campaigns, setCampaigns] = useState<NotificationCampaign[]>([]);
@@ -648,18 +651,18 @@ export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
     try {
       setError(null);
       const newSegment = await UserSegmentationService.createSegment(segment);
-  const createABTest = useCallback(async (test: ABTest) => {
-    try {
-      setError(null);
-      const newTest = await NotificationABTestingService.createTest(test);
-      setABTests(prev => [...prev, newTest]);
-      setSuccess('Test A/B creado exitosamente');
+      setSegments(prev => [...prev, newSegment]);
+      setSuccess('Segmento creado exitosamente');
     } catch (err) {
-      console.error('Error creating A/B test:', err);
-      setError('Error al crear el test A/B');
+      console.error('Error creating segment:', err);
+      setError('Error al crear el segmento');
       throw err;
     }
   }, []);
+
+  // A/B Testing operations
+  const createABTest = useCallback(async (test: ABTest) => {
+    try {
       setError(null);
       const newTest = await NotificationABTestingService.createTest(test);
       setABTests(prev => [...prev, newTest]);
