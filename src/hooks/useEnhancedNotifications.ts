@@ -1,12 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from './useAuth';
-import { NotificationTemplatesService } from '../services/notification-templates.service';
+import { notificationTemplatesService } from '../services/notification-templates.service';
 import { NotificationAnalyticsService } from '../services/notification-analytics.service';
-import { NotificationSchedulerService } from '../services/notification-scheduler.service';
 import { UserSegmentationService } from '../services/user-segmentation.service';
 import { NotificationQueueService } from '../services/notification-queue.service';
 import { NotificationABTestingService } from '../services/notification-ab-testing.service';
-import { NotificationApprovalService } from '../services/notification-approval.service';
 
 interface NotificationTemplate {
   id: string;
@@ -14,7 +11,10 @@ interface NotificationTemplate {
   description: string;
   category: string;
   channels: string[];
-  content: any;
+  content: {
+    text?: string;
+    [key: string]: unknown;
+  };
   variables: string[];
   isActive: boolean;
   usageCount: number;
@@ -83,6 +83,33 @@ interface TemplateMetrics {
   clickRate: number;
 }
 
+interface UserSegment {
+  id: string;
+  name: string;
+  description?: string;
+  criteria: Record<string, unknown>;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+interface ABTest {
+  id: string;
+  name: string;
+  description?: string;
+  variants: string[];
+  status: 'draft' | 'running' | 'completed';
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+interface QueueStats {
+  totalInQueue: number;
+  processing: number;
+  paused: boolean;
+  lastProcessedAt?: Date;
+  [key: string]: unknown;
+}
+
 interface UseEnhancedNotificationsReturn {
   // Templates
   templates: NotificationTemplate[];
@@ -100,26 +127,25 @@ interface UseEnhancedNotificationsReturn {
   deleteCampaign: (id: string) => Promise<void>;
   sendCampaign: (id: string) => Promise<void>;
   scheduleCampaign: (id: string, scheduledAt: Date) => Promise<void>;
-  
+  segments: UserSegment[];
   // Analytics
   metrics: NotificationMetrics | null;
   loadingMetrics: boolean;
   refreshMetrics: () => Promise<void>;
-  getTemplateAnalytics: (templateId: string) => Promise<any>;
-  getCampaignAnalytics: (campaignId: string) => Promise<any>;
+  getTemplateAnalytics: (templateId: string) => Promise<TemplateMetrics>;
+  getCampaignAnalytics: (campaignId: string) => Promise<CampaignStats>;
   
   // Segments
-  segments: any[];
   loadingSegments: boolean;
-  createSegment: (segment: any) => Promise<void>;
+  createSegment: (segment: UserSegment) => Promise<void>;
   
   // A/B Testing
-  abTests: any[];
+  abTests: ABTest[];
   loadingABTests: boolean;
-  createABTest: (test: any) => Promise<void>;
+  createABTest: (test: ABTest) => Promise<void>;
   
   // Queue Management
-  queueStats: any;
+  queueStats: QueueStats | null;
   loadingQueue: boolean;
   pauseQueue: () => Promise<void>;
   resumeQueue: () => Promise<void>;
@@ -127,8 +153,8 @@ interface UseEnhancedNotificationsReturn {
   
   // Utilities
   sendTestNotification: (templateId: string, recipient: string, channel: string) => Promise<void>;
-  previewTemplate: (templateId: string, variables: Record<string, any>) => Promise<string>;
-  validateTemplate: (template: any) => Promise<{ isValid: boolean; errors: string[] }>;
+  previewTemplate: (templateId: string, variables: Record<string, unknown>) => Promise<string>;
+  validateTemplate: (template: Partial<NotificationTemplate>) => Promise<{ isValid: boolean; errors: string[] }>;
   
   // State management
   error: string | null;
@@ -138,16 +164,14 @@ interface UseEnhancedNotificationsReturn {
 }
 
 export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
-  const { user } = useAuth();
-  
   // State
   const [templates, setTemplates] = useState<NotificationTemplate[]>([]);
   const [campaigns, setCampaigns] = useState<NotificationCampaign[]>([]);
   const [metrics, setMetrics] = useState<NotificationMetrics | null>(null);
-  const [segments, setSegments] = useState<any[]>([]);
-  const [abTests, setABTests] = useState<any[]>([]);
-  const [queueStats, setQueueStats] = useState<any>(null);
-  
+  const [segments, setSegments] = useState<UserSegment[]>([]);
+  const [abTests, setABTests] = useState<ABTest[]>([]);
+  const [queueStats, setQueueStats] = useState<QueueStats | null>(null);
+
   // Loading states
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
@@ -161,7 +185,7 @@ export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
   const [success, setSuccess] = useState<string | null>(null);
 
   // Cache for performance
-  const [cache, setCache] = useState<Map<string, { data: any; timestamp: number }>>(new Map());
+  const [cache, setCache] = useState<Map<string, { data: unknown; timestamp: number }>>(new Map());
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   // Utility functions
@@ -178,7 +202,7 @@ export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
     return null;
   }, [cache]);
 
-  const setCachedData = useCallback((key: string, data: any) => {
+  const setCachedData = useCallback((key: string, data: unknown) => {
     setCache(prev => new Map(prev.set(key, { data, timestamp: Date.now() })));
   }, []);
 
@@ -189,12 +213,12 @@ export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
       setError(null);
 
       const cachedTemplates = getCachedData('templates');
-      if (cachedTemplates) {
-        setTemplates(cachedTemplates);
+      if (Array.isArray(cachedTemplates)) {
+        setTemplates(cachedTemplates as NotificationTemplate[]);
         return;
       }
 
-      const templatesData = await NotificationTemplatesService.getTemplates();
+      const templatesData = await notificationTemplatesService.getTemplates();
       setTemplates(templatesData);
       setCachedData('templates', templatesData);
     } catch (err) {
@@ -212,8 +236,8 @@ export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
       setError(null);
 
       const cachedCampaigns = getCachedData('campaigns');
-      if (cachedCampaigns) {
-        setCampaigns(cachedCampaigns);
+      if (Array.isArray(cachedCampaigns)) {
+        setCampaigns(cachedCampaigns as NotificationCampaign[]);
         return;
       }
 
@@ -276,8 +300,8 @@ export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
       setError(null);
 
       const cachedMetrics = getCachedData('metrics');
-      if (cachedMetrics) {
-        setMetrics(cachedMetrics);
+      if (cachedMetrics && typeof cachedMetrics === 'object' && cachedMetrics !== null && 'totalSent' in cachedMetrics) {
+        setMetrics(cachedMetrics as NotificationMetrics);
         return;
       }
 
@@ -330,8 +354,17 @@ export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
       setLoadingQueue(true);
       setError(null);
 
-      const queueData = await NotificationQueueService.getQueueStats();
-      setQueueStats(queueData);
+      const queueData = await NotificationQueueService.getQueueStats() as QueueStats;
+      // Ensure all required properties exist and normalize 'paused' to boolean
+      const normalizedQueueData: QueueStats = {
+        totalInQueue: queueData.totalInQueue ?? 0,
+        processing: queueData.processing ?? 0,
+        paused: typeof queueData.paused === 'number' ? queueData.paused !== 0 : !!queueData.paused,
+        lastProcessedAt: queueData.lastProcessedAt ? new Date(queueData.lastProcessedAt as string) : undefined,
+        ...queueData,
+        paused: typeof queueData.paused === 'number' ? queueData.paused !== 0 : !!queueData.paused
+      };
+      setQueueStats(normalizedQueueData);
     } catch (err) {
       console.error('Error loading queue stats:', err);
       setError('Error al cargar estadísticas de cola');
@@ -344,7 +377,7 @@ export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
   const createTemplate = useCallback(async (template: Partial<NotificationTemplate>) => {
     try {
       setError(null);
-      const newTemplate = await NotificationTemplatesService.createTemplate(template);
+      const newTemplate = await notificationTemplatesService.createTemplate(template);
       setTemplates(prev => [...prev, newTemplate]);
       setSuccess('Plantilla creada exitosamente');
       
@@ -364,7 +397,7 @@ export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
   const updateTemplate = useCallback(async (id: string, updates: Partial<NotificationTemplate>) => {
     try {
       setError(null);
-      const updatedTemplate = await NotificationTemplatesService.updateTemplate(id, updates);
+      const updatedTemplate = await notificationTemplatesService.updateTemplate(id, updates);
       setTemplates(prev => prev.map(t => t.id === id ? updatedTemplate : t));
       setSuccess('Plantilla actualizada exitosamente');
       
@@ -384,7 +417,7 @@ export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
   const deleteTemplate = useCallback(async (id: string) => {
     try {
       setError(null);
-      await NotificationTemplatesService.deleteTemplate(id);
+      await notificationTemplatesService.deleteTemplate(id);
       setTemplates(prev => prev.filter(t => t.id !== id));
       setSuccess('Plantilla eliminada exitosamente');
       
@@ -407,7 +440,7 @@ export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
       const originalTemplate = templates.find(t => t.id === id);
       if (!originalTemplate) throw new Error('Template not found');
 
-      const duplicatedTemplate = await NotificationTemplatesService.createTemplate({
+      const duplicatedTemplate = await notificationTemplatesService.createTemplate({
         ...originalTemplate,
         name: `${originalTemplate.name} (Copia)`,
         id: undefined
@@ -553,7 +586,7 @@ export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
     }
   }, [templates]);
 
-  const validateTemplate = useCallback(async (template: any) => {
+  const validateTemplate = useCallback(async (template: Partial<NotificationTemplate>) => {
     try {
       const errors: string[] = [];
 
@@ -611,22 +644,22 @@ export function useEnhancedNotifications(): UseEnhancedNotificationsReturn {
   }, [loadQueueStats]);
 
   // Segment operations
-  const createSegment = useCallback(async (segment: any) => {
+  const createSegment = useCallback(async (segment: UserSegment) => {
     try {
       setError(null);
       const newSegment = await UserSegmentationService.createSegment(segment);
-      setSegments(prev => [...prev, newSegment]);
-      setSuccess('Segmento creado exitosamente');
+  const createABTest = useCallback(async (test: ABTest) => {
+    try {
+      setError(null);
+      const newTest = await NotificationABTestingService.createTest(test);
+      setABTests(prev => [...prev, newTest]);
+      setSuccess('Test A/B creado exitosamente');
     } catch (err) {
-      console.error('Error creating segment:', err);
-      setError('Error al crear el segmento');
+      console.error('Error creating A/B test:', err);
+      setError('Error al crear el test A/B');
       throw err;
     }
   }, []);
-
-  // A/B Testing operations
-  const createABTest = useCallback(async (test: any) => {
-    try {
       setError(null);
       const newTest = await NotificationABTestingService.createTest(test);
       setABTests(prev => [...prev, newTest]);
