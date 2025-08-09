@@ -38,7 +38,10 @@ import {
   Zap,
   User,
   ShoppingBag,
-  Gift
+  Gift,
+  Bell,
+  Mail,
+  MessageSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -49,6 +52,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/Input';
 import { QuickClienteCreator } from '../clientes/QuickClienteCreator';
 import { subDays } from 'date-fns';
+
+// ... (mantener todos los componentes AdvancedMetricCard y SocioCard igual que antes)
 
 // Componente de métrica avanzada
 const AdvancedMetricCard: React.FC<{
@@ -1036,90 +1041,156 @@ export function SocioAnalytics() {
         </>
       )}
 
-      {/* Modal de crear socio */}
-      <Dialog open={showCreateModal} onClose={() => setShowCreateModal(false)}>
-        <DialogContent>
+      {/* Modal de crear socio - PANTALLA COMPLETA */}
+      <Dialog open={showCreateModal} onClose={() => setShowCreateModal(false)} fullScreen>
+        <DialogContent fullScreen>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <UserPlus size={20} />
-              Nuevo Socio
+            <DialogTitle className="flex items-center gap-3 text-3xl">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <UserPlus size={24} className="text-white" />
+              </div>
+              Crear Nuevo Socio
             </DialogTitle>
+            <p className="text-slate-600 mt-2 text-lg">
+              Completa la información del nuevo socio para agregarlo al sistema
+            </p>
           </DialogHeader>
 
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Nombre completo *"
-                value={formData.nombre}
-                onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
-                placeholder="Nombre del socio"
-                required
-              />
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-8 mb-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Información Personal */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                      <User size={16} className="text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">Información Personal</h3>
+                  </div>
 
-              <Input
-                label="Email *"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="email@ejemplo.com"
-                required
-              />
+                  <Input
+                    label="Nombre completo *"
+                    value={formData.nombre}
+                    onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
+                    placeholder="Nombre completo del socio"
+                    required
+                    className="text-lg"
+                  />
 
-              <Input
-                label="Teléfono"
-                value={formData.telefono}
-                onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
-                placeholder="+54 9 11 1234-5678"
-              />
+                  <Input
+                    label="Email *"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="email@ejemplo.com"
+                    required
+                    className="text-lg"
+                  />
 
-              <Input
-                label="DNI"
-                value={formData.dni}
-                onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
-                placeholder="12345678"
-              />
+                  <Input
+                    label="Teléfono"
+                    value={formData.telefono}
+                    onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
+                    placeholder="+54 9 11 1234-5678"
+                    className="text-lg"
+                  />
 
-              <Input
-                label="Fecha de nacimiento"
-                type="date"
-                value={formData.fechaNacimiento}
-                onChange={(e) => setFormData(prev => ({ ...prev, fechaNacimiento: e.target.value }))}
-              />
+                  <Input
+                    label="DNI"
+                    value={formData.dni}
+                    onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
+                    placeholder="12345678"
+                    className="text-lg"
+                  />
+                </div>
 
-              <Input
-                label="Dirección"
-                value={formData.direccion}
-                onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
-                placeholder="Dirección completa"
-              />
+                {/* Información Adicional */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                      <MapPin size={16} className="text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">Información Adicional</h3>
+                  </div>
+
+                  <Input
+                    label="Fecha de nacimiento"
+                    type="date"
+                    value={formData.fechaNacimiento}
+                    onChange={(e) => setFormData(prev => ({ ...prev, fechaNacimiento: e.target.value }))}
+                    className="text-lg"
+                  />
+
+                  <Input
+                    label="Dirección"
+                    value={formData.direccion}
+                    onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
+                    placeholder="Dirección completa"
+                    className="text-lg"
+                  />
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-3">
+                      Notas
+                    </label>
+                    <textarea
+                      value={formData.notas}
+                      onChange={(e) => setFormData(prev => ({ ...prev, notas: e.target.value }))}
+                      placeholder="Notas adicionales sobre el socio..."
+                      rows={4}
+                      className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Notas
-              </label>
-              <textarea
-                value={formData.notas}
-                onChange={(e) => setFormData(prev => ({ ...prev, notas: e.target.value }))}
-                placeholder="Notas adicionales sobre el socio..."
-                rows={3}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-3">
-                Configuración de comunicación
-              </label>
-              <div className="space-y-3">
+            {/* Configuración de Comunicación */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <Bell size={16} className="text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">Configuración de Comunicación</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
-                  { key: 'recibirNotificaciones', label: 'Recibir notificaciones' },
-                  { key: 'recibirPromociones', label: 'Recibir promociones' },
-                  { key: 'recibirEmail', label: 'Comunicación por email' },
-                  { key: 'recibirSMS', label: 'Comunicación por SMS' },
+                  { 
+                    key: 'recibirNotificaciones', 
+                    label: 'Recibir notificaciones', 
+                    description: 'Notificaciones generales del sistema',
+                    icon: <Bell size={16} />
+                  },
+                  { 
+                    key: 'recibirPromociones', 
+                    label: 'Recibir promociones', 
+                    description: 'Ofertas y promociones especiales',
+                    icon: <Gift size={16} />
+                  },
+                  { 
+                    key: 'recibirEmail', 
+                    label: 'Comunicación por email', 
+                    description: 'Recibir emails informativos',
+                    icon: <Mail size={16} />
+                  },
+                  { 
+                    key: 'recibirSMS', 
+                    label: 'Comunicación por SMS', 
+                    description: 'Mensajes de texto importantes',
+                    icon: <MessageSquare size={16} />
+                  },
                 ].map((config) => (
-                  <div key={config.key} className="flex items-center justify-between">
-                    <span className="text-sm text-slate-700">{config.label}</span>
+                  <div key={config.key} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                        {config.icon}
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-slate-900">{config.label}</span>
+                        <p className="text-xs text-slate-500 mt-1">{config.description}</p>
+                      </div>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setFormData(prev => ({
@@ -1129,14 +1200,14 @@ export function SocioAnalytics() {
                           [config.key]: !prev.configuracion[config.key as keyof typeof prev.configuracion]
                         }
                       }))}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
                         formData.configuracion[config.key as keyof typeof formData.configuracion]
                           ? 'bg-purple-600' 
-                          : 'bg-slate-200'
+                          : 'bg-slate-300'
                       }`}
                     >
                       <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${
                           formData.configuracion[config.key as keyof typeof formData.configuracion]
                             ? 'translate-x-6' 
                             : 'translate-x-1'
@@ -1156,7 +1227,7 @@ export function SocioAnalytics() {
                 setShowCreateModal(false);
                 resetForm();
               }}
-              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              className="border-slate-300 text-slate-700 hover:bg-slate-50 px-8 py-3 text-lg"
             >
               Cancelar
             </Button>
@@ -1164,98 +1235,165 @@ export function SocioAnalytics() {
               onClick={handleCreateCliente}
               loading={loading}
               disabled={!formData.nombre || !formData.email}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg shadow-lg shadow-purple-500/30"
             >
+              <UserPlus size={20} className="mr-2" />
               Crear Socio
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Modal de editar socio */}
-      <Dialog open={showEditModal} onClose={() => setShowEditModal(false)}>
-        <DialogContent>
+      {/* Modal de editar socio - PANTALLA COMPLETA */}
+      <Dialog open={showEditModal} onClose={() => setShowEditModal(false)} fullScreen>
+        <DialogContent fullScreen>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Edit3 size={20} />
+            <DialogTitle className="flex items-center gap-3 text-3xl">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Edit3 size={24} className="text-white" />
+              </div>
               Editar Socio
             </DialogTitle>
+            <p className="text-slate-600 mt-2 text-lg">
+              Modifica la información del socio según sea necesario
+            </p>
           </DialogHeader>
 
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Nombre completo *"
-                value={formData.nombre}
-                onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
-                placeholder="Nombre del socio"
-                required
-              />
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-8 mb-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Información Personal */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                      <User size={16} className="text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">Información Personal</h3>
+                  </div>
 
-              <Input
-                label="Email *"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="email@ejemplo.com"
-                required
-              />
+                  <Input
+                    label="Nombre completo *"
+                    value={formData.nombre}
+                    onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
+                    placeholder="Nombre completo del socio"
+                    required
+                    className="text-lg"
+                  />
 
-              <Input
-                label="Teléfono"
-                value={formData.telefono}
-                onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
-                placeholder="+54 9 11 1234-5678"
-              />
+                  <Input
+                    label="Email *"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="email@ejemplo.com"
+                    required
+                    className="text-lg"
+                  />
 
-              <Input
-                label="DNI"
-                value={formData.dni}
-                onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
-                placeholder="12345678"
-              />
+                  <Input
+                    label="Teléfono"
+                    value={formData.telefono}
+                    onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
+                    placeholder="+54 9 11 1234-5678"
+                    className="text-lg"
+                  />
 
-              <Input
-                label="Fecha de nacimiento"
-                type="date"
-                value={formData.fechaNacimiento}
-                onChange={(e) => setFormData(prev => ({ ...prev, fechaNacimiento: e.target.value }))}
-              />
+                  <Input
+                    label="DNI"
+                    value={formData.dni}
+                    onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
+                    placeholder="12345678"
+                    className="text-lg"
+                  />
+                </div>
 
-              <Input
-                label="Dirección"
-                value={formData.direccion}
-                onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
-                placeholder="Dirección completa"
-              />
+                {/* Información Adicional */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
+                      <MapPin size={16} className="text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">Información Adicional</h3>
+                  </div>
+
+                  <Input
+                    label="Fecha de nacimiento"
+                    type="date"
+                    value={formData.fechaNacimiento}
+                    onChange={(e) => setFormData(prev => ({ ...prev, fechaNacimiento: e.target.value }))}
+                    className="text-lg"
+                  />
+
+                  <Input
+                    label="Dirección"
+                    value={formData.direccion}
+                    onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
+                    placeholder="Dirección completa"
+                    className="text-lg"
+                  />
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-3">
+                      Notas
+                    </label>
+                    <textarea
+                      value={formData.notas}
+                      onChange={(e) => setFormData(prev => ({ ...prev, notas: e.target.value }))}
+                      placeholder="Notas adicionales sobre el socio..."
+                      rows={4}
+                      className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-lg resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Notas
-              </label>
-              <textarea
-                value={formData.notas}
-                onChange={(e) => setFormData(prev => ({ ...prev, notas: e.target.value }))}
-                placeholder="Notas adicionales sobre el socio..."
-                rows={3}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-3">
-                Configuración de comunicación
-              </label>
-              <div className="space-y-3">
+            {/* Configuración de Comunicación */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <Bell size={16} className="text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">Configuración de Comunicación</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
-                  { key: 'recibirNotificaciones', label: 'Recibir notificaciones' },
-                  { key: 'recibirPromociones', label: 'Recibir promociones' },
-                  { key: 'recibirEmail', label: 'Comunicación por email' },
-                  { key: 'recibirSMS', label: 'Comunicación por SMS' },
+                  { 
+                    key: 'recibirNotificaciones', 
+                    label: 'Recibir notificaciones', 
+                    description: 'Notificaciones generales del sistema',
+                    icon: <Bell size={16} />
+                  },
+                  { 
+                    key: 'recibirPromociones', 
+                    label: 'Recibir promociones', 
+                    description: 'Ofertas y promociones especiales',
+                    icon: <Gift size={16} />
+                  },
+                  { 
+                    key: 'recibirEmail', 
+                    label: 'Comunicación por email', 
+                    description: 'Recibir emails informativos',
+                    icon: <Mail size={16} />
+                  },
+                  { 
+                    key: 'recibirSMS', 
+                    label: 'Comunicación por SMS', 
+                    description: 'Mensajes de texto importantes',
+                    icon: <MessageSquare size={16} />
+                  },
                 ].map((config) => (
-                  <div key={config.key} className="flex items-center justify-between">
-                    <span className="text-sm text-slate-700">{config.label}</span>
+                  <div key={config.key} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                        {config.icon}
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-slate-900">{config.label}</span>
+                        <p className="text-xs text-slate-500 mt-1">{config.description}</p>
+                      </div>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setFormData(prev => ({
@@ -1265,14 +1403,14 @@ export function SocioAnalytics() {
                           [config.key]: !prev.configuracion[config.key as keyof typeof prev.configuracion]
                         }
                       }))}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
                         formData.configuracion[config.key as keyof typeof formData.configuracion]
-                          ? 'bg-purple-600' 
-                          : 'bg-slate-200'
+                          ? 'bg-emerald-600' 
+                          : 'bg-slate-300'
                       }`}
                     >
                       <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${
                           formData.configuracion[config.key as keyof typeof formData.configuracion]
                             ? 'translate-x-6' 
                             : 'translate-x-1'
@@ -1292,7 +1430,7 @@ export function SocioAnalytics() {
                 setShowEditModal(false);
                 resetForm();
               }}
-              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              className="border-slate-300 text-slate-700 hover:bg-slate-50 px-8 py-3 text-lg"
             >
               Cancelar
             </Button>
@@ -1300,226 +1438,302 @@ export function SocioAnalytics() {
               onClick={handleEditCliente}
               loading={loading}
               disabled={!formData.nombre || !formData.email}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg shadow-lg shadow-emerald-500/30"
             >
+              <Edit3 size={20} className="mr-2" />
               Guardar Cambios
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Modal de eliminar socio */}
-      <Dialog open={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
-        <DialogContent>
+      {/* Modal de eliminar socio - PANTALLA COMPLETA */}
+      <Dialog open={showDeleteModal} onClose={() => setShowDeleteModal(false)} fullScreen>
+        <DialogContent fullScreen>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
-              <Trash2 size={20} />
+            <DialogTitle className="flex items-center gap-3 text-3xl text-red-600">
+              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Trash2 size={24} className="text-white" />
+              </div>
               Eliminar Socio
             </DialogTitle>
+            <p className="text-slate-600 mt-2 text-lg">
+              Esta acción no se puede deshacer. Se eliminarán todos los datos asociados.
+            </p>
           </DialogHeader>
 
-          <div className="py-4">
-            <div className="flex items-center gap-4 p-4 bg-red-50 rounded-lg border border-red-200">
-              <AlertCircle className="text-red-500 flex-shrink-0" size={24} />
-              <div>
-                <p className="font-medium text-red-800">
-                  ¿Estás seguro de que deseas eliminar este socio?
-                </p>
-                <p className="text-red-600 text-sm mt-1">
-                  Esta acción no se puede deshacer. Se eliminarán todos los datos asociados.
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-8 mb-8">
+              <div className="flex items-center gap-4 mb-6">
+                <AlertCircle className="text-red-500 flex-shrink-0" size={32} />
+                <div>
+                  <h3 className="text-xl font-bold text-red-800 mb-2">
+                    ¿Estás seguro de que deseas eliminar este socio?
+                  </h3>
+                  <p className="text-red-600">
+                    Esta acción eliminará permanentemente toda la información del socio, incluyendo su historial de compras, beneficios utilizados y datos personales.
+                  </p>
+                </div>
+              </div>
+
+              {selectedCliente && (
+                <div className="bg-white rounded-xl p-6 border border-red-200">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-slate-200 rounded-xl flex items-center justify-center">
+                      {selectedCliente.avatar ? (
+                        <Image
+                          src={selectedCliente.avatar}
+                          alt={selectedCliente.nombre}
+                          className="w-full h-full object-cover rounded-xl"
+                          width={64}
+                          height={64}
+                        />
+                      ) : (
+                        <User size={24} className="text-slate-400" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-xl font-bold text-slate-900">{selectedCliente.nombre}</h4>
+                      <p className="text-slate-600 mb-2">{selectedCliente.email}</p>
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <span className="font-medium text-slate-900">{selectedCliente.totalCompras}</span>
+                          <p className="text-slate-500">Compras</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-slate-900">${selectedCliente.montoTotalGastado.toLocaleString()}</span>
+                          <p className="text-slate-500">Total gastado</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-slate-900">{selectedCliente.beneficiosUsados}</span>
+                          <p className="text-slate-500">Beneficios usados</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="text-amber-600" size={20} />
+                <p className="text-amber-800 font-medium">
+                  Recomendación: Considera desactivar el socio en lugar de eliminarlo para mantener el historial.
                 </p>
               </div>
             </div>
-
-            {selectedCliente && (
-              <div className="mt-4 p-4 bg-slate-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-slate-200 rounded-lg flex items-center justify-center">
-                    {selectedCliente.avatar ? (
-                      <Image
-                        src={selectedCliente.avatar}
-                        alt={selectedCliente.nombre}
-                        className="w-full h-full object-cover rounded-lg"
-                        width={48}
-                        height={48}
-                      />
-                    ) : (
-                      <User size={20} className="text-slate-400" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900">{selectedCliente.nombre}</p>
-                    <p className="text-sm text-slate-500">{selectedCliente.email}</p>
-                    <p className="text-sm text-slate-500">
-                      {selectedCliente.totalCompras} compras • ${selectedCliente.montoTotalGastado.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setShowDeleteModal(false)}
-              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              className="border-slate-300 text-slate-700 hover:bg-slate-50 px-8 py-3 text-lg"
             >
               Cancelar
             </Button>
             <Button
               onClick={handleDeleteCliente}
               loading={loading}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 text-lg shadow-lg shadow-red-500/30"
             >
+              <Trash2 size={20} className="mr-2" />
               Eliminar Socio
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Modal de detalle del socio */}
-      <Dialog open={showDetailModal} onClose={() => setShowDetailModal(false)}>
-        <DialogContent>
+      {/* Modal de detalle del socio - PANTALLA COMPLETA */}
+      <Dialog open={showDetailModal} onClose={() => setShowDetailModal(false)} fullScreen>
+        <DialogContent fullScreen>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <User size={20} />
+            <DialogTitle className="flex items-center gap-3 text-3xl">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <User size={24} className="text-white" />
+              </div>
               Perfil del Socio
             </DialogTitle>
+            <p className="text-slate-600 mt-2 text-lg">
+              Información completa y estadísticas del socio
+            </p>
           </DialogHeader>
 
           {selectedCliente && (
-            <div className="space-y-6">
+            <div className="max-w-6xl mx-auto space-y-8">
               {/* Header del socio */}
-              <div className="flex items-start gap-6 p-6 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl">
-                <div className="relative">
-                  <div className="w-24 h-24 bg-white rounded-xl shadow-lg flex items-center justify-center overflow-hidden">
-                    {selectedCliente.avatar ? (
-                      <Image
-                        src={selectedCliente.avatar}
-                        alt={selectedCliente.nombre}
-                        className="w-full h-full object-cover"
-                        width={96}
-                        height={96}
-                      />
-                    ) : (
-                      <User size={32} className="text-slate-400" />
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                        {selectedCliente.nombre}
-                      </h2>
-                      <p className="text-slate-600 mb-3">{selectedCliente.email}</p>
-                      
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${
-                          selectedCliente.estado === 'activo' 
-                            ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                            : selectedCliente.estado === 'suspendido'
-                            ? 'bg-red-100 text-red-800 border-red-200'
-                            : 'bg-slate-100 text-slate-800 border-slate-200'
-                        }`}>
-                          {selectedCliente.estado === 'activo' && <CheckCircle size={14} />}
-                          {selectedCliente.estado === 'suspendido' && <XCircle size={14} />}
-                          {selectedCliente.estado === 'inactivo' && <Pause size={14} />}
-                          {selectedCliente.estado.charAt(0).toUpperCase() + selectedCliente.estado.slice(1)}
-                        </div>
-                        
-                        <span className="text-sm text-slate-500">
-                          Socio desde {format(selectedCliente.creadoEn.toDate(), 'dd/MM/yyyy', { locale: es })}
-                        </span>
-                      </div>
-
-                      {/* Información de contacto */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {selectedCliente.telefono && (
-                          <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <Phone size={14} />
-                            <span>{selectedCliente.telefono}</span>
-                          </div>
-                        )}
-                        {selectedCliente.direccion && (
-                          <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <MapPin size={14} />
-                            <span>{selectedCliente.direccion}</span>
-                          </div>
-                        )}
-                        {selectedCliente.fechaNacimiento && (
-                          <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <Calendar size={14} />
-                            <span>
-                              {format(selectedCliente.fechaNacimiento.toDate(), 'dd/MM/yyyy', { locale: es })}
-                            </span>
-                          </div>
-                        )}
-                      </div>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8">
+                <div className="flex items-start gap-8">
+                  <div className="relative">
+                    <div className="w-32 h-32 bg-white rounded-2xl shadow-lg flex items-center justify-center overflow-hidden">
+                      {selectedCliente.avatar ? (
+                        <Image
+                          src={selectedCliente.avatar}
+                          alt={selectedCliente.nombre}
+                          className="w-full h-full object-cover"
+                          width={128}
+                          height={128}
+                        />
+                      ) : (
+                        <User size={48} className="text-slate-400" />
+                      )}
                     </div>
+                    <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center ${
+                      selectedCliente.estado === 'activo' ? 'bg-emerald-500' : 
+                      selectedCliente.estado === 'suspendido' ? 'bg-red-500' : 'bg-slate-500'
+                    }`}>
+                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    </div>
+                  </div>
 
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        leftIcon={<Edit3 size={14} />}
-                        onClick={() => {
-                          setShowDetailModal(false);
-                          openEditModal(selectedCliente);
-                        }}
-                        className="border-slate-300 text-slate-700 hover:bg-slate-50"
-                      >
-                        Editar
-                      </Button>
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h2 className="text-4xl font-bold text-slate-900 mb-3">
+                          {selectedCliente.nombre}
+                        </h2>
+                        <p className="text-xl text-slate-600 mb-4">{selectedCliente.email}</p>
+                        
+                        <div className="flex items-center gap-6 mb-6">
+                          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border ${
+                            selectedCliente.estado === 'activo' 
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                              : selectedCliente.estado === 'suspendido'
+                              ? 'bg-red-100 text-red-800 border-red-200'
+                              : 'bg-slate-100 text-slate-800 border-slate-200'
+                          }`}>
+                            {selectedCliente.estado === 'activo' && <CheckCircle size={16} />}
+                            {selectedCliente.estado === 'suspendido' && <XCircle size={16} />}
+                            {selectedCliente.estado === 'inactivo' && <Pause size={16} />}
+                            {selectedCliente.estado.charAt(0).toUpperCase() + selectedCliente.estado.slice(1)}
+                          </div>
+                          
+                          <span className="text-slate-500">
+                            Socio desde {format(selectedCliente.creadoEn.toDate(), 'dd/MM/yyyy', { locale: es })}
+                          </span>
+                        </div>
+
+                        {/* Información de contacto */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {selectedCliente.telefono && (
+                            <div className="flex items-center gap-3 text-slate-600">
+                              <Phone size={18} />
+                              <span className="text-lg">{selectedCliente.telefono}</span>
+                            </div>
+                          )}
+                          {selectedCliente.direccion && (
+                            <div className="flex items-center gap-3 text-slate-600">
+                              <MapPin size={18} />
+                              <span className="text-lg">{selectedCliente.direccion}</span>
+                            </div>
+                          )}
+                          {selectedCliente.fechaNacimiento && (
+                            <div className="flex items-center gap-3 text-slate-600">
+                              <Calendar size={18} />
+                              <span className="text-lg">
+                                {format(selectedCliente.fechaNacimiento.toDate(), 'dd/MM/yyyy', { locale: es })}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <Button
+                          variant="outline"
+                          leftIcon={<Edit3 size={18} />}
+                          onClick={() => {
+                            setShowDetailModal(false);
+                            openEditModal(selectedCliente);
+                          }}
+                          className="border-slate-300 text-slate-700 hover:bg-slate-50 px-6 py-3 text-lg"
+                        >
+                          Editar
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Estadísticas del socio */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <ShoppingBag size={20} className="text-blue-600" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center shadow-sm">
+                  <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <ShoppingBag size={32} className="text-blue-600" />
                   </div>
-                  <div className="text-2xl font-bold text-slate-900 mb-1">
+                  <div className="text-3xl font-bold text-slate-900 mb-2">
                     {selectedCliente.totalCompras}
                   </div>
-                  <div className="text-sm text-slate-500">Total Compras</div>
+                  <div className="text-slate-500">Total Compras</div>
                 </div>
 
-                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
-                  <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <DollarSign size={20} className="text-emerald-600" />
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center shadow-sm">
+                  <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <DollarSign size={32} className="text-emerald-600" />
                   </div>
-                  <div className="text-2xl font-bold text-slate-900 mb-1">
+                  <div className="text-3xl font-bold text-slate-900 mb-2">
                     ${selectedCliente.montoTotalGastado.toLocaleString()}
                   </div>
-                  <div className="text-sm text-slate-500">Total Gastado</div>
+                  <div className="text-slate-500">Total Gastado</div>
                 </div>
 
-                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <Gift size={20} className="text-purple-600" />
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center shadow-sm">
+                  <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Gift size={32} className="text-purple-600" />
                   </div>
-                  <div className="text-2xl font-bold text-slate-900 mb-1">
+                  <div className="text-3xl font-bold text-slate-900 mb-2">
                     {selectedCliente.beneficiosUsados}
                   </div>
-                  <div className="text-sm text-slate-500">Beneficios Usados</div>
+                  <div className="text-slate-500">Beneficios Usados</div>
                 </div>
 
-                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
-                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <Receipt size={20} className="text-orange-600" />
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center shadow-sm">
+                  <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Receipt size={32} className="text-orange-600" />
                   </div>
-                  <div className="text-2xl font-bold text-slate-900 mb-1">
+                  <div className="text-3xl font-bold text-slate-900 mb-2">
                     ${selectedCliente.promedioCompra.toLocaleString()}
                   </div>
-                  <div className="text-sm text-slate-500">Promedio Compra</div>
+                  <div className="text-slate-500">Promedio Compra</div>
                 </div>
               </div>
+
+              {/* Información adicional */}
+              {(selectedCliente.notas || (selectedCliente.tags && selectedCliente.tags.length > 0)) && (
+                <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+                  <h3 className="text-2xl font-bold text-slate-900 mb-6">
+                    Información Adicional
+                  </h3>
+                  
+                  {selectedCliente.notas && (
+                    <div className="mb-6">
+                      <h4 className="text-lg font-medium text-slate-700 mb-3">Notas</h4>
+                      <p className="text-slate-600 bg-slate-50 p-4 rounded-xl text-lg leading-relaxed">
+                        {selectedCliente.notas}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedCliente.tags && selectedCliente.tags.length > 0 && (
+                    <div>
+                      <h4 className="text-lg font-medium text-slate-700 mb-3">Tags</h4>
+                      <div className="flex flex-wrap gap-3">
+                        {selectedCliente.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 text-sm rounded-full border border-blue-200"
+                          >
+                            <Tag size={14} />
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -1527,7 +1741,7 @@ export function SocioAnalytics() {
             <Button
               variant="outline"
               onClick={() => setShowDetailModal(false)}
-              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              className="border-slate-300 text-slate-700 hover:bg-slate-50 px-8 py-3 text-lg"
             >
               Cerrar
             </Button>
