@@ -76,6 +76,43 @@ const CONFIG = {
     }
 };
 
+// ===== FUNCIÓN PARA CORREGIR ALTURA DEL CTA DEL DRAWER =====
+(function fixDrawerCTAHeight(){
+const drawer = document.querySelector('.nav__drawer');
+const cta    = document.querySelector('.nav__drawer-cta');
+const content= document.querySelector('.nav__drawer-content');
+if(!drawer || !cta || !content) return;
+// Fallback para 100vh en móviles antiguos
+function setVHVar(){
+document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+}
+// Mide el alto REAL del CTA y sincroniza padding/altura
+function syncCTAHeight(){
+// Forzamos un reflow tras fonts/animaciones iniciales
+requestAnimationFrame(()=> {
+const h = Math.ceil(cta.getBoundingClientRect().height);
+// Evita valores 0 en el primer paint
+const safeH = h > 0 ? h : 96;
+drawer.style.setProperty('--drawer-cta-h', safeH + 'px');
+// Opcional: asegura que el scroll no tape el CTA al hacer anchor
+content.style.scrollPaddingBottom = safeH + 'px';
+});
+}
+// Ejecuta en el primer render
+setVHVar();
+syncCTAHeight();
+// Recalcula en cambios relevantes
+window.addEventListener('resize', () => { setVHVar(); syncCTAHeight(); });
+window.addEventListener('orientationchange', () => { setVHVar(); syncCTAHeight(); });
+// Si cambia el tamaño del CTA (traducción, wrap de texto, etc.)
+const ro = new ResizeObserver(syncCTAHeight);
+ro.observe(cta);
+// Si usás fuentes web, vuelve a medir cuando carguen
+if (document.fonts && document.fonts.ready) {
+document.fonts.ready.then(syncCTAHeight).catch(()=>{});
+}
+})();
+
 // ===== SISTEMA DE TRADUCCIÓN OPTIMIZADO =====
 const translationData = {
     en: {
@@ -2304,590 +2341,212 @@ function initializeFAQ() {
     faqItems.forEach(item => {
         const question = item.querySelector('.faq__question');
         const answer = item.querySelector('.faq__answer');
+        const icon = item.querySelector('.faq__icon');
         
-        if (question && answer) {
-            question.addEventListener('click', () => {
-                const isActive = item.classList.contains('active');
-                
-                faqItems.forEach(otherItem => {
-                    if (otherItem !== item) {
-                        otherItem.classList.remove('active');
-                        const otherAnswer = otherItem.querySelector('.faq__answer');
-                        const otherQuestion = otherItem.querySelector('.faq__question');
-                        if (otherAnswer) otherAnswer.classList.remove('active');
-                        if (otherQuestion) otherQuestion.setAttribute('aria-expanded', 'false');
+        if (!question || !answer) return;
+        
+        question.addEventListener('click', () => {
+            const isActive = item.classList.contains('active');
+            
+            // Cerrar todos los otros items
+            faqItems.forEach(otherItem => {
+                if (otherItem !== item) {
+                    otherItem.classList.remove('active');
+                    const otherAnswer = otherItem.querySelector('.faq__answer');
+                    if (otherAnswer) {
+                        otherAnswer.classList.remove('active');
                     }
-                });
-                
-                if (isActive) {
-                    item.classList.remove('active');
-                    answer.classList.remove('active');
-                    question.setAttribute('aria-expanded', 'false');
-                } else {
-                    item.classList.add('active');
-                    answer.classList.add('active');
-                    question.setAttribute('aria-expanded', 'true');
                 }
             });
-
-            if (isMobile) {
-                question.addEventListener('touchstart', () => {
-                    question.style.transform = 'scale(0.98)';
-                }, { passive: true });
-                question.addEventListener('touchend', () => {
-                    question.style.transform = '';
-                }, { passive: true });
+            
+            // Toggle el item actual
+            if (isActive) {
+                item.classList.remove('active');
+                answer.classList.remove('active');
+            } else {
+                item.classList.add('active');
+                answer.classList.add('active');
             }
+        });
+
+        if (isMobile) {
+            question.addEventListener('touchstart', () => {
+                question.style.transform = 'scale(0.98)';
+            }, { passive: true });
+            question.addEventListener('touchend', () => {
+                question.style.transform = '';
+            }, { passive: true });
         }
     });
     
+    // Búsqueda en FAQ
     if (searchInput) {
-        searchInput.addEventListener('input', debounce((e) => {
-            const searchTerm = e.target.value.toLowerCase().trim();
-            let visibleItems = 0;
-            
-            faqItems.forEach(item => {
-                const questionText = item.querySelector('.faq__question-text');
-                const answerText = item.querySelector('.faq__answer-text');
-                
-                if (questionText && answerText) {
-                    const questionContent = questionText.textContent.toLowerCase();
-                    const answerContent = answerText.textContent.toLowerCase();
-                    
-                    if (searchTerm === '' ||
-                        questionContent.includes(searchTerm) ||
-                        answerContent.includes(searchTerm)) {
-                        item.style.display = 'block';
-                        visibleItems++;
-                    } else {
-                        item.style.display = 'none';
-                        item.classList.remove('active');
-                        const answer = item.querySelector('.faq__answer');
-                        const question = item.querySelector('.faq__question');
-                        if (answer) answer.classList.remove('active');
-                        if (question) question.setAttribute('aria-expanded', 'false');
-                    }
-                }
-            });
-            
-            if (noResults) {
-                if (visibleItems === 0 && searchTerm !== '') {
-                    noResults.classList.add('show');
-                } else {
-                    noResults.classList.remove('show');
-                }
-            }
-        }, isMobile ? 400 : 300));
-    }
-}
-
-// ===== INTERSECTION OBSERVER ULTRA-OPTIMIZADO =====
-function initializeIntersectionObserver() {
-    if (performanceMode) return;
-    
-    const observerOptions = {
-        threshold: isMobile ? 0.1 : 0.15,
-        rootMargin: isMobile ? '0px 0px -50px 0px' : '0px 0px -100px 0px'
-    };
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('in-view');
-                if (entry.target.classList.contains('feature')) {
-                    animateFeature(entry.target);
-                }
-                // Desconectar el elemento una vez que se ha animado
-                observer.unobserve(entry.target);
-            }
-        });
-    }, observerOptions);
-    
-    const elementsToObserve = document.querySelectorAll('.feature, .faq__item, .contact__channel, .videos');
-    elementsToObserve.forEach(element => {
-        observer.observe(element);
-    });
-}
-
-function animateFeature(feature) {
-    if (performanceMode) return;
-    
-    const content = feature.querySelector('.feature__content');
-    
-    if (content) {
-        const listItems = content.querySelectorAll('.feature__list-item');
-        listItems.forEach((item, index) => {
-            setTimeout(() => {
-                item.style.opacity = '1';
-                item.style.transform = 'translateX(0)';
-            }, 200 + (index * (isMobile ? 50 : 100)));
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filterFAQItems(e.target.value.toLowerCase());
+            }, 300);
         });
     }
 }
 
-// ===== CONFIGURACIÓN DE LAZY LOADING ULTRA-OPTIMIZADA =====
-function setupImageLazyLoading() {
-    const waitForOptimizer = () => {
-        if (!imageOptimizer) {
-            setTimeout(waitForOptimizer, 100);
-            return;
-        }
-        
-        console.log('🖼️ Configurando lazy loading de imágenes...');
-        
-        // Logo del navbar desktop
-        const navLogo = document.querySelector('.nav__logo');
-        if (navLogo) {
-            imageOptimizer.loadImageImmediately(navLogo, 'logo');
-        }
-        
-        // Logo del drawer móvil
-        const drawerLogo = document.querySelector('.nav__drawer-logo');
-        if (drawerLogo) {
-            imageOptimizer.loadImageImmediately(drawerLogo, 'logo');
-        }
-        
-        // Imagen del hero (crítica) - Nota: Hero usa video, no imagen estática
-        const heroImage = document.querySelector('.hero__phone-app-image');
-        if (heroImage) {
-            // Usar video-poster como fallback para hero
-            imageOptimizer.loadImageImmediately(heroImage, 'videoPoster');
-        }
-        
-        // Imágenes de características - CORREGIDAS
-        const featureImages = document.querySelectorAll('.phone__app-image');
-        console.log(`📱 Encontradas ${featureImages.length} imágenes de características`);
-        
-        featureImages.forEach((img, index) => {
-            const imageKeys = [
-                'phones.schedule',
-                'phones.stations',
-                'phones.calendar',
-                'phones.log',
-                'phones.notifications',
-                'phones.referrals'
-            ];
-            
-            if (imageKeys[index]) {
-                console.log(`🔄 Cargando imagen ${index + 1}: ${imageKeys[index]}`);
-                if (performanceMode) {
-                    imageOptimizer.loadImageImmediately(img, imageKeys[index]);
-                } else {
-                    imageOptimizer.observeImage(img, imageKeys[index]);
-                }
-            }
-        });
-        
-        // Botones de descarga
-        const appleBtn = document.querySelector('.download-btn--app-store .download-btn__image');
-        const googleBtn = document.querySelector('.download-btn--google .download-btn__image');
-        
-        if (appleBtn) {
-            imageOptimizer.loadImageImmediately(appleBtn, 'downloads.apple');
-        }
-        if (googleBtn) {
-            imageOptimizer.loadImageImmediately(googleBtn, 'downloads.google');
-        }
-        
-        console.log('✅ Lazy loading configurado correctamente');
-    };
+function filterFAQItems(searchTerm) {
+    const faqItems = document.querySelectorAll('.faq__item');
+    const noResults = document.getElementById('faq-no-results');
+    let visibleCount = 0;
     
-    waitForOptimizer();
-}
-
-// ===== VIDEO HERO ULTRA-OPTIMIZADO =====
-function initializeHeroVideoFallback() {
-    const heroVideo = document.getElementById('hero-video');
-    const heroFallbackImage = document.querySelector('.hero__phone-app-image');
-    const heroMobileVideo = document.getElementById('hero-mobile-video');
-    
-    if (heroMobileVideo && isMobile) {
-        heroMobileVideo.muted = true;
-        heroMobileVideo.autoplay = true;
-        heroMobileVideo.loop = true;
-        heroMobileVideo.playsInline = true;
-        heroMobileVideo.preload = 'auto';
+    faqItems.forEach(item => {
+        const question = item.querySelector('.faq__question-text');
+        const answer = item.querySelector('.faq__answer-text');
         
-        heroMobileVideo.addEventListener('loadeddata', () => {
-            console.log('Video móvil del hero cargado correctamente');
-        });
+        if (!question || !answer) return;
         
-        heroMobileVideo.addEventListener('error', (e) => {
-            console.error('Error cargando video móvil del hero:', e);
-            const mobileVideoContainer = document.querySelector('.hero__mobile-video');
-            if (mobileVideoContainer) {
-                mobileVideoContainer.style.display = 'none';
-            }
-        });
-    }
-    
-    if (!heroVideo || !heroFallbackImage) return;
-    
-    if (isMobile || performanceMode) {
-        heroVideo.style.display = 'none';
-        heroFallbackImage.style.display = 'block';
-        heroFallbackImage.style.zIndex = '2';
-        console.log('Video del teléfono deshabilitado en móvil/modo rendimiento');
-        return;
-    }
-    
-    heroVideo.muted = true;
-    heroVideo.autoplay = true;
-    heroVideo.loop = true;
-    heroVideo.playsInline = true;
-    heroVideo.preload = 'auto';
-    
-    heroVideo.addEventListener('loadeddata', () => {
-        heroVideo.classList.remove('loading');
-        heroVideo.classList.add('loaded');
-        console.log('Video del hero cargado correctamente');
-    });
-    
-    heroVideo.addEventListener('error', (e) => {
-        console.error('Error cargando video del hero:', e);
-        showVideoFallback();
-    });
-    
-    heroVideo.addEventListener('stalled', () => {
-        console.warn('Video del hero interrumpido, mostrando fallback');
-        showVideoFallback();
-    });
-    
-    function showVideoFallback() {
-        heroVideo.style.display = 'none';
-        heroFallbackImage.style.display = 'block';
-        heroFallbackImage.style.zIndex = '2';
-        console.log('Mostrando imagen de fallback para el video del hero');
-    }
-    
-    setTimeout(() => {
-        if (heroVideo.readyState < 2) {
-            showVideoFallback();
-        }
-    }, 2000);
-}
-
-// ===== UTILIDADES ULTRA-OPTIMIZADAS =====
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-function throttle(func, limit) {
-    let inThrottle;
-    return function() {
-        const args = arguments;
-        const context = this;
-        if (!inThrottle) {
-            func.apply(context, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    }
-}
-
-// ===== OPTIMIZACIONES DE RENDIMIENTO ULTRA-AGRESIVAS =====
-function initializePerformanceOptimizations() {
-    if (!performanceMode) {
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => {
-                preloadCriticalResources();
-            });
+        const questionText = question.textContent.toLowerCase();
+        const answerText = answer.textContent.toLowerCase();
+        
+        if (searchTerm === '' || questionText.includes(searchTerm) || answerText.includes(searchTerm)) {
+            item.style.display = 'block';
+            visibleCount++;
         } else {
-            setTimeout(preloadCriticalResources, 5000);
-        }
-    }
-    
-    if (isMobile) {
-        const elementsToOptimize = document.querySelectorAll('.hero__phone, .nav__logo, .nav__drawer-logo, .floating-widget__main-btn');
-        elementsToOptimize.forEach(element => {
-            element.style.willChange = 'transform';
-        });
-        
-        const featureElements = document.querySelectorAll('.feature__phone, .phone');
-        featureElements.forEach(element => {
-            element.style.willChange = 'auto';
-        });
-    }
-    
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            handleResize();
-        }, isMobile ? 1000 : 500);
-    });
-}
-
-function preloadCriticalResources() {
-    const criticalResources = [
-        './assets/logo.webp',
-        './assets/video-poster.webp'
-    ];
-    
-    criticalResources.forEach(src => {
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = 'image';
-        link.href = src;
-        document.head.appendChild(link);
-    });
-}
-
-function handleResize() {
-    const newIsMobile = window.innerWidth <= 1023;
-    
-    if (newIsMobile !== isMobile) {
-        isMobile = newIsMobile;
-        detectDeviceCapabilities();
-        
-        // Cerrar menús abiertos al cambiar de dispositivo
-        if (isMenuOpen) {
-            closeMobileMenu();
-        }
-        if (isMobileMenuOpen) {
-            closeMobileMenu();
-        }
-        
-        // Manejar visibilidad del botón flotante según el dispositivo
-        const floatingWidget = document.getElementById('floating-widget');
-        if (floatingWidget) {
-            if (!isMobile) {
-                // En desktop, siempre mostrar el botón flotante
-                floatingWidget.classList.remove('hidden-by-drawer');
-            } else if (isMobileMenuOpen) {
-                // En móvil, ocultar si el drawer está abierto
-                floatingWidget.classList.add('hidden-by-drawer');
-            }
-        }
-        
-        // Reinicializar navegación
-        setTimeout(() => {
-            initializeNavigation();
-            updateActiveNavOnScroll();
-        }, 100);
-    }
-    
-    if (isFloatingMenuOpen) {
-        closeFloatingMenu();
-    }
-    
-    if (isLanguageSwitcherOpen) {
-        closeLanguageSwitcher();
-    }
-}
-
-// ===== ACCESIBILIDAD ULTRA-OPTIMIZADA =====
-function initializeAccessibility() {
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (isMenuOpen) {
-                closeMobileMenu();
-            }
-            if (isMobileMenuOpen) {
-                closeMobileMenu();
-            }
-            if (isFloatingMenuOpen) {
-                closeFloatingMenu();
-            }
-            if (isLanguageSwitcherOpen) {
-                closeLanguageSwitcher();
+            item.style.display = 'none';
+            item.classList.remove('active');
+            const answerElement = item.querySelector('.faq__answer');
+            if (answerElement) {
+                answerElement.classList.remove('active');
             }
         }
     });
     
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
-            document.body.classList.add('keyboard-navigation');
+    if (noResults) {
+        if (visibleCount === 0 && searchTerm !== '') {
+            noResults.classList.add('show');
+        } else {
+            noResults.classList.remove('show');
         }
-    });
-    
-    document.addEventListener('mousedown', () => {
-        document.body.classList.remove('keyboard-navigation');
-    });
-    
-    if (isMobile) {
-        document.addEventListener('touchstart', () => {
-            document.body.classList.add('touch-navigation');
-        }, { passive: true });
     }
 }
 
 // ===== INICIALIZACIÓN PRINCIPAL ULTRA-OPTIMIZADA =====
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Iniciando StarFlex con sistema de rutas basado en pathname...');
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🚀 Iniciando aplicación StarFlex...');
     
-    detectDeviceCapabilities();
-    
-    imageOptimizer = new UltraOptimizedImageLoader();
-    
-    initializeLanguageSystem();
-    initializeLanguageSwitcher();
-    initializeRouting(); // Sistema de routing basado en pathname
-    initializeNavigation();
-    initializeScrollEffects();
-    initializeVideoPlayer();
-    initializeYouTubePlayer();
-    initializeFAQ();
-    initializeHeroVideoFallback();
-    initializeAccessibility();
-    initializeFloatingWidget();
-    
-    setupImageLazyLoading();
-    
-    if (!performanceMode) {
-        initializeIntersectionObserver();
+    try {
+        // 1. Detectar capacidades del dispositivo PRIMERO
+        detectDeviceCapabilities();
+        
+        // 2. Inicializar sistema de idiomas
+        initializeLanguageSystem();
+        
+        // 3. Inicializar sistema de routing
+        initializeRouting();
+        
+        // 4. Inicializar optimizador de imágenes
+        imageOptimizer = new UltraOptimizedImageLoader();
+        
+        // 5. Inicializar navegación
+        initializeNavigation();
+        
+        // 6. Inicializar efectos de scroll
+        initializeScrollEffects();
+        
+        // 7. Inicializar componentes específicos
+        if (!isMobile) {
+            initializeLanguageSwitcher();
+        }
+        
+        initializeFloatingWidget();
+        initializeVideoPlayer();
+        initializeYouTubePlayer();
+        initializeFAQ();
+        
+        // 8. Actualizar metadatos dinámicos
+        updateDynamicMetadata();
+        
+        console.log('✅ Aplicación StarFlex inicializada correctamente');
+        
+    } catch (error) {
+        console.error('❌ Error durante la inicialización:', error);
     }
-    
-    initializePerformanceOptimizations();
-    
-    // AGREGAR ESTA LÍNEA PARA ASEGURAR QUE LOS ENLACES SE CONFIGUREN
-    setTimeout(() => {
-        setupLegalLinks();
-        updateLegalLinks();
-    }, 500);
-    
-    console.log(`✅ StarFlex Ultra-Optimizado con rutas basadas en pathname - Móvil: ${isMobile}, Modo rendimiento: ${performanceMode}, Idioma actual: ${currentLanguage}, Pathname: ${window.location.pathname}`);
-    
 });
 
-// ===== MANEJO DE ERRORES ULTRA-OPTIMIZADO =====
-window.addEventListener('error', (e) => {
-    console.error('Error en la aplicación:', e.error);
-    
-    if (isMobile && e.error && e.error.message.includes('video')) {
-        console.log('Error de video detectado, forzando fallback de imagen');
-        const heroVideo = document.getElementById('hero-video');
-        const heroImage = document.querySelector('.hero__phone-app-image');
-        if (heroVideo && heroImage) {
-            heroVideo.style.display = 'none';
-            heroImage.style.display = 'block';
-            heroImage.style.zIndex = '2';
+// ===== MANEJO DE REDIMENSIONAMIENTO OPTIMIZADO =====
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        const wasMobile = isMobile;
+        detectDeviceCapabilities();
+        
+        // Si cambió de móvil a desktop o viceversa, reinicializar navegación
+        if (wasMobile !== isMobile) {
+            console.log(`📱➡️🖥️ Cambio de dispositivo detectado: ${isMobile ? 'móvil' : 'desktop'}`);
+            
+            // Cerrar menús abiertos
+            if (isMobileMenuOpen) closeMobileMenu();
+            if (isFloatingMenuOpen) closeFloatingMenu();
+            if (isLanguageSwitcherOpen) closeLanguageSwitcher();
+            
+            // Reinicializar navegación
+            setTimeout(() => {
+                initializeNavigation();
+                if (!isMobile) {
+                    initializeLanguageSwitcher();
+                }
+            }, 100);
         }
-    }
+        
+        // Actualizar metadatos
+        updateDynamicMetadata();
+        
+    }, 250);
+}, { passive: true });
+
+// ===== MANEJO DE ORIENTACIÓN MÓVIL =====
+window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+        detectDeviceCapabilities();
+        updateDynamicMetadata();
+    }, 500);
+}, { passive: true });
+
+// ===== PREVENCIÓN DE ZOOM EN INPUTS MÓVILES =====
+if (isMobile) {
+    const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], textarea');
+    inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            if (input.style.fontSize !== '16px') {
+                input.style.fontSize = '16px';
+            }
+        });
+    });
+}
+
+// ===== MANEJO DE ERRORES GLOBALES =====
+window.addEventListener('error', (e) => {
+    console.error('Error global capturado:', e.error);
 });
 
 window.addEventListener('unhandledrejection', (e) => {
-    console.error('Promise rechazada:', e.reason);
+    console.error('Promesa rechazada no manejada:', e.reason);
 });
 
-// ===== LIMPIEZA AL SALIR =====
-window.addEventListener('beforeunload', () => {
-    if (imageOptimizer && imageOptimizer.intersectionObserver) {
-        imageOptimizer.intersectionObserver.disconnect();
-    }
-});
-
-// ===== SOPORTE PARA PWA OPTIMIZADO =====
-if ('serviceWorker' in navigator && !isMobile && !performanceMode) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-                console.log('SW registrado:', registration);
-            })
-            .catch(registrationError => {
-                console.log('SW falló:', registrationError);
-            });
-    });
+// ===== OPTIMIZACIONES DE RENDIMIENTO FINALES =====
+if (performanceMode) {
+    // Deshabilitar animaciones costosas
+    document.documentElement.style.setProperty('--transition', '0.1s ease');
+    document.documentElement.style.setProperty('--transition-slow', '0.1s ease');
+    
+    // Reducir frecuencia de scroll
+    let lastScrollTime = 0;
+    const originalScrollHandler = window.onscroll;
+    window.onscroll = (e) => {
+        const now = Date.now();
+        if (now - lastScrollTime > 100) {
+            lastScrollTime = now;
+            if (originalScrollHandler) originalScrollHandler(e);
+        }
+    };
 }
 
-// ===== FUNCIONES ADICIONALES PARA DEBUGGING Y MONITOREO =====
-function debugImageLoading() {
-    console.log('🔍 Estado del cargador de imágenes:');
-    console.log('- Formatos soportados:', imageOptimizer?.supportedFormats);
-    console.log('- Imágenes en caché:', imageOptimizer?.imageCache.size);
-    console.log('- Imágenes lazy:', imageOptimizer?.lazyImages.size);
-    
-    // Verificar imágenes de características
-    const featureImages = document.querySelectorAll('.phone__app-image');
-    console.log(`📱 Imágenes de características encontradas: ${featureImages.length}`);
-    
-    featureImages.forEach((img, index) => {
-        const feature = img.closest('.feature');
-        const featureType = feature?.getAttribute('data-feature');
-        const backgroundImage = window.getComputedStyle(img).backgroundImage;
-        const hasBackground = backgroundImage && backgroundImage !== 'none';
-        
-        console.log(`  ${index + 1}. ${featureType}: ${hasBackground ? '✅ Cargada' : '❌ Sin cargar'}`);
-        if (hasBackground) {
-            console.log(`     URL: ${backgroundImage}`);
-        }
-    });
-}
-
-// Exponer función de debug globalmente para testing
-window.debugImageLoading = debugImageLoading;
-
-// ===== FUNCIÓN PARA FORZAR RECARGA DE IMÁGENES =====
-function forceReloadImages() {
-    console.log('🔄 Forzando recarga de todas las imágenes...');
-    
-    if (imageOptimizer) {
-        // Limpiar caché
-        imageOptimizer.imageCache.clear();
-        
-        // Recargar imágenes de características
-        imageOptimizer.forceLoadFeatureImages();
-        
-        // Recargar logos
-        const navLogo = document.querySelector('.nav__logo');
-        const drawerLogo = document.querySelector('.nav__drawer-logo');
-        
-        if (navLogo) {
-            imageOptimizer.loadImageImmediately(navLogo, 'logo');
-        }
-        if (drawerLogo) {
-            imageOptimizer.loadImageImmediately(drawerLogo, 'logo');
-        }
-        
-        console.log('✅ Recarga de imágenes completada');
-    }
-}
-
-// Exponer función de recarga globalmente
-window.forceReloadImages = forceReloadImages;
-
-// ===== EXPOSICIÓN DE API PARA DEBUGGING =====
-window.StarFlex = {
-    version: '2.0.0',
-    isMobile,
-    performanceMode,
-    imageOptimizer,
-    debugImageLoading,
-    forceReloadImages,
-    // Funciones de navegación
-    openMobileMenu,
-    closeMobileMenu,
-    toggleMobileMenu,
-    // Funciones de idioma
-    switchLanguage,
-    currentLanguage,
-    navigateToLanguageRoute,
-    detectInitialLanguage,
-    // Funciones de video
-    initializeYouTubePlayer,
-    loadYouTubeVideo,
-    // Funciones de routing
-    initializeRouting,
-    handleRouteChange,
-    showMainContent,
-    showPrivacyPolicy,
-    showTermsConditions,
-    // Funciones de scroll
-    scrollToTop,
-    // Funciones para páginas legales
-    goToPrivacyPolicy,
-    goToTermsPolicy,
-    getCurrentLanguage,
-    // Utilidades
-    detectDeviceCapabilities
-    // Al final de la función switchLanguage()
-};
-updateDynamicMetadata();
+console.log('🎯 StarFlex App cargada completamente');
