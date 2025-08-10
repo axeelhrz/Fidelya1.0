@@ -2,7 +2,7 @@
 :root {
 /* 1) Variables del drawer CTA */
 --drawer-cta-h: 96px;   /* alto real del CTA (fallback) */
---drawer-gap: 24px;     /* separación visual contenido ↔ CTA */
+--drawer-gap: 90px;     /* separación visual contenido ↔ CTA */
 
 --primary-bg: #0a0d14; --secondary-bg: #151922; --accent-bg: #1e2330;
 --glass-bg: rgba(21, 25, 34, 0.7); --glass-bg-light: rgba(255, 255, 255, 0.05); --glass-bg-medium: rgba(255, 255, 255, 0.08); --glass-bg-strong: rgba(255, 255, 255, 0.12); --glass-border: rgba(255, 255, 255, 0.12);
@@ -2879,3 +2879,4 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
   }
 }
 
+ 

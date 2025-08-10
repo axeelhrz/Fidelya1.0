@@ -76,28 +76,31 @@ const CONFIG = {
     }
 };
 
-// ===== FUNCIÓN PARA CORREGIR ALTURA DEL CTA DEL DRAWER =====
+// ===== FUNCIÓN PARA CORREGIR ALTURA DEL CTA DEL DRAWER - ACTUALIZADA =====
 (function fixDrawerCTAHeight(){
 const drawer = document.querySelector('.nav__drawer');
 const cta    = document.querySelector('.nav__drawer-cta');
 const content= document.querySelector('.nav__drawer-content');
 if(!drawer || !cta || !content) return;
+
+// Obtener el GAP desde CSS
+const GAP = parseInt(getComputedStyle(document.documentElement)
+.getPropertyValue('--drawer-gap')) || 24;
+
 // Fallback para 100vh en móviles antiguos
 function setVHVar(){
 document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
 }
+
 // Mide el alto REAL del CTA y sincroniza padding/altura
-function syncCTAHeight(){
-// Forzamos un reflow tras fonts/animaciones iniciales
-requestAnimationFrame(()=> {
-const h = Math.ceil(cta.getBoundingClientRect().height);
-// Evita valores 0 en el primer paint
-const safeH = h > 0 ? h : 96;
-drawer.style.setProperty('--drawer-cta-h', safeH + 'px');
-// Opcional: asegura que el scroll no tape el CTA al hacer anchor
-content.style.scrollPaddingBottom = safeH + 'px';
+function syncCTAHeight() {
+requestAnimationFrame(() => {
+const h = Math.ceil(cta.getBoundingClientRect().height) || 96;
+drawer.style.setProperty('--drawer-cta-h', h + 'px');
+content.style.scrollPaddingBottom = (h + GAP) + 'px';
 });
 }
+
 // Ejecuta en el primer render
 setVHVar();
 syncCTAHeight();
@@ -423,6 +426,8 @@ const translationData = {
         'last-updated': 'Última actualización: 15 de diciembre de 2024'
     }
 };
+
+
 
 // ===== FUNCIÓN PARA SCROLL SUAVE HACIA ARRIBA =====
 function scrollToTop() {
@@ -2550,3 +2555,4 @@ if (performanceMode) {
 }
 
 console.log('🎯 StarFlex App cargada completamente');
+    
