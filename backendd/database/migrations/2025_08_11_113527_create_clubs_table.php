@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('clubs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('league_id')->constrained('leagues')->onDelete('cascade');
+            $table->string('name');
+            $table->string('city')->nullable();
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
+            
+            $table->index(['league_id', 'status']);
         });
     }
 
