@@ -1,69 +1,37 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { RegisterForm } from '@/types';
-
-const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  password_confirmation: z.string(),
-}).refine((data) => data.password === data.password_confirmation, {
-  message: "Passwords don't match",
-  path: ["password_confirmation"],
-});
 
 export default function SignUpPage() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    password_confirmation: ''
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { register: registerUser } = useAuth();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
-  });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
-  const onSubmit = async (data: RegisterForm) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    try {
-      await registerUser(data);
-    } catch (err: unknown) {
-      interface ErrorResponse {
-        response?: {
-          data?: {
-            message?: string;
-          };
-        };
-      }
-
-      const errorObj = err as ErrorResponse;
-
-      if (
-        typeof err === 'object' &&
-        err !== null &&
-        errorObj.response &&
-        typeof errorObj.response === 'object' &&
-        errorObj.response.data &&
-        typeof errorObj.response.data === 'object' &&
-        'message' in errorObj.response.data
-      ) {
-        setError(errorObj.response.data.message || 'An error occurred during registration');
-      } else {
-        setError('An error occurred during registration');
-      }
-    } finally {
+    // Simple form submission without AuthContext for testing
+    console.log('Form submitted:', formData);
+    
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      setError('Registration temporarily disabled for debugging');
+    }, 1000);
   };
 
   return (
@@ -83,7 +51,7 @@ export default function SignUpPage() {
             </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="text-sm text-red-700">{error}</div>
@@ -96,15 +64,16 @@ export default function SignUpPage() {
                 Full Name
               </label>
               <input
-                {...register('name')}
+                id="name"
+                name="name"
                 type="text"
+                value={formData.name}
+                onChange={handleChange}
                 autoComplete="name"
+                required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="Enter your full name"
               />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-              )}
             </div>
 
             <div>
@@ -112,15 +81,16 @@ export default function SignUpPage() {
                 Email Address
               </label>
               <input
-                {...register('email')}
+                id="email"
+                name="email"
                 type="email"
+                value={formData.email}
+                onChange={handleChange}
                 autoComplete="email"
+                required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="Enter your email address"
               />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
             </div>
 
             <div>
@@ -128,15 +98,16 @@ export default function SignUpPage() {
                 Password
               </label>
               <input
-                {...register('password')}
+                id="password"
+                name="password"
                 type="password"
+                value={formData.password}
+                onChange={handleChange}
                 autoComplete="new-password"
+                required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="Enter your password"
               />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-              )}
             </div>
 
             <div>
@@ -144,15 +115,16 @@ export default function SignUpPage() {
                 Confirm Password
               </label>
               <input
-                {...register('password_confirmation')}
+                id="password_confirmation"
+                name="password_confirmation"
                 type="password"
+                value={formData.password_confirmation}
+                onChange={handleChange}
                 autoComplete="new-password"
+                required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="Confirm your password"
               />
-              {errors.password_confirmation && (
-                <p className="mt-1 text-sm text-red-600">{errors.password_confirmation.message}</p>
-              )}
             </div>
           </div>
 
@@ -166,6 +138,12 @@ export default function SignUpPage() {
             </button>
           </div>
         </form>
+        
+        <div className="mt-4 p-4 bg-yellow-50 rounded-md">
+          <p className="text-sm text-yellow-700">
+            🔧 Debug Mode: AuthContext temporarily disabled to fix infinite reload issue.
+          </p>
+        </div>
       </div>
     </div>
   );
