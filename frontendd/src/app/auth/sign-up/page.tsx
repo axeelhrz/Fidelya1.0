@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ export default function SignUpPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { register: registerUser } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -25,13 +27,26 @@ export default function SignUpPage() {
     setIsLoading(true);
     setError(null);
 
-    // Simple form submission without AuthContext for testing
-    console.log('Form submitted:', formData);
-    
-    setTimeout(() => {
+    // Basic validation
+    if (formData.password !== formData.password_confirmation) {
+      setError("Passwords don't match");
       setIsLoading(false);
-      setError('Registration temporarily disabled for debugging');
-    }, 1000);
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      await registerUser(formData);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'An error occurred during registration');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -138,12 +153,6 @@ export default function SignUpPage() {
             </button>
           </div>
         </form>
-        
-        <div className="mt-4 p-4 bg-yellow-50 rounded-md">
-          <p className="text-sm text-yellow-700">
-            🔧 Debug Mode: AuthContext temporarily disabled to fix infinite reload issue.
-          </p>
-        </div>
       </div>
     </div>
   );
