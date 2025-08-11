@@ -22,8 +22,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const checkAuth = async () => {
-    // Temporarily disabled to stop infinite loops
-    console.log('checkAuth called - but disabled for debugging');
+    setLoading(true);
+    try {
+      const response = await api.get<ApiResponse<{ user: User }>>('/api/auth/me');
+      setUser(response.data.data.user);
+      return response.data.data.user;
+    } catch (error) {
+      setUser(null);
+      return null;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const login = async (credentials: LoginForm) => {
