@@ -100,8 +100,12 @@ export default function MembersPage() {
       setShowForm(false);
       setEditingMember(null);
       fetchMembers();
-    } catch (error: any) {
-      console.error('Error saving member:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error saving member:', error.message);
+      } else {
+        console.error('Error saving member:', error);
+      }
     }
   };
 
@@ -123,12 +127,20 @@ export default function MembersPage() {
 
   const handleDelete = async (member: Member) => {
     if (!confirm(`Are you sure you want to delete "${member.full_name}"?`)) return;
-    
     try {
       await api.delete(`/api/members/${member.id}`);
       fetchMembers();
-    } catch (error: any) {
-      alert(error.response?.data?.message || 'Error deleting member');
+    } catch (error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof (error as { response?: { data?: { message?: unknown } } }).response?.data?.message === 'string'
+      ) {
+        alert((error as { response?: { data?: { message?: string } } }).response!.data!.message!);
+      } else {
+        alert('Error deleting member');
+      }
     }
   };
 

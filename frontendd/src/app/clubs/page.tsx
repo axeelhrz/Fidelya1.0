@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -37,7 +37,7 @@ export default function ClubsPage() {
     },
   });
 
-  const fetchClubs = async () => {
+  const fetchClubs = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -52,7 +52,7 @@ export default function ClubsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, leagueFilter, statusFilter]);
 
   const fetchLeagues = async () => {
     try {
@@ -69,7 +69,7 @@ export default function ClubsPage() {
 
   useEffect(() => {
     fetchClubs();
-  }, [searchTerm, leagueFilter, statusFilter]);
+  }, [fetchClubs]);
 
   const onSubmit = async (data: ClubForm) => {
     try {
@@ -83,7 +83,7 @@ export default function ClubsPage() {
       setShowForm(false);
       setEditingClub(null);
       fetchClubs();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving club:', error);
     }
   };
@@ -105,8 +105,27 @@ export default function ClubsPage() {
     try {
       await api.delete(`/api/clubs/${club.id}`);
       fetchClubs();
-    } catch (error: any) {
-      alert(error.response?.data?.message || 'Error deleting club');
+    } catch (error: unknown) {
+      interface AxiosError {
+        response?: {
+          data?: {
+            message?: string;
+          };
+        };
+      }
+
+      const axiosError = error as AxiosError;
+
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof axiosError.response?.data?.message === 'string'
+      ) {
+        alert(axiosError.response!.data!.message!);
+      } else {
+        alert('Error deleting club');
+      }
     }
   };
 

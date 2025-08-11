@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await api.post<ApiResponse<{ user: User }>>('/api/auth/login', credentials);
       setUser(response.data.data.user);
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw error;
     }
   };
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await api.post<ApiResponse<{ user: User }>>('/api/auth/register', userData);
       setUser(response.data.data.user);
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw error;
     }
   };

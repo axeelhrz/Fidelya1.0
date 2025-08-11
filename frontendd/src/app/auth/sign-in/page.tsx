@@ -30,10 +30,29 @@ export default function SignInPage() {
     setIsLoading(true);
     setError(null);
 
+    type ErrorWithResponse = {
+      response?: {
+        data?: {
+          message?: string;
+        };
+      };
+    };
+
     try {
       await login(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred during login');
+    } catch (err: unknown) {
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        typeof (err as ErrorWithResponse).response?.data?.message === 'string'
+      ) {
+        setError((err as ErrorWithResponse).response!.data!.message!);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An error occurred during login');
+      }
     } finally {
       setIsLoading(false);
     }

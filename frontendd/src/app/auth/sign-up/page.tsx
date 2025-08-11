@@ -37,8 +37,30 @@ export default function SignUpPage() {
 
     try {
       await registerUser(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred during registration');
+    } catch (err: unknown) {
+      interface ErrorResponse {
+        response?: {
+          data?: {
+            message?: string;
+          };
+        };
+      }
+
+      const errorObj = err as ErrorResponse;
+
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        errorObj.response &&
+        typeof errorObj.response === 'object' &&
+        errorObj.response.data &&
+        typeof errorObj.response.data === 'object' &&
+        'message' in errorObj.response.data
+      ) {
+        setError(errorObj.response.data.message || 'An error occurred during registration');
+      } else {
+        setError('An error occurred during registration');
+      }
     } finally {
       setIsLoading(false);
     }
