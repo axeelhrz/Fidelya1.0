@@ -16,28 +16,15 @@ export function middleware(request: NextRequest) {
   // Check if the current path is a public route
   const isPublicRoute = publicRoutes.includes(pathname);
 
-  // Get the session cookie (this is a simple check, in production you might want to verify the token)
-  const sessionCookie = request.cookies.get('laravel_session');
-
-  // If accessing a protected route without a session, redirect to sign-in
-  if (isProtectedRoute && !sessionCookie) {
+  // For now, let's disable the session-based redirects to prevent infinite loops
+  // The AuthContext will handle authentication state and redirects
+  
+  // Only redirect root path to sign-in (simple redirect without session check)
+  if (pathname === '/') {
     return NextResponse.redirect(new URL('/auth/sign-in', request.url));
   }
 
-  // If accessing a public auth route while authenticated, redirect to dashboard
-  if (isPublicRoute && sessionCookie) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
-  // Redirect root to dashboard if authenticated, otherwise to sign-in
-  if (pathname === '/') {
-    if (sessionCookie) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    } else {
-      return NextResponse.redirect(new URL('/auth/sign-in', request.url));
-    }
-  }
-
+  // Allow all other routes to proceed - AuthContext will handle authentication
   return NextResponse.next();
 }
 
