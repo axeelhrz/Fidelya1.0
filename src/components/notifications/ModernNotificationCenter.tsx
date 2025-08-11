@@ -22,8 +22,8 @@ import {
   Activity
 } from 'lucide-react';
 import { useSimpleNotifications } from '@/hooks/useSimpleNotifications';
-import { toast } from 'react-hot-toast';
 import { DeliveryStats } from './DeliveryStats';
+import { SimpleNotificationSender } from './SimpleNotificationSender';
 import type { SimpleNotificationChannel } from '@/types/simple-notification';
 
 type TabType = 'dashboard' | 'send' | 'history';
@@ -39,27 +39,13 @@ export const ModernNotificationCenter = () => {
   const {
     notifications,
     recipients,
-    sendNotification,
     loading,
-    sending,
   } = useSimpleNotifications();
 
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showAdvancedStats, setShowAdvancedStats] = useState(false);
-
-  // Form states for sending notifications
-  // Import the type at the top of the file:
-  // import type { SimpleNotificationChannel } from '@/types/simple-notification';
-
-  const [notificationForm, setNotificationForm] = useState({
-    title: '',
-    message: '',
-    type: 'info' as const,
-    channels: [] as SimpleNotificationChannel[],
-    recipientIds: [] as string[]
-  });
 
   // Calculate stats
   const stats: NotificationStats = {
@@ -91,40 +77,6 @@ export const ModernNotificationCenter = () => {
       color: 'from-purple-500 to-purple-600'
     }
   ];
-
-  const handleSendNotification = async () => {
-    if (!notificationForm.title.trim() || !notificationForm.message.trim()) {
-      toast.error('Completa todos los campos requeridos');
-      return;
-    }
-
-    if (notificationForm.channels.length === 0) {
-      toast.error('Selecciona al menos un canal');
-      return;
-    }
-
-    if (notificationForm.recipientIds.length === 0) {
-      toast.error('Selecciona al menos un destinatario');
-      return;
-    }
-
-    try {
-      await sendNotification({
-        ...notificationForm,
-        channels: notificationForm.channels
-      });
-      setNotificationForm({
-        title: '',
-        message: '',
-        type: 'info',
-        channels: [],
-        recipientIds: []
-      });
-      toast.success('Notificación enviada exitosamente');
-    } catch {
-      toast.error('Error al enviar la notificación');
-    }
-  };
 
   const filteredNotifications = notifications.filter(notification => {
     const matchesSearch = notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -221,13 +173,9 @@ export const ModernNotificationCenter = () => {
               />
             )}
             {activeTab === 'send' && (
-              <SendTab
-                form={notificationForm}
-                setForm={setNotificationForm}
-                recipients={recipients}
-                onSend={handleSendNotification}
-                sending={sending}
-              />
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+                <SimpleNotificationSender />
+              </div>
             )}
             {activeTab === 'history' && (
               <HistoryTab
@@ -413,196 +361,6 @@ const DashboardTab = ({ stats, notifications, recipients, showAdvancedStats }: {
               </div>
         </motion.div>
       </div>
-    </div>
-  );
-};
-
-// Send Tab Component
-type NotificationFormType = {
-  title: string;
-  message: string;
-  type: 'info';
-  channels: SimpleNotificationChannel[];
-  recipientIds: string[];
-};
-
-const SendTab = ({ form, setForm, recipients, onSend, sending }: {
-  form: NotificationFormType;
-  setForm: (form: NotificationFormType) => void;
-  recipients: Recipient[];
-  onSend: () => void;
-  sending: boolean;
-}) => {
-  return (
-    <div className="max-w-4xl mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-sm border border-gray-200 p-8"
-      >
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-2 bg-green-100 rounded-lg">
-            <Send className="w-6 h-6 text-green-600" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Crear Nueva Notificación</h2>
-            <p className="text-sm text-gray-500">Envía mensajes personalizados a tus usuarios</p>
-          </div>
-        </div>
-        
-        <div className="space-y-6">
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Título *
-            </label>
-            <input
-              type="text"
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              placeholder="Ingresa el título de la notificación"
-            />
-          </div>
-
-          {/* Message */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mensaje *
-            </label>
-            <textarea
-              value={form.message}
-              onChange={(e) => setForm({ ...form, message: e.target.value })}
-              rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
-              placeholder="Escribe tu mensaje aquí..."
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              {form.message.length}/500 caracteres
-            </p>
-          </div>
-
-          {/* Channels */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Canales *
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                { id: 'email' as SimpleNotificationChannel, name: 'Email', icon: Mail, color: 'blue', description: 'Correo electrónico' },
-                { id: 'whatsapp' as SimpleNotificationChannel, name: 'WhatsApp', icon: Smartphone, color: 'green', description: 'Mensaje de WhatsApp' },
-                { id: 'app' as SimpleNotificationChannel, name: 'In-App', icon: Bell, color: 'purple', description: 'Notificación en la app' }
-              ].map((channel) => {
-                const Icon = channel.icon;
-                const isSelected = form.channels.includes(channel.id);
-                
-                return (
-                  <motion.button
-                    key={channel.id}
-                    type="button"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      const newChannels = isSelected
-                        ? form.channels.filter((c: SimpleNotificationChannel) => c !== channel.id)
-                        : [...form.channels, channel.id];
-                      setForm({ ...form, channels: newChannels });
-                    }}
-                    className={`p-4 border-2 rounded-xl transition-all ${
-                      isSelected
-                        ? `border-${channel.color}-500 bg-${channel.color}-50 shadow-md`
-                        : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                    }`}
-                  >
-                    <Icon className={`w-8 h-8 mx-auto mb-3 ${
-                      isSelected ? `text-${channel.color}-600` : 'text-gray-400'
-                    }`} />
-                    <p className={`text-sm font-medium mb-1 ${
-                      isSelected ? `text-${channel.color}-900` : 'text-gray-600'
-                    }`}>
-                      {channel.name}
-                    </p>
-                    <p className={`text-xs ${
-                      isSelected ? `text-${channel.color}-700` : 'text-gray-500'
-                    }`}>
-                      {channel.description}
-                    </p>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Recipients */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Destinatarios * ({recipients.length} disponibles)
-            </label>
-            <div className="border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto bg-gray-50">
-              <div className="flex items-center mb-3 p-2 bg-white rounded-lg">
-                <input
-                  type="checkbox"
-                  checked={form.recipientIds.length === recipients.length}
-                  onChange={(e) => {
-                    const newRecipients = e.target.checked
-                      ? recipients.map(r => r.id)
-                      : [];
-                    setForm({ ...form, recipientIds: newRecipients });
-                  }}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <label className="ml-3 text-sm font-medium text-gray-700">
-                  Seleccionar todos ({recipients.length})
-                </label>
-              </div>
-              <div className="space-y-2">
-                {recipients.map((recipient) => (
-                  <div key={recipient.id} className="flex items-center p-2 bg-white rounded-lg hover:bg-gray-50 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={form.recipientIds.includes(recipient.id)}
-                      onChange={(e) => {
-                        const newRecipients = e.target.checked
-                          ? [...form.recipientIds, recipient.id]
-                          : form.recipientIds.filter((id: string) => id !== recipient.id);
-                        setForm({ ...form, recipientIds: newRecipients });
-                      }}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <div className="ml-3 flex-1">
-                      <p className="text-sm font-medium text-gray-700">{recipient.name}</p>
-                      <p className="text-xs text-gray-500 capitalize">{recipient.type}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Send Button */}
-          <div className="flex justify-end pt-6 border-t border-gray-200">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={onSend}
-              disabled={sending}
-              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
-            >
-              {sending ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Enviando...</span>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Send className="w-4 h-4" />
-                  <span>Enviar Notificación</span>
-                </div>
-              )}
-            </motion.button>
-          </div>
-        </div>
-      </motion.div>
     </div>
   );
 };
