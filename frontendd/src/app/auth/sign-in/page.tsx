@@ -1,61 +1,26 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { LoginForm } from '@/types';
-
-const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
-});
 
 export default function SignInPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-  });
-
-  const onSubmit = async (data: LoginForm) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    type ErrorWithResponse = {
-      response?: {
-        data?: {
-          message?: string;
-        };
-      };
-    };
-
-    try {
-      await login(data);
-    } catch (err: unknown) {
-      if (
-        typeof err === 'object' &&
-        err !== null &&
-        'response' in err &&
-        typeof (err as ErrorWithResponse).response?.data?.message === 'string'
-      ) {
-        setError((err as ErrorWithResponse).response!.data!.message!);
-      } else if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('An error occurred during login');
-      }
-    } finally {
+    // Simple form submission without AuthContext for testing
+    console.log('Form submitted:', { email, password });
+    
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      setError('Authentication temporarily disabled for debugging');
+    }, 1000);
   };
 
   return (
@@ -75,7 +40,7 @@ export default function SignInPage() {
             </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="text-sm text-red-700">{error}</div>
@@ -88,30 +53,32 @@ export default function SignInPage() {
                 Email address
               </label>
               <input
-                {...register('email')}
+                id="email"
+                name="email"
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
+                required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
               />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
             </div>
             <div>
               <label htmlFor="password" className="sr-only">
                 Password
               </label>
               <input
-                {...register('password')}
+                id="password"
+                name="password"
                 type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
+                required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
               />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-              )}
             </div>
           </div>
 
@@ -125,6 +92,12 @@ export default function SignInPage() {
             </button>
           </div>
         </form>
+        
+        <div className="mt-4 p-4 bg-yellow-50 rounded-md">
+          <p className="text-sm text-yellow-700">
+            🔧 Debug Mode: AuthContext temporarily disabled to fix infinite reload issue.
+          </p>
+        </div>
       </div>
     </div>
   );
