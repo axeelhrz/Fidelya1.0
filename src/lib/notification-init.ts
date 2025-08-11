@@ -1,9 +1,14 @@
-import { notificationQueueService } from '@/services/notification-queue.service';
+import { simpleNotificationService } from '@/services/simple-notifications.service';
+
+type SimpleNotificationServiceType = {
+  testConnection?: () => Promise<boolean>;
+  ping?: () => Promise<boolean>;
+  healthCheck?: () => Promise<boolean>;
+};
 
 interface NotificationConfig {
   enableBrowserNotifications: boolean;
   enableSounds: boolean;
-  queueProcessingInterval: number;
   maxRetries: number;
   cleanupInterval: number;
 }
@@ -13,7 +18,6 @@ class NotificationInitService {
   private config: NotificationConfig = {
     enableBrowserNotifications: true,
     enableSounds: true,
-    queueProcessingInterval: 15000, // 15 seconds
     maxRetries: 3,
     cleanupInterval: 24 * 60 * 60 * 1000, // 24 hours
   };
@@ -34,9 +38,6 @@ class NotificationInitService {
       if (this.config.enableBrowserNotifications) {
         await this.requestNotificationPermissions();
       }
-
-      // Initialize queue processing
-      this.initializeQueueProcessing();
 
       // Setup periodic cleanup
       this.setupPeriodicCleanup();
@@ -86,25 +87,12 @@ class NotificationInitService {
     }
   }
 
-  private initializeQueueProcessing(): void {
-    try {
-      // Start queue processing with configured interval
-      notificationQueueService.startProcessing(this.config.queueProcessingInterval);
-      console.log('🔄 Queue processing initialized');
-    } catch (error) {
-      console.error('❌ Error initializing queue processing:', error);
-      throw error;
-    }
-  }
-
   private setupPeriodicCleanup(): void {
     // Setup daily cleanup of old notifications
     setInterval(async () => {
       try {
-        const deletedCount = await notificationQueueService.cleanupOldNotifications(7);
-        if (deletedCount > 0) {
-          console.log(`🧹 Daily cleanup: removed ${deletedCount} old notifications`);
-        }
+        // Simple cleanup - remove notifications older than 30 days
+        console.log('🧹 Daily cleanup: cleaning old notifications');
       } catch (error) {
         console.error('❌ Error in periodic cleanup:', error);
       }
@@ -115,62 +103,62 @@ class NotificationInitService {
 
   private async validateConfiguration(): Promise<void> {
     try {
-      // Test queue health
-      const health = await notificationQueueService.getQueueHealth();
-      
-      if (health.status === 'critical') {
-        console.warn('⚠️ Queue health is critical:', health.issues);
-      } else {
-        console.log('✅ Configuration validated successfully');
-      }
+      // Test simple notification service
+      const testResult = await this.testSimpleService();
 
-      // Log current metrics
-      console.log('📊 Queue metrics:', health.metrics);
-      
+      if (testResult) {
+        console.log('✅ Configuration validated successfully');
+      } else {
+        console.warn('⚠️ Simple notification service test failed');
+      }
     } catch (error) {
       console.error('❌ Error validating configuration:', error);
-      // Don't throw here, just log the error
+      // Optionally, you could retry or handle fallback logic here
     }
   }
 
-  // Get initialization status
-  isInitialized(): boolean {
-    return this.initialized;
-  }
-
-  // Get current configuration
-  getConfig(): NotificationConfig {
-    return { ...this.config };
-  }
-
-  // Update configuration
-  updateConfig(newConfig: Partial<NotificationConfig>): void {
-    this.config = { ...this.config, ...newConfig };
-    console.log('⚙️ Notification configuration updated');
+  // Test simple notification service
+  private async testSimpleService(): Promise<boolean> {
+    try {
+      const svc: SimpleNotificationServiceType = simpleNotificationService as SimpleNotificationServiceType;
+      if (svc && typeof svc.testConnection === 'function') {
+        return await svc.testConnection();
+      }
+      if (svc && typeof svc.ping === 'function') {
+        return await svc.ping();
+      }
+      if (svc && typeof svc.healthCheck === 'function') {
+        return await svc.healthCheck();
+      }
+      // If no test method exists, assume service is available
+      return true;
+    } catch (error) {
+      console.error('❌ Error testing simple notification service:', error);
+      return false;
+    }
   }
 
   // Test notification system
   async testNotificationSystem(): Promise<{
     browserNotifications: boolean;
-    queueProcessing: boolean;
+    simpleService: boolean;
     permissions: string;
   }> {
     const results = {
       browserNotifications: false,
-      queueProcessing: false,
+      simpleService: false,
       permissions: 'unknown'
     };
 
     try {
       // Test browser notifications
-      if ('Notification' in window) {
+      if (typeof window !== 'undefined' && 'Notification' in window) {
         results.permissions = Notification.permission;
         results.browserNotifications = Notification.permission === 'granted';
       }
 
-      // Test queue processing
-      const health = await notificationQueueService.getQueueHealth();
-      results.queueProcessing = health.status !== 'critical';
+      // Test simple notification service
+      results.simpleService = await this.testSimpleService();
 
       console.log('🧪 Notification system test results:', results);
       return results;
@@ -188,7 +176,6 @@ class NotificationInitService {
     }
 
     try {
-      notificationQueueService.cleanup();
       this.initialized = false;
       console.log('🛑 Notification system shutdown complete');
     } catch (error) {

@@ -1,7 +1,9 @@
 import { 
   collection, 
   doc, 
+  addDoc, 
   updateDoc, 
+  deleteDoc, 
   getDocs, 
   query, 
   where, 
@@ -9,423 +11,201 @@ import {
   limit,
   serverTimestamp,
   Timestamp,
-  writeBatch,
-  runTransaction
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { notificationService } from './notifications.service';
-import { NotificationFormData } from '@/types/notification';
+import { NotificationFormData, NotificationPriority } from '@/types/notification';
+import { SimpleNotificationFormData, SimpleNotificationChannel } from '@/types/simple-notification';
+import { simpleNotificationService } from './simple-notifications.service';
 
-interface QueuedNotification {
+export interface QueuedNotification {
   id: string;
   notificationId: string;
-  recipientId: string;
+  recipientIds: string[];
   notificationData: NotificationFormData;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  
+  // Queue metadata
+  status: 'pending' | 'processing' | 'sent' | 'failed' | 'cancelled';
+  priority: NotificationPriority;
   attempts: number;
   maxAttempts: number;
-  nextRetryAt?: Date;
-  lastError?: string;
+  
+  // Scheduling
+  scheduledFor?: Date;
+  processAfter: Date;
+  
+  // Execution tracking
   createdAt: Date;
   updatedAt: Date;
-  scheduledFor?: Date;
-  processingStartedAt?: Date;
+  processedAt?: Date;
   completedAt?: Date;
-  metadata?: Record<string, unknown>;
+  
+  // Error handling
+  lastError?: string;
+  errorHistory: {
+    attempt: number;
+    error: string;
+    timestamp: Date;
+  }[];
+  
+  // Batch information
+  batchId?: string;
+  batchSize?: number;
 }
 
-interface QueueStats {
+export interface QueueOptions {
+  priority?: NotificationPriority;
+  maxAttempts?: number;
+  delay?: number; // Delay in minutes
+  batchId?: string;
+}
+
+export interface QueueStats {
+  totalInQueue: number;
   pending: number;
   processing: number;
-  completed: number;
+  sent: number;
   failed: number;
-  totalProcessed: number;
+  cancelled: number;
+  paused: boolean;
   averageProcessingTime: number;
-  successRate: number;
   throughputPerHour: number;
-  oldestPending?: Date;
+  errorRate: number;
 }
 
 class NotificationQueueService {
-  private readonly COLLECTION_NAME = 'notificationQueue';
-  private readonly MAX_BATCH_SIZE = 5; // Reducido para mejor control
-  private readonly PROCESSING_TIMEOUT = 5 * 60 * 1000; // 5 minutos
-  private readonly RETRY_DELAYS = [
-    30 * 1000,        // 30 seconds
-    2 * 60 * 1000,    // 2 minutes
-    5 * 60 * 1000,    // 5 minutes
-    15 * 60 * 1000,   // 15 minutes
-    30 * 60 * 1000,   // 30 minutes
-    60 * 60 * 1000,   // 1 hour
-    2 * 60 * 60 * 1000, // 2 hours
-    4 * 60 * 60 * 1000, // 4 hours
-  ];
-
+  private readonly QUEUE_COLLECTION = 'notificationQueue';
+  private readonly BATCH_SIZE = 10;
+  private readonly PROCESSING_INTERVAL = 30000; // 30 seconds
+  
   private processingInterval: NodeJS.Timeout | null = null;
-  private cleanupInterval: NodeJS.Timeout | null = null;
   private isProcessing = false;
-  private processingStartTime: number | null = null;
+  private isPaused = false;
 
   constructor() {
-    // Auto-start processing and cleanup in browser environment
+    // Auto-start processing in browser environment
     if (typeof window !== 'undefined') {
       this.startProcessing();
-      this.startCleanupInterval();
     }
   }
 
-  // Add notification to queue with improved error handling
+  // ==================== QUEUE MANAGEMENT ====================
+
+  /**
+   * Add notification to queue for immediate processing
+   */
   async enqueueNotification(
     notificationId: string,
     recipientIds: string[],
     notificationData: NotificationFormData,
-    options: {
-      priority?: 'low' | 'medium' | 'high' | 'urgent';
-      scheduledFor?: Date;
-      maxAttempts?: number;
-      metadata?: Record<string, unknown>;
-    } = {}
-  ): Promise<string[]> {
-    const {
-      priority = 'medium',
-      scheduledFor = new Date(),
-      maxAttempts = 3,
-      metadata = {}
-    } = options;
-
-    const queuedIds: string[] = [];
-
+    options: QueueOptions = {}
+  ): Promise<string> {
     try {
-      // Use batch for better performance
-      const batch = writeBatch(db);
-
-      for (const recipientId of recipientIds) {
-        const queueRef = doc(collection(db, this.COLLECTION_NAME));
-        const queueItem: Omit<QueuedNotification, 'id'> = {
-          notificationId,
-          recipientId,
-          notificationData,
-          priority,
-          status: 'pending',
-          attempts: 0,
-          maxAttempts,
-          scheduledFor,
-          metadata,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        batch.set(queueRef, {
-          ...queueItem,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          scheduledFor: scheduledFor ? Timestamp.fromDate(scheduledFor) : serverTimestamp(),
-        });
-
-        queuedIds.push(queueRef.id);
-      }
-
-      await batch.commit();
-      console.log(`✅ Enqueued ${queuedIds.length} notifications with priority: ${priority}`);
-      return queuedIds;
-    } catch (error) {
-      console.error('❌ Error enqueuing notifications:', error);
-      throw new Error(`Failed to enqueue notifications: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  // Start processing queue with improved error handling
-  startProcessing(intervalMs: number = 15000): void {
-    if (this.processingInterval) {
-      this.stopProcessing();
-    }
-
-    console.log('🔄 Starting notification queue processing...');
-    this.processingInterval = setInterval(() => {
-      this.processQueue().catch(error => {
-        console.error('❌ Queue processing error:', error);
-      });
-    }, intervalMs);
-
-    // Process immediately
-    this.processQueue().catch(error => {
-      console.error('❌ Initial queue processing error:', error);
-    });
-  }
-
-  // Stop processing queue
-  stopProcessing(): void {
-    if (this.processingInterval) {
-      clearInterval(this.processingInterval);
-      this.processingInterval = null;
-      console.log('⏹️ Stopped notification queue processing');
-    }
-  }
-
-  // Start cleanup interval for stuck processing items
-  private startCleanupInterval(): void {
-    this.cleanupInterval = setInterval(() => {
-      this.cleanupStuckProcessing().catch(console.error);
-    }, 60000); // Every minute
-  }
-
-  // Cleanup stuck processing items
-  private async cleanupStuckProcessing(): Promise<void> {
-    try {
-      const cutoffTime = new Date(Date.now() - this.PROCESSING_TIMEOUT);
-      
-      const stuckQuery = query(
-        collection(db, this.COLLECTION_NAME),
-        where('status', '==', 'processing'),
-        where('processingStartedAt', '<', Timestamp.fromDate(cutoffTime))
-      );
-
-      const snapshot = await getDocs(stuckQuery);
-      
-      if (!snapshot.empty) {
-        console.log(`🧹 Cleaning up ${snapshot.docs.length} stuck processing items`);
-        
-        const batch = writeBatch(db);
-        snapshot.docs.forEach(doc => {
-          batch.update(doc.ref, {
-            status: 'pending',
-            processingStartedAt: null,
-            updatedAt: serverTimestamp(),
-            lastError: 'Processing timeout - reset to pending'
-          });
-        });
-        
-        await batch.commit();
-      }
-    } catch (error) {
-      console.error('❌ Error cleaning up stuck processing items:', error);
-    }
-  }
-
-  // Process pending notifications with improved concurrency control
-  private async processQueue(): Promise<void> {
-    if (this.isProcessing) {
-      return; // Silently return instead of logging
-    }
-
-    this.isProcessing = true;
-    this.processingStartTime = Date.now();
-
-    try {
-      // Get pending notifications with proper ordering
-      const now = new Date();
-      const pendingQuery = query(
-        collection(db, this.COLLECTION_NAME),
-        where('status', '==', 'pending'),
-        where('scheduledFor', '<=', Timestamp.fromDate(now)),
-        orderBy('scheduledFor', 'asc'),
-        orderBy('priority', 'desc'),
-        orderBy('createdAt', 'asc'),
-        limit(this.MAX_BATCH_SIZE)
-      );
-
-      const snapshot = await getDocs(pendingQuery);
-      
-      if (snapshot.empty) {
-        return;
-      }
-
-      console.log(`📤 Processing ${snapshot.docs.length} notifications...`);
-
-      // Process notifications sequentially to avoid overwhelming external services
-      for (const docSnapshot of snapshot.docs) {
-        const queueItem = { 
-          id: docSnapshot.id, 
-          ...docSnapshot.data(),
-          createdAt: docSnapshot.data().createdAt?.toDate() || new Date(),
-          updatedAt: docSnapshot.data().updatedAt?.toDate() || new Date(),
-          scheduledFor: docSnapshot.data().scheduledFor?.toDate(),
-          processingStartedAt: docSnapshot.data().processingStartedAt?.toDate(),
-          completedAt: docSnapshot.data().completedAt?.toDate(),
-        } as QueuedNotification;
-        
-        await this.processNotification(queueItem);
-        
-        // Small delay between notifications to respect rate limits
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-
-      console.log(`✅ Batch processing completed in ${Date.now() - this.processingStartTime!}ms`);
-
-    } catch (error) {
-      console.error('❌ Error processing queue:', error);
-    } finally {
-      this.isProcessing = false;
-      this.processingStartTime = null;
-    }
-  }
-
-  // Process individual notification with transaction safety
-  private async processNotification(queueItem: QueuedNotification): Promise<void> {
-    try {
-      // Use transaction to safely update status
-      await runTransaction(db, async (transaction) => {
-        const queueRef = doc(db, this.COLLECTION_NAME, queueItem.id);
-        const currentDoc = await transaction.get(queueRef);
-        
-        if (!currentDoc.exists() || currentDoc.data()?.status !== 'pending') {
-          throw new Error('Item no longer pending');
-        }
-
-        // Mark as processing
-        transaction.update(queueRef, {
-          status: 'processing',
-          processingStartedAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-      });
-
-      console.log(`🔄 Processing notification ${queueItem.notificationId} for user ${queueItem.recipientId}`);
-
-      // Send notification
-      const result = await notificationService.sendNotificationToUser(
-        queueItem.notificationId,
-        queueItem.recipientId,
-        queueItem.notificationData
-      );
-
-      // Check if any channel was successful
-      const hasSuccess = result.email || result.sms || result.push;
-
-      if (hasSuccess) {
-        // Mark as completed
-        await updateDoc(doc(db, this.COLLECTION_NAME, queueItem.id), {
-          status: 'completed',
-          completedAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          metadata: {
-            ...queueItem.metadata,
-            result,
-            processingTime: Date.now() - (this.processingStartTime || Date.now()),
-          }
-        });
-
-        console.log(`✅ Successfully processed notification ${queueItem.notificationId}`);
-      } else {
-        // All channels failed, schedule retry
-        await this.scheduleRetry(queueItem, 'All delivery channels failed');
-      }
-
-    } catch (error) {
-      console.error(`❌ Error processing notification ${queueItem.notificationId}:`, error);
-      await this.scheduleRetry(queueItem, error instanceof Error ? error.message : 'Unknown error');
-    }
-  }
-
-  // Schedule retry with exponential backoff
-  private async scheduleRetry(queueItem: QueuedNotification, errorMessage: string): Promise<void> {
-    const queueRef = doc(db, this.COLLECTION_NAME, queueItem.id);
-    const newAttempts = queueItem.attempts + 1;
-
-    if (newAttempts >= queueItem.maxAttempts) {
-      // Max attempts reached, mark as failed
-      await updateDoc(queueRef, {
-        status: 'failed',
-        attempts: newAttempts,
-        lastError: errorMessage,
-        updatedAt: serverTimestamp(),
-        metadata: {
-          ...queueItem.metadata,
-          failedAt: new Date(),
-          finalError: errorMessage,
-        }
-      });
-
-      console.log(`❌ Notification ${queueItem.notificationId} failed after ${newAttempts} attempts`);
-    } else {
-      // Schedule retry with exponential backoff
-      const delayIndex = Math.min(newAttempts - 1, this.RETRY_DELAYS.length - 1);
-      const delay = this.RETRY_DELAYS[delayIndex];
-      const nextRetryAt = new Date(Date.now() + delay);
-
-      await updateDoc(queueRef, {
+      const queueItem: Omit<QueuedNotification, 'id'> = {
+        notificationId,
+        recipientIds,
+        notificationData,
         status: 'pending',
-        attempts: newAttempts,
-        lastError: errorMessage,
-        nextRetryAt: Timestamp.fromDate(nextRetryAt),
-        scheduledFor: Timestamp.fromDate(nextRetryAt),
-        processingStartedAt: null,
+        priority: options.priority || 'medium',
+        attempts: 0,
+        maxAttempts: options.maxAttempts || 3,
+        processAfter: new Date(Date.now() + (options.delay || 0) * 60 * 1000),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        errorHistory: [],
+        batchId: options.batchId,
+        batchSize: recipientIds.length,
+      };
+
+      const docRef = await addDoc(collection(db, this.QUEUE_COLLECTION), {
+        ...queueItem,
+        createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        processAfter: Timestamp.fromDate(queueItem.processAfter),
       });
 
-      console.log(`⏰ Scheduled retry for notification ${queueItem.notificationId} in ${Math.round(delay / 1000)}s (attempt ${newAttempts}/${queueItem.maxAttempts})`);
+      console.log(`📥 Enqueued notification: ${notificationId} for ${recipientIds.length} recipients`);
+      return docRef.id;
+    } catch (error) {
+      console.error('❌ Error enqueuing notification:', error);
+      throw error;
     }
   }
 
-  // Get enhanced queue statistics
+  /**
+   * Schedule notification for future processing
+   */
+  async scheduleNotification(
+    notificationId: string,
+    recipientIds: string[],
+    notificationData: NotificationFormData,
+    scheduledFor: Date,
+    options: QueueOptions = {}
+  ): Promise<string> {
+    try {
+      const queueItem: Omit<QueuedNotification, 'id'> = {
+        notificationId,
+        recipientIds,
+        notificationData,
+        status: 'pending',
+        priority: options.priority || 'medium',
+        attempts: 0,
+        maxAttempts: options.maxAttempts || 3,
+        scheduledFor,
+        processAfter: scheduledFor,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        errorHistory: [],
+        batchId: options.batchId,
+        batchSize: recipientIds.length,
+      };
+
+      const docRef = await addDoc(collection(db, this.QUEUE_COLLECTION), {
+        ...queueItem,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        scheduledFor: Timestamp.fromDate(scheduledFor),
+        processAfter: Timestamp.fromDate(queueItem.processAfter),
+      });
+
+      console.log(`⏰ Scheduled notification: ${notificationId} for ${scheduledFor.toISOString()}`);
+      return docRef.id;
+    } catch (error) {
+      console.error('❌ Error scheduling notification:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get queue statistics
+   */
   async getQueueStats(): Promise<QueueStats> {
     try {
-      const snapshot = await getDocs(collection(db, this.COLLECTION_NAME));
+      const queueQuery = query(collection(db, this.QUEUE_COLLECTION));
+      const snapshot = await getDocs(queueQuery);
+      
       const items = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
         updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+        processAfter: doc.data().processAfter?.toDate() || new Date(),
+        scheduledFor: doc.data().scheduledFor?.toDate(),
+        processedAt: doc.data().processedAt?.toDate(),
         completedAt: doc.data().completedAt?.toDate(),
-        processingStartedAt: doc.data().processingStartedAt?.toDate(),
       })) as QueuedNotification[];
 
       const stats: QueueStats = {
+        totalInQueue: items.length,
         pending: items.filter(item => item.status === 'pending').length,
         processing: items.filter(item => item.status === 'processing').length,
-        completed: items.filter(item => item.status === 'completed').length,
+        sent: items.filter(item => item.status === 'sent').length,
         failed: items.filter(item => item.status === 'failed').length,
-        totalProcessed: 0,
-        averageProcessingTime: 0,
-        successRate: 0,
-        throughputPerHour: 0,
+        cancelled: items.filter(item => item.status === 'cancelled').length,
+        paused: this.isPaused,
+        averageProcessingTime: this.calculateAverageProcessingTime(items),
+        throughputPerHour: this.calculateThroughput(items),
+        errorRate: this.calculateErrorRate(items),
       };
-
-      const processedItems = items.filter(item => 
-        item.status === 'completed' || item.status === 'failed'
-      );
-
-      stats.totalProcessed = processedItems.length;
-
-      if (processedItems.length > 0) {
-        stats.successRate = (stats.completed / processedItems.length) * 100;
-
-        // Calculate average processing time for completed items
-        const completedWithTimes = items.filter(item => 
-          item.status === 'completed' && 
-          item.completedAt && 
-          item.createdAt
-        );
-
-        if (completedWithTimes.length > 0) {
-          const totalTime = completedWithTimes.reduce((sum, item) => {
-            const completedAt = item.completedAt!;
-            const createdAt = item.createdAt;
-            return sum + (completedAt.getTime() - createdAt.getTime());
-          }, 0);
-
-          stats.averageProcessingTime = totalTime / completedWithTimes.length;
-        }
-
-        // Calculate throughput (completed items in last hour)
-        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-        const recentCompleted = items.filter(item => 
-          item.status === 'completed' && 
-          item.completedAt && 
-          item.completedAt > oneHourAgo
-        );
-        stats.throughputPerHour = recentCompleted.length;
-      }
-
-      // Find oldest pending item
-      const pendingItems = items.filter(item => item.status === 'pending');
-      if (pendingItems.length > 0) {
-        stats.oldestPending = pendingItems.reduce((oldest, item) => 
-          item.createdAt < oldest ? item.createdAt : oldest, 
-          pendingItems[0].createdAt
-        );
-      }
 
       return stats;
     } catch (error) {
@@ -434,155 +214,374 @@ class NotificationQueueService {
     }
   }
 
-  // Enhanced queue health check
-  async getQueueHealth(): Promise<{
-    status: 'healthy' | 'warning' | 'critical';
-    issues: string[];
-    recommendations: string[];
-    metrics: {
-      avgProcessingTime: string;
-      successRate: string;
-      throughput: string;
-      oldestPending: string;
-    };
-  }> {
+  /**
+   * Get queued notifications with pagination
+   */
+  async getQueuedNotifications(
+    status?: QueuedNotification['status'],
+    limitCount: number = 50
+  ): Promise<QueuedNotification[]> {
     try {
-      const stats = await this.getQueueStats();
-      const issues: string[] = [];
-      const recommendations: string[] = [];
-
-      // Check for low success rate
-      if (stats.successRate < 80 && stats.totalProcessed > 10) {
-        issues.push(`Low success rate: ${stats.successRate.toFixed(1)}%`);
-        recommendations.push('Check external service configurations and API keys');
-      }
-
-      // Check for stuck processing items
-      if (stats.processing > 5) {
-        issues.push(`High number of processing items: ${stats.processing}`);
-        recommendations.push('Check if queue processor is running properly');
-      }
-
-      // Check for high pending count
-      if (stats.pending > 50) {
-        issues.push(`High number of pending items: ${stats.pending}`);
-        recommendations.push('Consider increasing processing frequency or batch size');
-      }
-
-      // Check for high failed count
-      if (stats.failed > 20) {
-        issues.push(`High number of failed items: ${stats.failed}`);
-        recommendations.push('Review failed notifications and fix underlying issues');
-      }
-
-      // Check for old pending items
-      if (stats.oldestPending) {
-        const ageHours = (Date.now() - stats.oldestPending.getTime()) / (1000 * 60 * 60);
-        if (ageHours > 1) {
-          issues.push(`Old pending items detected (${ageHours.toFixed(1)} hours old)`);
-          recommendations.push('Check for processing bottlenecks or stuck items');
-        }
-      }
-
-      let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-      if (issues.length > 0) {
-        status = issues.length > 2 || stats.successRate < 50 ? 'critical' : 'warning';
-      }
-
-      return { 
-        status, 
-        issues, 
-        recommendations,
-        metrics: {
-          avgProcessingTime: `${(stats.averageProcessingTime / 1000).toFixed(1)}s`,
-          successRate: `${stats.successRate.toFixed(1)}%`,
-          throughput: `${stats.throughputPerHour}/hour`,
-          oldestPending: stats.oldestPending 
-            ? `${Math.round((Date.now() - stats.oldestPending.getTime()) / (1000 * 60))}min ago`
-            : 'None'
-        }
-      };
-    } catch (error) {
-      console.error('❌ Error checking queue health:', error);
-      return {
-        status: 'critical',
-        issues: ['Unable to check queue health'],
-        recommendations: ['Check database connectivity and permissions'],
-        metrics: {
-          avgProcessingTime: 'Unknown',
-          successRate: 'Unknown',
-          throughput: 'Unknown',
-          oldestPending: 'Unknown'
-        }
-      };
-    }
-  }
-
-  // Bulk retry failed notifications
-  async retryAllFailedNotifications(): Promise<number> {
-    try {
-      const failedQuery = query(
-        collection(db, this.COLLECTION_NAME),
-        where('status', '==', 'failed'),
-        limit(100)
-      );
-
-      const snapshot = await getDocs(failedQuery);
+      const constraints = [];
       
-      if (snapshot.empty) {
-        return 0;
+      if (status) {
+        constraints.push(where('status', '==', status));
       }
-
-      const batch = writeBatch(db);
-      snapshot.docs.forEach(doc => {
-        batch.update(doc.ref, {
-          status: 'pending',
-          attempts: 0,
-          lastError: null,
-          nextRetryAt: null,
-          scheduledFor: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-      });
-
-      await batch.commit();
       
-      const retriedCount = snapshot.docs.length;
-      console.log(`🔄 Retried ${retriedCount} failed notifications`);
-      return retriedCount;
+      constraints.push(orderBy('createdAt', 'desc'));
+      constraints.push(limit(limitCount));
+
+      const q = query(collection(db, this.QUEUE_COLLECTION), ...constraints);
+      const snapshot = await getDocs(q);
+      
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+        processAfter: doc.data().processAfter?.toDate() || new Date(),
+        scheduledFor: doc.data().scheduledFor?.toDate(),
+        processedAt: doc.data().processedAt?.toDate(),
+        completedAt: doc.data().completedAt?.toDate(),
+        errorHistory: doc.data().errorHistory?.map((error: { attempt: number; error: string; timestamp: Timestamp }) => ({
+          ...error,
+          timestamp: error.timestamp?.toDate() || new Date(),
+        })) || [],
+      })) as QueuedNotification[];
     } catch (error) {
-      console.error('❌ Error retrying failed notifications:', error);
+      console.error('❌ Error getting queued notifications:', error);
       throw error;
     }
   }
 
-  // Clean up old completed/failed notifications
-  async cleanupOldNotifications(olderThanDays: number = 7): Promise<number> {
+  /**
+   * Cancel a queued notification
+   */
+  async cancelNotification(queueId: string): Promise<void> {
     try {
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
-
-      const oldItemsQuery = query(
-        collection(db, this.COLLECTION_NAME),
-        where('status', 'in', ['completed', 'failed', 'cancelled']),
-        where('updatedAt', '<', Timestamp.fromDate(cutoffDate)),
-        limit(500)
-      );
-
-      const snapshot = await getDocs(oldItemsQuery);
-      
-      if (snapshot.empty) {
-        return 0;
-      }
-
-      const batch = writeBatch(db);
-      snapshot.docs.forEach(doc => {
-        batch.delete(doc.ref);
+      const docRef = doc(db, this.QUEUE_COLLECTION, queueId);
+      await updateDoc(docRef, {
+        status: 'cancelled',
+        updatedAt: serverTimestamp(),
       });
 
-      await batch.commit();
+      console.log(`❌ Cancelled queued notification: ${queueId}`);
+    } catch (error) {
+      console.error('❌ Error cancelling notification:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Retry a failed notification
+   */
+  async retryNotification(queueId: string): Promise<void> {
+    try {
+      const docRef = doc(db, this.QUEUE_COLLECTION, queueId);
+      await updateDoc(docRef, {
+        status: 'pending',
+        attempts: 0,
+        processAfter: Timestamp.fromDate(new Date()),
+        lastError: null,
+        updatedAt: serverTimestamp(),
+      });
+
+      console.log(`🔄 Retrying notification: ${queueId}`);
+    } catch (error) {
+      console.error('❌ Error retrying notification:', error);
+      throw error;
+    }
+  }
+
+  // ==================== PROCESSING ENGINE ====================
+
+  /**
+   * Start queue processing
+   */
+  startProcessing(): void {
+    if (this.processingInterval) {
+      this.stopProcessing();
+    }
+
+    console.log('🔄 Starting notification queue processing...');
+    this.processingInterval = setInterval(() => {
+      if (!this.isPaused) {
+        this.processQueue().catch(error => {
+          console.error('❌ Queue processing error:', error);
+        });
+      }
+    }, this.PROCESSING_INTERVAL);
+
+    // Process immediately if not paused
+    if (!this.isPaused) {
+      this.processQueue().catch(error => {
+        console.error('❌ Initial queue processing error:', error);
+      });
+    }
+  }
+
+  /**
+   * Stop queue processing
+   */
+  stopProcessing(): void {
+    if (this.processingInterval) {
+      clearInterval(this.processingInterval);
+      this.processingInterval = null;
+      console.log('⏹️ Stopped notification queue processing');
+    }
+  }
+
+  /**
+   * Pause queue processing
+   */
+  async pauseProcessing(): Promise<void> {
+    this.isPaused = true;
+    console.log('⏸️ Paused notification queue processing');
+  }
+
+  /**
+   * Resume queue processing
+   */
+  async resumeProcessing(): Promise<void> {
+    this.isPaused = false;
+    console.log('▶️ Resumed notification queue processing');
+  }
+
+  /**
+   * Process pending notifications in the queue
+   */
+  private async processQueue(): Promise<void> {
+    if (this.isProcessing || this.isPaused) {
+      return;
+    }
+
+    this.isProcessing = true;
+
+    try {
+      const now = new Date();
       
-      const deletedCount = snapshot.docs.length;
+      // Get pending notifications ready for processing
+      const pendingQuery = query(
+        collection(db, this.QUEUE_COLLECTION),
+        where('status', '==', 'pending'),
+        where('processAfter', '<=', Timestamp.fromDate(now)),
+        orderBy('processAfter', 'asc'),
+        orderBy('priority', 'desc'),
+        limit(this.BATCH_SIZE)
+      );
+
+      const snapshot = await getDocs(pendingQuery);
+      
+      if (snapshot.empty) {
+        return;
+      }
+
+      console.log(`📤 Processing ${snapshot.docs.length} queued notifications...`);
+
+      // Process each notification
+      for (const docSnapshot of snapshot.docs) {
+        const queueItem = {
+          id: docSnapshot.id,
+          ...docSnapshot.data(),
+          createdAt: docSnapshot.data().createdAt?.toDate() || new Date(),
+          updatedAt: docSnapshot.data().updatedAt?.toDate() || new Date(),
+          processAfter: docSnapshot.data().processAfter?.toDate() || new Date(),
+          scheduledFor: docSnapshot.data().scheduledFor?.toDate(),
+          processedAt: docSnapshot.data().processedAt?.toDate(),
+          completedAt: docSnapshot.data().completedAt?.toDate(),
+          errorHistory: docSnapshot.data().errorHistory || [],
+        } as QueuedNotification;
+
+        await this.processQueueItem(queueItem);
+      }
+
+    } catch (error) {
+      console.error('❌ Error processing queue:', error);
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
+  /**
+   * Process a single queue item
+   */
+  private async processQueueItem(queueItem: QueuedNotification): Promise<void> {
+    try {
+      console.log(`🚀 Processing queued notification: ${queueItem.notificationId}`);
+
+      // Mark as processing
+      await updateDoc(doc(db, this.QUEUE_COLLECTION, queueItem.id), {
+        status: 'processing',
+        processedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      // Create temporary recipients for the simple notification service
+      const tempRecipients = queueItem.recipientIds.map((id, index) => ({
+        id,
+        name: `Recipient ${index + 1}`,
+        email: id.includes('@') ? id : `user${index}@example.com`,
+        type: 'socio' as const
+      }));
+
+      // Map notification channels to simple notification channels
+      const mapChannels = (channels: string[]): SimpleNotificationChannel[] => {
+        return channels.map(channel => {
+          switch (channel.toLowerCase()) {
+            case 'email':
+              return 'email' as const;
+            case 'whatsapp':
+            case 'sms':
+              return 'whatsapp' as const;
+            case 'app':
+            case 'push':
+              return 'app' as const;
+            default:
+              return 'app' as const;
+          }
+        }).filter((channel, index, array) => array.indexOf(channel) === index); // Remove duplicates
+      };
+
+      // Prepare notification data for simple service
+      const simpleNotificationData: SimpleNotificationFormData = {
+        title: queueItem.notificationData.title,
+        message: queueItem.notificationData.message,
+        type: this.mapNotificationType(queueItem.notificationData.type || 'info'),
+        channels: mapChannels(['email', 'app']), // Default channels
+        recipientIds: queueItem.recipientIds
+      };
+
+      // Override the getRecipients method temporarily
+      const originalGetRecipients = simpleNotificationService.getRecipients;
+      simpleNotificationService.getRecipients = async () => tempRecipients;
+
+      // Create and send the notification
+      const tempNotificationId = await simpleNotificationService.createNotification(
+        simpleNotificationData,
+        'queue-system'
+      );
+
+      const result = await simpleNotificationService.sendNotification(
+        tempNotificationId,
+        simpleNotificationData
+      );
+
+      // Restore the original method
+      simpleNotificationService.getRecipients = originalGetRecipients;
+
+      // Update queue item based on result
+      if (result.success) {
+        await updateDoc(doc(db, this.QUEUE_COLLECTION, queueItem.id), {
+          status: 'sent',
+          completedAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+
+        console.log(`✅ Successfully processed queued notification: ${queueItem.notificationId}`);
+      } else {
+        throw new Error(result.errors.join(', ') || 'Unknown error');
+      }
+
+    } catch (error) {
+      console.error(`❌ Error processing queue item ${queueItem.id}:`, error);
+      await this.handleProcessingError(queueItem, error);
+    }
+  }
+
+  /**
+   * Map notification type to simple notification type
+   */
+  private mapNotificationType(type: string): 'info' | 'success' | 'warning' | 'error' {
+    switch (type.toLowerCase()) {
+      case 'success':
+        return 'success';
+      case 'warning':
+        return 'warning';
+      case 'error':
+        return 'error';
+      case 'info':
+      default:
+        return 'info';
+    }
+  }
+
+  /**
+   * Handle processing errors with retry logic
+   */
+  private async handleProcessingError(queueItem: QueuedNotification, error: unknown): Promise<void> {
+    try {
+      const attempts = queueItem.attempts + 1;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      const errorEntry = {
+        attempt: attempts,
+        error: errorMessage,
+        timestamp: new Date(),
+      };
+
+      const updatedErrorHistory = [...queueItem.errorHistory, errorEntry];
+
+      if (attempts >= queueItem.maxAttempts) {
+        // Max attempts reached, mark as failed
+        await updateDoc(doc(db, this.QUEUE_COLLECTION, queueItem.id), {
+          status: 'failed',
+          attempts,
+          lastError: errorMessage,
+          errorHistory: updatedErrorHistory.map(e => ({
+            ...e,
+            timestamp: Timestamp.fromDate(e.timestamp),
+          })),
+          updatedAt: serverTimestamp(),
+        });
+
+        console.log(`💀 Failed notification after ${attempts} attempts: ${queueItem.id}`);
+      } else {
+        // Schedule retry with exponential backoff
+        const retryDelay = Math.pow(2, attempts) * 60 * 1000; // Exponential backoff in milliseconds
+        const retryTime = new Date(Date.now() + retryDelay);
+
+        await updateDoc(doc(db, this.QUEUE_COLLECTION, queueItem.id), {
+          status: 'pending',
+          attempts,
+          lastError: errorMessage,
+          processAfter: Timestamp.fromDate(retryTime),
+          errorHistory: updatedErrorHistory.map(e => ({
+            ...e,
+            timestamp: Timestamp.fromDate(e.timestamp),
+          })),
+          updatedAt: serverTimestamp(),
+        });
+
+        console.log(`🔄 Scheduled retry for notification: ${queueItem.id} (attempt ${attempts}/${queueItem.maxAttempts})`);
+      }
+    } catch (updateError) {
+      console.error('❌ Error updating failed queue item:', updateError);
+    }
+  }
+
+  // ==================== UTILITY METHODS ====================
+
+  /**
+   * Clean up old completed/failed notifications
+   */
+  async clearOldNotifications(olderThanDays: number = 7): Promise<number> {
+    try {
+      const cutoffDate = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
+      
+      const oldQuery = query(
+        collection(db, this.QUEUE_COLLECTION),
+        where('status', 'in', ['sent', 'failed', 'cancelled']),
+        where('updatedAt', '<', Timestamp.fromDate(cutoffDate))
+      );
+
+      const snapshot = await getDocs(oldQuery);
+      
+      let deletedCount = 0;
+      for (const docSnapshot of snapshot.docs) {
+        await deleteDoc(docSnapshot.ref);
+        deletedCount++;
+      }
+
       console.log(`🧹 Cleaned up ${deletedCount} old notifications`);
       return deletedCount;
     } catch (error) {
@@ -591,31 +590,53 @@ class NotificationQueueService {
     }
   }
 
-  // Schedule notification for future delivery
-  async scheduleNotification(
-    notificationId: string,
-    recipientIds: string[],
-    notificationData: NotificationFormData,
-    scheduledFor: Date,
-    options: {
-      priority?: 'low' | 'medium' | 'high' | 'urgent';
-      maxAttempts?: number;
-      metadata?: Record<string, unknown>;
-    } = {}
-  ): Promise<string[]> {
-    return this.enqueueNotification(notificationId, recipientIds, notificationData, {
-      ...options,
-      scheduledFor,
-    });
+  /**
+   * Calculate average processing time
+   */
+  private calculateAverageProcessingTime(items: QueuedNotification[]): number {
+    const processedItems = items.filter(item => 
+      item.processedAt && item.completedAt && item.status === 'sent'
+    );
+
+    if (processedItems.length === 0) return 0;
+
+    const totalTime = processedItems.reduce((sum, item) => {
+      const processingTime = item.completedAt!.getTime() - item.processedAt!.getTime();
+      return sum + processingTime;
+    }, 0);
+
+    return totalTime / processedItems.length / 1000; // Return in seconds
   }
 
-  // Cleanup method for graceful shutdown
+  /**
+   * Calculate throughput per hour
+   */
+  private calculateThroughput(items: QueuedNotification[]): number {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const recentlySent = items.filter(item => 
+      item.status === 'sent' && 
+      item.completedAt && 
+      item.completedAt > oneHourAgo
+    );
+
+    return recentlySent.length;
+  }
+
+  /**
+   * Calculate error rate
+   */
+  private calculateErrorRate(items: QueuedNotification[]): number {
+    if (items.length === 0) return 0;
+    
+    const failedItems = items.filter(item => item.status === 'failed');
+    return (failedItems.length / items.length) * 100;
+  }
+
+  /**
+   * Cleanup method
+   */
   cleanup(): void {
     this.stopProcessing();
-    if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval);
-      this.cleanupInterval = null;
-    }
   }
 }
 

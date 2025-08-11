@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { socioService, SocioFilters, ImportResult } from '@/services/socio.service';
-import { Socio, SocioStats, SocioFormData, BulkEditSocioData, BulkEditResult } from '@/types/socio';
+import { Socio, SocioStats, SocioFormData } from '@/types/socio';
 import { useAuth } from './useAuth';
 import { toast } from 'react-hot-toast';
 
@@ -18,7 +18,6 @@ interface UseSociosReturn {
   updateSocio: (id: string, data: Partial<SocioFormData>) => Promise<boolean>;
   deleteSocio: (id: string) => Promise<boolean>;
   toggleSocioStatus: (id: string, currentStatus: string) => Promise<boolean>;
-  bulkUpdateSocios: (data: BulkEditSocioData) => Promise<BulkEditResult>;
   importSocios: (csvData: SocioFormData[]) => Promise<ImportResult>;
   registerPayment: (socioId: string, amount: number, months?: number) => Promise<boolean>;
   updateMembershipStatus: () => Promise<number>;
@@ -33,8 +32,8 @@ export function useSocios(): UseSociosReturn {
     total: 0,
     activos: 0,
     inactivos: 0,
-    vencidos: 0,
     alDia: 0,
+    vencidos: 0,
     pendientes: 0,
     ingresosMensuales: 0,
     beneficiosUsados: 0,
@@ -209,43 +208,6 @@ export function useSocios(): UseSociosReturn {
     }
   }, [loadSocios, refreshStats]);
 
-  // NUEVO: Edición múltiple de socios
-  const bulkUpdateSocios = useCallback(async (data: BulkEditSocioData): Promise<BulkEditResult> => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const result = await socioService.bulkUpdateSocios(data);
-      
-      if (result.success) {
-        toast.success(`${result.updated} socios actualizados exitosamente`);
-        if (result.errors.length > 0) {
-          toast(`${result.errors.length} errores encontrados`, { icon: '⚠️' });
-        }
-        
-        await loadSocios(); // Refresh list
-        await refreshStats(); // Refresh stats
-      } else {
-        toast.error('Error en la actualización masiva');
-      }
-
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar socios';
-      setError(errorMessage);
-      toast.error(errorMessage);
-      
-      return {
-        success: false,
-        updated: 0,
-        errors: [{ socioId: 'general', error: errorMessage }],
-        total: data.socioIds.length
-      };
-    } finally {
-      setLoading(false);
-    }
-  }, [loadSocios, refreshStats]);
-
   // Import socios from CSV
   const importSocios = useCallback(async (csvData: SocioFormData[]): Promise<ImportResult> => {
     if (!asociacionId) {
@@ -383,7 +345,6 @@ export function useSocios(): UseSociosReturn {
     updateSocio,
     deleteSocio,
     toggleSocioStatus,
-    bulkUpdateSocios,
     importSocios,
     registerPayment,
     updateMembershipStatus,

@@ -73,33 +73,19 @@ const beneficioSchema = z.object({
     .min(0, 'El descuento debe ser mayor a 0'),
   fechaInicio: z
     .date()
-    .refine((date) => date >= new Date(new Date().setHours(0, 0, 0, 0)), {
+    .refine((date) => date >= new Date(), {
       message: 'La fecha de inicio debe ser hoy o posterior'
     }),
   fechaFin: z
     .date(),
   limitePorSocio: z
-    .union([
-      z.number().min(1, 'El límite por socio debe ser mayor a 0'),
-      z.undefined(),
-      z.nan()
-    ])
-    .optional()
-    .transform((val) => {
-      if (val === undefined || isNaN(val) || val === 0) return undefined;
-      return val;
-    }),
+    .number()
+    .min(1, 'El límite por socio debe ser mayor a 0')
+    .optional(),
   limiteTotal: z
-    .union([
-      z.number().min(1, 'El límite total debe ser mayor a 0'),
-      z.undefined(),
-      z.nan()
-    ])
-    .optional()
-    .transform((val) => {
-      if (val === undefined || isNaN(val) || val === 0) return undefined;
-      return val;
-    }),
+    .number()
+    .min(1, 'El límite total debe ser mayor a 0')
+    .optional(),
   condiciones: z
     .string()
     .max(300, 'Las condiciones no pueden exceder 300 caracteres')
@@ -528,10 +514,9 @@ export const BeneficiosManagement: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {beneficio.tipo === 'porcentaje' && beneficio.descuento > 0 && `${beneficio.descuento}%`}
-                          {beneficio.tipo === 'monto_fijo' && beneficio.descuento > 0 && `$${beneficio.descuento}`}
+                          {beneficio.tipo === 'porcentaje' && `${beneficio.descuento}%`}
+                          {beneficio.tipo === 'monto_fijo' && `$${beneficio.descuento}`}
                           {beneficio.tipo === 'producto_gratis' && 'Gratis'}
-                          {beneficio.descuento === 0 && beneficio.tipo !== 'producto_gratis' && 'Sin descuento'}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -835,13 +820,8 @@ export const BeneficiosManagement: React.FC = () => {
                         type="date"
                         fullWidth
                         InputLabelProps={{ shrink: true }}
-                        value={field.value && !isNaN(field.value.getTime()) ? format(field.value, 'yyyy-MM-dd') : ''}
-                        onChange={(e) => {
-                          const date = new Date(e.target.value);
-                          if (!isNaN(date.getTime())) {
-                            field.onChange(date);
-                          }
-                        }}
+                        value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                        onChange={(e) => field.onChange(new Date(e.target.value))}
                         error={!!errors.fechaInicio}
                         helperText={errors.fechaInicio?.message}
                         sx={{
@@ -868,13 +848,8 @@ export const BeneficiosManagement: React.FC = () => {
                         type="date"
                         fullWidth
                         InputLabelProps={{ shrink: true }}
-                        value={field.value && !isNaN(field.value.getTime()) ? format(field.value, 'yyyy-MM-dd') : ''}
-                        onChange={(e) => {
-                          const date = new Date(e.target.value);
-                          if (!isNaN(date.getTime())) {
-                            field.onChange(date);
-                          }
-                        }}
+                        value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                        onChange={(e) => field.onChange(new Date(e.target.value))}
                         error={!!errors.fechaFin}
                         helperText={errors.fechaFin?.message}
                         sx={{

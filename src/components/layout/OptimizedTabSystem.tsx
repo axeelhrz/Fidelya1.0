@@ -6,43 +6,27 @@ import {
   Home, 
   Users, 
   Store, 
-  BarChart3, 
-  Gift,
   Bell,
   Sparkles,
   Activity
 } from 'lucide-react';
 
 // Lazy load heavy components for optimal performance
-// Note: For named exports, we need to destructure the component from the module
+// Fixed lazy loading for components with different export types
 const OptimizedOverviewDashboard = lazy(() => import('@/components/asociacion/OptimizedOverviewDashboard'));
 const EnhancedMemberManagement = lazy(() => 
   import('@/components/asociacion/EnhancedMemberManagement').then(module => ({ 
-    default: module.EnhancedMemberManagement 
+    default: module.EnhancedMemberManagement
   }))
 );
 const ComercioManagement = lazy(() => 
   import('@/components/asociacion/ComercioManagement').then(module => ({ 
-    default: module.ComercioManagement 
+    default: module.ComercioManagement
   }))
 );
-const BeneficiosManagement = lazy(() => 
-  import('@/components/asociacion/BeneficiosManagement').then(module => ({ 
-    default: module.BeneficiosManagement 
-  }))
-);
-const AdvancedAnalytics = lazy(() => 
-  import('@/components/asociacion/AdvancedAnalytics').then(module => ({ 
-    default: module.AdvancedAnalytics 
-  }))
-);
-const NotificationsCenter = lazy(() => 
-  import('@/components/asociacion/NotificationsCenter').then(module => ({ 
-    default: module.NotificationsCenter 
-  }))
-);
+const NotificationsCenter = lazy(() => import('@/components/asociacion/NotificationsCenter'));
 
-// Tab configuration with optimized structure
+// Tab configuration with optimized structure - SIN Beneficios y Analytics
 interface TabConfig {
   id: string;
   label: string;
@@ -61,8 +45,6 @@ const TabLoadingState = memo<{ tabId: string }>(({ tabId }) => {
     dashboard: { color: 'blue', text: 'Cargando Dashboard' },
     socios: { color: 'emerald', text: 'Cargando Socios' },
     comercios: { color: 'purple', text: 'Cargando Comercios' },
-    beneficios: { color: 'orange', text: 'Cargando Beneficios' },
-    analytics: { color: 'indigo', text: 'Cargando Analytics' },
     notificaciones: { color: 'red', text: 'Cargando Notificaciones' }
   };
 
@@ -175,7 +157,6 @@ interface OptimizedTabSystemProps {
   stats?: {
     totalSocios?: number;
     comerciosActivos?: number;
-    beneficiosActivos?: number;
     [key: string]: number | undefined;
   };
   triggerNewSocio?: boolean;
@@ -193,7 +174,7 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Memoized tab configuration
+  // Memoized tab configuration - SIN Beneficios y Analytics
   const tabs = useMemo<TabConfig[]>(() => [
     {
       id: 'dashboard',
@@ -222,24 +203,6 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
       badge: stats?.comerciosActivos || 0
     },
     {
-      id: 'beneficios',
-      label: 'Beneficios',
-      icon: Gift,
-      component: BeneficiosManagement,
-      gradient: 'from-orange-500 to-orange-600',
-      description: 'Ofertas y promociones',
-      badge: stats?.beneficiosActivos || 0
-    },
-    {
-      id: 'analytics',
-      label: 'Analytics',
-      icon: BarChart3,
-      component: AdvancedAnalytics,
-      gradient: 'from-indigo-500 to-indigo-600',
-      description: 'Métricas avanzadas',
-      isNew: true
-    },
-    {
       id: 'notificaciones',
       label: 'Notificaciones',
       icon: Bell,
@@ -249,12 +212,11 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
     }
   ], [stats]);
 
-  // Enhanced tab change handler with better navigation support
+  // Optimized tab change handler
   const handleTabChange = useCallback((tabId: string) => {
     if (tabId === activeTab || isTransitioning) return;
 
-    console.log('Changing tab to:', tabId); // Debug log
-
+    console.log('🔥 Tab changing to:', tabId);
     setIsTransitioning(true);
     
     // Smooth transition with debouncing
@@ -267,36 +229,13 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
     }, 150);
   }, [activeTab, isTransitioning, onNavigate]);
 
-  // Enhanced navigation handler for external navigation calls
-  const handleExternalNavigation = useCallback((section: string) => {
-    console.log('External navigation to:', section); // Debug log
-    
-    // Validate that the section exists in our tabs
-    const validTab = tabs.find(tab => tab.id === section);
-    if (validTab) {
-      handleTabChange(section);
-    } else {
-      console.warn('Invalid tab section:', section);
+  // Handle external navigation (like from dashboard buttons)
+  useEffect(() => {
+    if (initialTab && initialTab !== activeTab && !isTransitioning) {
+      console.log('🔥 External navigation to:', initialTab);
+      handleTabChange(initialTab);
     }
-  }, [tabs, handleTabChange]);
-
-  // Enhanced add member handler
-  const handleAddMember = useCallback(() => {
-    console.log('Add member triggered'); // Debug log
-    
-    // First navigate to socios tab if not already there
-    if (activeTab !== 'socios') {
-      setActiveTab('socios');
-      if (onNavigate) {
-        onNavigate('socios');
-      }
-    }
-    
-    // Then trigger the new socio dialog
-    if (onAddMember) {
-      onAddMember();
-    }
-  }, [activeTab, onNavigate, onAddMember]);
+  }, [initialTab, activeTab, isTransitioning, handleTabChange]);
 
   // Get current tab configuration
   const currentTab = useMemo(() => 
@@ -304,24 +243,14 @@ export const OptimizedTabSystem = memo<OptimizedTabSystemProps>(({
     [tabs, activeTab]
   );
 
-  // Enhanced component props with better navigation support
+  // Memoized component props
   const componentProps = useMemo(() => ({
-    onNavigate: handleExternalNavigation,
-    onAddMember: handleAddMember,
+    onNavigate,
+    onAddMember,
     stats,
     triggerNewSocio: activeTab === 'socios' ? triggerNewSocio : false,
     onNewSocioTriggered
-  }), [handleExternalNavigation, handleAddMember, stats, activeTab, triggerNewSocio, onNewSocioTriggered]);
-
-  // Effect to handle initial tab setting
-  useEffect(() => {
-    if (initialTab && initialTab !== activeTab) {
-      const validTab = tabs.find(tab => tab.id === initialTab);
-      if (validTab) {
-        setActiveTab(initialTab);
-      }
-    }
-  }, [initialTab, activeTab, tabs]);
+  }), [onNavigate, onAddMember, stats, activeTab, triggerNewSocio, onNewSocioTriggered]);
 
   return (
     <div className="space-y-6">

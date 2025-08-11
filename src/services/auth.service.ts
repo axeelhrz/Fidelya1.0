@@ -27,7 +27,6 @@ import { UserData } from '@/types/auth';
 import { COLLECTIONS, USER_STATES, DASHBOARD_ROUTES } from '@/lib/constants';
 import { handleError } from '@/lib/error-handler';
 import { configService } from '@/lib/config';
-import { customAuthService } from './custom-auth.service';
 
 export interface LoginCredentials {
   email: string;
@@ -159,7 +158,7 @@ class AuthService {
   }
 
   /**
-   * Register new user with custom email verification
+   * Register new user with email verification - Enhanced with better error handling
    */
   async register(data: RegisterData): Promise<AuthResponse> {
     const batch = writeBatch(db);
@@ -260,11 +259,8 @@ class AuthService {
 
       console.log('🔐 Firestore documents created successfully');
 
-      // Send custom email verification
-      await this.sendCustomEmailVerificationWithRetry(
-        userCredential.user.email!,
-        nombre
-      );
+      // Send email verification with retry logic
+      await this.sendEmailVerificationWithRetry(userCredential.user);
 
       // Sign out user until email verification
       await this.signOut();
@@ -296,38 +292,22 @@ class AuthService {
   }
 
   /**
-   * Send custom email verification with retry logic
+   * Send email verification with retry logic
    */
-  private async sendCustomEmailVerificationWithRetry(
-    email: string,
-    displayName: string,
-    maxRetries = 3
-  ): Promise<void> {
+  private async sendEmailVerificationWithRetry(user: User, maxRetries = 3): Promise<void> {
     let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`📧 Sending custom email verification (attempt ${attempt}/${maxRetries})...`);
+        console.log(`🔐 Sending email verification (attempt ${attempt}/${maxRetries})...`);
         
-        const continueUrl = customAuthService.generateContinueUrl('/auth/login', {
-          verified: 'true'
-        });
-
-        const result = await customAuthService.sendCustomEmailVerification(
-          email,
-          displayName,
-          continueUrl
-        );
-
-        if (result.success) {
-          console.log('✅ Custom email verification sent successfully');
-          return;
-        } else {
-          throw new Error(result.error || 'Unknown error');
-        }
+        await sendEmailVerification(user, this.getEmailActionCodeSettings());
+        
+        console.log('🔐 Email verification sent successfully');
+        return;
       } catch (error) {
         lastError = error as Error;
-        console.warn(`❌ Custom email verification attempt ${attempt} failed:`, error);
+        console.warn(`🔐 Email verification attempt ${attempt} failed:`, error);
         
         if (attempt < maxRetries) {
           // Wait before retrying (exponential backoff)
@@ -338,17 +318,58 @@ class AuthService {
     }
 
     // If all retries failed, throw the last error
-    throw new Error(`Failed to send custom email verification after ${maxRetries} attempts: ${lastError?.message}`);
+    throw new Error(`Failed to send email verification after ${maxRetries} attempts: ${lastError?.message}`);
   }
 
   /**
-   * Resend email verification with custom template
+   * Get role collection name
+   */
+  private getRoleCollection(role: string): string | null {
+    switch (role) {
+      case 'comercio':
+        return COLLECTIONS.COMERCIOS;
+      case 'socio':
+        return COLLECTIONS.SOCIOS;
+      case 'asociacion':
+        return COLLECTIONS.ASOCIACIONES;
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Add role-specific data
+   */
+  private addRoleSpecificData(data: Record<string, unknown>, role: string): void {
+    if (role === 'comercio') {
+      data.asociacionesVinculadas = [];
+      data.visible = true;
+      data.configuracion = {
+        notificacionesEmail: true,
+        notificacionesWhatsApp: false,
+        autoValidacion: false
+      };
+    } else if (role === 'socio') {
+      data.asociacionesVinculadas = [];
+      data.estadoMembresia = 'pendiente';
+    } else if (role === 'asociacion') {
+      data.configuracion = {
+        notificacionesEmail: true,
+        notificacionesWhatsApp: false,
+        autoAprobacionSocios: false,
+        requiereAprobacionComercios: true
+      };
+    }
+  }
+
+  /**
+   * Resend email verification with enhanced error handling and temporary authentication
    */
   async resendEmailVerification(email: string, password?: string): Promise<AuthResponse> {
     let tempUserCredential: UserCredential | null = null;
     
     try {
-      console.log('🔐 Attempting to resend custom email verification for:', email);
+      console.log('🔐 Attempting to resend email verification for:', email);
 
       // Check if user exists in our database
       const userQuery = query(
@@ -414,28 +435,17 @@ class AuthService {
         };
       }
 
-      // Send custom email verification
-      const continueUrl = customAuthService.generateContinueUrl('/auth/login', {
-        verified: 'true'
-      });
-
-      const result = await customAuthService.resendEmailVerification(continueUrl);
+      // Send verification email
+      await this.sendEmailVerificationWithRetry(targetUser);
 
       // If we signed in temporarily, sign out
       if (tempUserCredential) {
         await this.signOut();
       }
 
-      if (result.success) {
-        return {
-          success: true,
-        };
-      } else {
-        return {
-          success: false,
-          error: result.error || 'Error enviando correo de verificación'
-        };
-      }
+      return {
+        success: true,
+      };
     } catch (error) {
       console.error('🔐 Resend email verification error:', error);
       
@@ -455,46 +465,6 @@ class AuthService {
     }
   }
 
-  /**
-   * Send password reset email with custom template
-   */
-  async resetPassword(email: string): Promise<AuthResponse> {
-    try {
-      console.log('🔐 Sending custom password reset email to:', email);
-      
-      if (!email || !email.includes('@')) {
-        throw new Error('Email válido es requerido');
-      }
-
-      const continueUrl = customAuthService.generateContinueUrl('/auth/login', {
-        reset: 'true'
-      });
-
-      const result = await customAuthService.sendCustomPasswordReset(
-        email.trim().toLowerCase(),
-        continueUrl
-      );
-
-      if (result.success) {
-        console.log('✅ Custom password reset email sent successfully');
-        return {
-          success: true
-        };
-      } else {
-        return {
-          success: false,
-          error: result.error || 'Error enviando correo de restablecimiento'
-        };
-      }
-    } catch (error: unknown) {
-      return {
-        success: false,
-        error: handleError(error, 'Password Reset', false).message
-      };
-    }
-  }
-
-  // ... rest of existing methods remain unchanged
   /**
    * Complete email verification process
    */
@@ -559,6 +529,37 @@ class AuthService {
     } catch (error) {
       handleError(error, 'Sign Out');
       throw error;
+    }
+  }
+
+  /**
+   * Send password reset email with enhanced settings
+   */
+  async resetPassword(email: string): Promise<AuthResponse> {
+    try {
+      console.log('🔐 Sending password reset email to:', email);
+      
+      if (!email || !email.includes('@')) {
+        throw new Error('Email válido es requerido');
+      }
+
+      const actionCodeSettings: ActionCodeSettings = {
+        url: `${configService.getAppUrl()}/auth/login?reset=true`,
+        handleCodeInApp: false,
+      };
+
+      await sendPasswordResetEmail(auth, email.trim().toLowerCase(), actionCodeSettings);
+      
+      console.log('🔐 Password reset email sent successfully');
+      
+      return {
+        success: true
+      };
+    } catch (error: unknown) {
+      return {
+        success: false,
+        error: handleError(error, 'Password Reset', false).message
+      };
     }
   }
 
@@ -685,47 +686,6 @@ class AuthService {
     } catch (error) {
       console.warn('Error checking email existence:', error);
       return false;
-    }
-  }
-
-  /**
-   * Get role collection name
-   */
-  private getRoleCollection(role: string): string | null {
-    switch (role) {
-      case 'comercio':
-        return COLLECTIONS.COMERCIOS;
-      case 'socio':
-        return COLLECTIONS.SOCIOS;
-      case 'asociacion':
-        return COLLECTIONS.ASOCIACIONES;
-      default:
-        return null;
-    }
-  }
-
-  /**
-   * Add role-specific data
-   */
-  private addRoleSpecificData(data: Record<string, unknown>, role: string): void {
-    if (role === 'comercio') {
-      data.asociacionesVinculadas = [];
-      data.visible = true;
-      data.configuracion = {
-        notificacionesEmail: true,
-        notificacionesWhatsApp: false,
-        autoValidacion: false
-      };
-    } else if (role === 'socio') {
-      data.asociacionesVinculadas = [];
-      data.estadoMembresia = 'pendiente';
-    } else if (role === 'asociacion') {
-      data.configuracion = {
-        notificacionesEmail: true,
-        notificacionesWhatsApp: false,
-        autoAprobacionSocios: false,
-        requiereAprobacionComercios: true
-      };
     }
   }
 

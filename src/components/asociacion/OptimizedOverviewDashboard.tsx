@@ -225,6 +225,17 @@ const OptimizedOverviewDashboard: React.FC<OverviewDashboardProps> = ({
     }
   }, [refreshing, refreshSocioStats, refreshComercioStats]);
 
+  // Enhanced add member handler
+  const handleAddMemberClick = useCallback(() => {
+    console.log('🔥 Add member clicked from overview dashboard');
+    // First navigate to socios tab
+    onNavigate('socios');
+    // Then trigger the new socio dialog
+    setTimeout(() => {
+      onAddMember();
+    }, 100);
+  }, [onNavigate, onAddMember]);
+
   // Optimized activities listener
   useEffect(() => {
     if (!user?.uid) return;
@@ -305,7 +316,7 @@ const OptimizedOverviewDashboard: React.FC<OverviewDashboardProps> = ({
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={onAddMember}
+              onClick={handleAddMemberClick}
               className="bg-gradient-to-r from-slate-600 to-slate-800 hover:from-slate-700 hover:to-slate-900 text-white px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 lg:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 flex items-center space-x-2 shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl text-sm sm:text-base"
             >
               <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />

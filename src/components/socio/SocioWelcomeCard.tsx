@@ -6,7 +6,6 @@ import {
   User, 
   TrendingUp, 
   Shield, 
-  Settings,
   Gift,
   Building2,
   Star,
@@ -141,24 +140,11 @@ const SocioWelcomeCard = memo<SocioWelcomeCardProps>(({
               </span>
             </div>
             
-            {/* Action buttons */}
             <div className="flex items-center gap-2">
               <motion.button
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2.5 sm:p-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl sm:rounded-2xl transition-all duration-200"
-                title="Configuración"
-              >
-                <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
-              </motion.button>
-              
-              <motion.button
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.6 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onViewProfile}
@@ -171,7 +157,7 @@ const SocioWelcomeCard = memo<SocioWelcomeCardProps>(({
               <motion.button
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.7 }}
+                transition={{ delay: 0.6 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onLogout}

@@ -123,8 +123,6 @@ class SocioInvitationService {
     temporaryPassword: string
   ): Promise<void> {
     try {
-      const activationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/activate-account?email=${encodeURIComponent(email)}`;
-
       const emailContent: NotificationFormData = {
         title: '¡Bienvenido! Activa tu cuenta de socio',
         message: `Hola ${nombre},
@@ -145,9 +143,7 @@ PASOS PARA ACTIVAR TU CUENTA:
 IMPORTANTE: Por seguridad, debes cambiar tu contraseña temporal en el primer inicio de sesión.`,
         type: 'info',
         priority: 'high',
-        category: 'membership',
-        actionUrl: activationUrl,
-        actionLabel: 'Activar Cuenta'
+        category: 'membership'
       };
 
       // Crear notificación en la base de datos

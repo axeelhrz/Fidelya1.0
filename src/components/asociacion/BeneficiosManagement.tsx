@@ -57,17 +57,21 @@ export const BeneficiosManagement: React.FC<BeneficiosManagementProps> = ({
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Función corregida para manejar la creación de beneficios
+  // Función mejorada para manejar la creación de beneficios
   const handleCreateBeneficioClick = () => {
-    if (onCreateBeneficio) {
+    console.log('🎯 Botón Nuevo Beneficio clickeado');
+    
+    if (onCreateBeneficio && typeof onCreateBeneficio === 'function') {
       try {
+        console.log('✅ Ejecutando función onCreateBeneficio');
         onCreateBeneficio();
+        toast.success('Abriendo formulario de creación...');
       } catch (error) {
-        console.error('Error al abrir modal de creación:', error);
+        console.error('❌ Error al ejecutar onCreateBeneficio:', error);
         toast.error('Error al abrir el formulario de creación');
       }
     } else {
-      console.warn('onCreateBeneficio no está definido');
+      console.warn('⚠️ onCreateBeneficio no está definido o no es una función');
       toast.error('Función de creación no disponible');
     }
   };
@@ -318,11 +322,12 @@ export const BeneficiosManagement: React.FC<BeneficiosManagementProps> = ({
               <span className="hidden sm:inline">Filtros</span>
             </button>
             
-            {/* Botón Nuevo corregido */}
+            {/* Botón Nuevo mejorado con mejor debugging */}
             <button
               onClick={handleCreateBeneficioClick}
               className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-medium transform hover:-translate-y-0.5 active:scale-95"
               type="button"
+              title="Crear nuevo beneficio"
             >
               <Plus className="w-5 h-5" />
               <span className="hidden sm:inline">Nuevo Beneficio</span>
@@ -458,12 +463,12 @@ export const BeneficiosManagement: React.FC<BeneficiosManagementProps> = ({
                       </div>
                       
                       {/* Menú de acciones */}
-                      <div className="relative">
+                      <div className="relative group/menu">
                         <button className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors opacity-0 group-hover:opacity-100">
                           <MoreVertical className="w-5 h-5" />
                         </button>
                         
-                        <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                        <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-200 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-200 z-10">
                           <div className="py-2">
                             <button
                               onClick={() => {
@@ -615,12 +620,12 @@ export const BeneficiosManagement: React.FC<BeneficiosManagementProps> = ({
                       </div>
                       
                       {/* Menú de acciones para vista lista */}
-                      <div className="relative">
+                      <div className="relative group/menu">
                         <button className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors">
                           <MoreVertical className="w-5 h-5" />
                         </button>
                         
-                        <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                        <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-200 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-200 z-10">
                           <div className="py-2">
                             <button
                               onClick={() => {

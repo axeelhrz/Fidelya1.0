@@ -1,2 +1,3 @@
 export { ClienteProfileView } from './ClienteProfileView';
-export { ClienteAnalytics } from './ClienteAnalytics';
+export { EnhancedClienteForm } from './EnhancedClienteForm';
+export { QuickClienteCreator } from './QuickClienteCreator';

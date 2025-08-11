@@ -52,6 +52,7 @@ const convertFirestoreDoc = (doc: DocumentSnapshot): Notification => {
   const data = doc.data() || {};
   return {
     id: doc.id,
+    recipientId: data.recipientId || '',
     title: data.title || '',
     message: data.message || '',
     type: data.type || '',
@@ -171,11 +172,11 @@ export const subscribeToNotifications = (
       }
 
       if (filters?.priority && filters.priority.length > 0) {
-        notifications = notifications.filter(n => filters.priority!.includes(n.priority));
+        notifications = notifications.filter(n => n.priority !== undefined && filters.priority!.includes(n.priority));
       }
 
       if (filters?.category && filters.category.length > 0) {
-        notifications = notifications.filter(n => filters.category!.includes(n.category));
+        notifications = notifications.filter(n => n.category !== undefined && filters.category!.includes(n.category));
       }
 
       if (filters?.dateRange) {

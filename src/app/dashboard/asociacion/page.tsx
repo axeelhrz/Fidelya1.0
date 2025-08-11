@@ -1,172 +1,271 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useCallback, memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
+import { LogoutModal } from '@/components/ui/LogoutModal';
+import { OptimizedTabSystem } from '@/components/layout/OptimizedTabSystem';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocios } from '@/hooks/useSocios';
 import { useComercios } from '@/hooks/useComercios';
-import { useValidaciones } from '@/hooks/useValidaciones';
-import { useReports } from '@/hooks/useReports';
-import { useNotifications } from '@/hooks/useNotifications';
-import { useBeneficios } from '@/hooks/useBeneficios';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useBeneficiosAsociacion } from '@/hooks/useBeneficios';
+import { 
+  Building2,
+  TrendingUp,
+  Shield,
+  LogOut
+} from 'lucide-react';
 
-const AsociacionDashboardPage: React.FC = () => {
-  const { user } = useAuth();
-  const { socios, loading: sociosLoading } = useSocios();
-  const { comerciosVinculados, loading: comerciosLoading } = useComercios();
-  const { validaciones, loading: validacionesLoading } = useValidaciones();
-  const { loading: reportsLoading } = useReports();
-  const { loading: notificationsLoading } = useNotifications();
-  const { beneficios, loading: beneficiosLoading } = useBeneficios();
+// Optimized loading component
+const OptimizedLoadingState = memo(() => (
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="text-center"
+    >
+      <div className="relative mb-8">
+        <div className="w-20 h-20 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin mx-auto" />
+        <motion.div
+          animate={{ rotate: -360 }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-blue-500 rounded-full mx-auto"
+        />
+      </div>
+      <motion.h2 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-blue-700 bg-clip-text text-transparent mb-3"
+      >
+        Inicializando Dashboard
+      </motion.h2>
+      <motion.p 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="text-slate-600 text-lg"
+      >
+        Cargando tu panel de control...
+      </motion.p>
+    </motion.div>
+  </div>
+));
 
-  const isLoading = sociosLoading || comerciosLoading || validacionesLoading || 
-                   reportsLoading || notificationsLoading || beneficiosLoading;
+OptimizedLoadingState.displayName = 'OptimizedLoadingState';
 
-  if (!user) {
+// Memoized header component
+interface User {
+  nombre?: string;
+  role?: string;
+  // Add other user properties as needed
+}
+
+interface Stats {
+  [key: string]: number;
+}
+
+const DashboardHeader = memo<{
+  user: User;
+  stats: Stats;
+  onAddMember: () => void;
+  onLogout: () => void;
+}>(({ user, onAddMember, onLogout }) => {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl border border-white/30 p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8"
+    >
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 lg:gap-6">
+          <div className="relative">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-xl sm:shadow-2xl">
+              <Building2 className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-white" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full border-2 sm:border-3 border-white shadow-lg flex items-center justify-center">
+              <TrendingUp className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+            </div>
+          </div>
+          <div>
+            <motion.h1 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-1 sm:mb-2"
+            >
+              Hola, {user?.nombre || 'Administrador'}
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-sm sm:text-base lg:text-lg xl:text-xl text-slate-600"
+            >
+              Panel de control de asociación
+            </motion.p>
+          </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4">
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onAddMember}
+            className="bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800 hover:from-slate-700 hover:via-slate-800 hover:to-slate-900 text-white px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 lg:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl group text-sm sm:text-base"
+          >
+            <span>Nuevo Socio</span>
+          </motion.button>
+          
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-emerald-50 px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl border border-emerald-200">
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+              <span className="text-xs sm:text-sm font-medium text-emerald-700">Seguro</span>
+            </div>
+            
+            {/* Solo botón de Logout - ELIMINADO el botón de Settings/Configuración */}
+            <div className="flex items-center gap-2">
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onLogout}
+                className="p-2.5 sm:p-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl sm:rounded-2xl transition-all duration-200"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+              </motion.button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
+
+DashboardHeader.displayName = 'DashboardHeader';
+
+// Main component
+export default function OptimizedAsociacionDashboard() {
+  const router = useRouter();
+  const { user, loading: authLoading, signOut } = useAuth();
+  
+  // Hooks for stats
+  const { stats: sociosStats} = useSocios();
+  const { stats: comerciosStats} = useComercios();
+  const { stats: beneficiosStats } = useBeneficiosAsociacion();
+  
+  // State management - optimized to prevent unnecessary re-renders
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [currentSection, setCurrentSection] = useState('dashboard');
+  const [triggerNewSocio, setTriggerNewSocio] = useState(false);
+
+  // Memoized consolidated stats
+  const consolidatedStats = useMemo(() => ({
+    totalSocios: sociosStats?.total || 0,
+    sociosActivos: sociosStats?.activos || 0,
+    comerciosActivos: comerciosStats?.comerciosActivos || 0,
+    beneficiosActivos: beneficiosStats?.beneficiosActivos || 0,
+    ingresosMensuales: sociosStats?.ingresosMensuales || 0
+  }), [sociosStats, comerciosStats, beneficiosStats]);
+
+  // Optimized logout handlers
+  const handleLogoutClick = useCallback(() => {
+    setLogoutModalOpen(true);
+  }, []);
+
+  const handleLogoutConfirm = useCallback(async () => {
+    setLoggingOut(true);
+    try {
+      await signOut();
+      toast.success('Sesión cerrada correctamente');
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      toast.error('Error al cerrar sesión. Inténtalo de nuevo.');
+    } finally {
+      setLoggingOut(false);
+      setLogoutModalOpen(false);
+    }
+  }, [signOut, router]);
+
+  const handleLogoutCancel = useCallback(() => {
+    setLogoutModalOpen(false);
+  }, []);
+
+  // Optimized navigation handler
+  const handleNavigate = useCallback((section: string) => {
+    setCurrentSection(section);
+  }, []);
+
+  // Enhanced add member handler that triggers the new socio dialog
+  const handleAddMember = useCallback(() => {
+    console.log('🔥 handleAddMember called - navigating to socios and triggering dialog');
+    setCurrentSection('socios');
+    setTriggerNewSocio(true);
+  }, []);
+
+  // Callback to reset the trigger after the dialog is opened
+  const handleNewSocioTriggered = useCallback(() => {
+    console.log('🔥 New socio dialog triggered - resetting trigger');
+    setTriggerNewSocio(false);
+  }, []);
+
+  // Redirect if not authenticated or not association
+  if (!authLoading && (!user || user.role !== 'asociacion')) {
+    router.push('/auth/login');
     return null;
   }
 
+  // Loading state
+  if (authLoading) {
+    return <OptimizedLoadingState />;
+  }
+
   return (
-    <ProtectedRoute allowedRoles={['asociacion']}>
-      <DashboardLayout>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-8"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Panel de Asociación
-              </h1>
-              <p className="text-gray-600">
-                Gestiona socios, comercios y beneficios de tu asociación
-              </p>
-            </div>
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <div className="p-3 sm:p-4 lg:p-6 xl:p-8 space-y-4 sm:space-y-6 lg:space-y-8 max-w-7xl mx-auto">
+          {/* Optimized Header */}
+          <DashboardHeader
+            user={user ?? {}}
+            stats={consolidatedStats}
+            onAddMember={handleAddMember}
+            onLogout={handleLogoutClick}
+          />
 
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {/* Stats Cards */}
-                <div className="bg-white rounded-lg shadow p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
-                          Total Socios
-                        </dt>
-                        <dd className="text-lg font-medium text-gray-900">
-                          {socios.length}
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
+          {/* Ultra Optimized Tab System */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <OptimizedTabSystem
+              onNavigate={handleNavigate}
+              onAddMember={handleAddMember}
+              initialTab={currentSection}
+              stats={consolidatedStats}
+              triggerNewSocio={triggerNewSocio}
+              onNewSocioTriggered={handleNewSocioTriggered}
+            />
+          </motion.div>
+        </div>
+      </div>
 
-                <div className="bg-white rounded-lg shadow p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 114 0 2 2 0 01-4 0zm8 0a2 2 0 114 0 2 2 0 01-4 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
-                          Comercios Activos
-                        </dt>
-                        <dd className="text-lg font-medium text-gray-900">
-                          {Array.isArray(comerciosVinculados) ? comerciosVinculados.length : 0}
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
-                          Validaciones
-                        </dt>
-                        <dd className="text-lg font-medium text-gray-900">
-                          {validaciones.length}
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
-                          Beneficios
-                        </dt>
-                        <dd className="text-lg font-medium text-gray-900">
-                          {beneficios.length}
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Acciones Rápidas</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <button className="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                  Agregar Socio
-                </button>
-                <button className="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                  Vincular Comercio
-                </button>
-                <button className="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
-                  Ver Reportes
-                </button>
-                <button className="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                  Notificaciones
-                </button>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </DashboardLayout>
-    </ProtectedRoute>
+      {/* Enhanced Logout Modal */}
+      <LogoutModal
+        isOpen={logoutModalOpen}
+        isLoading={loggingOut}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
+    </>
   );
-};
-
-export default AsociacionDashboardPage;
+}

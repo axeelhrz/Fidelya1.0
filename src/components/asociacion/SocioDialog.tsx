@@ -32,7 +32,7 @@ import { Timestamp } from 'firebase/firestore';
 const createSocioSchema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   email: z.string().email('Email inválido'),
-  estado: z.enum(['activo', 'inactivo', 'vencido']),
+  estado: z.enum(['activo', 'inactivo', 'suspendido', 'pendiente', 'vencido']),
   telefono: z.string().optional(),
   dni: z.string().optional(),
   direccion: z.string().optional(),
@@ -53,7 +53,7 @@ const createSocioSchema = z.object({
 const editSocioSchema = z.object({
   nombre: z.string().min(1, 'El nombre es requerido').optional(),
   email: z.string().email('Email inválido').optional(),
-  estado: z.enum(['activo', 'inactivo', 'vencido']).optional(),
+  estado: z.enum(['activo', 'inactivo', 'suspendido', 'pendiente', 'vencido']).optional(),
   telefono: z.string().optional(),
   dni: z.string().optional(),
   direccion: z.string().optional(),
@@ -308,6 +308,9 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
         }
   });
 
+  // Validación debounced
+  // const debouncedTrigger = useDebounce(trigger, 300);
+
   // Resetear formulario
   useEffect(() => {
     if (open) {
@@ -439,6 +442,8 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
         options: [
           { value: 'activo', label: 'Activo' },
           { value: 'inactivo', label: 'Inactivo' },
+          { value: 'suspendido', label: 'Suspendido' },
+          { value: 'pendiente', label: 'Pendiente' },
           { value: 'vencido', label: 'Vencido' }
         ]
       },

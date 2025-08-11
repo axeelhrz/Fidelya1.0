@@ -26,14 +26,12 @@ import {
   Grid3X3,
   List,
   SlidersHorizontal,
-  X,
-  Edit2,
-  Check
+  X
 } from 'lucide-react';
 import { useSocios } from '@/hooks/useSocios';
 import { useSocioAsociacion } from '@/hooks/useSocioAsociacion';
 import { SocioDialog } from './SocioDialog';
-import { BulkEditSociosDialog } from './BulkEditSociosDialog';
+import { AddRegisteredSocioButton } from './AddRegisteredSocioButton';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { UnlinkConfirmDialog } from './UnlinkConfirmDialog';
 import { format } from 'date-fns';
@@ -63,8 +61,7 @@ export const EnhancedMemberManagement = ({
     createSocio,
     updateSocio,
     deleteSocio,
-    importSocios,
-    bulkUpdateSocios
+    importSocios
   } = useSocios();
 
   const {
@@ -78,18 +75,12 @@ export const EnhancedMemberManagement = ({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [filters, setFilters] = useState({
     estado: '',
-    estadoMembresia: '',
     fechaDesde: '',
     fechaHasta: ''
   });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  
-  // Estados para selección múltiple
-  const [selectedSocios, setSelectedSocios] = useState<string[]>([]);
-  const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false);
-  const [selectAll, setSelectAll] = useState(false);
   
   // Estados para el diálogo de eliminación
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -113,7 +104,9 @@ export const EnhancedMemberManagement = ({
 
   // Handle trigger for new socio from external sources
   useEffect(() => {
+    console.log('🔥 EnhancedMemberManagement - triggerNewSocio changed:', triggerNewSocio, 'dialogOpen:', dialogOpen);
     if (triggerNewSocio && !dialogOpen) {
+      console.log('🔥 Opening new socio dialog from trigger');
       setSelectedSocio(null);
       setDialogOpen(true);
       if (onNewSocioTriggered) {
@@ -132,92 +125,6 @@ export const EnhancedMemberManagement = ({
       toast.error('Error al actualizar los datos');
     } finally {
       setRefreshing(false);
-    }
-  };
-
-  // Funciones para selección múltiple
-  const handleSelectSocio = (socioId: string) => {
-    setSelectedSocios(prev => {
-      if (prev.includes(socioId)) {
-        return prev.filter(id => id !== socioId);
-      } else {
-        return [...prev, socioId];
-      }
-    });
-  };
-
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedSocios([]);
-      setSelectAll(false);
-    } else {
-      setSelectedSocios(filteredSocios.map(socio => socio.id));
-      setSelectAll(true);
-    }
-  };
-
-  // Filtrar socios (duplicated, so rename to filteredSociosList)
-  const filteredSociosList = socios.filter(socio => {
-    const matchesSearch = 
-      socio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      socio.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (socio.dni && socio.dni.includes(searchTerm)) ||
-      (socio.numeroSocio && socio.numeroSocio.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    const matchesEstado = !filters.estado || socio.estado === filters.estado;
-    const matchesMembresia = !filters.estadoMembresia || socio.estadoMembresia === filters.estadoMembresia;
-
-    let matchesFecha = true;
-    if (filters.fechaDesde || filters.fechaHasta) {
-      const fechaIngreso = socio.fechaIngreso.toDate();
-      if (filters.fechaDesde && new Date(filters.fechaDesde) > fechaIngreso) {
-        matchesFecha = false;
-      }
-      if (filters.fechaHasta && new Date(filters.fechaHasta) < fechaIngreso) {
-        matchesFecha = false;
-      }
-    }
-
-    return matchesSearch && matchesEstado && matchesMembresia && matchesFecha;
-  });
-
-  // Actualizar selectAll cuando cambian las selecciones
-  useEffect(() => {
-    const allSelected = filteredSociosList.length > 0 && selectedSocios.length === filteredSociosList.length;
-    setSelectAll(allSelected);
-  }, [selectedSocios, filteredSociosList]);
-
-  // Función para abrir el diálogo de edición múltiple
-  const handleBulkEdit = () => {
-    if (selectedSocios.length === 0) {
-      toast.error('Selecciona al menos un socio para editar');
-      return;
-    }
-    setBulkEditDialogOpen(true);
-  };
-
-  // Función para manejar la edición múltiple
-  const handleBulkEditSave = async (data: { socioIds: string[]; changes: Partial<SocioFormData> }) => {
-    try {
-      const result = await bulkUpdateSocios({
-        socioIds: data.socioIds,
-        changes: data.changes
-      });
-
-      if (result.success) {
-        toast.success(`${result.updated} socios actualizados exitosamente`);
-        if (result.errors.length > 0) {
-          toast.error(`${result.errors.length} socios no pudieron ser actualizados`);
-        }
-        setSelectedSocios([]);
-        setBulkEditDialogOpen(false);
-        await handleRefresh();
-      } else {
-        toast.error('Error en la actualización masiva');
-      }
-    } catch (error) {
-      toast.error('Error al actualizar los socios');
-      console.error('Bulk edit error:', error);
     }
   };
 
@@ -371,7 +278,6 @@ export const EnhancedMemberManagement = ({
         'Teléfono': socio.telefono || '',
         'Número de Socio': socio.numeroSocio || '',
         'Estado': socio.estado || '',
-        'Estado de Membresía': socio.estadoMembresia || '',
         'Fecha de Ingreso': formatDate(socio.fechaIngreso),
         'Fecha de Vencimiento': formatDate(socio.fechaVencimiento),
         'Monto de Cuota': socio.montoCuota || 0,
@@ -392,7 +298,6 @@ export const EnhancedMemberManagement = ({
         { wch: 18 },  // Teléfono
         { wch: 15 },  // Número Socio
         { wch: 12 },  // Estado
-        { wch: 18 },  // Estado Membresía
         { wch: 15 },  // Fecha Ingreso
         { wch: 15 },  // Fecha Vencimiento
         { wch: 12 },  // Monto Cuota
@@ -429,18 +334,6 @@ export const EnhancedMemberManagement = ({
       });
 
       statsData.push(['', '']);
-      statsData.push(['DISTRIBUCIÓN POR MEMBRESÍA', '']);
-      statsData.push(['', '']);
-
-      // Agregar distribución por membresía
-      const membresiaCount = socios.reduce((acc, socio) => {
-        acc[socio.estadoMembresia] = (acc[socio.estadoMembresia] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      Object.entries(membresiaCount).forEach(([membresia, count]) => {
-        statsData.push([`${membresia.charAt(0).toUpperCase() + membresia.slice(1)}`, count]);
-      });
 
       // Agregar información de exportación
       statsData.push(['', '']);
@@ -460,15 +353,14 @@ export const EnhancedMemberManagement = ({
 
       // Crear hoja de plantilla para importación
       const templateData = [
-        ['PLANTILLA PARA IMPORTACIÓN DE SOCIOS', '', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', '', ''],
-        ['Instrucciones:', '', '', '', '', '', '', '', ''],
-        ['1. Complete los datos en las filas siguientes', '', '', '', '', '', '', '', ''],
-        ['2. No modifique los encabezados de las columnas', '', '', '', '', '', '', '', ''],
-        ['3. Los campos marcados con * son obligatorios', '', '', '', '', '', '', '', '', ''],
-        ['4. Estados válidos: activo, inactivo, vencido', '', '', '', '', '', '', '', ''],
-        ['5. Estados de membresía válidos: al_dia, vencido, pendiente', '', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', '', ''],
+        ['PLANTILLA PARA IMPORTACIÓN DE SOCIOS', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['Instrucciones:', '', '', '', '', '', '', ''],
+        ['1. Complete los datos en las filas siguientes', '', '', '', '', '', '', ''],
+        ['2. No modifique los encabezados de las columnas', '', '', '', '', '', '', ''],
+        ['3. Los campos marcados con * son obligatorios', '', '', '', '', '', '', ''],
+        ['4. Estados válidos: activo, inactivo, suspendido, pendiente', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
         [
           'Nombre Completo *',
           'Correo Electrónico *',
@@ -476,7 +368,6 @@ export const EnhancedMemberManagement = ({
           'Teléfono',
           'Número de Socio',
           'Estado',
-          'Estado de Membresía',
           'Monto de Cuota',
           'Dirección'
         ],
@@ -487,7 +378,6 @@ export const EnhancedMemberManagement = ({
           '+54 9 11 1234-5678',
           'SOC001',
           'activo',
-          'al_dia',
           '1500',
           'Av. Corrientes 1234, CABA'
         ]
@@ -496,7 +386,7 @@ export const EnhancedMemberManagement = ({
       const templateSheet = XLSX.utils.aoa_to_sheet(templateData);
       templateSheet['!cols'] = [
         { wch: 25 }, { wch: 30 }, { wch: 15 }, { wch: 18 },
-        { wch: 15 }, { wch: 12 }, { wch: 18 }, { wch: 12 }, { wch: 30 }
+        { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 30 }
       ];
 
       XLSX.utils.book_append_sheet(workbook, templateSheet, 'Plantilla');
@@ -541,7 +431,6 @@ export const EnhancedMemberManagement = ({
         'Teléfono',
         'Número de Socio',
         'Estado',
-        'Estado de Membresía',
         'Monto de Cuota',
         'Beneficios Utilizados',
         'Dirección',
@@ -584,7 +473,6 @@ export const EnhancedMemberManagement = ({
             escapeCSV(socio.telefono || ''),
             escapeCSV(socio.numeroSocio || ''),
             escapeCSV(socio.estado || ''),
-            escapeCSV(socio.estadoMembresia || ''),
             escapeCSV(socio.montoCuota || 0),
             escapeCSV(socio.beneficiosUsados || 0),
             escapeCSV(socio.direccion || ''),
@@ -717,9 +605,6 @@ export const EnhancedMemberManagement = ({
         'número de socio': 'numeroSocio',
         'numero socio': 'numeroSocio',
         'estado': 'estado',
-        'estado membresia': 'estadoMembresia',
-        'estado de membresía': 'estadoMembresia',
-        'estado de membresia': 'estadoMembresia',
         'monto cuota': 'montoCuota',
         'monto de cuota': 'montoCuota',
         'cuota': 'montoCuota',
@@ -781,21 +666,12 @@ export const EnhancedMemberManagement = ({
                 socio.numeroSocio = value;
                 break;
               case 'estado':
-                const validStates = ['activo', 'inactivo', 'vencido'];
+                const validStates = ['activo', 'inactivo', 'suspendido', 'pendiente'];
                 const normalizedState = value.toLowerCase();
                 if (validStates.includes(normalizedState)) {
                   socio.estado = normalizedState as SocioFormData['estado'];
                 } else {
                   socio.estado = 'activo';
-                }
-                break;
-              case 'estadoMembresia':
-                const validMembershipStates = ['al_dia', 'vencido', 'pendiente'];
-                const normalizedMembership = value.toLowerCase().replace(/\s+/g, '_');
-                if (validMembershipStates.includes(normalizedMembership)) {
-                  socio.estadoMembresia = normalizedMembership as SocioFormData['estadoMembresia'];
-                } else {
-                  socio.estadoMembresia = 'al_dia';
                 }
                 break;
               case 'montoCuota':
@@ -824,7 +700,6 @@ export const EnhancedMemberManagement = ({
             telefono: socio.telefono || '',
             numeroSocio: socio.numeroSocio || '',
             estado: socio.estado || 'activo',
-            estadoMembresia: socio.estadoMembresia || 'al_dia',
             montoCuota: socio.montoCuota || 0,
             direccion: socio.direccion || '',
             fechaNacimiento: undefined,
@@ -969,9 +844,6 @@ export const EnhancedMemberManagement = ({
         'número de socio': 'numeroSocio',
         'numero socio': 'numeroSocio',
         'estado': 'estado',
-        'estado membresia': 'estadoMembresia',
-        'estado de membresía': 'estadoMembresia',
-        'estado de membresia': 'estadoMembresia',
         'monto cuota': 'montoCuota',
         'monto de cuota': 'montoCuota',
         'cuota': 'montoCuota',
@@ -1031,21 +903,12 @@ export const EnhancedMemberManagement = ({
                 socio.numeroSocio = value;
                 break;
               case 'estado':
-                const validStates = ['activo', 'inactivo', 'vencido'];
+                const validStates = ['activo', 'inactivo', 'suspendido', 'pendiente'];
                 const normalizedState = value.toLowerCase();
                 if (validStates.includes(normalizedState)) {
                   socio.estado = normalizedState as SocioFormData['estado'];
                 } else {
                   socio.estado = 'activo';
-                }
-                break;
-              case 'estadoMembresia':
-                const validMembershipStates = ['al_dia', 'vencido', 'pendiente'];
-                const normalizedMembership = value.toLowerCase().replace(/\s+/g, '_');
-                if (validMembershipStates.includes(normalizedMembership)) {
-                  socio.estadoMembresia = normalizedMembership as SocioFormData['estadoMembresia'];
-                } else {
-                  socio.estadoMembresia = 'al_dia';
                 }
                 break;
               case 'montoCuota':
@@ -1072,7 +935,6 @@ export const EnhancedMemberManagement = ({
             telefono: socio.telefono || '',
             numeroSocio: socio.numeroSocio || '',
             estado: socio.estado || 'activo',
-            estadoMembresia: socio.estadoMembresia || 'al_dia',
             montoCuota: socio.montoCuota || 0,
             direccion: socio.direccion || '',
             fechaNacimiento: undefined,
@@ -1140,16 +1002,15 @@ export const EnhancedMemberManagement = ({
 
     // Crear datos de la plantilla
     const templateData = [
-      ['PLANTILLA PARA IMPORTACIÓN DE SOCIOS', '', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', '', ''],
-      ['Instrucciones:', '', '', '', '', '', '', '', ''],
-      ['1. Complete los datos en las filas siguientes', '', '', '', '', '', '', '', '', ''],
-      ['2. No modifique los encabezados de las columnas', '', '', '', '', '', '', '', ''],
-      ['3. Los campos marcados con * son obligatorios', '', '', '', '', '', '', '', '', ''],
-      ['4. Estados válidos: activo, inactivo, vencido', '', '', '', '', '', '', '', ''],
-      ['5. Estados de membresía válidos: al_dia, vencido, pendiente', '', '', '', '', '', '', '', ''],
-      ['6. Guarde el archivo como Excel (.xlsx) antes de importar', '', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', '', ''],
+      ['PLANTILLA PARA IMPORTACIÓN DE SOCIOS', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', ''],
+      ['Instrucciones:', '', '', '', '', '', '', ''],
+      ['1. Complete los datos en las filas siguientes', '', '', '', '', '', '', ''],
+      ['2. No modifique los encabezados de las columnas', '', '', '', '', '', '', ''],
+      ['3. Los campos marcados con * son obligatorios', '', '', '', '', '', '', ''],
+      ['4. Estados válidos: activo, inactivo, suspendido, pendiente', '', '', '', '', '', '', ''],
+      ['5. Guarde el archivo como Excel (.xlsx) antes de importar', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', ''],
       [
         'Nombre Completo *',
         'Correo Electrónico *',
@@ -1157,7 +1018,6 @@ export const EnhancedMemberManagement = ({
         'Teléfono',
         'Número de Socio',
         'Estado',
-        'Estado de Membresía',
         'Monto de Cuota',
         'Dirección'
       ],
@@ -1168,7 +1028,6 @@ export const EnhancedMemberManagement = ({
         '+54 9 11 1234-5678',
         'SOC001',
         'activo',
-        'al_dia',
         1500,
         'Av. Corrientes 1234, CABA'
       ],
@@ -1179,7 +1038,6 @@ export const EnhancedMemberManagement = ({
         '+54 9 11 8765-4321',
         'SOC002',
         'activo',
-        'al_dia',
         2000,
         'Av. Santa Fe 5678, CABA'
       ]
@@ -1189,8 +1047,8 @@ export const EnhancedMemberManagement = ({
     
     // Configurar anchos de columna
     worksheet['!cols'] = [
-      { wch: 25 }, { wch: 30 }, { wch: 15 }, { wch: 18 }, 
-      { wch: 15 }, { wch: 12 }, { wch: 18 }, { wch: 12 }, { wch: 30 }
+      { wch: 25 }, { wch: 30 }, { wch: 15 }, { wch: 18 },
+      { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 30 }
     ];
 
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Plantilla');
@@ -1209,7 +1067,6 @@ export const EnhancedMemberManagement = ({
       'Teléfono',
       'Número de Socio',
       'Estado',
-      'Estado de Membresía',
       'Monto de Cuota',
       'Dirección'
     ];
@@ -1221,7 +1078,6 @@ export const EnhancedMemberManagement = ({
       '+54 9 11 1234-5678',
       'SOC001',
       'activo',
-      'al_dia',
       '1500',
       'Av. Corrientes 1234, CABA'
     ];
@@ -1254,7 +1110,6 @@ export const EnhancedMemberManagement = ({
       (socio.numeroSocio && socio.numeroSocio.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesEstado = !filters.estado || socio.estado === filters.estado;
-    const matchesMembresia = !filters.estadoMembresia || socio.estadoMembresia === filters.estadoMembresia;
 
     let matchesFecha = true;
     if (filters.fechaDesde || filters.fechaHasta) {
@@ -1267,7 +1122,7 @@ export const EnhancedMemberManagement = ({
       }
     }
 
-    return matchesSearch && matchesEstado && matchesMembresia && matchesFecha;
+    return matchesSearch && matchesEstado && matchesFecha;
   });
 
   // Renderizar estado de carga
@@ -1310,7 +1165,8 @@ export const EnhancedMemberManagement = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleRefresh}
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl hover:from-red-600 hover:to-red-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl hover:from-red-600 
+            hover:to-red-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
           >
             <RefreshCw className="w-5 h-5 mr-2" />
             Reintentar
@@ -1415,20 +1271,6 @@ export const EnhancedMemberManagement = ({
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-3">
-              {/* Bulk Edit Button - Solo mostrar si hay socios seleccionados */}
-              {selectedSocios.length > 0 && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleBulkEdit}
-                  className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-5 py-2.5 rounded-2xl hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl border border-white/20 relative overflow-hidden group"
-                >
-                  <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <Edit2 className="w-4 h-4 relative z-10" />
-                  <span className="relative z-10">Editar {selectedSocios.length} socios</span>
-                </motion.button>
-              )}
-
               {/* View Mode Toggle */}
               <div className="flex items-center bg-slate-100/80 backdrop-blur-sm rounded-2xl p-1.5 border border-slate-200/50 shadow-sm">
                 <motion.button
@@ -1482,6 +1324,12 @@ export const EnhancedMemberManagement = ({
                   </motion.div>
                 )}
               </motion.button>
+
+              {/* Add Registered Socio */}
+              <AddRegisteredSocioButton 
+                onSocioAdded={handleRefresh}
+                className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white px-5 py-2.5 rounded-2xl hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 border border-white/20 relative overflow-hidden group"
+              />
 
               {/* New Socio Button */}
               <motion.button
@@ -1602,7 +1450,7 @@ export const EnhancedMemberManagement = ({
                 className="overflow-hidden"
               >
                 <div className="pt-6 border-t border-slate-200">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
                         Estado
@@ -1615,22 +1463,7 @@ export const EnhancedMemberManagement = ({
                         <option value="">Todos los estados</option>
                         <option value="activo">Activo</option>
                         <option value="inactivo">Inactivo</option>
-                        <option value="vencido">Vencido</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Estado de Membresía
-                      </label>
-                      <select
-                        value={filters.estadoMembresia}
-                        onChange={(e) => setFilters(prev => ({ ...prev, estadoMembresia: e.target.value }))}
-                        className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                      >
-                        <option value="">Todas las membresías</option>
-                        <option value="al_dia">Al día</option>
-                        <option value="vencido">Vencido</option>
+                        <option value="suspendido">Suspendido</option>
                         <option value="pendiente">Pendiente</option>
                       </select>
                     </div>
@@ -1667,12 +1500,10 @@ export const EnhancedMemberManagement = ({
                       onClick={() => {
                         setFilters({
                           estado: '',
-                          estadoMembresia: '',
                           fechaDesde: '',
                           fechaHasta: ''
                         });
                         setSearchTerm('');
-                        setSelectedSocios([]);
                       }}
                       className="text-sm text-slate-600 hover:text-slate-900 font-medium px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-all duration-200"
                     >
@@ -1680,11 +1511,6 @@ export const EnhancedMemberManagement = ({
                     </motion.button>
                     <div className="text-sm text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
                       Mostrando {filteredSocios.length} de {socios.length} socios
-                      {selectedSocios.length > 0 && (
-                        <span className="ml-2 text-blue-600 font-medium">
-                          ({selectedSocios.length} seleccionados)
-                        </span>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -1716,7 +1542,7 @@ export const EnhancedMemberManagement = ({
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-slate-50/40 rounded-3xl blur-2xl" />
         <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl overflow-hidden">
-          {filteredSociosList.length === 0 ? (
+          {filteredSocios.length === 0 ? (
             <div className="text-center py-16 px-6">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -1737,6 +1563,10 @@ export const EnhancedMemberManagement = ({
                 </p>
                 {socios.length === 0 && (
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <AddRegisteredSocioButton 
+                      onSocioAdded={handleRefresh}
+                      className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+                    />
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -1757,7 +1587,7 @@ export const EnhancedMemberManagement = ({
             // Grid View
             <div className="p-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredSociosList.map((socio, index) => (
+                {filteredSocios.map((socio, index) => (
                   <motion.div
                     key={socio.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -1767,26 +1597,8 @@ export const EnhancedMemberManagement = ({
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
                     <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 p-6">
-                      {/* Selection Checkbox */}
-                      <div className="absolute top-3 left-3">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleSelectSocio(socio.id)}
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-                            selectedSocios.includes(socio.id)
-                              ? 'bg-blue-500 border-blue-500 text-white'
-                              : 'border-slate-300 hover:border-blue-400'
-                          }`}
-                        >
-                          {selectedSocios.includes(socio.id) && (
-                            <Check className="w-3 h-3" />
-                          )}
-                        </motion.button>
-                      </div>
-
                       {/* Avatar and Status */}
-                      <div className="flex items-center justify-between mb-4 mt-2">
+                      <div className="flex items-center justify-between mb-4">
                         <div className="relative">
                           {socio.avatar ? (
                             <Image
@@ -1804,7 +1616,7 @@ export const EnhancedMemberManagement = ({
                           <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
                             socio.estado === 'activo' ? 'bg-emerald-500' :
                             socio.estado === 'inactivo' ? 'bg-slate-400' :
-                            'bg-red-500'
+                            socio.estado === 'suspendido' ? 'bg-red-500' : 'bg-yellow-500'
                           }`} />
                         </div>
                       </div>
@@ -1882,20 +1694,6 @@ export const EnhancedMemberManagement = ({
               <table className="min-w-full">
                 <thead className="bg-slate-50/80 backdrop-blur-sm">
                   <tr>
-                    <th className="px-6 py-4 text-left">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={handleSelectAll}
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-                          selectAll
-                            ? 'bg-blue-500 border-blue-500 text-white'
-                            : 'border-slate-300 hover:border-blue-400'
-                        }`}
-                      >
-                        {selectAll && <Check className="w-3 h-3" />}
-                      </motion.button>
-                    </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Socio
                     </th>
@@ -1917,32 +1715,14 @@ export const EnhancedMemberManagement = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredSociosList.map((socio, index) => (
+                  {filteredSocios.map((socio, index) => (
                     <motion.tr 
                       key={socio.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.02 }}
-                      className={`hover:bg-slate-50/50 transition-colors group ${
-                        selectedSocios.includes(socio.id) ? 'bg-blue-50/50' : ''
-                      }`}
+                      className="hover:bg-slate-50/50 transition-colors group"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleSelectSocio(socio.id)}
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-                            selectedSocios.includes(socio.id)
-                              ? 'bg-blue-500 border-blue-500 text-white'
-                              : 'border-slate-300 hover:border-blue-400'
-                          }`}
-                        >
-                          {selectedSocios.includes(socio.id) && (
-                            <Check className="w-3 h-3" />
-                          )}
-                        </motion.button>
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="relative">
@@ -1962,7 +1742,7 @@ export const EnhancedMemberManagement = ({
                             <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
                               socio.estado === 'activo' ? 'bg-emerald-500' :
                               socio.estado === 'inactivo' ? 'bg-slate-400' :
-                              'bg-red-500'
+                              socio.estado === 'suspendido' ? 'bg-red-500' : 'bg-yellow-500'
                             }`} />
                           </div>
                           <div className="ml-4">
@@ -1998,7 +1778,9 @@ export const EnhancedMemberManagement = ({
                               ? 'bg-emerald-100 text-emerald-800'
                               : socio.estado === 'inactivo'
                               ? 'bg-slate-100 text-slate-800'
-                              : 'bg-red-100 text-red-800'
+                              : socio.estado === 'suspendido'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
                           }`}>
                             {socio.estado.charAt(0).toUpperCase() + socio.estado.slice(1)}
                           </span>
@@ -2075,20 +1857,6 @@ export const EnhancedMemberManagement = ({
             onClose={() => setDialogOpen(false)}
             onSave={handleSaveSocio}
             socio={selectedSocio}
-          />
-        )}
-
-        {/* Bulk Edit Dialog */}
-        {bulkEditDialogOpen && (
-          <BulkEditSociosDialog
-            open={bulkEditDialogOpen}
-            onClose={() => setBulkEditDialogOpen(false)}
-            onSave={handleBulkEditSave}
-            selectedSocioIds={selectedSocios}
-            selectedSocioNames={selectedSocios.map(id => {
-              const socio = filteredSociosList.find(s => s.id === id);
-              return socio ? socio.nombre : '';
-            })}
           />
         )}
 

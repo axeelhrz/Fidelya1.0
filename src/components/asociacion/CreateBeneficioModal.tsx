@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Gift, Calendar, DollarSign, Tag, Store, Users, AlertCircle } from 'lucide-react';
+import { X, Gift, Calendar, DollarSign, Tag, Store, Users, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
 import { BeneficiosService } from '@/services/beneficios.service';
@@ -116,6 +116,34 @@ export const CreateBeneficioModal: React.FC<CreateBeneficioModalProps> = ({
 
     if (formData.fechaInicio >= formData.fechaFin) {
       const error = 'La fecha de fin debe ser posterior a la fecha de inicio';
+      addDebugInfo(`Error: ${error}`);
+      toast.error(error);
+      return;
+    }
+
+    if (formData.titulo.trim().length < 3) {
+      const error = 'El título debe tener al menos 3 caracteres';
+      addDebugInfo(`Error: ${error}`);
+      toast.error(error);
+      return;
+    }
+
+    if (formData.descripcion.trim().length < 10) {
+      const error = 'La descripción debe tener al menos 10 caracteres';
+      addDebugInfo(`Error: ${error}`);
+      toast.error(error);
+      return;
+    }
+
+    if (formData.tipo !== 'producto_gratis' && formData.descuento <= 0) {
+      const error = 'El descuento debe ser mayor a 0';
+      addDebugInfo(`Error: ${error}`);
+      toast.error(error);
+      return;
+    }
+
+    if (formData.tipo === 'porcentaje' && formData.descuento > 100) {
+      const error = 'El descuento porcentual no puede ser mayor a 100%';
       addDebugInfo(`Error: ${error}`);
       toast.error(error);
       return;
@@ -263,6 +291,22 @@ export const CreateBeneficioModal: React.FC<CreateBeneficioModalProps> = ({
                 </div>
               )}
 
+              {!comerciosLoading && comerciosVinculados.length > 0 && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                    <div>
+                      <h4 className="text-green-800 font-medium">
+                        {comerciosVinculados.length} comercio{comerciosVinculados.length !== 1 ? 's' : ''} disponible{comerciosVinculados.length !== 1 ? 's' : ''}
+                      </h4>
+                      <p className="text-green-700 text-sm mt-1">
+                        Puedes crear beneficios para cualquiera de estos comercios vinculados.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Información básica */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="lg:col-span-2">
@@ -277,6 +321,7 @@ export const CreateBeneficioModal: React.FC<CreateBeneficioModalProps> = ({
                     onChange={(e) => setFormData(prev => ({ ...prev, titulo: e.target.value }))}
                     className="form-input"
                     placeholder="Ej: 20% de descuento en productos seleccionados"
+                    minLength={3}
                   />
                 </div>
 
@@ -288,6 +333,7 @@ export const CreateBeneficioModal: React.FC<CreateBeneficioModalProps> = ({
                     onChange={(e) => setFormData(prev => ({ ...prev, descripcion: e.target.value }))}
                     className="form-input h-24 resize-none"
                     placeholder="Describe los detalles del beneficio..."
+                    minLength={10}
                   />
                 </div>
 
@@ -363,7 +409,8 @@ export const CreateBeneficioModal: React.FC<CreateBeneficioModalProps> = ({
                       value={formData.tipo}
                       onChange={(e) => setFormData(prev => ({ 
                         ...prev, 
-                        tipo: e.target.value as 'porcentaje' | 'monto_fijo' | 'producto_gratis'
+                        tipo: e.target.value as 'porcentaje' | 'monto_fijo' | 'producto_gratis',
+                        descuento: e.target.value === 'producto_gratis' ? 0 : prev.descuento
                       }))}
                       className="form-select"
                     >
@@ -392,7 +439,8 @@ export const CreateBeneficioModal: React.FC<CreateBeneficioModalProps> = ({
                         <input
                           type="number"
                           required
-                          min="0"
+                          min="0.01"
+                          step="0.01"
                           max={formData.tipo === 'porcentaje' ? 100 : undefined}
                           value={formData.descuento}
                           onChange={(e) => setFormData(prev => ({ 
@@ -406,6 +454,11 @@ export const CreateBeneficioModal: React.FC<CreateBeneficioModalProps> = ({
                           placeholder="0"
                         />
                       </div>
+                      {formData.tipo === 'porcentaje' && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Máximo 100%
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -430,6 +483,7 @@ export const CreateBeneficioModal: React.FC<CreateBeneficioModalProps> = ({
                         fechaInicio: new Date(e.target.value) 
                       }))}
                       className="form-input"
+                      min={formatDateForInput(new Date())}
                     />
                   </div>
 
@@ -444,6 +498,7 @@ export const CreateBeneficioModal: React.FC<CreateBeneficioModalProps> = ({
                         fechaFin: new Date(e.target.value) 
                       }))}
                       className="form-input"
+                      min={formatDateForInput(formData.fechaInicio)}
                     />
                   </div>
 
@@ -516,6 +571,7 @@ export const CreateBeneficioModal: React.FC<CreateBeneficioModalProps> = ({
                         type="button"
                         onClick={handleAddTag}
                         className="btn-secondary"
+                        disabled={!newTag.trim()}
                       >
                         Agregar
                       </button>

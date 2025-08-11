@@ -1,55 +1,106 @@
 import { Timestamp } from 'firebase/firestore';
 
+export interface SolicitudAsociacion {
+  id: string;
+  comercioId: string;
+  asociacionId: string;
+  nombreAsociacion: string;
+  emailAsociacion: string;
+  telefonoAsociacion?: string;
+  descripcionAsociacion?: string;
+  logoAsociacion?: string;
+  mensaje: string;
+  beneficiosOfrecidos?: string[];
+  condicionesEspeciales?: string;
+  estado: 'pendiente' | 'aprobada' | 'rechazada';
+  fechaSolicitud: Timestamp;
+  fechaRespuesta?: Timestamp;
+  motivoRechazo?: string;
+  datosAsociacion?: {
+    totalSocios?: number;
+    totalComercios?: number;
+    categoriasPrincipales?: string[];
+    ubicacion?: string;
+    sitioWeb?: string;
+  };
+  creadoEn: Timestamp;
+  actualizadoEn?: Timestamp;
+}
+
+export interface SolicitudAsociacionStats {
+  totalSolicitudes: number;
+  solicitudesPendientes: number;
+  solicitudesAprobadas: number;
+  solicitudesRechazadas: number;
+  asociacionesVinculadas: number;
+  solicitudesEsteMes: number;
+}
+
+export interface SolicitudAsociacionFormData {
+  comercioId: string;
+  mensaje: string;
+  beneficiosOfrecidos?: string[];
+  condicionesEspeciales?: string;
+}
+
 export interface Comercio {
-  uid: string;
-  nombre: string;
+  id: string;
   nombreComercio: string;
-  email: string;
   categoria: string;
+  descripcion?: string;
   direccion?: string;
   telefono?: string;
-  horario?: string;
-  logoUrl?: string;
-  imagenPrincipalUrl?: string;
-  descripcion?: string;
+  email: string;
   sitioWeb?: string;
-  // Nuevos campos para el perfil extendido
-  razonSocial?: string;
+  horario?: string;
   cuit?: string;
-  ubicacion?: string;
-  emailContacto?: string;
-  visible?: boolean;
-  redesSociales?: {
-    facebook?: string;
-    instagram?: string;
-    twitter?: string;
-  };
+  logo?: string;
+  banner?: string;
   estado: 'activo' | 'inactivo' | 'pendiente' | 'suspendido';
+  visible: boolean;
   asociacionesVinculadas: string[];
-  creadoEn: Timestamp;
-  actualizadoEn: Timestamp;
-  configuracion?: {
+  qrCode?: string;
+  qrCodeUrl?: string;
+  beneficiosActivos: number;
+  validacionesRealizadas: number;
+  clientesAtendidos: number;
+  ingresosMensuales: number;
+  rating: number;
+  configuracion: {
     notificacionesEmail: boolean;
     notificacionesWhatsApp: boolean;
     autoValidacion: boolean;
     requiereAprobacion: boolean;
   };
-  fechaRegistro?: string | Date;
-  verificado: boolean;
-  puntuacion: number;
-  totalReviews: number;
-  beneficiosActivos: number;
-  validacionesTotales: number;
-  // QR Code fields
-  qrCode?: string;
-  qrCodeUrl?: string;
-  // Statistics
-  validacionesRealizadas: number;
-  clientesAtendidos: number;
-  ingresosMensuales: number;
-  rating: number;
-  // Metadata
+  creadoEn: Date | Timestamp;
+  actualizadoEn: Date | Timestamp;
   metadata?: Record<string, unknown>;
+}
+
+export interface ComercioFormData {
+  nombreComercio: string;
+  categoria: string;
+  descripcion?: string;
+  direccion?: string;
+  telefono?: string;
+  email: string;
+  sitioWeb?: string;
+  horario?: string;
+  cuit?: string;
+  logo?: string;
+  banner?: string;
+  visible?: boolean;
+}
+
+export interface ComercioStats {
+  totalBeneficios: number;
+  beneficiosActivos: number;
+  validacionesHoy: number;
+  validacionesMes: number;
+  clientesUnicos: number;
+  ingresosMensuales: number;
+  promedioValidacionesDiarias: number;
+  crecimientoMensual: number;
 }
 
 export interface Beneficio {
@@ -148,29 +199,6 @@ export interface BeneficioFormData {
   limitePorSocio?: number;
   limiteTotal?: number;
   condiciones?: string;
-}
-
-export interface ComercioStats {
-  totalValidaciones: number;
-  validacionesHoy: number;
-  validacionesMes: number;
-  beneficiosActivos: number;
-  beneficiosVencidos: number;
-  asociacionesVinculadas: number;
-  sociosAlcanzados: number;
-  ingresosPotenciales: number;
-  tasaConversion: number;
-  beneficioMasUsado?: {
-    id: string;
-    titulo: string;
-    usos: number;
-  };
-  // New analytics fields
-  clientesUnicos: number;
-  ingresosMensuales: number;
-  promedioValidacionesDiarias: number;
-  crecimientoMensual: number;
-  totalBeneficios: number;
 }
 
 export interface ValidacionStats {

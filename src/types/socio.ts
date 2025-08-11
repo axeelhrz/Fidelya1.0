@@ -99,8 +99,7 @@ export interface Socio {
   direccion?: string;
   asociacionId: string;
   numeroSocio: string;
-  // CAMBIO: Solo usar los 3 estados indispensables
-  estado: 'activo' | 'inactivo' | 'vencido';
+  estado: 'activo' | 'inactivo' | 'pendiente' | 'suspendido' | 'vencido';
   estadoMembresia: string;
   montoCuota: number;
   beneficiosUsados?: number;
@@ -146,8 +145,7 @@ export interface Socio {
 export interface SocioFormData {
   nombre: string;
   email: string;
-  // CAMBIO: Solo usar los 3 estados indispensables
-  estado: 'activo' | 'inactivo' | 'vencido';
+  estado: 'activo' | 'inactivo' | 'suspendido' | 'pendiente' | 'vencido';
   estadoMembresia?: 'al_dia' | 'vencido' | 'pendiente';
   telefono?: string;
   dni?: string;
@@ -237,8 +235,7 @@ export interface SocioVinculado {
   dni?: string;
   telefono?: string;
   numeroSocio?: string;
-  // CAMBIO: Solo usar los 3 estados indispensables
-  estado: 'activo' | 'inactivo' | 'vencido';
+  estado: 'activo' | 'inactivo' | 'pendiente' | 'suspendido' | 'vencido';
   estadoMembresia: string;
   fechaVinculacion: Timestamp;
   vinculadoPor: string;
@@ -298,23 +295,4 @@ export interface SocioSearchResult {
   socios: Socio[];
   total: number;
   hasMore: boolean;
-}
-
-// NUEVO: Interface para edición múltiple de socios
-export interface BulkEditSocioData {
-  socioIds: string[];
-  changes: {
-    estado?: 'activo' | 'inactivo' | 'vencido';
-    estadoMembresia?: 'al_dia' | 'vencido' | 'pendiente';
-    montoCuota?: number;
-    fechaVencimiento?: Date | Timestamp;
-  };
-}
-
-// NUEVO: Interface para resultado de edición múltiple
-export interface BulkEditResult {
-  success: boolean;
-  updated: number;
-  errors: Array<{ socioId: string; error: string }>;
-  total: number;
 }

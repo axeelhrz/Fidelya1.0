@@ -16,6 +16,11 @@ import {
   AlertCircle,
   Gift,
   UserCheck,
+  Send,
+  Megaphone,
+  TrendingUp,
+  Users,
+  MessageSquare
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -26,11 +31,13 @@ export default function ComercioNotificacionesPage() {
     loading, 
     markAllAsRead,
     setFilters,
-    refreshStats
+    refreshStats,
+    hasUnread,
+    hasImportant
   } = useNotifications();
 
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
-  const [type, setType] = useState<'all' | 'validacion' | 'beneficio' | 'sistema'>('all');
+  const [type, setType] = useState<'all' | 'validation' | 'benefit' | 'system'>('all');
 
   const handleLogout = async () => {
     try {
@@ -62,9 +69,9 @@ export default function ComercioNotificacionesPage() {
 
   const notificationTypes = [
     { value: 'all', label: 'Todas', icon: Bell, color: 'gray' },
-    { value: 'validacion', label: 'Validaciones', icon: UserCheck, color: 'blue' },
-    { value: 'beneficio', label: 'Beneficios', icon: Gift, color: 'purple' },
-    { value: 'sistema', label: 'Sistema', icon: Settings, color: 'green' }
+    { value: 'validation', label: 'Validaciones', icon: UserCheck, color: 'blue' },
+    { value: 'benefit', label: 'Beneficios', icon: Gift, color: 'purple' },
+    { value: 'system', label: 'Sistema', icon: Settings, color: 'green' }
   ];
 
   const filterOptions = [
@@ -75,28 +82,27 @@ export default function ComercioNotificacionesPage() {
 
   // Update filters when filter or type changes
   useEffect(() => {
-      // Import or define NotificationStatus and NotificationCategory types if not already imported
-      type NotificationStatus = 'unread' | 'read';
-      type NotificationCategory = 'membership' | 'general' | 'system';
-  
-      const newFilters: { status?: NotificationStatus[]; category?: NotificationCategory[] } = {};
-      
-      if (filter !== 'all') {
-        newFilters.status = [filter as NotificationStatus];
-      }
-      
-      if (type !== 'all') {
-        // Map the type to the notification category
-        const categoryMap: Record<string, NotificationCategory> = {
-          'validacion': 'membership',
-          'beneficio': 'general',
-          'sistema': 'system'
-        };
-        newFilters.category = [categoryMap[type as keyof typeof categoryMap]];
-      }
-      
-      setFilters(newFilters);
-    }, [filter, type, setFilters]);
+    type NotificationStatus = 'unread' | 'read';
+    type NotificationCategory = 'membership' | 'general' | 'system';
+
+    const newFilters: { status?: NotificationStatus[]; category?: NotificationCategory[] } = {};
+    
+    if (filter !== 'all') {
+      newFilters.status = [filter as NotificationStatus];
+    }
+    
+    if (type !== 'all') {
+      // Map the type to the notification category
+      const categoryMap: Record<string, NotificationCategory> = {
+        'validation': 'membership',
+        'benefit': 'general',
+        'system': 'system'
+      };
+      newFilters.category = [categoryMap[type as keyof typeof categoryMap]];
+    }
+    
+    setFilters(newFilters);
+  }, [filter, type, setFilters]);
 
   if (loading) {
     return (
@@ -111,8 +117,8 @@ export default function ComercioNotificacionesPage() {
       >
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-2xl flex items-center justify-center">
-              <RefreshCw size={32} className="text-amber-500 animate-spin" />
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <RefreshCw size={32} className="text-white animate-spin" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Cargando notificaciones...
@@ -143,14 +149,20 @@ export default function ComercioNotificacionesPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-gray-900 via-amber-600 to-orange-600 bg-clip-text text-transparent mb-2">
-                Centro de Notificaciones
-              </h1>
-              <p className="text-lg text-gray-600 font-medium">
-                Mantente al día con todas las actividades de tu comercio
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Megaphone size={32} className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-gray-900 via-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                  Centro de Notificaciones
+                </h1>
+                <p className="text-lg text-gray-600 font-medium">
+                  Comunícate efectivamente con tus clientes y mantente informado
+                </p>
+              </div>
             </div>
+            
             <div className="flex gap-3">
               <Button
                 variant="outline"
@@ -160,11 +172,12 @@ export default function ComercioNotificacionesPage() {
               >
                 Actualizar
               </Button>
-              {stats?.unread > 0 && (
+              {hasUnread && (
                 <Button
                   size="sm"
                   leftIcon={<CheckCircle size={16} />}
                   onClick={handleMarkAllAsRead}
+                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
                 >
                   Marcar todas como leídas
                 </Button>
@@ -172,14 +185,15 @@ export default function ComercioNotificacionesPage() {
             </div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          {/* Enhanced Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <motion.div
-              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg"
+              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg relative overflow-hidden"
               whileHover={{ y: -2 }}
             >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/30">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-full -mr-10 -mt-10" />
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
                   <Bell size={24} />
                 </div>
                 <div>
@@ -192,10 +206,11 @@ export default function ComercioNotificacionesPage() {
             </motion.div>
 
             <motion.div
-              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg"
+              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg relative overflow-hidden"
               whileHover={{ y: -2 }}
             >
-              <div className="flex items-center gap-4">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-red-500/10 to-red-600/10 rounded-full -mr-10 -mt-10" />
+              <div className="flex items-center gap-4 relative z-10">
                 <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-red-500/30">
                   <AlertCircle size={24} />
                 </div>
@@ -206,13 +221,38 @@ export default function ComercioNotificacionesPage() {
                   <div className="text-sm font-semibold text-gray-600">No Leídas</div>
                 </div>
               </div>
+              {hasUnread && (
+                <div className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+              )}
             </motion.div>
 
             <motion.div
-              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg"
+              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg relative overflow-hidden"
               whileHover={{ y: -2 }}
             >
-              <div className="flex items-center gap-4">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-500/10 to-amber-600/10 rounded-full -mr-10 -mt-10" />
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/30">
+                  <TrendingUp size={24} />
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-gray-900">
+                    {stats?.important || 0}
+                  </div>
+                  <div className="text-sm font-semibold text-gray-600">Importantes</div>
+                </div>
+              </div>
+              {hasImportant && (
+                <div className="absolute top-2 right-2 w-3 h-3 bg-amber-500 rounded-full animate-pulse" />
+              )}
+            </motion.div>
+
+            <motion.div
+              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg relative overflow-hidden"
+              whileHover={{ y: -2 }}
+            >
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-500/10 to-green-600/10 rounded-full -mr-10 -mt-10" />
+              <div className="flex items-center gap-4 relative z-10">
                 <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-green-500/30">
                   <CheckCircle size={24} />
                 </div>
@@ -224,6 +264,50 @@ export default function ComercioNotificacionesPage() {
                 </div>
               </div>
             </motion.div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                  <Send className="w-5 h-5 text-blue-600" />
+                  Acciones Rápidas
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Gestiona tus notificaciones y comunicaciones con clientes
+                </p>
+              </div>
+              
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  size="sm"
+                  leftIcon={<MessageSquare size={16} />}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                  onClick={() => {
+                    // Navigate to send notification tab
+                    const event = new CustomEvent('navigateToNotificationTab', { detail: 'enviar' });
+                    window.dispatchEvent(event);
+                  }}
+                >
+                  Enviar Notificación
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<Users size={16} />}
+                  onClick={() => {
+                    // Navigate to clients tab
+                    if (window.navigateToSocioTab) {
+                      window.navigateToSocioTab('clientes');
+                    }
+                  }}
+                >
+                  Ver Clientes
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Filters */}
@@ -238,7 +322,7 @@ export default function ComercioNotificacionesPage() {
                       onClick={() => setFilter(option.value as 'all' | 'unread' | 'read')}
                       className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
                         filter === option.value
-                          ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                          ? 'bg-blue-100 text-blue-700 border border-blue-200'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
@@ -257,7 +341,7 @@ export default function ComercioNotificacionesPage() {
                   {notificationTypes.map((notifType) => (
                     <button
                       key={notifType.value}
-                      onClick={() => setType(notifType.value as 'all' | 'validacion' | 'beneficio' | 'sistema')}
+                      onClick={() => setType(notifType.value as 'all' | 'validation' | 'benefit' | 'system')}
                       className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
                         type === notifType.value
                           ? `bg-${notifType.color}-100 text-${notifType.color}-700 border border-${notifType.color}-200`
@@ -274,7 +358,7 @@ export default function ComercioNotificacionesPage() {
           </div>
         </div>
 
-        {/* Notifications List - Fixed: No props needed */}
+        {/* Notifications List */}
         <ComercioNotifications />
       </motion.div>
     </DashboardLayout>

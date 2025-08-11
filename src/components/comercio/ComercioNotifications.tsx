@@ -39,11 +39,13 @@ import {
   CheckCircle,
   Error,
   Star,
+  Send,
+  Analytics,
 } from '@mui/icons-material';
 import { useNotifications } from '@/hooks/useNotifications';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-
+import EnhancedNotificationsCenter from './EnhancedNotificationsCenter';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -72,6 +74,7 @@ export const ComercioNotifications: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<'simple' | 'enhanced'>('enhanced');
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -80,7 +83,7 @@ export const ComercioNotifications: React.FC = () => {
   const getNotificationIcon = (type: string, priority: string) => {
     const iconProps = { fontSize: 20 as const };
     
-    if (priority === 'high') {
+    if (priority === 'high' || priority === 'urgent') {
       return <Error sx={{ ...iconProps, color: '#ef4444' }} />;
     }
     
@@ -92,12 +95,16 @@ export const ComercioNotifications: React.FC = () => {
       case 'benefit':
         return <Star sx={{ ...iconProps, color: '#f59e0b' }} />;
       case 'alert':
+      case 'warning':
         return <Warning sx={{ ...iconProps, color: '#f59e0b' }} />;
+      case 'success':
+        return <CheckCircle sx={{ ...iconProps, color: '#10b981' }} />;
+      case 'error':
+        return <Error sx={{ ...iconProps, color: '#ef4444' }} />;
       default:
         return <NotificationsActive sx={{ ...iconProps, color: '#64748b' }} />;
     }
   };
-
 
   const filteredNotifications = notifications.filter(notification => {
     const matchesSearch = notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -109,7 +116,7 @@ export const ComercioNotifications: React.FC = () => {
       case 1: // No leídas
         return matchesSearch && !notification.read;
       case 2: // Importantes
-        return matchesSearch && notification.priority === 'high';
+        return matchesSearch && (notification.priority === 'high' || notification.priority === 'urgent');
       case 3: // Leídas
         return matchesSearch && notification.read;
       default:
@@ -172,6 +179,11 @@ export const ComercioNotifications: React.FC = () => {
     </Paper>
   );
 
+  // Si hay muchas notificaciones o el usuario prefiere la vista avanzada, mostrar el centro mejorado
+  if (viewMode === 'enhanced' || notifications.length > 10) {
+    return <EnhancedNotificationsCenter />;
+  }
+
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <motion.div
@@ -202,6 +214,22 @@ export const ComercioNotifications: React.FC = () => {
             </Box>
             
             <Stack direction="row" spacing={2}>
+              <Button
+                onClick={() => setViewMode(viewMode === 'simple' ? 'enhanced' : 'simple')}
+                variant="outlined"
+                startIcon={viewMode === 'simple' ? <Analytics /> : <NotificationsActive />}
+                sx={{
+                  borderColor: alpha('#6366f1', 0.3),
+                  color: '#6366f1',
+                  '&:hover': {
+                    borderColor: '#6366f1',
+                    bgcolor: alpha('#6366f1', 0.1),
+                  },
+                }}
+              >
+                {viewMode === 'simple' ? 'Vista Avanzada' : 'Vista Simple'}
+              </Button>
+              
               <IconButton
                 onClick={() => window.location.reload()}
                 sx={{
@@ -216,6 +244,7 @@ export const ComercioNotifications: React.FC = () => {
               >
                 <Refresh />
               </IconButton>
+              
               {selectedNotifications.length > 0 && (
                 <>
                   <Button
@@ -253,7 +282,7 @@ export const ComercioNotifications: React.FC = () => {
             </Stack>
           </Box>
 
-          {/* Stats Cards - Using CSS Grid instead of Material-UI Grid */}
+          {/* Stats Cards */}
           <Box
             sx={{
               display: 'grid',
@@ -284,7 +313,7 @@ export const ComercioNotifications: React.FC = () => {
             />
             <StatCard
               icon={<Warning />}
-              value={notifications.filter(n => n.priority === 'high').length}
+              value={stats.important}
               label="Importantes"
               color="#ef4444"
             />
@@ -295,6 +324,60 @@ export const ComercioNotifications: React.FC = () => {
               color="#10b981"
             />
           </Box>
+
+          {/* Upgrade Notice */}
+          {notifications.length > 5 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-6"
+            >
+              <Paper
+                sx={{
+                  p: 4,
+                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                  color: 'white',
+                  borderRadius: 4,
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                <Box sx={{ position: 'relative', zIndex: 2 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                    🚀 ¡Mejora tu experiencia!
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 3, opacity: 0.9 }}>
+                    Tienes {notifications.length} notificaciones. Usa nuestro Centro de Notificaciones Avanzado para una mejor gestión.
+                  </Typography>
+                  <Button
+                    onClick={() => setViewMode('enhanced')}
+                    variant="contained"
+                    startIcon={<Send />}
+                    sx={{
+                      bgcolor: 'rgba(255,255,255,0.2)',
+                      color: 'white',
+                      '&:hover': {
+                        bgcolor: 'rgba(255,255,255,0.3)',
+                      },
+                    }}
+                  >
+                    Usar Centro Avanzado
+                  </Button>
+                </Box>
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: -50,
+                    right: -50,
+                    width: 200,
+                    height: 200,
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                  }}
+                />
+              </Paper>
+            </motion.div>
+          )}
         </Box>
       </motion.div>
 
@@ -364,7 +447,7 @@ export const ComercioNotifications: React.FC = () => {
                 />
                 <Tab 
                   label={
-                    <Badge badgeContent={notifications.filter(n => n.priority === 'high').length} color="warning" max={99}>
+                    <Badge badgeContent={stats.important} color="warning" max={99}>
                       Importantes
                     </Badge>
                   } 
@@ -445,7 +528,7 @@ export const ComercioNotifications: React.FC = () => {
                                 >
                                   {notification.title}
                                 </Typography>
-                                {notification.priority === 'high' && (
+                                {(notification.priority === 'high' || notification.priority === 'urgent') && (
                                   <Chip
                                     label="Importante"
                                     size="small"

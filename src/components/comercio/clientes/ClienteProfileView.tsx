@@ -35,7 +35,8 @@ import {
   Bell,
   MessageSquare,
   Settings,
-  Clock
+  Clock,
+  Zap
 } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
@@ -45,6 +46,8 @@ import { Cliente, ClienteFormData } from '@/types/cliente';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
+import { EnhancedClienteForm } from './EnhancedClienteForm';
+import { QuickClienteCreator } from './QuickClienteCreator';
 
 // Componente de tarjeta de cliente
 const ClienteCard: React.FC<{
@@ -285,6 +288,7 @@ export const ClienteProfileView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEnhancedCreateModal, setShowEnhancedCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -455,6 +459,27 @@ export const ClienteProfileView: React.FC = () => {
     setShowEditModal(true);
   };
 
+  // Manejar creación de cliente con formulario mejorado
+  const handleEnhancedCreateCliente = async () => {
+    try {
+      const clienteId = await createCliente(formData);
+      if (clienteId) {
+        setShowEnhancedCreateModal(false);
+        resetForm();
+        await loadClientes();
+      }
+    } catch (error) {
+      console.error('Error creating cliente:', error);
+    }
+  };
+
+  // Manejar subida de imagen en formulario
+  const handleImageUpload = async (file: File) => {
+    // Esta función se puede implementar para subir imagen durante la creación
+    // Por ahora solo mostramos el preview
+    console.log('Image upload:', file);
+  };
+
   if (loading && clientes.length === 0) {
     return (
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
@@ -555,13 +580,41 @@ export const ClienteProfileView: React.FC = () => {
               Exportar
             </button>
 
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 bg-purple-500 text-white px-4 py-3 rounded-xl hover:bg-purple-600 transition-colors shadow-lg shadow-purple-500/30"
-            >
-              <UserPlus className="w-4 h-4" />
-              Nuevo Cliente
-            </button>
+            {/* Dropdown para crear cliente */}
+            <div className="relative group">
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 bg-purple-500 text-white px-4 py-3 rounded-xl hover:bg-purple-600 transition-colors shadow-lg shadow-purple-500/30"
+              >
+                <UserPlus className="w-4 h-4" />
+                Nuevo Cliente
+                <div className="w-1 h-1 bg-white rounded-full ml-1"></div>
+              </button>
+
+              {/* Dropdown menu */}
+              <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                <button
+                  onClick={() => {
+                    setShowCreateModal(true);
+                    resetForm();
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                >
+                  <UserPlus size={14} />
+                  Formulario básico
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEnhancedCreateModal(true);
+                    resetForm();
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                >
+                  <Zap size={14} />
+                  Formulario completo
+                </button>
+              </div>
+            </div>
 
             <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
               <button
@@ -878,6 +931,32 @@ export const ClienteProfileView: React.FC = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Modal de crear cliente mejorado */}
+      <Dialog open={showEnhancedCreateModal} onClose={() => setShowEnhancedCreateModal(false)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Zap size={20} />
+              Crear Nuevo Cliente
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="overflow-y-auto max-h-[70vh]">
+            <EnhancedClienteForm
+              formData={formData}
+              setFormData={setFormData}
+              onSubmit={handleEnhancedCreateCliente}
+              onCancel={() => {
+                setShowEnhancedCreateModal(false);
+                resetForm();
+              }}
+              loading={loading}
+              onImageUpload={handleImageUpload}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Modal de editar cliente */}
       <Dialog open={showEditModal} onClose={() => setShowEditModal(false)}>
         <DialogContent className="max-w-2xl">
@@ -921,7 +1000,7 @@ export const ClienteProfileView: React.FC = () => {
                 placeholder="12345678"
               />
 
-                           <Input
+              <Input
                 label="Fecha de nacimiento"
                 type="date"
                 value={formData.fechaNacimiento}
@@ -1526,7 +1605,12 @@ export const ClienteProfileView: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Componente de creación rápida flotante */}
+      <QuickClienteCreator
+        onCreateCliente={createCliente}
+        loading={loading}
+      />
     </div>
   );
 };
- 

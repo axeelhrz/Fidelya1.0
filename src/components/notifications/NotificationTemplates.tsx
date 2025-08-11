@@ -1,935 +1,1352 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
+  Container,
+  Typography,
+  Paper,
   Card,
   CardContent,
-  Typography,
+  CardActions,
   Button,
-  TextField,
+  IconButton,
+  Chip,
+  Avatar,
+  Menu,
+  MenuItem,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Chip,
-  Avatar,
-  IconButton,
-  Menu,
-  MenuItem,
-  alpha,
-  Divider,
-  Alert,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  TextField,
   FormControl,
   InputLabel,
   Select,
   Switch,
   FormControlLabel,
+  Divider,
+  Stack,
+  Alert,
+  Tooltip,
+  alpha,
+  useTheme,
+  useMediaQuery,
+  Fab,
+  Zoom,
+  LinearProgress,
+  CircularProgress,
 } from '@mui/material';
 import {
   Add,
   Edit,
   Delete,
+  ContentCopy,
   MoreVert,
+  Send,
+  Code,
   Preview,
   Save,
-  Palette,
+  Refresh,
+  Search,
+  AutoAwesome,
   Email,
   Sms,
   PhoneAndroid,
-  ExpandMore,
-  ContentCopy,
+  Notifications,
+  CheckCircle,
+  Warning,
+  Error,
+  Info,
+  Announcement,
 } from '@mui/icons-material';
-import { toast } from 'react-hot-toast';
-import { NotificationTemplate, NotificationType, NotificationPriority, NotificationCategory } from '@/types/notification';
+import toast from 'react-hot-toast';
+import {
+  notificationTemplatesService,
+  NotificationTemplate,
+  TemplateVariable
+} from '@/services/notification-templates.service';
+import { NotificationType, NotificationPriority, NotificationCategory } from '@/types/notification';
 
 interface NotificationTemplatesProps {
-  onTemplateSelect?: (template: NotificationTemplate) => void;
+  loading?: boolean;
 }
 
-const defaultTemplates: NotificationTemplate[] = [
-  {
-    id: 'welcome',
-    name: 'Bienvenida',
-    title: 'Bienvenido a {{app_name}}',
-    message: 'Hola {{user_name}}, gracias por unirte a nuestra comunidad. Estamos emocionados de tenerte con nosotros.',
-    type: 'success',
-    priority: 'medium',
-    category: 'membership',
-    variables: ['app_name', 'user_name'],
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'payment_reminder',
-    name: 'Recordatorio de Pago',
-    title: 'Recordatorio: Pago pendiente',
-    message: 'Hola {{user_name}}, tienes un pago pendiente de {{amount}} que vence el {{due_date}}. Por favor, realiza el pago para evitar interrupciones.',
-    type: 'warning',
-    priority: 'high',
-    category: 'payment',
-    variables: ['user_name', 'amount', 'due_date'],
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'event_announcement',
-    name: 'Anuncio de Evento',
-    title: 'Nuevo evento: {{event_name}}',
-    message: 'Te invitamos a participar en {{event_name}} que se realizará el {{event_date}} en {{event_location}}. ¡No te lo pierdas!',
-    type: 'announcement',
-    priority: 'medium',
-    category: 'event',
-    variables: ['event_name', 'event_date', 'event_location'],
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'system_maintenance',
-    name: 'Mantenimiento del Sistema',
-    title: 'Mantenimiento programado',
-    message: 'El sistema estará en mantenimiento el {{maintenance_date}} de {{start_time}} a {{end_time}}. Durante este tiempo, algunos servicios podrían no estar disponibles.',
-    type: 'info',
-    priority: 'high',
-    category: 'system',
-    variables: ['maintenance_date', 'start_time', 'end_time'],
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
+interface TemplateCardProps {
+  template: NotificationTemplate;
+  onEdit: (template: NotificationTemplate) => void;
+  onDelete: (id: string) => void;
+  onDuplicate: (template: NotificationTemplate) => void;
+  onPreview: (template: NotificationTemplate) => void;
+  onUse: (template: NotificationTemplate) => void;
+}
 
-export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
-  onTemplateSelect
+interface TemplateDialogProps {
+  open: boolean;
+  template?: NotificationTemplate;
+  onClose: () => void;
+  onSave: (template: Omit<NotificationTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount' | 'lastUsed'>) => void;
+  loading?: boolean;
+}
+
+const typeConfig = {
+  info: { icon: <Info />, color: '#3b82f6', label: 'Información' },
+  success: { icon: <CheckCircle />, color: '#10b981', label: 'Éxito' },
+  warning: { icon: <Warning />, color: '#f59e0b', label: 'Advertencia' },
+  error: { icon: <Error />, color: '#ef4444', label: 'Error' },
+  announcement: { icon: <Announcement />, color: '#8b5cf6', label: 'Anuncio' },
+};
+
+const priorityConfig = {
+  low: { color: '#6b7280', label: 'Baja' },
+  medium: { color: '#3b82f6', label: 'Media' },
+  high: { color: '#f59e0b', label: 'Alta' },
+  urgent: { color: '#ef4444', label: 'Urgente' },
+};
+
+const categoryConfig = {
+  system: { label: 'Sistema' },
+  membership: { label: 'Socios' },
+  payment: { label: 'Pagos' },
+  event: { label: 'Eventos' },
+  general: { label: 'General' },
+};
+
+const TemplateCard: React.FC<TemplateCardProps> = ({
+  template,
+  onEdit,
+  onDelete,
+  onDuplicate,
+  onPreview,
+  onUse,
 }) => {
-  const [templates, setTemplates] = useState<NotificationTemplate[]>(defaultTemplates);
-  const [selectedTemplate, setSelectedTemplate] = useState<NotificationTemplate | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
-  const [menuTemplateId, setMenuTemplateId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
 
-  const [editForm, setEditForm] = useState({
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const typeInfo = typeConfig[template.type];
+  const priorityInfo = priorityConfig[template.priority];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+      whileHover={{ y: -4 }}
+    >
+      <Card
+        elevation={0}
+        sx={{
+          height: '100%',
+          border: '1px solid #f1f5f9',
+          borderRadius: 4,
+          position: 'relative',
+          overflow: 'hidden',
+          cursor: 'pointer',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            borderColor: alpha(typeInfo.color, 0.3),
+            boxShadow: `0 8px 32px ${alpha(typeInfo.color, 0.15)}`,
+          }
+        }}
+        onClick={() => onPreview(template)}
+      >
+        <CardContent sx={{ p: 3, pb: 1 }}>
+          {/* Header */}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
+              <Avatar
+                sx={{
+                  width: 40,
+                  height: 40,
+                  bgcolor: alpha(typeInfo.color, 0.1),
+                  color: typeInfo.color,
+                }}
+              >
+                {typeInfo.icon}
+              </Avatar>
+
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#1e293b',
+                      fontSize: '1rem',
+                      lineHeight: 1.3,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      flex: 1,
+                    }}
+                  >
+                    {template.name}
+                  </Typography>
+
+                  {template.isSystem && (
+                    <Chip
+                      label="Sistema"
+                      size="small"
+                      sx={{
+                        bgcolor: alpha('#6366f1', 0.1),
+                        color: '#6366f1',
+                        fontSize: '0.7rem',
+                        height: 20,
+                      }}
+                    />
+                  )}
+                </Box>
+
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: '#64748b',
+                    fontSize: '0.75rem',
+                    display: 'block',
+                  }}
+                >
+                  {template.description}
+                </Typography>
+              </Box>
+            </Box>
+
+            <IconButton
+              onClick={handleMenuClick}
+              size="small"
+              sx={{ color: '#94a3b8' }}
+            >
+              <MoreVert />
+            </IconButton>
+          </Box>
+
+          {/* Content Preview */}
+          <Box sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: '#475569',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                mb: 0.5,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {template.title}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: '#64748b',
+                fontSize: '0.8rem',
+                lineHeight: 1.4,
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}
+            >
+              {template.message}
+            </Typography>
+          </Box>
+
+          {/* Metadata */}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+            <Chip
+              label={typeInfo.label}
+              size="small"
+              sx={{
+                bgcolor: alpha(typeInfo.color, 0.1),
+                color: typeInfo.color,
+                fontSize: '0.7rem',
+                height: 20,
+              }}
+            />
+            <Chip
+              label={priorityInfo.label}
+              size="small"
+              sx={{
+                bgcolor: alpha(priorityInfo.color, 0.1),
+                color: priorityInfo.color,
+                fontSize: '0.7rem',
+                height: 20,
+              }}
+            />
+            <Chip
+              label={categoryConfig[template.category].label}
+              size="small"
+              variant="outlined"
+              sx={{
+                fontSize: '0.7rem',
+                height: 20,
+              }}
+            />
+          </Box>
+
+          {/* Tags */}
+          {template.tags.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+              {template.tags.slice(0, 3).map((tag, index) => (
+                <Chip
+                  key={index}
+                  label={tag}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    fontSize: '0.65rem',
+                    height: 18,
+                    borderColor: alpha('#94a3b8', 0.3),
+                    color: '#64748b',
+                  }}
+                />
+              ))}
+              {template.tags.length > 3 && (
+                <Chip
+                  label={`+${template.tags.length - 3}`}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    fontSize: '0.65rem',
+                    height: 18,
+                    borderColor: alpha('#94a3b8', 0.3),
+                    color: '#64748b',
+                  }}
+                />
+              )}
+            </Box>
+          )}
+
+          {/* Channels */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.7rem' }}>
+              Canales:
+            </Typography>
+            {template.channels.email && <Email sx={{ fontSize: 14, color: '#3b82f6' }} />}
+            {template.channels.sms && <Sms sx={{ fontSize: 14, color: '#f59e0b' }} />}
+            {template.channels.push && <PhoneAndroid sx={{ fontSize: 14, color: '#8b5cf6' }} />}
+            {template.channels.app && <Notifications sx={{ fontSize: 14, color: '#10b981' }} />}
+          </Box>
+
+          {/* Usage Stats */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.7rem' }}>
+              Usado {template.usageCount} veces
+            </Typography>
+            {template.lastUsed && (
+              <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.7rem' }}>
+                Último uso: {
+                  template.lastUsed instanceof Date
+                    ? template.lastUsed.toLocaleDateString()
+                    : typeof template.lastUsed === 'object' && 'toDate' in template.lastUsed && typeof template.lastUsed.toDate === 'function'
+                      ? (template.lastUsed.toDate() as Date).toLocaleDateString()
+                      : template.lastUsed?.toLocaleString?.() ?? ''
+                }
+              </Typography>
+            )}
+          </Box>
+        </CardContent>
+
+        <CardActions sx={{ p: 2, pt: 0, justifyContent: 'space-between' }}>
+          <Button
+            size="small"
+            startIcon={<Preview />}
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreview(template);
+            }}
+            sx={{
+              color: '#6366f1',
+              '&:hover': {
+                bgcolor: alpha('#6366f1', 0.1),
+              }
+            }}
+          >
+            Vista Previa
+          </Button>
+
+          <Button
+            size="small"
+            startIcon={<Send />}
+            variant="contained"
+            onClick={(e) => {
+              e.stopPropagation();
+              onUse(template);
+            }}
+            sx={{
+              bgcolor: typeInfo.color,
+              '&:hover': {
+                bgcolor: typeInfo.color,
+                filter: 'brightness(0.9)',
+              }
+            }}
+          >
+            Usar
+          </Button>
+        </CardActions>
+
+        {/* Context Menu */}
+        <Menu
+          anchorEl={anchorEl}
+          open={menuOpen}
+          onClose={handleMenuClose}
+          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              border: '1px solid #f1f5f9',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+              minWidth: 180,
+            }
+          }}
+        >
+          <MenuItem onClick={() => { onEdit(template); handleMenuClose(); }}>
+            <Edit sx={{ mr: 2, fontSize: 18 }} />
+            Editar
+          </MenuItem>
+          <MenuItem onClick={() => { onDuplicate(template); handleMenuClose(); }}>
+            <ContentCopy sx={{ mr: 2, fontSize: 18 }} />
+            Duplicar
+          </MenuItem>
+          <Divider />
+          {!template.isSystem && (
+            <MenuItem
+              onClick={() => { onDelete(template.id); handleMenuClose(); }}
+              sx={{ color: '#ef4444' }}
+            >
+              <Delete sx={{ mr: 2, fontSize: 18 }} />
+              Eliminar
+            </MenuItem>
+          )}
+        </Menu>
+
+        {/* Background decoration */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: 80,
+            height: 80,
+            background: `radial-gradient(circle, ${alpha(typeInfo.color, 0.1)} 0%, transparent 70%)`,
+            pointerEvents: 'none',
+          }}
+        />
+      </Card>
+    </motion.div>
+  );
+};
+
+const TemplateDialog: React.FC<TemplateDialogProps> = ({
+  open,
+  template,
+  onClose,
+  onSave,
+  loading = false,
+}) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  const [formData, setFormData] = useState({
     name: '',
+    description: '',
     title: '',
     message: '',
     type: 'info' as NotificationType,
     priority: 'medium' as NotificationPriority,
     category: 'general' as NotificationCategory,
-    variables: [] as string[],
+    tags: [] as string[],
+    actionUrl: '',
+    actionLabel: '',
+    channels: {
+      email: true,
+      sms: false,
+      push: true,
+      app: true,
+    },
     isActive: true,
   });
+  const [tagInput, setTagInput] = useState('');
+  const [availableVariables, setAvailableVariables] = useState<Record<string, TemplateVariable>>({});
+  const [previewData, setPreviewData] = useState<Record<string, string | number | Date>>({});
 
-  const [previewData, setPreviewData] = useState<Record<string, string>>({});
+  // Load available variables
+  useEffect(() => {
+    const variables = notificationTemplatesService.getAvailableVariables();
+    setAvailableVariables(variables);
 
-  const handleCreateTemplate = () => {
-    setSelectedTemplate(null);
-    setEditForm({
-      name: '',
-      title: '',
-      message: '',
-      type: 'info',
-      priority: 'medium',
-      category: 'general',
-      variables: [],
-      isActive: true,
+    // Set default preview data
+    const defaultPreview: Record<string, string | number | Date> = {};
+    Object.entries(variables).forEach(([key, variable]) => {
+      switch (variable.type) {
+        case 'text':
+          defaultPreview[key] = `[${variable.description}]`;
+          break;
+        case 'number':
+          defaultPreview[key] = 123;
+          break;
+        case 'date':
+          defaultPreview[key] = new Date().toLocaleDateString();
+          break;
+        default:
+          defaultPreview[key] = `[${variable.description}]`;
+      }
     });
-    setEditDialogOpen(true);
+    setPreviewData(defaultPreview);
+  }, []);
+
+  // Initialize form data
+  useEffect(() => {
+    if (template) {
+      setFormData({
+        name: template.name,
+        description: template.description,
+        title: template.title,
+        message: template.message,
+        type: template.type,
+        priority: template.priority,
+        category: template.category,
+        tags: template.tags,
+        actionUrl: template.actionUrl || '',
+        actionLabel: template.actionLabel || '',
+        channels: template.channels,
+        isActive: template.isActive,
+      });
+    } else {
+      setFormData({
+        name: '',
+        description: '',
+        title: '',
+        message: '',
+        type: 'info',
+        priority: 'medium',
+        category: 'general',
+        tags: [],
+        actionUrl: '',
+        actionLabel: '',
+        channels: {
+          email: true,
+          sms: false,
+          push: true,
+          app: true,
+        },
+        isActive: true,
+      });
+    }
+  }, [template, open]);
+
+  const handleInputChange = (
+    field: keyof typeof formData,
+    value: string | boolean | string[] // Add other types as needed
+  ) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleChannelChange = (channel: string, enabled: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      channels: {
+        ...prev.channels,
+        [channel]: enabled,
+      }
+    }));
+  };
+
+  const handleAddTag = () => {
+    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, tagInput.trim()]
+      }));
+      setTagInput('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };
+
+  const handleSave = () => {
+    if (!formData.name.trim() || !formData.title.trim() || !formData.message.trim()) {
+      toast.error('Por favor completa todos los campos obligatorios');
+      return;
+    }
+
+    // Validate template
+    const validation = notificationTemplatesService.validateTemplate(formData.title, formData.message);
+    if (!validation.isValid) {
+      toast.error(`Errores en la plantilla: ${validation.errors.join(', ')}`);
+      return;
+    }
+
+    const templateData = {
+      ...formData,
+      variables: validation.variables,
+      isSystem: false,
+      createdBy: 'user', // TODO: Get actual user ID
+    };
+
+    onSave(templateData);
+  };
+
+  // Generate preview
+  const previewTitle = notificationTemplatesService.parseTemplate(formData.title, previewData);
+  const previewMessage = notificationTemplatesService.parseTemplate(formData.message, previewData);
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 4,
+          maxHeight: '90vh',
+        }
+      }}
+    >
+      <DialogTitle sx={{ pb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            sx={{
+              bgcolor: alpha('#6366f1', 0.1),
+              color: '#6366f1',
+            }}
+          >
+            <AutoAwesome />
+          </Avatar>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              {template ? 'Editar Plantilla' : 'Nueva Plantilla'}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#64748b' }}>
+              {template ? 'Modifica los campos de la plantilla' : 'Crea una nueva plantilla de notificación'}
+            </Typography>
+          </Box>
+        </Box>
+      </DialogTitle>
+
+      <DialogContent sx={{ pb: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 3 }}>
+          {/* Basic Information */}
+          <Box sx={{ flex: 1 }}>
+            <Stack spacing={3}>
+              <TextField
+                fullWidth
+                label="Nombre de la plantilla"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                required
+              />
+
+              <TextField
+                fullWidth
+                label="Descripción"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                multiline
+                rows={2}
+              />
+
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: 1, minWidth: 120 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Tipo</InputLabel>
+                    <Select
+                      value={formData.type}
+                      onChange={(e) => handleInputChange('type', e.target.value)}
+                    >
+                      {Object.entries(typeConfig).map(([key, config]) => (
+                        <MenuItem key={key} value={key}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {config.icon}
+                            {config.label}
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                <Box sx={{ flex: 1, minWidth: 120 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Prioridad</InputLabel>
+                    <Select
+                      value={formData.priority}
+                      onChange={(e) => handleInputChange('priority', e.target.value)}
+                    >
+                      {Object.entries(priorityConfig).map(([key, config]) => (
+                        <MenuItem key={key} value={key}>
+                          {config.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                <Box sx={{ flex: 1, minWidth: 120 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Categoría</InputLabel>
+                    <Select
+                      value={formData.category}
+                      onChange={(e) => handleInputChange('category', e.target.value)}
+                    >
+                      {Object.entries(categoryConfig).map(([key, config]) => (
+                        <MenuItem key={key} value={key}>
+                          {config.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Box>
+
+              {/* Channels */}
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                  Canales de Envío
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.channels.email}
+                        onChange={(e) => handleChannelChange('email', e.target.checked)}
+                      />
+                    }
+                    label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><Email sx={{ fontSize: 16 }} />Email</Box>}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.channels.sms}
+                        onChange={(e) => handleChannelChange('sms', e.target.checked)}
+                      />
+                    }
+                    label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><Sms sx={{ fontSize: 16 }} />SMS</Box>}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.channels.push}
+                        onChange={(e) => handleChannelChange('push', e.target.checked)}
+                      />
+                    }
+                    label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><PhoneAndroid sx={{ fontSize: 16 }} />Push</Box>}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.channels.app}
+                        onChange={(e) => handleChannelChange('app', e.target.checked)}
+                      />
+                    }
+                    label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><Notifications sx={{ fontSize: 16 }} />App</Box>}
+                  />
+                </Box>
+              </Box>
+            </Stack>
+          </Box>
+
+          {/* Content */}
+          <Box sx={{ flex: 1 }}>
+            <Stack spacing={3}>
+              <TextField
+                fullWidth
+                label="Título"
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                required
+                helperText="Usa {{variable}} para insertar variables dinámicas"
+              />
+
+              <TextField
+                fullWidth
+                label="Mensaje"
+                value={formData.message}
+                onChange={(e) => handleInputChange('message', e.target.value)}
+                multiline
+                rows={4}
+                required
+                helperText="Usa {{variable}} para insertar variables dinámicas"
+              />
+
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                  fullWidth
+                  label="URL de acción (opcional)"
+                  value={formData.actionUrl}
+                  onChange={(e) => handleInputChange('actionUrl', e.target.value)}
+                />
+                <TextField
+                  fullWidth
+                  label="Texto del botón (opcional)"
+                  value={formData.actionLabel}
+                  onChange={(e) => handleInputChange('actionLabel', e.target.value)}
+                />
+              </Box>
+
+              {/* Tags */}
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                  Etiquetas
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                  <TextField
+                    size="small"
+                    placeholder="Agregar etiqueta..."
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
+                    sx={{ flex: 1 }}
+                  />
+                  <Button
+                    onClick={handleAddTag}
+                    variant="outlined"
+                    disabled={!tagInput.trim()}
+                  >
+                    <Add />
+                  </Button>
+                </Box>
+                {formData.tags.length > 0 && (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {formData.tags.map((tag, index) => (
+                      <Chip
+                        key={index}
+                        label={tag}
+                        onDelete={() => handleRemoveTag(tag)}
+                        size="small"
+                      />
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            </Stack>
+          </Box>
+        </Box>
+
+        {/* Preview */}
+        <Box sx={{ mt: 3 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: '1px solid #e2e8f0',
+              borderRadius: 3,
+              bgcolor: '#f8fafc',
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Preview />
+              Vista Previa
+            </Typography>
+
+            <Alert
+              severity={formData.type === 'error' ? 'error' : formData.type === 'warning' ? 'warning' : formData.type === 'success' ? 'success' : 'info'}
+              sx={{ borderRadius: 2 }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                {previewTitle || 'Título de la notificación'}
+              </Typography>
+              <Typography variant="body2">
+                {previewMessage || 'Mensaje de la notificación'}
+              </Typography>
+            </Alert>
+          </Paper>
+        </Box>
+
+        {/* Available Variables */}
+        <Box sx={{ mt: 3 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: '1px solid #e2e8f0',
+              borderRadius: 3,
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Code />
+              Variables Disponibles
+            </Typography>
+
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {Object.entries(availableVariables).slice(0, 12).map(([key, variable]) => (
+                <Tooltip key={key} title={variable.description}>
+                  <Chip
+                    label={`{{${key}}}`}
+                    size="small"
+                    variant="outlined"
+                    onClick={() => {
+                      // Copy to clipboard
+                      navigator.clipboard.writeText(`{{${key}}}`);
+                      toast.success('Variable copiada');
+                    }}
+                    sx={{
+                      cursor: 'pointer',
+                      fontSize: '0.7rem',
+                      '&:hover': {
+                        bgcolor: alpha('#6366f1', 0.1),
+                      }
+                    }}
+                  />
+                </Tooltip>
+              ))}
+            </Box>
+          </Paper>
+        </Box>
+      </DialogContent>
+
+      <DialogActions sx={{ p: 3, pt: 2 }}>
+        <Button onClick={onClose} disabled={loading}>
+          Cancelar
+        </Button>
+        <Button
+          onClick={handleSave}
+          variant="contained"
+          disabled={loading || !formData.name.trim() || !formData.title.trim() || !formData.message.trim()}
+          startIcon={loading ? <CircularProgress size={16} /> : <Save />}
+        >
+          {template ? 'Actualizar' : 'Crear'} Plantilla
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+export const NotificationTemplates: React.FC<NotificationTemplatesProps> = ({
+  loading: externalLoading = false
+}) => {
+
+  const [templates, setTemplates] = useState<NotificationTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<NotificationType | 'all'>('all');
+  const [filterCategory, setFilterCategory] = useState<NotificationCategory | 'all'>('all');
+  const [showSystemTemplates, setShowSystemTemplates] = useState(true);
+  const [templateDialog, setTemplateDialog] = useState<{
+    open: boolean;
+    template?: NotificationTemplate;
+  }>({ open: false });
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Load templates
+  const loadTemplates = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await notificationTemplatesService.getTemplates(true);
+      setTemplates(data);
+    } catch (err) {
+      console.error('Error loading templates:', err);
+      setError((err && typeof err === 'object' && 'message' in err)
+        ? typeof (err as { message?: unknown }).message === 'string'
+          ? (err as { message: string }).message
+          : 'Error al cargar las plantillas'
+        : 'Error al cargar las plantillas');
+      toast.error('Error al cargar las plantillas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  // Filtered templates
+  const filteredTemplates = useMemo(() => {
+    return templates.filter(template => {
+      // Search filter
+      if (searchTerm && !template.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !template.description.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !template.title.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+
+      // Type filter
+      if (filterType !== 'all' && template.type !== filterType) {
+        return false;
+      }
+
+      // Category filter
+      if (filterCategory !== 'all' && template.category !== filterCategory) {
+        return false;
+      }
+
+      // System templates filter
+      if (!showSystemTemplates && template.isSystem) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [templates, searchTerm, filterType, filterCategory, showSystemTemplates]);
+
+  // Handle template actions
+  const handleCreateTemplate = () => {
+    setTemplateDialog({ open: true });
   };
 
   const handleEditTemplate = (template: NotificationTemplate) => {
-    setSelectedTemplate(template);
-    setEditForm({
-      name: template.name,
-      title: template.title,
-      message: template.message,
-      type: template.type,
-      priority: template.priority,
-      category: template.category,
-      variables: template.variables || [],
-      isActive: template.isActive,
-    });
-    setEditDialogOpen(true);
-    setMenuAnchor(null);
+    setTemplateDialog({ open: true, template });
   };
 
-  const handleDeleteTemplate = async (templateId: string) => {
+  const handleDeleteTemplate = async (id: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta plantilla?')) {
+      return;
+    }
+
     try {
-      setLoading(true);
-      setTemplates(prev => prev.filter(t => t.id !== templateId));
-      toast.success('Template eliminado exitosamente');
-    } catch (error) {
-      console.error('Error deleting template:', error);
-      toast.error('Error al eliminar template');
+      setActionLoading(true);
+      await notificationTemplatesService.deleteTemplate(id);
+      await loadTemplates();
+      toast.success('Plantilla eliminada exitosamente');
+    } catch (err) {
+      console.error('Error deleting template:', err);
+      toast.error('Error al eliminar la plantilla');
     } finally {
-      setLoading(false);
-      setMenuAnchor(null);
+      setActionLoading(false);
     }
   };
 
-  const handleDuplicateTemplate = (template: NotificationTemplate) => {
-    const newTemplate: NotificationTemplate = {
-      ...template,
-      id: `${template.id}_copy_${Date.now()}`,
-      name: `${template.name} (Copia)`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setTemplates(prev => [...prev, newTemplate]);
-    toast.success('Template duplicado exitosamente');
-    setMenuAnchor(null);
+  const handleDuplicateTemplate = async (template: NotificationTemplate) => {
+    const newName = prompt('Nombre para la plantilla duplicada:', `${template.name} (Copia)`);
+    if (!newName) return;
+
+    try {
+      setActionLoading(true);
+      await notificationTemplatesService.duplicateTemplate(template.id, newName);
+      await loadTemplates();
+      toast.success('Plantilla duplicada exitosamente');
+    } catch (err) {
+      console.error('Error duplicating template:', err);
+      toast.error('Error al duplicar la plantilla');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleSaveTemplate = async () => {
-    try {
-      setLoading(true);
-      
-      // Extract variables from title and message
-      const extractedVariables = extractVariables(editForm.title + ' ' + editForm.message);
-      
-      const templateData: NotificationTemplate = {
-        id: selectedTemplate?.id || `template_${Date.now()}`,
-        name: editForm.name,
-        title: editForm.title,
-        message: editForm.message,
-        type: editForm.type,
-        priority: editForm.priority,
-        category: editForm.category,
-        variables: extractedVariables,
-        isActive: editForm.isActive,
-        createdAt: selectedTemplate?.createdAt || new Date(),
-        updatedAt: new Date(),
-      };
+  const handlePreviewTemplate = () => {
+    // TODO: Implement preview modal
+    toast('Vista previa próximamente');
+  };
 
-      if (selectedTemplate) {
-        // Update existing template
-        setTemplates(prev => prev.map(t => t.id === selectedTemplate.id ? templateData : t));
-        toast.success('Template actualizado exitosamente');
+  const handleUseTemplate = () => {
+    // TODO: Implement use template (redirect to create notification with template)
+    toast('Usar plantilla próximamente');
+  };
+
+  const handleSaveTemplate = async (templateData: Omit<NotificationTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount' | 'lastUsed'>) => {
+    try {
+      setActionLoading(true);
+
+      if (templateDialog.template) {
+        await notificationTemplatesService.updateTemplate(templateDialog.template.id, templateData);
+        toast.success('Plantilla actualizada exitosamente');
       } else {
-        // Create new template
-        setTemplates(prev => [...prev, templateData]);
-        toast.success('Template creado exitosamente');
+        await notificationTemplatesService.createTemplate(templateData);
+        toast.success('Plantilla creada exitosamente');
       }
 
-      setEditDialogOpen(false);
-    } catch (error) {
-      console.error('Error saving template:', error);
-      toast.error('Error al guardar template');
+      setTemplateDialog({ open: false });
+      await loadTemplates();
+    } catch (err) {
+      console.error('Error saving template:', err);
+      toast.error('Error al guardar la plantilla');
+      throw err;
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
-  const extractVariables = (text: string): string[] => {
-    const regex = /\{\{([^}]+)\}\}/g;
-    const variables: string[] = [];
-    let match;
-    
-    while ((match = regex.exec(text)) !== null) {
-      if (!variables.includes(match[1])) {
-        variables.push(match[1]);
-      }
-    }
-    
-    return variables;
-  };
+  const isLoading = loading || externalLoading || actionLoading;
 
-  const handlePreviewTemplate = (template: NotificationTemplate) => {
-    setSelectedTemplate(template);
-    
-    // Initialize preview data with sample values
-    const sampleData: Record<string, string> = {};
-    template.variables?.forEach(variable => {
-      switch (variable) {
-        case 'user_name':
-          sampleData[variable] = 'Juan Pérez';
-          break;
-        case 'app_name':
-          sampleData[variable] = 'Fidelita';
-          break;
-        case 'amount':
-          sampleData[variable] = '$150.00';
-          break;
-        case 'due_date':
-          sampleData[variable] = '15 de Enero, 2024';
-          break;
-        case 'event_name':
-          sampleData[variable] = 'Reunión Anual de Socios';
-          break;
-        case 'event_date':
-          sampleData[variable] = '20 de Febrero, 2024';
-          break;
-        case 'event_location':
-          sampleData[variable] = 'Centro de Convenciones';
-          break;
-        case 'maintenance_date':
-          sampleData[variable] = '25 de Enero, 2024';
-          break;
-        case 'start_time':
-          sampleData[variable] = '02:00 AM';
-          break;
-        case 'end_time':
-          sampleData[variable] = '06:00 AM';
-          break;
-        default:
-          sampleData[variable] = `[${variable}]`;
-      }
-    });
-    
-    setPreviewData(sampleData);
-    setPreviewDialogOpen(true);
-    setMenuAnchor(null);
-  };
-
-  const renderPreviewText = (text: string, data: Record<string, string>): string => {
-    let result = text;
-    Object.entries(data).forEach(([key, value]) => {
-      result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
-    });
-    return result;
-  };
-
-  const getTypeColor = (type: NotificationType) => {
-    const colors = {
-      info: '#3b82f6',
-      success: '#10b981',
-      warning: '#f59e0b',
-      error: '#ef4444',
-      announcement: '#8b5cf6',
-    };
-    return colors[type];
-  };
-
-  const getPriorityColor = (priority: NotificationPriority) => {
-    const colors = {
-      low: '#6b7280',
-      medium: '#3b82f6',
-      high: '#f59e0b',
-      urgent: '#ef4444',
-    };
-    return colors[priority];
-  };
+  if (error && templates.length === 0) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert severity="error" sx={{ borderRadius: 3 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+            Error al cargar las plantillas
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+          <Button
+            onClick={loadTemplates}
+            variant="contained"
+            startIcon={<Refresh />}
+            size="small"
+          >
+            Reintentar
+          </Button>
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
-    <Box>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
-            Templates de Notificación
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#64748b' }}>
-            Crea y gestiona templates reutilizables para tus notificaciones
-          </Typography>
-        </Box>
-        
-        <Button
-          onClick={handleCreateTemplate}
-          variant="contained"
-          startIcon={<Add />}
-          sx={{
-            borderRadius: 3,
-            px: 3,
-            py: 1.5,
-            fontWeight: 600,
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-            },
-          }}
-        >
-          Nuevo Template
-        </Button>
-      </Box>
-
-      {/* Templates Grid */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap',
-        gap: 3,
-        '& > *': {
-          flex: '1 1 100%',
-          '@media (min-width: 768px)': {
-            flex: '1 1 calc(50% - 12px)',
-          },
-          '@media (min-width: 1200px)': {
-            flex: '1 1 calc(33.333% - 16px)',
-          }
-        }
-      }}>
-        {templates.map((template) => (
-          <Card
-            key={template.id}
-            elevation={0}
-            sx={{
-              border: '1px solid #f1f5f9',
-              borderRadius: 4,
-              position: 'relative',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                borderColor: alpha(getTypeColor(template.type), 0.3),
-                transform: 'translateY(-4px)',
-                boxShadow: `0 12px 40px ${alpha(getTypeColor(template.type), 0.15)}`,
-              },
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              {/* Header */}
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      bgcolor: alpha(getTypeColor(template.type), 0.1),
-                      color: getTypeColor(template.type),
-                    }}
-                  >
-                    <Palette />
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                      {template.name}
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                      <Chip
-                        label={template.type}
-                        size="small"
-                        sx={{
-                          bgcolor: alpha(getTypeColor(template.type), 0.1),
-                          color: getTypeColor(template.type),
-                          fontWeight: 600,
-                          fontSize: '0.75rem',
-                        }}
-                      />
-                      <Chip
-                        label={template.priority}
-                        size="small"
-                        sx={{
-                          bgcolor: alpha(getPriorityColor(template.priority), 0.1),
-                          color: getPriorityColor(template.priority),
-                          fontWeight: 600,
-                          fontSize: '0.75rem',
-                        }}
-                      />
-                    </Box>
-                  </Box>
-                </Box>
-                  
-                <IconButton
-                  onClick={(e) => {
-                    setMenuAnchor(e.currentTarget);
-                    setMenuTemplateId(template.id);
-                  }}
-                  size="small"
-                  sx={{ color: '#64748b' }}
-                >
-                  <MoreVert />
-                </IconButton>
-              </Box>
-
-              {/* Content Preview */}
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
-                  {template.title}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: '#64748b',
-                    lineHeight: 1.5,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {template.message}
-                </Typography>
-              </Box>
-
-              {/* Variables */}
-              {template.variables && template.variables.length > 0 && (
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, mb: 1, display: 'block' }}>
-                    Variables:
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {template.variables.slice(0, 3).map((variable) => (
-                      <Chip
-                        key={variable}
-                        label={`{{${variable}}}`}
-                        size="small"
-                        variant="outlined"
-                        sx={{
-                          fontSize: '0.7rem',
-                          height: 20,
-                          borderColor: alpha('#6366f1', 0.3),
-                          color: '#6366f1',
-                        }}
-                      />
-                    ))}
-                    {template.variables.length > 3 && (
-                      <Chip
-                        label={`+${template.variables.length - 3}`}
-                        size="small"
-                        variant="outlined"
-                        sx={{
-                          fontSize: '0.7rem',
-                          height: 20,
-                          borderColor: alpha('#64748b', 0.3),
-                          color: '#64748b',
-                        }}
-                      />
-                    )}
-                  </Box>
-                </Box>
-              )}
-
-              {/* Actions */}
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  onClick={() => handlePreviewTemplate(template)}
-                  size="small"
-                  startIcon={<Preview />}
-                  sx={{
-                    flex: 1,
-                    borderRadius: 2,
-                    color: '#6366f1',
-                    '&:hover': { bgcolor: alpha('#6366f1', 0.1) }
-                  }}
-                >
-                  Vista Previa
-                </Button>
-                <Button
-                  onClick={() => onTemplateSelect?.(template)}
-                  size="small"
-                  variant="contained"
-                  sx={{
-                    flex: 1,
-                    borderRadius: 2,
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                    },
-                  }}
-                >
-                  Usar
-                </Button>
-              </Box>
-
-              {/* Status Indicator */}
-              <Box sx={{ position: 'absolute', top: 12, right: 12 }}>
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    bgcolor: template.isActive ? '#10b981' : '#ef4444',
-                  }}
-                />
-              </Box>
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
-
-      {/* Context Menu */}
-      <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={() => setMenuAnchor(null)}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-      >
-        <MenuItem onClick={() => {
-          const template = templates.find(t => t.id === menuTemplateId);
-          if (template) handlePreviewTemplate(template);
-        }}>
-          <Preview sx={{ mr: 2 }} />
-          Vista Previa
-        </MenuItem>
-        <MenuItem onClick={() => {
-          const template = templates.find(t => t.id === menuTemplateId);
-          if (template) handleEditTemplate(template);
-        }}>
-          <Edit sx={{ mr: 2 }} />
-          Editar
-        </MenuItem>
-        <MenuItem onClick={() => {
-          const template = templates.find(t => t.id === menuTemplateId);
-          if (template) handleDuplicateTemplate(template);
-        }}>
-          <ContentCopy sx={{ mr: 2 }} />
-          Duplicar
-        </MenuItem>
-        <Divider />
-        <MenuItem 
-          onClick={() => {
-            if (menuTemplateId) handleDeleteTemplate(menuTemplateId);
-          }}
-          sx={{ color: '#ef4444' }}
-        >
-          <Delete sx={{ mr: 2 }} />
-          Eliminar
-        </MenuItem>
-      </Menu>
-
-      {/* Edit Dialog */}
-      <Dialog
-        open={editDialogOpen}
-        onClose={() => setEditDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: { borderRadius: 4 }
-        }}
-      >
-        <DialogTitle sx={{ pb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ bgcolor: alpha('#6366f1', 0.1), color: '#6366f1' }}>
-              {selectedTemplate ? <Edit /> : <Add />}
-            </Avatar>
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              {selectedTemplate ? 'Editar Template' : 'Crear Template'}
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', mb: 1 }}>
+              Plantillas de Notificaciones
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b' }}>
+              Gestiona y crea plantillas reutilizables para tus notificaciones
             </Typography>
           </Box>
-        </DialogTitle>
-        
-        <DialogContent sx={{ pb: 2 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
-            {/* Basic Info */}
-            <TextField
-              fullWidth
-              label="Nombre del Template"
-              value={editForm.name}
-              onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Ej: Bienvenida, Recordatorio de Pago..."
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
-            />
 
-            {/* Type and Priority */}
-            <Box sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap',
-              gap: 2,
-              '& > *': {
-                flex: '1 1 calc(33.333% - 8px)',
-                minWidth: '150px',
-              }
-            }}>
-              <FormControl fullWidth>
-                <InputLabel>Tipo</InputLabel>
-                <Select
-                  value={editForm.type}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, type: e.target.value as NotificationType }))}
-                  sx={{ borderRadius: 3 }}
-                >
-                  <MenuItem value="info">Información</MenuItem>
-                  <MenuItem value="success">Éxito</MenuItem>
-                  <MenuItem value="warning">Advertencia</MenuItem>
-                  <MenuItem value="error">Error</MenuItem>
-                  <MenuItem value="announcement">Anuncio</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Prioridad</InputLabel>
-                <Select
-                  value={editForm.priority}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, priority: e.target.value as NotificationPriority }))}
-                  sx={{ borderRadius: 3 }}
-                >
-                  <MenuItem value="low">Baja</MenuItem>
-                  <MenuItem value="medium">Media</MenuItem>
-                  <MenuItem value="high">Alta</MenuItem>
-                  <MenuItem value="urgent">Urgente</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Categoría</InputLabel>
-                <Select
-                  value={editForm.category}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, category: e.target.value as NotificationCategory }))}
-                  sx={{ borderRadius: 3 }}
-                >
-                  <MenuItem value="system">Sistema</MenuItem>
-                  <MenuItem value="membership">Socios</MenuItem>
-                  <MenuItem value="payment">Pagos</MenuItem>
-                  <MenuItem value="event">Eventos</MenuItem>
-                  <MenuItem value="general">General</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-
-            {/* Content */}
-            <TextField
-              fullWidth
-              label="Título"
-              value={editForm.title}
-              onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Usa {{variable}} para contenido dinámico"
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
-            />
-
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Mensaje"
-              value={editForm.message}
-              onChange={(e) => setEditForm(prev => ({ ...prev, message: e.target.value }))}
-              placeholder="Escribe tu mensaje aquí. Usa {{variable}} para contenido dinámico."
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
-            />
-
-            {/* Variables Preview */}
-            {extractVariables(editForm.title + ' ' + editForm.message).length > 0 && (
-              <Alert severity="info" sx={{ borderRadius: 3 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                  Variables detectadas:
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {extractVariables(editForm.title + ' ' + editForm.message).map((variable) => (
-                    <Chip
-                      key={variable}
-                      label={`{{${variable}}}`}
-                      size="small"
-                      sx={{
-                        bgcolor: alpha('#3b82f6', 0.1),
-                        color: '#3b82f6',
-                        fontWeight: 600,
-                      }}
-                    />
-                  ))}
-                </Box>
-              </Alert>
-            )}
-
-            {/* Active Status */}
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={editForm.isActive}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, isActive: e.target.checked }))}
-                  sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': { color: '#10b981' },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#10b981' },
-                  }}
-                />
-              }
-              label="Template activo"
-            />
-          </Box>
-        </DialogContent>
-        
-        <DialogActions sx={{ p: 3, pt: 2 }}>
           <Button
-            onClick={() => setEditDialogOpen(false)}
-            variant="outlined"
-            sx={{ borderRadius: 3 }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSaveTemplate}
+            onClick={handleCreateTemplate}
             variant="contained"
-            disabled={!editForm.name || !editForm.title || !editForm.message || loading}
-            startIcon={loading ? <Save /> : <Save />}
+            startIcon={<Add />}
+            size="large"
             sx={{
               borderRadius: 3,
+              px: 4,
+              py: 1.5,
               background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
               '&:hover': {
                 background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-              },
-            }}
-          >
-            {loading ? 'Guardando...' : 'Guardar Template'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Preview Dialog */}
-      <Dialog
-        open={previewDialogOpen}
-        onClose={() => setPreviewDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: { borderRadius: 4 }
-        }}
-      >
-        <DialogTitle sx={{ pb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ bgcolor: alpha('#10b981', 0.1), color: '#10b981' }}>
-              <Preview />
-            </Avatar>
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              Vista Previa: {selectedTemplate?.name}
-            </Typography>
-          </Box>
-        </DialogTitle>
-        
-        <DialogContent>
-          {selectedTemplate && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {/* Variable Editor */}
-              {selectedTemplate.variables && selectedTemplate.variables.length > 0 && (
-                <Accordion defaultExpanded>
-                  <AccordionSummary expandIcon={<ExpandMore />}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                      Personalizar Variables
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      flexWrap: 'wrap',
-                      gap: 2,
-                      '& > *': {
-                        flex: '1 1 calc(50% - 8px)',
-                        minWidth: '200px',
-                      }
-                    }}>
-                      {selectedTemplate.variables.map((variable) => (
-                        <TextField
-                          key={variable}
-                          fullWidth
-                          size="small"
-                          label={variable}
-                          value={previewData[variable] || ''}
-                          onChange={(e) => setPreviewData(prev => ({
-                            ...prev,
-                            [variable]: e.target.value
-                          }))}
-                          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-                        />
-                      ))}
-                    </Box>
-                  </AccordionDetails>
-                </Accordion>
-              )}
-
-              {/* Preview Cards */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {/* App Notification Preview */}
-                <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3 }}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                      <PhoneAndroid sx={{ color: '#6366f1' }} />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        Notificación en App
-                      </Typography>
-                    </Box>
-                    <Alert
-                      severity={selectedTemplate.type === 'error' ? 'error' : selectedTemplate.type === 'warning' ? 'warning' : selectedTemplate.type === 'success' ? 'success' : 'info'}
-                      sx={{ borderRadius: 2 }}
-                    >
-                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-                        {renderPreviewText(selectedTemplate.title, previewData)}
-                      </Typography>
-                      <Typography variant="body2">
-                        {renderPreviewText(selectedTemplate.message, previewData)}
-                      </Typography>
-                    </Alert>
-                  </CardContent>
-                </Card>
-
-                {/* Email Preview */}
-                <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3 }}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                      <Email sx={{ color: '#10b981' }} />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        Email
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        border: '1px solid #e5e7eb',
-                        borderRadius: 2,
-                        p: 3,
-                        bgcolor: '#fafafa',
-                      }}
-                    >
-                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#1e293b' }}>
-                        {renderPreviewText(selectedTemplate.title, previewData)}
-                      </Typography>
-                      <Typography variant="body1" sx={{ lineHeight: 1.6, color: '#374151' }}>
-                        {renderPreviewText(selectedTemplate.message, previewData)}
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
-
-                {/* SMS Preview */}
-                <Card elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: 3 }}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                      <Sms sx={{ color: '#f59e0b' }} />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        SMS
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        border: '1px solid #e5e7eb',
-                        borderRadius: 2,
-                        p: 2,
-                        bgcolor: '#f8fafc',
-                        maxWidth: 300,
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                        {renderPreviewText(selectedTemplate.title, previewData)}
-                      </Typography>
-                      <Typography variant="body2" sx={{ lineHeight: 1.4 }}>
-                        {renderPreviewText(selectedTemplate.message, previewData)}
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        
-        <DialogActions sx={{ p: 3 }}>
-          <Button
-            onClick={() => setPreviewDialogOpen(false)}
-            variant="outlined"
-            sx={{ borderRadius: 3 }}
-          >
-            Cerrar
-          </Button>
-          <Button
-            onClick={() => {
-              if (selectedTemplate) {
-                onTemplateSelect?.(selectedTemplate);
-                setPreviewDialogOpen(false);
               }
             }}
-            variant="contained"
+          >
+            Nueva Plantilla
+          </Button>
+        </Box>
+
+        {/* Filters */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            border: '1px solid #f1f5f9',
+            borderRadius: 4,
+            mb: 3,
+          }}
+        >
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, alignItems: 'center' }}>
+            <Box sx={{ flex: 1, minWidth: 200 }}>
+              <TextField
+                fullWidth
+                placeholder="Buscar plantillas..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: <Search sx={{ color: '#94a3b8', mr: 1 }} />,
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 3,
+                  }
+                }}
+              />
+            </Box>
+
+            <Box sx={{ minWidth: 120 }}>
+              <FormControl fullWidth>
+                <InputLabel>Tipo</InputLabel>
+                <Select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value as NotificationType | 'all')}
+                >
+                  <MenuItem value="all">Todos</MenuItem>
+                  {Object.entries(typeConfig).map(([key, config]) => (
+                    <MenuItem key={key} value={key}>
+                      {config.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Box sx={{ minWidth: 120 }}>
+              <FormControl fullWidth>
+                <InputLabel>Categoría</InputLabel>
+                <Select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value as NotificationCategory | 'all')}
+                >
+                  <MenuItem value="all">Todas</MenuItem>
+                  {Object.entries(categoryConfig).map(([key, config]) => (
+                    <MenuItem key={key} value={key}>
+                      {config.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showSystemTemplates}
+                  onChange={(e) => setShowSystemTemplates(e.target.checked)}
+                />
+              }
+              label="Mostrar plantillas del sistema"
+            />
+          </Box>
+        </Paper>
+      </Box>
+
+      {/* Templates Grid */}
+      {isLoading && templates.length === 0 ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <LinearProgress sx={{ mb: 2, width: 200 }} />
+            <Typography variant="body2" sx={{ color: '#64748b' }}>
+              Cargando plantillas...
+            </Typography>
+          </Box>
+        </Box>
+      ) : filteredTemplates.length === 0 ? (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 8,
+            textAlign: 'center',
+            border: '1px solid #f1f5f9',
+            borderRadius: 4,
+          }}
+        >
+          <Avatar
             sx={{
-              borderRadius: 3,
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-              },
+              width: 80,
+              height: 80,
+              bgcolor: alpha('#6366f1', 0.1),
+              color: '#6366f1',
+              mx: 'auto',
+              mb: 3,
             }}
           >
-            Usar Template
+            <AutoAwesome sx={{ fontSize: 40 }} />
+          </Avatar>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', mb: 2 }}>
+            No se encontraron plantillas
+          </Typography>
+          <Typography variant="body1" sx={{ color: '#64748b', mb: 4 }}>
+            {searchTerm || filterType !== 'all' || filterCategory !== 'all'
+              ? 'No hay plantillas que coincidan con los filtros aplicados.'
+              : 'Aún no tienes plantillas creadas. Crea tu primera plantilla para comenzar.'
+            }
+          </Typography>
+          <Button
+            onClick={handleCreateTemplate}
+            variant="contained"
+            startIcon={<Add />}
+            sx={{
+              borderRadius: 3,
+              px: 4,
+              py: 1.5,
+              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            }}
+          >
+            Crear Primera Plantilla
           </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        </Paper>
+      ) : (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(3, 1fr)',
+            },
+            gap: 3,
+          }}
+        >
+          <AnimatePresence>
+            {filteredTemplates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                onEdit={handleEditTemplate}
+                onDelete={handleDeleteTemplate}
+                onDuplicate={handleDuplicateTemplate}
+                onPreview={handlePreviewTemplate}
+                onUse={handleUseTemplate}
+              />
+            ))}
+          </AnimatePresence>
+        </Box>
+      )}
+
+      {/* Floating Action Button */}
+      <Zoom in={!templateDialog.open}>
+        <Fab
+          onClick={handleCreateTemplate}
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            color: 'white',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+              transform: 'scale(1.1)',
+            },
+            transition: 'all 0.3s ease',
+          }}
+        >
+          <Add />
+        </Fab>
+      </Zoom>
+
+      {/* Template Dialog */}
+      <TemplateDialog
+        open={templateDialog.open}
+        template={templateDialog.template}
+        onClose={() => setTemplateDialog({ open: false })}
+        onSave={handleSaveTemplate}
+        loading={actionLoading}
+      />
+
+      {/* Loading overlay */}
+      {isLoading && (
+        <LinearProgress
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+            height: 3,
+            bgcolor: alpha('#6366f1', 0.1),
+            '& .MuiLinearProgress-bar': {
+              bgcolor: '#6366f1',
+            }
+          }}
+        />
+      )}
+    </Container>
   );
 };

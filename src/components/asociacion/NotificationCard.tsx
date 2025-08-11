@@ -117,7 +117,8 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
   };
 
   const typeInfo = typeConfig[notification.type];
-  const priorityInfo = priorityConfig[notification.priority];
+  const priority = notification.priority || 'medium'; // Default to medium if not specified
+  const priorityInfo = priorityConfig[priority];
   const isUnread = notification.status === 'unread';
   const isExpired = notification.expiresAt && new Date() > new Date(notification.expiresAt);
 

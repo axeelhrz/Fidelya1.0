@@ -17,14 +17,11 @@ import {
   Camera,
   Sparkles,
   Target,
-  Award,
-  CheckCircle,
-  AlertCircle
+  Award
 } from 'lucide-react';
 import { QRScannerButton } from '@/components/socio/QRScannerButton';
 import { ValidationResultModal } from '@/components/socio/ValidationResultModal';
 import { useAuth } from '@/hooks/useAuth';
-import { useValidaciones } from '@/hooks/useValidaciones';
 import { validacionesService } from '@/services/validaciones.service';
 import { ValidacionResponse } from '@/types/validacion';
 import { cn } from '@/lib/utils';
@@ -57,18 +54,11 @@ const itemVariants = {
 
 export const SocioValidar: React.FC = () => {
   const { user } = useAuth();
-  const { refrescar } = useValidaciones();
   
   // Estados para validación
   const [validationResult, setValidationResult] = useState<ValidacionResponse | null>(null);
   const [validationModalOpen, setValidationModalOpen] = useState(false);
   const [scannerLoading, setScannerLoading] = useState(false);
-  const [lastValidation, setLastValidation] = useState<{
-    timestamp: number;
-    success: boolean;
-    comercio: string;
-    monto: number;
-  } | null>(null);
   
   // Estados para UI
   const [isReady, setIsReady] = useState(false);
@@ -127,72 +117,14 @@ export const SocioValidar: React.FC = () => {
         setValidationModalOpen(true);
         
         if (result.success) {
-          // Store last successful validation
-          setLastValidation({
-            timestamp: Date.now(),
-            success: true,
-            comercio: result.data?.comercio?.nombre || 'Comercio',
-            monto: result.data?.validacion?.montoDescuento || 0
-          });
-
-          toast.success('¡Validación exitosa! Beneficio activado', {
-            duration: 4000,
-            icon: '🎉',
-            style: {
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              color: 'white',
-              fontWeight: '600',
-              borderRadius: '12px',
-              padding: '16px 20px',
-            },
-          });
-
-          // Refresh data after successful validation
-          setTimeout(() => {
-            refrescar();
-          }, 2000);
+          toast.success('¡Validación exitosa! Beneficio activado');
         } else {
-          setLastValidation({
-            timestamp: Date.now(),
-            success: false,
-            comercio: result.data?.comercio?.nombre || 'Comercio',
-            monto: 0
-          });
-
-          toast.error(`Validación fallida: ${result.message || 'Error desconocido'}`, {
-            duration: 5000,
-            icon: '❌',
-            style: {
-              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-              color: 'white',
-              fontWeight: '600',
-              borderRadius: '12px',
-              padding: '16px 20px',
-            },
-          });
+          toast.error(`Validación fallida: ${result.message || 'Error desconocido'}`);
         }
       } catch (error) {
         console.error('❌ Error validating QR:', error);
         const errorMessage = error instanceof Error ? error.message : 'Error al validar el código QR';
-        
-        setLastValidation({
-          timestamp: Date.now(),
-          success: false,
-          comercio: 'Error',
-          monto: 0
-        });
-
-        toast.error(errorMessage, {
-          duration: 5000,
-          icon: '⚠️',
-          style: {
-            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-            color: 'white',
-            fontWeight: '600',
-            borderRadius: '12px',
-            padding: '16px 20px',
-          },
-        });
+        toast.error(errorMessage);
         
         // Create error result for modal
         const errorResult: ValidacionResponse = {
@@ -212,7 +144,7 @@ export const SocioValidar: React.FC = () => {
         setScannerLoading(false);
       }
     },
-    [user, refrescar]
+    [user]
   );
 
   // Initialize component
@@ -329,54 +261,6 @@ export const SocioValidar: React.FC = () => {
               </motion.div>
             </div>
           </motion.div>
-
-          {/* Last Validation Status */}
-          {lastValidation && (
-            <motion.div
-              className={cn(
-                "mb-8 p-6 rounded-3xl border shadow-lg backdrop-blur-xl",
-                lastValidation.success 
-                  ? "bg-gradient-to-r from-green-50/80 to-emerald-50/80 border-green-200/50"
-                  : "bg-gradient-to-r from-red-50/80 to-rose-50/80 border-red-200/50"
-              )}
-              variants={itemVariants}
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="flex items-center gap-4">
-                <div className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center",
-                  lastValidation.success ? "bg-green-500" : "bg-red-500"
-                )}>
-                  {lastValidation.success ? (
-                    <CheckCircle size={24} className="text-white" />
-                  ) : (
-                    <AlertCircle size={24} className="text-white" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <h3 className={cn(
-                    "font-black text-lg mb-1",
-                    lastValidation.success ? "text-green-800" : "text-red-800"
-                  )}>
-                    {lastValidation.success ? '¡Validación Exitosa!' : 'Validación Fallida'}
-                  </h3>
-                  <p className={cn(
-                    "text-sm font-medium",
-                    lastValidation.success ? "text-green-700" : "text-red-700"
-                  )}>
-                    {lastValidation.success 
-                      ? `Beneficio validado en ${lastValidation.comercio} - Ahorro: $${lastValidation.monto}`
-                      : `Error al validar en ${lastValidation.comercio}`
-                    }
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {new Date(lastValidation.timestamp).toLocaleString('es-AR')}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
 
           {/* Main Scanner Card */}
           <motion.div

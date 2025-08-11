@@ -35,7 +35,7 @@ export const getComercioById = async (userId: string): Promise<Comercio | null> 
     const comercioSnap = await getDoc(comercioRef);
     
     if (comercioSnap.exists()) {
-      return { uid: comercioSnap.id, ...comercioSnap.data() } as Comercio;
+      return { ...comercioSnap.data(), uid: comercioSnap.id } as unknown as Comercio;
     }
     
     return null;
@@ -58,7 +58,7 @@ export const getComerciosByAsociacion = async (asociacionId: string): Promise<Co
     const comercios: Comercio[] = [];
     
     querySnapshot.forEach((doc) => {
-      comercios.push({ uid: doc.id, ...doc.data() } as Comercio);
+      comercios.push({ uid: doc.id, ...doc.data() } as unknown as Comercio);
     });
     
     return comercios;
@@ -82,7 +82,7 @@ export const searchComerciosByCategory = async (categoria: string): Promise<Come
     const comercios: Comercio[] = [];
     
     querySnapshot.forEach((doc) => {
-      comercios.push({ uid: doc.id, ...doc.data() } as Comercio);
+      comercios.push({ ...doc.data(), uid: doc.id } as unknown as Comercio);
     });
     
     return comercios;

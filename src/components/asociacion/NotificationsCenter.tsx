@@ -1,996 +1,1045 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Paper,
-  Avatar,
-  IconButton,
-  alpha,
-  Divider,
-  Checkbox,
-  FormControlLabel,
-  Menu,
-  MenuItem,
-  Badge,
-  Tooltip,
-  LinearProgress,
-  Fab,
-  Zoom,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
-import {
-  Notifications,
-  Add,
-  MoreVert,
-  CheckCircle,
-  Archive,
-  Delete,
-  SelectAll,
-  MarkEmailRead,
-  Refresh,
-  Settings,
+  Bell,
+  Send,
+  History,
+  BarChart3,
+  Users,
+  MessageSquare,
+  Mail,
   TrendingUp,
-  NotificationsActive,
-  VolumeUp,
-  VolumeOff,
-  FilterList,
-} from '@mui/icons-material';
-import toast from 'react-hot-toast';
-import { useNotifications } from '@/hooks/useNotifications';
-import { NotificationCard } from './NotificationCard';
-import { NotificationFilters } from './NotificationFilters';
-import { CreateNotificationDialog } from './CreateNotificationDialog';
-import { RealTimeNotifications } from './RealTimeNotifications';
-import { NotificationFormData } from '@/types/notification';
+  TrendingDown,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Filter,
+  Search,
+  Calendar,
+  Download,
+  Target,
+  Activity,
+  Eye,
+  RefreshCw,
+  Store,
+  UserCheck,
+  X,
+  Plus
+} from 'lucide-react';
+import { useSimpleNotifications } from '@/hooks/useSimpleNotifications';
+import { useSocios } from '@/hooks/useSocios';
+import { useComercios } from '@/hooks/useComercios';
+import { SimpleNotificationChannel } from '@/types/simple-notification';
+import { toast } from 'react-hot-toast';
 
-interface NotificationsCenterProps {
-  loading?: boolean;
+// Interfaces
+interface NotificationStats {
+  total: number;
+  sent: number;
+  pending: number;
+  failed: number;
+  todayCount: number;
+  weekCount: number;
+  successRate: number;
 }
 
-export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
-  loading: externalLoading = false
-}) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+interface TabConfig {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  gradient: string;
+  description: string;
+}
+
+interface Recipient {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  type: 'socio' | 'comercio';
+  status: string;
+}
+
+// Tab configurations
+const tabs: TabConfig[] = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: BarChart3,
+    gradient: 'from-blue-500 to-blue-600',
+    description: 'Vista general y estadísticas'
+  },
+  {
+    id: 'enviar',
+    label: 'Enviar',
+    icon: Send,
+    gradient: 'from-emerald-500 to-emerald-600',
+    description: 'Crear y enviar notificaciones'
+  },
+  {
+    id: 'historial',
+    label: 'Historial',
+    icon: History,
+    gradient: 'from-purple-500 to-purple-600',
+    description: 'Registro de notificaciones enviadas'
+  }
+];
+
+// Dashboard Component
+const Dashboard = ({ stats }: { stats: NotificationStats }) => {
+  const [timeRange, setTimeRange] = useState('7d');
   
-  const {
-    notifications,
-    allNotifications,
-    loading,
-    error,
-    stats,
-    filters,
-    newNotificationCount,
-    setFilters,
-    createNotification,
-    markAsRead,
-    markAsUnread,
-    archiveNotification,
-    deleteNotification,
-    markAllAsRead,
-    bulkAction,
-    clearNewNotificationCount,
-    refreshStats,
-  } = useNotifications();
-
-  const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [bulkMenuAnchor, setBulkMenuAnchor] = useState<null | HTMLElement>(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Auto-refresh stats every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refreshStats();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [refreshStats]);
-
-  // Clear new notification count when user interacts
-  useEffect(() => {
-    if (selectedNotifications.length > 0 || createDialogOpen) {
-      clearNewNotificationCount();
+  const statCards = [
+    {
+      title: 'Total Enviadas',
+      value: stats.total,
+      change: '+12%',
+      trend: 'up',
+      icon: Bell,
+      color: 'blue',
+      gradient: 'from-blue-500 to-blue-600'
+    },
+    {
+      title: 'Exitosas',
+      value: stats.sent,
+      change: '+8%',
+      trend: 'up',
+      icon: CheckCircle,
+      color: 'emerald',
+      gradient: 'from-emerald-500 to-emerald-600'
+    },
+    {
+      title: 'Tasa de Éxito',
+      value: `${stats.successRate}%`,
+      change: '+2%',
+      trend: 'up',
+      icon: Target,
+      color: 'purple',
+      gradient: 'from-purple-500 to-purple-600'
+    },
+    {
+      title: 'Esta Semana',
+      value: stats.weekCount,
+      change: '+15%',
+      trend: 'up',
+      icon: Calendar,
+      color: 'orange',
+      gradient: 'from-orange-500 to-orange-600'
     }
-  }, [selectedNotifications, createDialogOpen, clearNewNotificationCount]);
+  ];
 
-  const handleSelectNotification = (id: string, selected: boolean) => {
-    setSelectedNotifications(prev => 
-      selected 
-        ? [...prev, id]
-        : prev.filter(notificationId => notificationId !== id)
-    );
+  const channelStats = [
+    { name: 'WhatsApp', count: Math.floor(stats.sent * 0.7), color: 'emerald', icon: MessageSquare },
+    { name: 'Email', count: Math.floor(stats.sent * 0.3), color: 'blue', icon: Mail }
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Dashboard de Notificaciones</h2>
+          <p className="text-slate-600">Monitorea el rendimiento de tus comunicaciones</p>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <select 
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+            className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="24h">Últimas 24h</option>
+            <option value="7d">Últimos 7 días</option>
+            <option value="30d">Últimos 30 días</option>
+          </select>
+          
+          <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors">
+            <RefreshCw className="w-4 h-4" />
+            <span className="text-sm font-medium">Actualizar</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map((stat, index) => (
+          <motion.div
+            key={stat.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 hover:shadow-xl transition-shadow"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-12 h-12 bg-gradient-to-r ${stat.gradient} rounded-xl flex items-center justify-center`}>
+                <stat.icon className="w-6 h-6 text-white" />
+              </div>
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                stat.trend === 'up' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+              }`}>
+                {stat.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                {stat.change}
+              </div>
+            </div>
+            
+            <div>
+              <div className="text-2xl font-bold text-slate-900 mb-1">{stat.value}</div>
+              <div className="text-sm text-slate-600">{stat.title}</div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Channel Distribution */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100"
+        >
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Distribución por Canal</h3>
+          <div className="space-y-4">
+            {channelStats.map((channel) => (
+              <div key={channel.name} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 bg-${channel.color}-100 rounded-lg flex items-center justify-center`}>
+                    <channel.icon className={`w-4 h-4 text-${channel.color}-600`} />
+                  </div>
+                  <span className="font-medium text-slate-700">{channel.name}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-24 bg-slate-100 rounded-full h-2">
+                    <div 
+                      className={`h-2 bg-${channel.color}-500 rounded-full transition-all duration-500`}
+                      style={{ width: `${stats.sent > 0 ? (channel.count / stats.sent) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-semibold text-slate-900 w-8">{channel.count}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Activity Timeline */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100"
+        >
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Actividad Reciente</h3>
+          <div className="space-y-4">
+            {[
+              { time: '10:30', action: 'WhatsApp enviado', count: 45, status: 'success' },
+              { time: '09:15', action: 'Email programado', count: 120, status: 'pending' },
+              { time: '08:45', action: 'Template actualizado', count: 1, status: 'info' },
+              { time: '08:20', action: 'Error en envío', count: 3, status: 'error' }
+            ].map((activity, index) => (
+              <div key={index} className="flex items-center gap-4">
+                <div className="text-sm text-slate-500 w-12">{activity.time}</div>
+                <div className={`w-2 h-2 rounded-full ${
+                  activity.status === 'success' ? 'bg-emerald-500' :
+                  activity.status === 'pending' ? 'bg-orange-500' :
+                  activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                }`} />
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-slate-700">{activity.action}</div>
+                  <div className="text-xs text-slate-500">{activity.count} destinatarios</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+// Recipient Selector Component
+const RecipientSelector = ({ 
+  selectedRecipients, 
+  onRecipientsChange 
+}: { 
+  selectedRecipients: Recipient[], 
+  onRecipientsChange: (recipients: Recipient[]) => void 
+}) => {
+  const { socios } = useSocios();
+  const { comerciosVinculados } = useComercios();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState<'all' | 'socios' | 'comercios'>('all');
+  const [showSelector, setShowSelector] = useState(false);
+
+  // Convert socios and comercios to recipients format
+  const allRecipients: Recipient[] = [
+    ...socios
+      .filter(socio => socio.estado === 'activo')
+      .map(socio => ({
+        id: socio.id,
+        name: socio.nombre,
+        email: socio.email,
+        phone: socio.telefono,
+        type: 'socio' as const,
+        status: socio.estado
+      })),
+    ...comerciosVinculados
+      .filter(comercio => comercio.estado === 'activo')
+      .map(comercio => ({
+        id: comercio.id,
+        name: comercio.nombreComercio,
+        email: comercio.email,
+        phone: comercio.telefono,
+        type: 'comercio' as const,
+        status: comercio.estado
+      }))
+  ];
+
+  // Filter recipients based on search and type
+  const filteredRecipients = allRecipients.filter(recipient => {
+    const matchesSearch = recipient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         recipient.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = selectedType === 'all' || 
+                       (selectedType === 'socios' && recipient.type === 'socio') ||
+                       (selectedType === 'comercios' && recipient.type === 'comercio');
+    
+    return matchesSearch && matchesType && !selectedRecipients.find(r => r.id === recipient.id);
+  });
+
+  const handleAddRecipient = (recipient: Recipient) => {
+    onRecipientsChange([...selectedRecipients, recipient]);
+  };
+
+  const handleRemoveRecipient = (recipientId: string) => {
+    onRecipientsChange(selectedRecipients.filter(r => r.id !== recipientId));
   };
 
   const handleSelectAll = () => {
-    if (selectedNotifications.length === notifications.length) {
-      setSelectedNotifications([]);
-    } else {
-      setSelectedNotifications(notifications.map(n => n.id));
-    }
-  };
-
-  const handleBulkAction = async (action: 'read' | 'unread' | 'archive' | 'delete') => {
-    if (selectedNotifications.length === 0) return;
-
-    setActionLoading(true);
-    try {
-      await bulkAction(selectedNotifications, action);
-      setSelectedNotifications([]);
-      toast.success(`${selectedNotifications.length} notificaciones procesadas`);
-    } catch (error) {
-      console.error('Bulk action error:', error);
-      toast.error('Error al procesar las notificaciones');
-    } finally {
-      setActionLoading(false);
-      setBulkMenuAnchor(null);
-    }
-  };
-
-  const handleCreateNotification = async (data: NotificationFormData) => {
-    setActionLoading(true);
-    try {
-      await createNotification(data);
-      setCreateDialogOpen(false);
-      toast.success('Notificación creada exitosamente');
-    } catch (error) {
-      console.error('Create notification error:', error);
-      toast.error('Error al crear la notificación');
-      throw error;
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleMarkAllAsRead = async () => {
-    setActionLoading(true);
-    try {
-      await markAllAsRead();
-      toast.success('Todas las notificaciones marcadas como leídas');
-    } catch (error) {
-      console.error('Mark all as read error:', error);
-      toast.error('Error al marcar como leídas');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleAction = (url: string) => {
-    window.open(url, '_blank');
-  };
-
-  const clearFilters = () => {
-    setFilters({});
-    toast.success('Filtros limpiados');
-  };
-
-  const handleRefresh = async () => {
-    setActionLoading(true);
-    try {
-      await refreshStats();
-      toast.success('Notificaciones actualizadas');
-    } catch {
-      toast.error('Error al actualizar');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Enhanced stats with trends
-  const enhancedStats = useMemo(() => {
-    const total = stats.total;
-    const unread = stats.unread;
-    const read = stats.read;
-    const archived = stats.archived;
+    const typeFilter = selectedType === 'all' ? allRecipients : 
+                      selectedType === 'socios' ? allRecipients.filter(r => r.type === 'socio') :
+                      allRecipients.filter(r => r.type === 'comercio');
     
-    // Calculate percentages
-    const unreadPercentage = total > 0 ? Math.round((unread / total) * 100) : 0;
-    const readPercentage = total > 0 ? Math.round((read / total) * 100) : 0;
-    
-    return {
-      total: { value: total, trend: '+12%', color: '#64748b' },
-      unread: { value: unread, trend: unread > 0 ? `${unreadPercentage}%` : 'Al día', color: '#ef4444' },
-      read: { value: read, trend: `${readPercentage}%`, color: '#10b981' },
-      archived: { value: archived, trend: 'Estable', color: '#f59e0b' },
-    };
-  }, [stats]);
+    const newRecipients = typeFilter.filter(r => !selectedRecipients.find(sr => sr.id === r.id));
+    onRecipientsChange([...selectedRecipients, ...newRecipients]);
+  };
 
-  const isLoading = loading || externalLoading || actionLoading;
-
-  if (error) {
-    return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Paper
-          elevation={0}
-          sx={{
-            p: 8,
-            textAlign: 'center',
-            border: '1px solid #fee2e2',
-            borderRadius: 4,
-            bgcolor: '#fef2f2',
-          }}
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-semibold text-slate-700">
+          Destinatarios Específicos
+        </label>
+        <button
+          type="button"
+          onClick={() => setShowSelector(!showSelector)}
+          className="flex items-center gap-2 px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
         >
-          <Avatar
-            sx={{
-              width: 80,
-              height: 80,
-              bgcolor: alpha('#ef4444', 0.1),
-              color: '#ef4444',
-              mx: 'auto',
-              mb: 3,
-            }}
-          >
-            <Notifications sx={{ fontSize: 40 }} />
-          </Avatar>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#dc2626', mb: 2 }}>
-            Error al cargar notificaciones
-          </Typography>
-          <Typography variant="body1" sx={{ color: '#7f1d1d', mb: 4 }}>
-            {error}
-          </Typography>
-          <Button
-            onClick={handleRefresh}
-            variant="contained"
-            startIcon={<Refresh />}
-            sx={{
-              borderRadius: 3,
-              px: 4,
-              py: 1.5,
-              fontWeight: 600,
-              bgcolor: '#ef4444',
-              '&:hover': { bgcolor: '#dc2626' }
-            }}
-          >
-            Reintentar
-          </Button>
-        </Paper>
-      </Container>
+          <Plus className="w-4 h-4" />
+          Seleccionar
+        </button>
+      </div>
+
+      {/* Selected Recipients */}
+      {selectedRecipients.length > 0 && (
+        <div className="bg-slate-50 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-slate-700">
+              {selectedRecipients.length} destinatario{selectedRecipients.length !== 1 ? 's' : ''} seleccionado{selectedRecipients.length !== 1 ? 's' : ''}
+            </span>
+            <button
+              type="button"
+              onClick={() => onRecipientsChange([])}
+              className="text-xs text-red-600 hover:text-red-700"
+            >
+              Limpiar todo
+            </button>
+          </div>
+          
+          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+            {selectedRecipients.map((recipient) => (
+              <div
+                key={recipient.id}
+                className="flex items-center gap-2 bg-white px-3 py-1 rounded-lg border border-slate-200"
+              >
+                <div className={`w-2 h-2 rounded-full ${
+                  recipient.type === 'socio' ? 'bg-blue-500' : 'bg-emerald-500'
+                }`} />
+                <span className="text-sm text-slate-700">{recipient.name}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveRecipient(recipient.id)}
+                  className="text-slate-400 hover:text-red-500 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recipient Selector Modal */}
+      {showSelector && (
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-slate-900">Seleccionar Destinatarios</h3>
+            <button
+              type="button"
+              onClick={() => setShowSelector(false)}
+              className="text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre o email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value as 'all' | 'socios' | 'comercios')}
+              className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Todos</option>
+              <option value="socios">Solo Socios</option>
+              <option value="comercios">Solo Comercios</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={handleSelectAll}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+            >
+              Seleccionar Todos
+            </button>
+          </div>
+
+          {/* Recipients List */}
+          <div className="max-h-64 overflow-y-auto space-y-2">
+            {filteredRecipients.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                <Users className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                <p>No se encontraron destinatarios</p>
+              </div>
+            ) : (
+              filteredRecipients.map((recipient) => (
+                <div
+                  key={recipient.id}
+                  className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      recipient.type === 'socio' ? 'bg-blue-100' : 'bg-emerald-100'
+                    }`}>
+                      {recipient.type === 'socio' ? 
+                        <UserCheck className={`w-4 h-4 text-blue-600`} /> : 
+                        <Store className={`w-4 h-4 text-emerald-600`} />
+                      }
+                    </div>
+                    <div>
+                      <div className="font-medium text-slate-900">{recipient.name}</div>
+                      <div className="text-sm text-slate-500">{recipient.email}</div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={() => handleAddRecipient(recipient)}
+                    className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                  >
+                    Agregar
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Send Notification Component
+const SendNotification = () => {
+  const { sendNotification } = useSimpleNotifications();
+  const { socios } = useSocios();
+  const { comerciosVinculados } = useComercios();
+  const [loading, setLoading] = useState(false);
+  const [selectedRecipients, setSelectedRecipients] = useState<Recipient[]>([]);
+  const [formData, setFormData] = useState({
+    title: '',
+    message: '',
+    channels: ['email'],
+    recipients: 'all',
+    priority: 'normal'
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title || !formData.message) {
+      toast.error('Por favor completa todos los campos requeridos');
+      return;
+    }
+
+    if (formData.channels.length === 0) {
+      toast.error('Selecciona al menos un canal de envío');
+      return;
+    }
+
+    if (formData.recipients === 'specific' && selectedRecipients.length === 0) {
+      toast.error('Selecciona al menos un destinatario específico');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Prepare recipient IDs based on selection type
+      let recipientIds: string[] = [];
+      
+      if (formData.recipients === 'specific') {
+        recipientIds = selectedRecipients.map(r => r.id);
+      } else {
+        // For other recipient types, we need to get the appropriate recipients
+        const allRecipients = [
+          ...socios
+            .filter(socio => socio.estado === 'activo')
+            .map(socio => socio.id),
+          ...comerciosVinculados
+            .filter(comercio => comercio.estado === 'activo')
+            .map(comercio => comercio.id)
+        ];
+        
+        switch (formData.recipients) {
+          case 'all':
+            recipientIds = allRecipients;
+            break;
+          case 'socios':
+            recipientIds = socios
+              .filter(socio => socio.estado === 'activo')
+              .map(socio => socio.id);
+            break;
+          case 'comercios':
+            recipientIds = comerciosVinculados
+              .filter(comercio => comercio.estado === 'activo')
+              .map(comercio => comercio.id);
+            break;
+          case 'active':
+            recipientIds = allRecipients; // For now, same as 'all'
+            break;
+          default:
+            recipientIds = allRecipients;
+        }
+      }
+
+      const notificationData = {
+        title: formData.title,
+        message: formData.message,
+        type: 'info' as const,
+        channels: formData.channels as SimpleNotificationChannel[],
+        recipientIds: recipientIds
+      };
+
+      console.log('🔍 Notification data being sent:', notificationData);
+      console.log('🔍 Form data:', formData);
+      console.log('🔍 Recipient IDs:', recipientIds);
+
+      await sendNotification(notificationData);
+      
+      toast.success(`Notificación enviada exitosamente a ${
+        formData.recipients === 'specific' 
+          ? `${selectedRecipients.length} destinatario${selectedRecipients.length !== 1 ? 's' : ''}`
+          : 'todos los usuarios seleccionados'
+      }`);
+      
+      setFormData({
+        title: '',
+        message: '',
+        channels: ['email'],
+        recipients: 'all',
+        priority: 'normal'
+      });
+      setSelectedRecipients([]);
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      toast.error('Error al enviar la notificación');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const channelOptions = [
+    { id: 'email', label: 'Email', icon: Mail, color: 'blue' },
+    { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, color: 'emerald' }
+  ];
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Enviar Notificación</h2>
+        <p className="text-slate-600">Crea y envía notificaciones a tus usuarios</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 shadow-lg border border-slate-100">
+        <div className="space-y-6">
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Título *
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Ingresa el título de la notificación"
+              required
+            />
+          </div>
+
+          {/* Message */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Mensaje *
+            </label>
+            <textarea
+              value={formData.message}
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              rows={4}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              placeholder="Escribe tu mensaje aquí..."
+              required
+            />
+            <div className="text-xs text-slate-500 mt-1">
+              {formData.message.length}/500 caracteres
+            </div>
+          </div>
+
+          {/* Channels */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-3">
+              Canales de Envío *
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {channelOptions.map((channel) => (
+                <label
+                  key={channel.id}
+                  className={`flex items-center gap-4 p-6 border-2 rounded-xl cursor-pointer transition-all ${
+                    formData.channels.includes(channel.id)
+                      ? `border-${channel.color}-500 bg-${channel.color}-50`
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData.channels.includes(channel.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData({
+                          ...formData,
+                          channels: [...formData.channels, channel.id]
+                        });
+                      } else {
+                        setFormData({
+                          ...formData,
+                          channels: formData.channels.filter(c => c !== channel.id)
+                        });
+                      }
+                    }}
+                    className="sr-only"
+                  />
+                  <div className={`w-12 h-12 bg-${channel.color}-100 rounded-xl flex items-center justify-center`}>
+                    <channel.icon className={`w-6 h-6 text-${channel.color}-600`} />
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-900">{channel.label}</span>
+                    <p className="text-sm text-slate-600">
+                      {channel.id === 'email' ? 'Envío por correo electrónico' : 'Envío por WhatsApp Business'}
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Recipients */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-3">
+              Destinatarios
+            </label>
+            <div className="space-y-4">
+              <select
+                value={formData.recipients}
+                onChange={(e) => {
+                  setFormData({ ...formData, recipients: e.target.value });
+                  if (e.target.value !== 'specific') {
+                    setSelectedRecipients([]);
+                  }
+                }}
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">Todos los usuarios</option>
+                <option value="socios">Solo socios</option>
+                <option value="comercios">Solo comercios</option>
+                <option value="active">Usuarios activos</option>
+                <option value="specific">Seleccionar específicos</option>
+              </select>
+
+              {/* Specific Recipients Selector */}
+              {formData.recipients === 'specific' && (
+                <RecipientSelector
+                  selectedRecipients={selectedRecipients}
+                  onRecipientsChange={setSelectedRecipients}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Priority */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Prioridad
+            </label>
+            <select
+              value={formData.priority}
+              onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="low">Baja</option>
+              <option value="normal">Normal</option>
+              <option value="high">Alta</option>
+            </select>
+          </div>
+
+          {/* Action Button */}
+          <div className="pt-6">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-4 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  <Send className="w-5 h-5" />
+                  Enviar Notificación
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+// History Component
+const NotificationHistory = () => {
+  const { notifications, loading } = useSimpleNotifications();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [channelFilter, setChannelFilter] = useState<'all' | SimpleNotificationChannel>('all');
+
+  const filteredNotifications = notifications.filter(notification => {
+    const matchesSearch = notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         notification.message.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || notification.status === statusFilter;
+    const matchesChannel = channelFilter === 'all' || notification.channels?.includes(channelFilter as SimpleNotificationChannel);
+    
+    return matchesSearch && matchesStatus && matchesChannel;
+  });
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'sent': return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+      case 'failed': return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'sending': return <Clock className="w-4 h-4 text-orange-500" />;
+      default: return <AlertCircle className="w-4 h-4 text-slate-500" />;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const styles = {
+      sent: 'bg-emerald-100 text-emerald-700',
+      failed: 'bg-red-100 text-red-700',
+      sending: 'bg-orange-100 text-orange-700',
+      pending: 'bg-blue-100 text-blue-700'
+    };
+    
+    return styles[status as keyof typeof styles] || 'bg-slate-100 text-slate-700';
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-600">Cargando historial...</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <>
-      <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
-        {/* Header */}
-        <Box
-          component={motion.div}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          sx={{ mb: { xs: 4, md: 6 } }}
-        >
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: { xs: 'flex-start', sm: 'center' }, 
-            gap: { xs: 2, md: 3 }, 
-            mb: { xs: 3, md: 4 } 
-          }}>
-            <Badge
-              badgeContent={newNotificationCount}
-              color="error"
-              max={99}
-              sx={{
-                '& .MuiBadge-badge': {
-                  animation: newNotificationCount > 0 ? 'pulse 2s infinite' : 'none',
-                  '@keyframes pulse': {
-                    '0%': { transform: 'scale(1)' },
-                    '50%': { transform: 'scale(1.2)' },
-                    '100%': { transform: 'scale(1)' },
-                  },
-                },
-              }}
-            >
-              <Avatar
-                sx={{
-                  width: { xs: 56, md: 64 },
-                  height: { xs: 56, md: 64 },
-                  borderRadius: 4,
-                  background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-                  boxShadow: '0 12px 40px rgba(236, 72, 153, 0.3)',
-                }}
-              >
-                <NotificationsActive sx={{ fontSize: { xs: 28, md: 32 } }} />
-              </Avatar>
-            </Badge>
-            
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography 
-                variant="h3" 
-                sx={{ 
-                  fontWeight: 900, 
-                  color: '#0f172a', 
-                  mb: 1,
-                  fontSize: { xs: '1.75rem', sm: '2.25rem', md: '3rem' },
-                  lineHeight: 1.2,
-                }}
-              >
-                Centro de Notificaciones
-                {isLoading && (
-                  <LinearProgress
-                    sx={{
-                      mt: 1,
-                      borderRadius: 2,
-                      height: 4,
-                      bgcolor: alpha('#ec4899', 0.1),
-                      '& .MuiLinearProgress-bar': {
-                        bgcolor: '#ec4899',
-                      }
-                    }}
-                  />
-                )}
-              </Typography>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  color: '#64748b', 
-                  fontWeight: 600,
-                  fontSize: { xs: '1rem', md: '1.25rem' },
-                }}
-              >
-                Gestiona todas las comunicaciones y alertas del sistema
-              </Typography>
-            </Box>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Historial de Notificaciones</h2>
+          <p className="text-slate-600">Revisa todas las notificaciones enviadas</p>
+        </div>
+        
+        <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-colors">
+          <Download className="w-4 h-4" />
+          <span className="text-sm font-medium">Exportar</span>
+        </button>
+      </div>
 
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 1,
-              width: { xs: '100%', sm: 'auto' },
-              justifyContent: { xs: 'space-between', sm: 'flex-end' },
-            }}>
-              {!isMobile && (
-                <>
-                  <Tooltip title={soundEnabled ? 'Silenciar sonidos' : 'Activar sonidos'}>
-                    <IconButton
-                      onClick={() => setSoundEnabled(!soundEnabled)}
-                      sx={{
-                        color: soundEnabled ? '#10b981' : '#94a3b8',
-                        bgcolor: alpha(soundEnabled ? '#10b981' : '#94a3b8', 0.1),
-                      }}
-                    >
-                      {soundEnabled ? <VolumeUp /> : <VolumeOff />}
-                    </IconButton>
-                  </Tooltip>
-
-                  <Tooltip title="Actualizar">
-                    <IconButton
-                      onClick={handleRefresh}
-                      disabled={isLoading}
-                      sx={{
-                        color: '#6366f1',
-                        bgcolor: alpha('#6366f1', 0.1),
-                        '&:hover': {
-                          bgcolor: alpha('#6366f1', 0.2),
-                        }
-                      }}
-                    >
-                      <Refresh sx={{ 
-                        animation: isLoading ? 'spin 1s linear infinite' : 'none',
-                        '@keyframes spin': {
-                          '0%': { transform: 'rotate(0deg)' },
-                          '100%': { transform: 'rotate(360deg)' },
-                        }
-                      }} />
-                    </IconButton>
-                  </Tooltip>
-
-                  <Tooltip title="Filtros">
-                    <IconButton
-                      onClick={() => setShowFilters(!showFilters)}
-                      sx={{
-                        color: showFilters ? '#ec4899' : '#94a3b8',
-                        bgcolor: alpha(showFilters ? '#ec4899' : '#94a3b8', 0.1),
-                      }}
-                    >
-                      <FilterList />
-                    </IconButton>
-                  </Tooltip>
-                </>
-              )}
-
-              <Button
-                onClick={() => setCreateDialogOpen(true)}
-                variant="contained"
-                startIcon={<Add />}
-                size={isMobile ? "medium" : "large"}
-                sx={{
-                  py: { xs: 1.5, md: 2 },
-                  px: { xs: 3, md: 4 },
-                  borderRadius: 4,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  fontSize: { xs: '0.875rem', md: '1rem' },
-                  background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-                  boxShadow: '0 8px 32px rgba(236, 72, 153, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #be185d 0%, #9d174d 100%)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 12px 40px rgba(236, 72, 153, 0.4)',
-                  },
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                {isMobile ? 'Nueva' : 'Nueva Notificación'}
-              </Button>
-            </Box>
-          </Box>
-
-          {/* Enhanced Stats Cards - Using CSS Grid instead of Material-UI Grid */}
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: 'repeat(2, 1fr)',
-                sm: 'repeat(4, 1fr)',
-              },
-              gap: { xs: 2, md: 3 },
-              mb: { xs: 3, md: 4 },
-            }}
-          >
-            {[
-              { 
-                key: 'total',
-                label: 'Total', 
-                value: enhancedStats.total.value, 
-                color: enhancedStats.total.color,
-                icon: <Notifications />,
-                trend: enhancedStats.total.trend,
-                gradient: 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
-              },
-              { 
-                key: 'unread',
-                label: 'No leídas', 
-                value: enhancedStats.unread.value, 
-                color: enhancedStats.unread.color,
-                icon: <NotificationsActive />,
-                trend: enhancedStats.unread.trend,
-                gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-              },
-              { 
-                key: 'read',
-                label: 'Leídas', 
-                value: enhancedStats.read.value, 
-                color: enhancedStats.read.color,
-                icon: <CheckCircle />,
-                trend: enhancedStats.read.trend,
-                gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              },
-              { 
-                key: 'archived',
-                label: 'Archivadas', 
-                value: enhancedStats.archived.value, 
-                color: enhancedStats.archived.color,
-                icon: <Archive />,
-                trend: enhancedStats.archived.trend,
-                gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              },
-            ].map((stat, index) => (
-              <Box
-                key={stat.key}
-                component={motion.div}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: { xs: 2.5, md: 4 },
-                    border: '1px solid #f1f5f9',
-                    borderRadius: 4,
-                    position: 'relative',
-                    overflow: 'hidden',
-                    transition: 'all 0.3s ease',
-                    height: '100%',
-                    '&:hover': {
-                      borderColor: alpha(stat.color, 0.3),
-                      transform: 'translateY(-4px)',
-                      boxShadow: `0 12px 40px ${alpha(stat.color, 0.15)}`,
-                    }
-                  }}
-                >
-                  {/* Background gradient */}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      right: 0,
-                      width: { xs: 80, md: 100 },
-                      height: { xs: 80, md: 100 },
-                      background: `radial-gradient(circle, ${alpha(stat.color, 0.1)} 0%, transparent 70%)`,
-                    }}
-                  />
-                  
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between', 
-                    mb: { xs: 1.5, md: 2 },
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    gap: { xs: 1, sm: 0 },
-                  }}>
-                    <Avatar
-                      sx={{
-                        width: { xs: 40, md: 48 },
-                        height: { xs: 40, md: 48 },
-                        background: stat.gradient,
-                        color: 'white',
-                        order: { xs: 2, sm: 1 },
-                      }}
-                    >
-                      {stat.icon}
-                    </Avatar>
-                    
-                    <Box sx={{ textAlign: { xs: 'center', sm: 'right' }, order: { xs: 1, sm: 2 } }}>
-                      <Typography
-                        variant="h3"
-                        sx={{
-                          fontWeight: 900,
-                          color: stat.color,
-                          lineHeight: 1,
-                          fontSize: { xs: '1.75rem', md: '2.5rem' },
-                        }}
-                      >
-                        {stat.value}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: '#10b981',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 0.5,
-                          justifyContent: { xs: 'center', sm: 'flex-end' },
-                          fontSize: { xs: '0.7rem', md: '0.75rem' },
-                        }}
-                      >
-                        <TrendingUp sx={{ fontSize: { xs: 10, md: 12 } }} />
-                        {stat.trend}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: '#64748b',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.1em',
-                      textAlign: { xs: 'center', sm: 'left' },
-                      fontSize: { xs: '0.7rem', md: '0.75rem' },
-                    }}
-                  >
-                    {stat.label}
-                  </Typography>
-                </Paper>
-              </Box>
-            ))}
-          </Box>
-        </Box>
-
-        {/* Mobile Controls */}
-        {isMobile && (
-          <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
-            <Button
-              onClick={() => setShowFilters(!showFilters)}
-              startIcon={<FilterList />}
-              variant={showFilters ? "contained" : "outlined"}
-              size="small"
-              sx={{ 
-                borderRadius: 3,
-                textTransform: 'none',
-                fontWeight: 600,
-              }}
-            >
-              Filtros
-            </Button>
-            <Button
-              onClick={handleRefresh}
-              startIcon={<Refresh />}
-              variant="outlined"
-              size="small"
-              disabled={isLoading}
-              sx={{ 
-                borderRadius: 3,
-                textTransform: 'none',
-                fontWeight: 600,
-              }}
-            >
-              Actualizar
-            </Button>
-            <Button
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              startIcon={soundEnabled ? <VolumeUp /> : <VolumeOff />}
-              variant="outlined"
-              size="small"
-              sx={{ 
-                borderRadius: 3,
-                textTransform: 'none',
-                fontWeight: 600,
-                color: soundEnabled ? '#10b981' : '#94a3b8',
-              }}
-            >
-              {soundEnabled ? 'Sonido' : 'Silencio'}
-            </Button>
-          </Box>
-        )}
-
-        {/* Filters */}
-        {(showFilters || !isMobile) && (
-          <NotificationFilters
-            filters={{
-              ...filters,
-              dateRange: filters.dateRange
-                ? { from: filters.dateRange.start, to: filters.dateRange.end }
-                : undefined
-            }}
-            onFiltersChange={(newFilters) => {
-              setFilters({
-                ...newFilters,
-                dateRange: newFilters.dateRange
-                  ? { start: newFilters.dateRange.from, end: newFilters.dateRange.to }
-                  : undefined
-              });
-            }}
-            onClearFilters={clearFilters}
-            loading={isLoading}
-          />
-        )}
-
-        {/* Bulk Actions Bar */}
-        <AnimatePresence>
-          {selectedNotifications.length > 0 && (
-            <Box
-              component={motion.div}
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Paper
-                elevation={0}
-                sx={{
-                  p: { xs: 2, md: 3 },
-                  mb: 3,
-                  border: '2px solid #6366f1',
-                  borderRadius: 4,
-                  bgcolor: alpha('#6366f1', 0.02),
-                  backdropFilter: 'blur(10px)',
-                }}
-              >
-                <Box sx={{ 
-                  display: 'flex', 
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  alignItems: { xs: 'flex-start', sm: 'center' }, 
-                  justifyContent: 'space-between',
-                  gap: 2,
-                }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Checkbox
-                      checked={selectedNotifications.length === notifications.length}
-                      indeterminate={selectedNotifications.length > 0 && selectedNotifications.length < notifications.length}
-                      onChange={handleSelectAll}
-                      sx={{ color: '#6366f1' }}
-                    />
-                    <Typography variant="body1" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                      {selectedNotifications.length} notificación{selectedNotifications.length > 1 ? 'es' : ''} seleccionada{selectedNotifications.length > 1 ? 's' : ''}
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 1,
-                    flexWrap: 'wrap',
-                    width: { xs: '100%', sm: 'auto' },
-                  }}>
-                    <Button
-                      onClick={() => handleBulkAction('read')}
-                      startIcon={<CheckCircle />}
-                      size="small"
-                      disabled={actionLoading}
-                      sx={{ 
-                        color: '#10b981',
-                        '&:hover': { bgcolor: alpha('#10b981', 0.1) },
-                        textTransform: 'none',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Marcar leídas
-                    </Button>
-                    <Button
-                      onClick={() => handleBulkAction('archive')}
-                      startIcon={<Archive />}
-                      size="small"
-                      disabled={actionLoading}
-                      sx={{ 
-                        color: '#f59e0b',
-                        '&:hover': { bgcolor: alpha('#f59e0b', 0.1) },
-                        textTransform: 'none',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Archivar
-                    </Button>
-                    <Button
-                      onClick={() => handleBulkAction('delete')}
-                      startIcon={<Delete />}
-                      size="small"
-                      disabled={actionLoading}
-                      sx={{ 
-                        color: '#ef4444',
-                        '&:hover': { bgcolor: alpha('#ef4444', 0.1) },
-                        textTransform: 'none',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Eliminar
-                    </Button>
-                    <IconButton
-                      onClick={(e) => setBulkMenuAnchor(e.currentTarget)}
-                      size="small"
-                      sx={{ color: '#64748b' }}
-                    >
-                      <MoreVert />
-                    </IconButton>
-                  </Box>
-                </Box>
-              </Paper>
-            </Box>
-          )}
-        </AnimatePresence>
-
-        {/* Action Bar */}
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: { xs: 'flex-start', sm: 'center' }, 
-          justifyContent: 'space-between', 
-          mb: 3,
-          gap: 2,
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={selectedNotifications.length === notifications.length && notifications.length > 0}
-                  indeterminate={selectedNotifications.length > 0 && selectedNotifications.length < notifications.length}
-                  onChange={handleSelectAll}
-                />
-              }
-              label="Seleccionar todo"
-              sx={{ color: '#64748b' }}
+      {/* Filters */}
+      <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Buscar notificaciones..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            
-            {stats.unread > 0 && (
-              <Button
-                onClick={handleMarkAllAsRead}
-                startIcon={<MarkEmailRead />}
-                size="small"
-                disabled={actionLoading}
-                sx={{
-                  color: '#6366f1',
-                  '&:hover': {
-                    bgcolor: alpha('#6366f1', 0.1),
-                  },
-                  textTransform: 'none',
-                  fontWeight: 600,
-                }}
+          </div>
+          
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">Todos los estados</option>
+            <option value="sent">Enviadas</option>
+            <option value="sending">Enviando</option>
+            <option value="failed">Fallidas</option>
+          </select>
+          
+          <select
+            value={channelFilter}
+            onChange={(e) => setChannelFilter(e.target.value as 'all' | SimpleNotificationChannel)}
+            className="px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">Todos los canales</option>
+            <option value="email">Email</option>
+            <option value="whatsapp">WhatsApp</option>
+          </select>
+          
+          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors">
+            <Filter className="w-4 h-4" />
+            <span className="text-sm font-medium">Filtros</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Notifications List */}
+      <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
+        {filteredNotifications.length === 0 ? (
+          <div className="text-center py-12">
+            <Bell className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">No hay notificaciones</h3>
+            <p className="text-slate-600">No se encontraron notificaciones con los filtros aplicados</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {filteredNotifications.map((notification, index) => (
+              <motion.div
+                key={notification.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="p-6 hover:bg-slate-50 transition-colors"
               >
-                Marcar todas como leídas ({stats.unread})
-              </Button>
-            )}
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body2" sx={{ color: '#64748b' }}>
-              {notifications.length} de {stats.total} notificaciones
-            </Typography>
-            
-            {!isMobile && (
-              <Tooltip title="Configuración">
-                <IconButton
-                  size="small"
-                  sx={{
-                    color: '#64748b',
-                    '&:hover': {
-                      bgcolor: alpha('#6366f1', 0.1),
-                      color: '#6366f1',
-                    }
-                  }}
-                >
-                  <Settings />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Box>
-        </Box>
-
-        {/* Notifications List */}
-        <Box>
-          {isLoading && notifications.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 8 }}>
-              <Box
-                sx={{
-                  width: 60,
-                  height: 60,
-                  border: '4px solid #f1f5f9',
-                  borderRadius: '50%',
-                  borderTopColor: '#6366f1',
-                  animation: 'spin 1s linear infinite',
-                  mx: 'auto',
-                  mb: 3,
-                  '@keyframes spin': {
-                    '0%': { transform: 'rotate(0deg)' },
-                    '100%': { transform: 'rotate(360deg)' },
-                  },
-                }}
-              />
-              <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 600 }}>
-                Cargando notificaciones...
-              </Typography>
-            </Box>
-          ) : notifications.length === 0 ? (
-            <Paper
-              elevation={0}
-              sx={{
-                p: { xs: 6, md: 8 },
-                textAlign: 'center',
-                border: '1px solid #f1f5f9',
-                borderRadius: 4,
-              }}
-            >
-              <Avatar
-                sx={{
-                  width: { xs: 60, md: 80 },
-                  height: { xs: 60, md: 80 },
-                  bgcolor: alpha('#ec4899', 0.1),
-                  color: '#ec4899',
-                  mx: 'auto',
-                  mb: 3,
-                }}
-              >
-                <Notifications sx={{ fontSize: { xs: 30, md: 40 } }} />
-              </Avatar>
-              <Typography 
-                variant="h5" 
-                sx={{ 
-                  fontWeight: 700, 
-                  color: '#1e293b', 
-                  mb: 2,
-                  fontSize: { xs: '1.25rem', md: '1.5rem' },
-                }}
-              >
-                No hay notificaciones
-              </Typography>
-              <Typography 
-                variant="body1" 
-                sx={{ 
-                  color: '#64748b', 
-                  mb: 4,
-                  fontSize: { xs: '0.875rem', md: '1rem' },
-                }}
-              >
-                No se encontraron notificaciones que coincidan con los filtros aplicados.
-              </Typography>
-              <Button
-                onClick={() => setCreateDialogOpen(true)}
-                variant="contained"
-                startIcon={<Add />}
-                sx={{
-                  borderRadius: 3,
-                  px: 4,
-                  py: 1.5,
-                  fontWeight: 600,
-                  background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-                }}
-              >
-                Crear primera notificación
-              </Button>
-            </Paper>
-          ) : (
-            <AnimatePresence>
-              {notifications.map((notification) => (
-                <NotificationCard
-                  key={notification.id}
-                  notification={notification}
-                  onMarkAsRead={markAsRead}
-                  onMarkAsUnread={markAsUnread}
-                  onArchive={archiveNotification}
-                  onDelete={deleteNotification}
-                  onAction={handleAction}
-                  selected={selectedNotifications.includes(notification.id)}
-                  onSelect={handleSelectNotification}
-                />
-              ))}
-            </AnimatePresence>
-          )}
-        </Box>
-
-        {/* Bulk Actions Menu */}
-        <Menu
-          anchorEl={bulkMenuAnchor}
-          open={Boolean(bulkMenuAnchor)}
-          onClose={() => setBulkMenuAnchor(null)}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-          PaperProps={{
-            sx: {
-              borderRadius: 3,
-              boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-              border: '1px solid #f1f5f9',
-              minWidth: 200,
-            }
-          }}
-        >
-          <MenuItem onClick={() => handleBulkAction('unread')}>
-            <Badge sx={{ mr: 2 }} />
-            Marcar como no leídas
-          </MenuItem>
-          <Divider />
-          <MenuItem onClick={() => setSelectedNotifications([])}>
-            <SelectAll sx={{ mr: 2, transform: 'scaleX(-1)' }} />
-            Deseleccionar todo
-          </MenuItem>
-        </Menu>
-
-        {/* Create Notification Dialog */}
-        <CreateNotificationDialog
-          open={createDialogOpen}
-          onClose={() => setCreateDialogOpen(false)}
-          onSave={handleCreateNotification}
-          loading={actionLoading}
-        />
-      </Container>
-
-      {/* Floating Action Button */}
-      <Zoom in={!createDialogOpen}>
-        <Fab
-          onClick={() => setCreateDialogOpen(true)}
-          sx={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-            color: 'white',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #be185d 0%, #9d174d 100%)',
-              transform: 'scale(1.1)',
-            },
-            transition: 'all 0.3s ease',
-            zIndex: 1000,
-          }}
-        >
-          <Add />
-        </Fab>
-      </Zoom>
-
-      {/* Real-time Notifications */}
-      <RealTimeNotifications
-        notifications={allNotifications.filter(n => n.status === 'unread')}
-        onNotificationClick={(notification) => {
-          markAsRead(notification.id);
-          if (notification.actionUrl) {
-            handleAction(notification.actionUrl);
-          }
-        }}
-        onNotificationDismiss={(id) => {
-          markAsRead(id);
-        }}
-        maxVisible={3}
-        position="top-right"
-      />
-    </>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-semibold text-slate-900">{notification.title}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(notification.status)}`}>
+                        {notification.status}
+                      </span>
+                    </div>
+                    
+                    <p className="text-slate-600 mb-3 line-clamp-2">{notification.message}</p>
+                    
+                    <div className="flex items-center gap-4 text-sm text-slate-500">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {new Date(notification.createdAt).toLocaleDateString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                      
+                      <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        {notification.recipientIds?.length || 0} destinatarios
+                      </div>
+                      
+                      {notification.channels && (
+                        <div className="flex items-center gap-2">
+                          {notification.channels.map((channel: string) => (
+                            <div key={channel} className="flex items-center gap-1">
+                              {channel === 'email' && <Mail className="w-3 h-3" />}
+                              {channel === 'whatsapp' && <MessageSquare className="w-3 h-3" />}
+                              <span className="capitalize">{channel}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(notification.status)}
+                    <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
+
+// Main Component
+export default function NotificationsCenter() {
+  const { notifications, loading } = useSimpleNotifications();
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  // Calculate stats
+  const stats: NotificationStats = {
+    total: notifications.length,
+    sent: notifications.filter(n => n.status === 'sent').length,
+    pending: notifications.filter(n => n.status === 'sending').length,
+    failed: notifications.filter(n => n.status === 'failed').length,
+    todayCount: notifications.filter(n => {
+      const today = new Date();
+      const notificationDate = new Date(n.createdAt);
+      return notificationDate.toDateString() === today.toDateString();
+    }).length,
+    weekCount: notifications.filter(n => {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return new Date(n.createdAt) >= weekAgo;
+    }).length,
+    successRate: notifications.length > 0 ? Math.round((notifications.filter(n => n.status === 'sent').length / notifications.length) * 100) : 0
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <Dashboard stats={stats} />;
+      case 'enviar':
+        return <SendNotification />;
+      case 'historial':
+        return <NotificationHistory />;
+      default:
+        return <Dashboard stats={stats} />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-600">Cargando centro de notificaciones...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <Bell className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Centro de Notificaciones</h1>
+              <p className="text-slate-600">Gestiona todas tus comunicaciones desde aquí</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
+            <Activity className="w-4 h-4 text-emerald-600" />
+            <span className="text-sm font-medium text-emerald-700">Sistema Activo</span>
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex flex-wrap gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-semibold transition-all ${
+                activeTab === tab.id
+                  ? `bg-gradient-to-r ${tab.gradient} text-white shadow-lg scale-105`
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
+                activeTab === tab.id ? 'bg-white/20' : 'bg-slate-100'
+              }`}>
+                <tab.icon className={`w-5 h-5 ${
+                  activeTab === tab.id ? 'text-white' : 'text-slate-600'
+                }`} />
+              </div>
+              <span className="text-sm font-medium">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-3xl border border-white/20 shadow-xl p-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {renderContent()}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}

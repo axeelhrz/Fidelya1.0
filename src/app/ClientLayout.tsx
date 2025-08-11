@@ -17,7 +17,6 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         await notificationInitService.initialize({
           enableBrowserNotifications: true,
           enableSounds: true,
-          queueProcessingInterval: 15000,
           maxRetries: 3,
         });
       } catch (error) {

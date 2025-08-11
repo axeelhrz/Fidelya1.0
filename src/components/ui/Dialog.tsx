@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -10,11 +11,13 @@ interface DialogProps {
   onClose: () => void;
   children: React.ReactNode;
   className?: string;
+  fullScreen?: boolean;
 }
 
 interface DialogContentProps {
   children: React.ReactNode;
   className?: string;
+  fullScreen?: boolean;
 }
 
 interface DialogHeaderProps {
@@ -32,34 +35,84 @@ interface DialogFooterProps {
   className?: string;
 }
 
-export const Dialog: React.FC<DialogProps> = ({ open, onClose, children, className }) => {
-  return (
+export const Dialog: React.FC<DialogProps> = ({ open, onClose, children, className, fullScreen = false }) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      // Prevenir scroll del body cuando el modal está abierto
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restaurar scroll del body cuando el modal se cierra
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup al desmontar
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [open]);
+
+  if (!mounted) return null;
+
+  const modalContent = (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className={cn(
+          "fixed inset-0",
+          fullScreen ? "z-[99999]" : "z-[9999] flex items-center justify-center"
+        )}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            className={cn(
+              "fixed inset-0",
+              fullScreen ? "bg-black/70 backdrop-blur-md" : "bg-black/50 backdrop-blur-sm"
+            )}
             onClick={onClose}
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.2 }}
+            initial={{ 
+              opacity: 0, 
+              scale: fullScreen ? 0.98 : 0.95, 
+              y: fullScreen ? 10 : 20 
+            }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1, 
+              y: 0 
+            }}
+            exit={{ 
+              opacity: 0, 
+              scale: fullScreen ? 0.98 : 0.95, 
+              y: fullScreen ? 10 : 20 
+            }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             className={cn(
-              "relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-hidden",
+              "relative bg-white shadow-2xl overflow-hidden",
+              fullScreen 
+                ? "fixed inset-0 w-screen h-screen" 
+                : "rounded-2xl max-w-md w-full mx-4 max-h-[90vh]",
               className
             )}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors z-10"
+              className={cn(
+                "absolute p-3 text-gray-400 hover:text-gray-600 transition-colors z-50 hover:bg-white/90 rounded-full",
+                fullScreen 
+                  ? "top-8 right-8 bg-white/80 backdrop-blur-sm shadow-lg" 
+                  : "top-4 right-4 bg-white/80 backdrop-blur-sm"
+              )}
             >
-              <X size={20} />
+              <X size={fullScreen ? 28 : 20} />
             </button>
             {children}
           </motion.div>
@@ -67,28 +120,39 @@ export const Dialog: React.FC<DialogProps> = ({ open, onClose, children, classNa
       )}
     </AnimatePresence>
   );
+
+  // Usar portal para renderizar el modal directamente en el body
+  return createPortal(modalContent, document.body);
 };
 
-export const DialogContent: React.FC<DialogContentProps> = ({ children, className }) => (
-  <div className={cn("p-6", className)}>
+export const DialogContent: React.FC<DialogContentProps> = ({ children, className, fullScreen = false }) => (
+  <div className={cn(
+    fullScreen 
+      ? "h-full overflow-y-auto p-8 pt-24" 
+      : "p-6", 
+    className
+  )}>
     {children}
   </div>
 );
 
 export const DialogHeader: React.FC<DialogHeaderProps> = ({ children, className }) => (
-  <div className={cn("pb-4", className)}>
+  <div className={cn("pb-6", className)}>
     {children}
   </div>
 );
 
 export const DialogTitle: React.FC<DialogTitleProps> = ({ children, className }) => (
-  <h2 className={cn("text-xl font-semibold text-gray-900", className)}>
+  <h2 className={cn("text-2xl font-bold text-gray-900", className)}>
     {children}
   </h2>
 );
 
 export const DialogFooter: React.FC<DialogFooterProps> = ({ children, className }) => (
-  <div className={cn("flex gap-3 pt-4", className)}>
+  <div className={cn(
+    "flex gap-4 pt-6 border-t border-gray-200 bg-gray-50/80 backdrop-blur-sm sticky bottom-0 p-8 mt-8", 
+    className
+  )}>
     {children}
   </div>
 );

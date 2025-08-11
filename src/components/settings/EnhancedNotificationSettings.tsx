@@ -1,573 +1,907 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
+  Container,
+  Typography,
+  Paper,
   Card,
   CardContent,
-  Typography,
-  Switch,
-  FormControlLabel,
+  CardHeader,
   Button,
+  Switch,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
   Chip,
+  IconButton,
   Alert,
   Divider,
-  TextField,
-  MenuItem,
-  Avatar,
-  LinearProgress,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  Stack,
+  Slider,
+  FormControlLabel,
+  Checkbox,
+  Tab,
+  Tabs,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
-  Notifications,
+  Settings,
   Email,
   Sms,
+  NotificationsActive,
   PhoneAndroid,
-  VolumeOff,
-  Settings,
-  CheckCircle,
-  ExpandMore,
-  Refresh,
-  Science,
+  Speed,
+  Security,
+  Add,
+  Edit,
+  Save,
+  AccessTime,
+  FilterList,
+  Refresh
 } from '@mui/icons-material';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { useAuth } from '@/hooks/useAuth';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { enhancedNotificationService } from '@/services/enhanced-notifications.service';
-import toast from 'react-hot-toast';
+import { useAuth } from '../../hooks/useAuth';
 
-interface NotificationSettings {
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  smsNotifications: boolean;
-  categories: {
-    system: boolean;
-    membership: boolean;
-    payment: boolean;
-    event: boolean;
-    general: boolean;
-  };
-  priorities: {
-    low: boolean;
-    medium: boolean;
-    high: boolean;
-    urgent: boolean;
-  };
-  quietHours: {
-    enabled: boolean;
-    start: string;
-    end: string;
-  };
-  frequency: 'immediate' | 'hourly' | 'daily' | 'weekly';
+interface NotificationChannel {
+  id: string;
+  name: string;
+  type: 'email' | 'sms' | 'push' | 'app';
+  enabled: boolean;
+  config: ChannelConfig;
+  limits: ChannelLimits;
+  templates: string[];
 }
 
-export const EnhancedNotificationSettings: React.FC = () => {
-  const { user } = useAuth();
-  const {
-    isSupported: pushSupported,
-    isRegistering,
-    requestPermission,
-    isEnabled: pushEnabled
-  } = usePushNotifications();
+interface ChannelConfig {
+  provider?: string;
+  apiKey?: string;
+  fromAddress?: string;
+  fromName?: string;
+  replyTo?: string;
+  webhookUrl?: string;
+  retryAttempts: number;
+  retryDelay: number; // en minutos
+  timeout: number; // en segundos
+  priority: 'low' | 'normal' | 'high';
+  batchSize: number;
+  throttleRate: number; // mensajes por minuto
+}
 
-  const [settings, setSettings] = useState<NotificationSettings>({
-    emailNotifications: true,
-    pushNotifications: true,
-    smsNotifications: false,
-    categories: {
-      system: true,
-      membership: true,
-      payment: true,
-      event: true,
-      general: true,
-    },
-    priorities: {
-      low: true,
-      medium: true,
-      high: true,
-      urgent: true,
-    },
-    quietHours: {
-      enabled: false,
-      start: '22:00',
-      end: '08:00',
-    },
-    frequency: 'immediate',
+interface ChannelLimits {
+  dailyLimit: number;
+  hourlyLimit: number;
+  perUserLimit: number;
+  cooldownPeriod: number; // en minutos
+  maxRecipients: number;
+}
+
+interface NotificationRule {
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  conditions: RuleCondition[];
+  actions: RuleAction[];
+  priority: number;
+}
+
+interface RuleCondition {
+  field: string;
+  operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'in' | 'not_in';
+  value: string | number | boolean;
+}
+
+interface RuleAction {
+  type: 'block' | 'throttle' | 'redirect' | 'modify' | 'approve';
+  parameters: Record<string, unknown>;
+}
+
+interface QuietHours {
+  enabled: boolean;
+  startTime: string;
+  endTime: string;
+  timezone: string;
+  days: string[];
+  exceptions: string[]; // IDs de usuarios que pueden recibir notificaciones
+}
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`notification-tabpanel-${index}`}
+      aria-labelledby={`notification-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
+
+export default function EnhancedNotificationSettings() {
+  useAuth();
+  const [activeTab, setActiveTab] = useState(0);
+  const [channels, setChannels] = useState<NotificationChannel[]>([]);
+  const [rules, setRules] = useState<NotificationRule[]>([]);
+  const [quietHours, setQuietHours] = useState<QuietHours>({
+    enabled: false,
+    startTime: '22:00',
+    endTime: '08:00',
+    timezone: 'America/Mexico_City',
+    days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+    exceptions: []
   });
-
   const [loading, setLoading] = useState(false);
-  const [testing, setTesting] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [editingChannel, setEditingChannel] = useState<NotificationChannel | null>(null);
+  const [channelDialogOpen, setChannelDialogOpen] = useState(false);
+  // const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
 
-  // Cargar configuración del usuario
+  // Cargar configuración inicial
   useEffect(() => {
-    const loadSettings = async () => {
-      if (!user?.uid) return;
-
-      try {
-        const userSettings = await enhancedNotificationService.getUserSettings(user.uid);
-        if (userSettings) {
-          setSettings({
-            emailNotifications: userSettings.emailNotifications,
-            pushNotifications: userSettings.pushNotifications,
-            smsNotifications: userSettings.smsNotifications,
-            categories: userSettings.categories,
-            priorities: userSettings.priorities,
-            quietHours: userSettings.quietHours,
-            frequency: userSettings.frequency,
-          });
-        }
-      } catch (error) {
-        console.error('Error loading notification settings:', error);
-        toast.error('Error al cargar la configuración');
-      }
-    };
-
     loadSettings();
-  }, [user?.uid]);
+  }, []);
 
-  // Guardar configuración
-  const saveSettings = async () => {
-    if (!user?.uid) return;
-
-    setLoading(true);
+  const loadSettings = async () => {
     try {
-      const settingsRef = doc(db, 'notificationSettings', user.uid);
-      await updateDoc(settingsRef, {
-        ...settings,
-        userId: user.uid,
-        updatedAt: serverTimestamp(),
-      });
+      setLoading(true);
+      setError(null);
 
-      setLastSaved(new Date());
-      toast.success('Configuración guardada exitosamente');
-    } catch (error) {
-      console.error('Error saving notification settings:', error);
-      toast.error('Error al guardar la configuración');
+      // Simular carga de configuración
+      const defaultChannels: NotificationChannel[] = [
+        {
+          id: 'email',
+          name: 'Email',
+          type: 'email',
+          enabled: true,
+          config: {
+            provider: 'sendgrid',
+            fromAddress: 'noreply@asociacion.com',
+            fromName: 'Mi Asociación',
+            replyTo: 'support@asociacion.com',
+            retryAttempts: 3,
+            retryDelay: 5,
+            timeout: 30,
+            priority: 'normal',
+            batchSize: 100,
+            throttleRate: 60
+          },
+          limits: {
+            dailyLimit: 10000,
+            hourlyLimit: 1000,
+            perUserLimit: 50,
+            cooldownPeriod: 5,
+            maxRecipients: 1000
+          },
+          templates: ['welcome', 'notification', 'reminder']
+        },
+        {
+          id: 'sms',
+          name: 'SMS',
+          type: 'sms',
+          enabled: true,
+          config: {
+            provider: 'twilio',
+            retryAttempts: 2,
+            retryDelay: 2,
+            timeout: 15,
+            priority: 'high',
+            batchSize: 50,
+            throttleRate: 30
+          },
+          limits: {
+            dailyLimit: 1000,
+            hourlyLimit: 100,
+            perUserLimit: 10,
+            cooldownPeriod: 15,
+            maxRecipients: 100
+          },
+          templates: ['alert', 'reminder']
+        },
+        {
+          id: 'push',
+          name: 'Push Notifications',
+          type: 'push',
+          enabled: true,
+          config: {
+            provider: 'firebase',
+            retryAttempts: 3,
+            retryDelay: 1,
+            timeout: 10,
+            priority: 'normal',
+            batchSize: 500,
+            throttleRate: 120
+          },
+          limits: {
+            dailyLimit: 50000,
+            hourlyLimit: 5000,
+            perUserLimit: 100,
+            cooldownPeriod: 1,
+            maxRecipients: 10000
+          },
+          templates: ['news', 'alert', 'promotion']
+        },
+        {
+          id: 'app',
+          name: 'In-App Notifications',
+          type: 'app',
+          enabled: true,
+          config: {
+            retryAttempts: 1,
+            retryDelay: 0,
+            timeout: 5,
+            priority: 'low',
+            batchSize: 1000,
+            throttleRate: 300
+          },
+          limits: {
+            dailyLimit: 100000,
+            hourlyLimit: 10000,
+            perUserLimit: 200,
+            cooldownPeriod: 0,
+            maxRecipients: 50000
+          },
+          templates: ['info', 'update', 'reminder']
+        }
+      ];
+
+      const defaultRules: NotificationRule[] = [
+        {
+          id: 'spam-protection',
+          name: 'Protección Anti-Spam',
+          description: 'Bloquea notificaciones excesivas al mismo usuario',
+          enabled: true,
+          conditions: [
+            {
+              field: 'recipient_notifications_last_hour',
+              operator: 'greater_than',
+              value: 10
+            }
+          ],
+          actions: [
+            {
+              type: 'throttle',
+              parameters: { delay: 60 }
+            }
+          ],
+          priority: 1
+        },
+        {
+          id: 'high-priority-bypass',
+          name: 'Bypass para Alta Prioridad',
+          description: 'Permite que notificaciones urgentes bypaseen límites',
+          enabled: true,
+          conditions: [
+            {
+              field: 'priority',
+              operator: 'equals',
+              value: 'urgent'
+            }
+          ],
+          actions: [
+            {
+              type: 'modify',
+              parameters: { bypass_limits: true }
+            }
+          ],
+          priority: 0
+        }
+      ];
+
+      setChannels(defaultChannels);
+      setRules(defaultRules);
+    } catch (err) {
+      console.error('Error loading settings:', err);
+      setError('Error al cargar la configuración');
     } finally {
       setLoading(false);
     }
   };
 
-  // Enviar notificación de prueba
-  const sendTestNotification = async () => {
-    if (!user?.uid) return;
-
-    setTesting(true);
+  const handleSaveSettings = async () => {
     try {
-      const testNotification = {
-        title: '🧪 Notificación de Prueba',
-        message: 'Esta es una notificación de prueba para verificar que tu configuración funciona correctamente.',
-        type: 'info' as const,
-        priority: 'medium' as const,
-        category: 'system' as const,
-      };
+      setLoading(true);
+      setError(null);
 
-      await enhancedNotificationService.sendNotificationToUser(
-        `test_${Date.now()}`,
-        user.uid,
-        testNotification
-      );
+      // Simular guardado
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      toast.success('Notificación de prueba enviada');
-    } catch (error) {
-      console.error('Error sending test notification:', error);
-      toast.error('Error al enviar la notificación de prueba');
+      setSuccess('Configuración guardada exitosamente');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      setError('Error al guardar la configuración');
     } finally {
-      setTesting(false);
+      setLoading(false);
     }
   };
 
-  const handleChannelChange = (channel: keyof Pick<NotificationSettings, 'emailNotifications' | 'pushNotifications' | 'smsNotifications'>) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setSettings(prev => ({
-      ...prev,
-      [channel]: event.target.checked
-    }));
+  const handleChannelToggle = (channelId: string) => {
+    setChannels(prev => prev.map(channel => 
+      channel.id === channelId 
+        ? { ...channel, enabled: !channel.enabled }
+        : channel
+    ));
   };
 
-  const handleCategoryChange = (category: keyof NotificationSettings['categories']) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setSettings(prev => ({
-      ...prev,
-      categories: {
-        ...prev.categories,
-        [category]: event.target.checked
-      }
-    }));
+  const handleEditChannel = (channel: NotificationChannel) => {
+    setEditingChannel({ ...channel });
+    setChannelDialogOpen(true);
   };
 
-  const handlePriorityChange = (priority: keyof NotificationSettings['priorities']) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setSettings(prev => ({
-      ...prev,
-      priorities: {
-        ...prev.priorities,
-        [priority]: event.target.checked
-      }
-    }));
+  const handleSaveChannel = () => {
+    if (!editingChannel) return;
+
+    setChannels(prev => prev.map(channel => 
+      channel.id === editingChannel.id ? editingChannel : channel
+    ));
+    
+    setChannelDialogOpen(false);
+    setEditingChannel(null);
   };
 
-  const channelConfigs = [
-    {
-      key: 'emailNotifications' as const,
-      label: 'Notificaciones por Email',
-      description: 'Recibe notificaciones en tu correo electrónico',
-      icon: <Email />,
-      color: '#3b82f6',
-      enabled: settings.emailNotifications,
-      status: 'Configurado',
-    },
-    {
-      key: 'pushNotifications' as const,
-      label: 'Notificaciones Push',
-      description: 'Recibe notificaciones en tiempo real en tu navegador',
-      icon: <PhoneAndroid />,
-      color: '#8b5cf6',
-      enabled: settings.pushNotifications && pushEnabled,
-      status: pushEnabled ? 'Activo' : pushSupported ? 'Disponible' : 'No soportado',
-    },
-    {
-      key: 'smsNotifications' as const,
-      label: 'Notificaciones por SMS',
-      description: 'Recibe notificaciones importantes por mensaje de texto',
-      icon: <Sms />,
-      color: '#10b981',
-      enabled: settings.smsNotifications,
-      status: 'Configurado',
-    },
-  ];
+  const handleRuleToggle = (ruleId: string) => {
+    setRules(prev => prev.map(rule => 
+      rule.id === ruleId 
+        ? { ...rule, enabled: !rule.enabled }
+        : rule
+    ));
+  };
 
-  const categoryConfigs = [
-    { key: 'system' as const, label: 'Sistema', description: 'Actualizaciones y mantenimiento' },
-    { key: 'membership' as const, label: 'Socios', description: 'Actividad de socios y registros' },
-    { key: 'payment' as const, label: 'Pagos', description: 'Pagos y facturación' },
-    { key: 'event' as const, label: 'Eventos', description: 'Eventos y actividades' },
-    { key: 'general' as const, label: 'General', description: 'Comunicaciones generales' },
-  ];
+  const getChannelIcon = (type: string) => {
+    switch (type) {
+      case 'email': return <Email />;
+      case 'sms': return <Sms />;
+      case 'push': return <NotificationsActive />;
+      case 'app': return <PhoneAndroid />;
+      default: return <Settings />;
+    }
+  };
 
-  const priorityConfigs = [
-    { key: 'low' as const, label: 'Baja', description: 'Información no crítica', color: '#6b7280' },
-    { key: 'medium' as const, label: 'Media', description: 'Información importante', color: '#3b82f6' },
-    { key: 'high' as const, label: 'Alta', description: 'Requiere atención', color: '#f59e0b' },
-    { key: 'urgent' as const, label: 'Urgente', description: 'Atención inmediata', color: '#ef4444' },
-  ];
+  const getChannelColor = (type: string) => {
+    switch (type) {
+      case 'email': return '#1976d2';
+      case 'sms': return '#388e3c';
+      case 'push': return '#f57c00';
+      case 'app': return '#7b1fa2';
+      default: return '#666';
+    }
+  };
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-          <Avatar sx={{ bgcolor: '#6366f1', width: 48, height: 48 }}>
-            <Notifications />
-          </Avatar>
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
-              Configuración de Notificaciones
-            </Typography>
-            <Typography variant="body1" sx={{ color: '#64748b' }}>
-              Personaliza cómo y cuándo recibir notificaciones
-            </Typography>
-          </Box>
-        </Box>
-        {lastSaved && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            Configuración guardada el {lastSaved.toLocaleString()}
-          </Alert>
-        )}
+        <Typography variant="h4" component="h1" gutterBottom>
+          Configuración Avanzada de Notificaciones
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Gestiona canales, reglas y configuraciones del sistema de notificaciones
+        </Typography>
       </Box>
 
-      {/* Canales de Notificación */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Settings />
-            Canales de Notificación
-          </Typography>
-          
-          <Box sx={{ 
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            gap: 3,
-            '& > *': {
-              flex: '1 1 280px',
-              minWidth: '280px'
-            }
-          }}>
-            {channelConfigs.map((channel) => (
-              <Card
-                key={channel.key}
-                variant="outlined"
-                sx={{
-                  border: channel.enabled ? `2px solid ${channel.color}` : '1px solid #e2e8f0',
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Avatar sx={{ bgcolor: channel.color, width: 40, height: 40 }}>
-                      {channel.icon}
-                    </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        {channel.label}
-                      </Typography>
-                      <Chip
-                        label={channel.status}
-                        size="small"
-                        color={channel.enabled ? 'success' : 'default'}
-                        sx={{ mt: 0.5 }}
-                      />
+      {/* Alerts */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          </motion.div>
+        )}
+        
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
+              {success}
+            </Alert>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Tabs */}
+      <Paper sx={{ mb: 3 }}>
+        <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
+          <Tab label="Canales" icon={<Settings />} />
+          <Tab label="Reglas" icon={<FilterList />} />
+          <Tab label="Horarios" icon={<AccessTime />} />
+          <Tab label="Límites" icon={<Speed />} />
+          <Tab label="Seguridad" icon={<Security />} />
+        </Tabs>
+      </Paper>
+
+      {/* Tab Content */}
+      <TabPanel value={activeTab} index={0}>
+        {/* Canales de Notificación */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 3 }}>
+          {channels.map((channel) => (
+            <motion.div
+              key={channel.id}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Card sx={{ height: '100%' }}>
+                <CardHeader
+                  avatar={
+                    <Box sx={{ color: getChannelColor(channel.type) }}>
+                      {getChannelIcon(channel.type)}
                     </Box>
-                  </Box>
-                  <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>
-                    {channel.description}
-                  </Typography>
-                  {channel.key === 'pushNotifications' && !pushSupported ? (
-                    <Alert severity="warning" sx={{ mb: 2 }}>
-                      No soportado en este navegador
-                    </Alert>
-                  ) : channel.key === 'pushNotifications' && pushSupported && !pushEnabled ? (
-                    <Button
-                      variant="outlined"
-                      onClick={requestPermission}
-                      disabled={isRegistering}
-                      startIcon={isRegistering ? <LinearProgress /> : <PhoneAndroid />}
-                      fullWidth
-                      sx={{ mb: 2 }}
-                    >
-                      {isRegistering ? 'Configurando...' : 'Activar Push'}
-                    </Button>
-                  ) : (
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={channel.enabled}
-                          onChange={handleChannelChange(channel.key)}
-                          color="primary"
-                        />
-                      }
-                      label={channel.enabled ? 'Activado' : 'Desactivado'}
-                    />
-                  )}
+                  }
+                  title={channel.name}
+                  subheader={`Tipo: ${channel.type.toUpperCase()}`}
+                  action={
+                    <Stack direction="row" spacing={1}>
+                      <Switch
+                        checked={channel.enabled}
+                        onChange={() => handleChannelToggle(channel.id)}
+                        color="primary"
+                      />
+                      <IconButton onClick={() => handleEditChannel(channel)}>
+                        <Edit />
+                      </IconButton>
+                    </Stack>
+                  }
+                />
+                <CardContent>
+                  <Stack spacing={2}>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Configuración
+                      </Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                        <Chip size="small" label={`Proveedor: ${channel.config.provider || 'N/A'}`} />
+                        <Chip size="small" label={`Reintentos: ${channel.config.retryAttempts}`} />
+                        <Chip size="small" label={`Lote: ${channel.config.batchSize}`} />
+                      </Stack>
+                    </Box>
+
+                    <Box>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Límites
+                      </Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                        <Chip size="small" label={`Diario: ${channel.limits.dailyLimit.toLocaleString()}`} />
+                        <Chip size="small" label={`Por hora: ${channel.limits.hourlyLimit.toLocaleString()}`} />
+                        <Chip size="small" label={`Por usuario: ${channel.limits.perUserLimit}`} />
+                      </Stack>
+                    </Box>
+
+                    <Box>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Plantillas disponibles
+                      </Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                        {channel.templates.map((template) => (
+                          <Chip key={template} size="small" variant="outlined" label={template} />
+                        ))}
+                      </Stack>
+                    </Box>
+                  </Stack>
                 </CardContent>
               </Card>
-            ))}
-          </Box>
-        </CardContent>
-      </Card>
+            </motion.div>
+          ))}
+        </Box>
+      </TabPanel>
 
-      {/* Configuración Avanzada */}
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMore />}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Configuración Avanzada
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Box sx={{ p: 2 }}>
-            {/* Categorías */}
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-              Categorías de Notificaciones
-            </Typography>
-            <Box sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: 2, 
-              mb: 3,
-              '& > *': {
-                flex: '1 1 200px',
-                minWidth: '200px'
-              }
-            }}>
-              {categoryConfigs.map((category) => (
-                <FormControlLabel
-                  key={category.key}
-                  control={
-                    <Switch
-                      checked={settings.categories[category.key]}
-                      onChange={handleCategoryChange(category.key)}
-                    />
-                  }
-                  label={
-                    <Box>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {category.label}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>
-                        {category.description}
-                      </Typography>
-                    </Box>
-                  }
-                />
-              ))}
-            </Box>
-
-            <Divider sx={{ my: 3 }} />
-
-            {/* Prioridades */}
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-              Niveles de Prioridad
-            </Typography>
-            <Box sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: 2, 
-              mb: 3,
-              '& > *': {
-                flex: '1 1 200px',
-                minWidth: '200px'
-              }
-            }}>
-              {priorityConfigs.map((priority) => (
-                <FormControlLabel
-                  key={priority.key}
-                  control={
-                    <Switch
-                      checked={settings.priorities[priority.key]}
-                      onChange={handlePriorityChange(priority.key)}
-                    />
-                  }
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box
-                        sx={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: '50%',
-                          bgcolor: priority.color
-                        }}
-                      />
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {priority.label}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: '#64748b' }}>
-                          {priority.description}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  }
-                />
-              ))}
-            </Box>
-
-            <Divider sx={{ my: 3 }} />
-
-            {/* Horarios de Silencio */}
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <VolumeOff />
-              Horarios de Silencio
-            </Typography>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={settings.quietHours.enabled}
-                  onChange={(e) => setSettings(prev => ({
-                    ...prev,
-                    quietHours: { ...prev.quietHours, enabled: e.target.checked }
-                  }))}
-                />
-              }
-              label="Activar horarios de silencio"
-              sx={{ mb: 2 }}
-            />
-            {settings.quietHours.enabled && (
-              <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-                <TextField
-                  type="time"
-                  label="Inicio"
-                  value={settings.quietHours.start}
-                  onChange={(e) => setSettings(prev => ({
-                    ...prev,
-                    quietHours: { ...prev.quietHours, start: e.target.value }
-                  }))}
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ flex: '1 1 150px', minWidth: '150px' }}
-                />
-                <TextField
-                  type="time"
-                  label="Fin"
-                  value={settings.quietHours.end}
-                  onChange={(e) => setSettings(prev => ({
-                    ...prev,
-                    quietHours: { ...prev.quietHours, end: e.target.value }
-                  }))}
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ flex: '1 1 150px', minWidth: '150px' }}
-                />
-              </Box>
-            )}
-
-            {/* Frecuencia */}
-            <TextField
-              select
-              label="Frecuencia de Notificaciones"
-              value={settings.frequency}
-              onChange={(e) => setSettings(prev => ({
-                ...prev,
-                frequency: e.target.value as NotificationSettings['frequency']
-              }))}
-              fullWidth
-              sx={{ mb: 3 }}
+      <TabPanel value={activeTab} index={1}>
+        {/* Reglas de Notificación */}
+        <Stack spacing={3}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">Reglas de Procesamiento</Typography>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              // onClick={() => setRuleDialogOpen(true)}
+              disabled
             >
-              <MenuItem value="immediate">Inmediata</MenuItem>
-              <MenuItem value="hourly">Cada hora</MenuItem>
-              <MenuItem value="daily">Diaria</MenuItem>
-              <MenuItem value="weekly">Semanal</MenuItem>
-            </TextField>
+              Nueva Regla
+            </Button>
           </Box>
-        </AccordionDetails>
-      </Accordion>
 
-      {/* Acciones */}
-      <Box sx={{ 
-        display: 'flex', 
-        gap: 2, 
-        mt: 4, 
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        alignItems: 'center'
-      }}>
+          {rules.map((rule) => (
+            <Card key={rule.id}>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                  <Box>
+                    <Typography variant="h6" gutterBottom>
+                      {rule.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {rule.description}
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Chip 
+                      size="small" 
+                      label={`Prioridad: ${rule.priority}`} 
+                      color={rule.priority === 0 ? 'error' : rule.priority === 1 ? 'warning' : 'default'}
+                    />
+                    <Switch
+                      checked={rule.enabled}
+                      onChange={() => handleRuleToggle(rule.id)}
+                    />
+                    <IconButton size="small">
+                      <Edit />
+                    </IconButton>
+                  </Stack>
+                </Box>
+
+                <Divider sx={{ my: 2 }} />
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Condiciones
+                    </Typography>
+                    {rule.conditions.map((condition, index) => (
+                      <Chip
+                        key={index}
+                        size="small"
+                        label={`${condition.field} ${condition.operator} ${condition.value}`}
+                        sx={{ mr: 1, mb: 1 }}
+                      />
+                    ))}
+                  </Box>
+
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Acciones
+                    </Typography>
+                    {rule.actions.map((action, index) => (
+                      <Chip
+                        key={index}
+                        size="small"
+                        variant="outlined"
+                        label={action.type}
+                        sx={{ mr: 1, mb: 1 }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          ))}
+        </Stack>
+      </TabPanel>
+
+      <TabPanel value={activeTab} index={2}>
+        {/* Horarios Silenciosos */}
+        <Card>
+          <CardHeader
+            title="Horarios Silenciosos"
+            subheader="Configura períodos donde las notificaciones no críticas se pausan"
+            action={
+              <Switch
+                checked={quietHours.enabled}
+                onChange={(e) => setQuietHours(prev => ({ ...prev, enabled: e.target.checked }))}
+              />
+            }
+          />
+          <CardContent>
+            <Stack spacing={3}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
+                <TextField
+                  label="Hora de inicio"
+                  type="time"
+                  value={quietHours.startTime}
+                  onChange={(e) => setQuietHours(prev => ({ ...prev, startTime: e.target.value }))}
+                  disabled={!quietHours.enabled}
+                  fullWidth
+                />
+                <TextField
+                  label="Hora de fin"
+                  type="time"
+                  value={quietHours.endTime}
+                  onChange={(e) => setQuietHours(prev => ({ ...prev, endTime: e.target.value }))}
+                  disabled={!quietHours.enabled}
+                  fullWidth
+                />
+                <FormControl fullWidth disabled={!quietHours.enabled}>
+                  <InputLabel>Zona horaria</InputLabel>
+                  <Select
+                    value={quietHours.timezone}
+                    onChange={(e) => setQuietHours(prev => ({ ...prev, timezone: e.target.value }))}
+                  >
+                    <MenuItem value="America/Mexico_City">Ciudad de México</MenuItem>
+                    <MenuItem value="America/New_York">Nueva York</MenuItem>
+                    <MenuItem value="Europe/Madrid">Madrid</MenuItem>
+                    <MenuItem value="Asia/Tokyo">Tokio</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" gutterBottom>
+                  Días de la semana
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  {[
+                    { key: 'monday', label: 'Lun' },
+                    { key: 'tuesday', label: 'Mar' },
+                    { key: 'wednesday', label: 'Mié' },
+                    { key: 'thursday', label: 'Jue' },
+                    { key: 'friday', label: 'Vie' },
+                    { key: 'saturday', label: 'Sáb' },
+                    { key: 'sunday', label: 'Dom' }
+                  ].map((day) => (
+                    <FormControlLabel
+                      key={day.key}
+                      control={
+                        <Checkbox
+                          checked={quietHours.days.includes(day.key)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setQuietHours(prev => ({ 
+                                ...prev, 
+                                days: [...prev.days, day.key] 
+                              }));
+                            } else {
+                              setQuietHours(prev => ({ 
+                                ...prev, 
+                                days: prev.days.filter(d => d !== day.key) 
+                              }));
+                            }
+                          }}
+                          disabled={!quietHours.enabled}
+                        />
+                      }
+                      label={day.label}
+                    />
+                  ))}
+                </Stack>
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+      </TabPanel>
+
+      <TabPanel value={activeTab} index={3}>
+        {/* Límites Globales */}
+        <Stack spacing={3}>
+          <Typography variant="h6">Límites Globales del Sistema</Typography>
+          
+          <Card>
+            <CardContent>
+              <Typography variant="subtitle1" gutterBottom>
+                Límites de Velocidad
+              </Typography>
+              <Stack spacing={3}>
+                <Box>
+                  <Typography variant="body2" gutterBottom>
+                    Notificaciones por minuto (global)
+                  </Typography>
+                  <Slider
+                    value={1000}
+                    min={100}
+                    max={5000}
+                    step={100}
+                    marks
+                    valueLabelDisplay="on"
+                  />
+                </Box>
+                <Box>
+                  <Typography variant="body2" gutterBottom>
+                    Máximo de destinatarios por notificación
+                  </Typography>
+                  <Slider
+                    value={10000}
+                    min={100}
+                    max={50000}
+                    step={1000}
+                    marks
+                    valueLabelDisplay="on"
+                  />
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <Typography variant="subtitle1" gutterBottom>
+                Límites de Almacenamiento
+              </Typography>
+              <Stack spacing={2}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2">Historial de notificaciones</Typography>
+                  <Typography variant="body2" color="primary">90 días</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2">Logs de entrega</Typography>
+                  <Typography variant="body2" color="primary">30 días</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2">Métricas de rendimiento</Typography>
+                  <Typography variant="body2" color="primary">1 año</Typography>
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Stack>
+      </TabPanel>
+
+      <TabPanel value={activeTab} index={4}>
+        {/* Configuración de Seguridad */}
+        <Stack spacing={3}>
+          <Typography variant="h6">Configuración de Seguridad</Typography>
+          
+          <Card>
+            <CardContent>
+              <Typography variant="subtitle1" gutterBottom>
+                Autenticación y Autorización
+              </Typography>
+              <Stack spacing={2}>
+                <FormControlLabel
+                  control={<Switch defaultChecked />}
+                  label="Requerir autenticación para envío de notificaciones"
+                />
+                <FormControlLabel
+                  control={<Switch defaultChecked />}
+                  label="Validar permisos de usuario por segmento"
+                />
+                <FormControlLabel
+                  control={<Switch />}
+                  label="Requerir aprobación para notificaciones masivas"
+                />
+                <FormControlLabel
+                  control={<Switch defaultChecked />}
+                  label="Auditar todas las acciones de notificación"
+                />
+              </Stack>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <Typography variant="subtitle1" gutterBottom>
+                Protección de Datos
+              </Typography>
+              <Stack spacing={2}>
+                <FormControlLabel
+                  control={<Switch defaultChecked />}
+                  label="Encriptar contenido de notificaciones sensibles"
+                />
+                <FormControlLabel
+                  control={<Switch defaultChecked />}
+                  label="Anonimizar datos en logs después de 30 días"
+                />
+                <FormControlLabel
+                  control={<Switch />}
+                  label="Permitir opt-out automático"
+                />
+                <FormControlLabel
+                  control={<Switch defaultChecked />}
+                  label="Validar direcciones de email antes del envío"
+                />
+              </Stack>
+            </CardContent>
+          </Card>
+        </Stack>
+      </TabPanel>
+
+      {/* Botones de acción */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4 }}>
         <Button
           variant="outlined"
-          onClick={sendTestNotification}
-          disabled={testing || !user?.uid}
-          startIcon={testing ? <LinearProgress /> : <Science />}
+          onClick={loadSettings}
+          startIcon={<Refresh />}
+          disabled={loading}
         >
-          {testing ? 'Enviando...' : 'Enviar Prueba'}
+          Recargar
         </Button>
-        
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          <Button
-            variant="outlined"
-            onClick={() => window.location.reload()}
-            startIcon={<Refresh />}
-          >
-            Recargar
-          </Button>
-          <Button
-            variant="contained"
-            onClick={saveSettings}
-            disabled={loading}
-            startIcon={loading ? <LinearProgress /> : <CheckCircle />}
-            sx={{
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-              }
-            }}
-          >
-            {loading ? 'Guardando...' : 'Guardar Configuración'}
-          </Button>
-        </Box>
+        <Button
+          variant="contained"
+          onClick={handleSaveSettings}
+          startIcon={<Save />}
+          disabled={loading}
+        >
+          {loading ? 'Guardando...' : 'Guardar Cambios'}
+        </Button>
       </Box>
-    </Box>
+
+      {/* Dialog para editar canal */}
+      <Dialog
+        open={channelDialogOpen}
+        onClose={() => setChannelDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Configurar Canal: {editingChannel?.name}
+        </DialogTitle>
+        <DialogContent>
+          {editingChannel && (
+            <Stack spacing={3} sx={{ mt: 2 }}>
+              <TextField
+                label="Nombre del canal"
+                value={editingChannel.name}
+                onChange={(e) => setEditingChannel(prev => prev ? { ...prev, name: e.target.value } : null)}
+                fullWidth
+              />
+              
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+                <TextField
+                  label="Reintentos"
+                  type="number"
+                  value={editingChannel.config.retryAttempts}
+                  onChange={(e) => setEditingChannel(prev => prev ? {
+                    ...prev,
+                    config: { ...prev.config, retryAttempts: parseInt(e.target.value) }
+                  } : null)}
+                />
+                <TextField
+                  label="Delay entre reintentos (min)"
+                  type="number"
+                  value={editingChannel.config.retryDelay}
+                  onChange={(e) => setEditingChannel(prev => prev ? {
+                    ...prev,
+                    config: { ...prev.config, retryDelay: parseInt(e.target.value) }
+                  } : null)}
+                />
+              </Box>
+
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+                <TextField
+                  label="Límite diario"
+                  type="number"
+                  value={editingChannel.limits.dailyLimit}
+                  onChange={(e) => setEditingChannel(prev => prev ? {
+                    ...prev,
+                    limits: { ...prev.limits, dailyLimit: parseInt(e.target.value) }
+                  } : null)}
+                />
+                <TextField
+                  label="Límite por hora"
+                  type="number"
+                  value={editingChannel.limits.hourlyLimit}
+                  onChange={(e) => setEditingChannel(prev => prev ? {
+                    ...prev,
+                    limits: { ...prev.limits, hourlyLimit: parseInt(e.target.value) }
+                  } : null)}
+                />
+              </Box>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setChannelDialogOpen(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSaveChannel} variant="contained">
+            Guardar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
-};
+}

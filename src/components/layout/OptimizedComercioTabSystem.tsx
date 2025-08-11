@@ -46,9 +46,9 @@ const ValidacionesHistory = lazy(() =>
   }))
 );
 
-const ClienteAnalytics = lazy(() => 
-  import('@/components/comercio/clientes/ClienteAnalytics').then(module => ({ 
-    default: module.ClienteAnalytics 
+const SocioAnalytics = lazy(() => 
+  import('@/components/comercio/socios/SocioAnalytics').then(module => ({ 
+    default: module.SocioAnalytics 
   }))
 );
 
@@ -79,7 +79,7 @@ const TabLoadingState = memo<{ tabId: string }>(({ tabId }) => {
     beneficios: { color: 'purple', text: 'Cargando Beneficios' },
     qr: { color: 'orange', text: 'Cargando QR' },
     validaciones: { color: 'indigo', text: 'Cargando Validaciones' },
-    clientes: { color: 'pink', text: 'Cargando Clientes' },
+    socios: { color: 'pink', text: 'Cargando Socios' },
     notificaciones: { color: 'amber', text: 'Cargando Notificaciones' }
   };
 
@@ -215,7 +215,7 @@ export const OptimizedComercioTabSystem: React.FC<OptimizedComercioTabSystemProp
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl && tabFromUrl !== activeTab) {
       // Only set if it's a valid tab
-      const validTabs = ['dashboard', 'perfil', 'beneficios', 'qr', 'validaciones', 'clientes', 'notificaciones'];
+      const validTabs = ['dashboard', 'perfil', 'beneficios', 'qr', 'validaciones', 'socios', 'notificaciones'];
       if (validTabs.includes(tabFromUrl)) {
         setActiveTab(tabFromUrl);
       } else {
@@ -271,12 +271,12 @@ export const OptimizedComercioTabSystem: React.FC<OptimizedComercioTabSystemProp
       badge: stats?.validacionesHoy || 0
     },
     {
-      id: 'clientes',
-      label: 'Clientes',
+      id: 'socios',
+      label: 'Socios',
       icon: Users,
-      component: ClienteAnalytics as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
+      component: SocioAnalytics as React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>>,
       gradient: 'from-pink-500 to-pink-600',
-      description: 'Gestión de clientes',
+      description: 'Gestión de socios',
       badge: stats?.clientesUnicos || 0
     },
     {
