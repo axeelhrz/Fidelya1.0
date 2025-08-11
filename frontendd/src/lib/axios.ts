@@ -6,21 +6,20 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
   },
 });
 
-// Request interceptor to get CSRF token before requests
+// Simplified request interceptor - get CSRF token before each request
 api.interceptors.request.use(
   async (config) => {
-    // Get CSRF token for state-changing requests
-    if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase() || '')) {
-      try {
-        await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8001'}/sanctum/csrf-cookie`, {
-          withCredentials: true,
-        });
-      } catch (error) {
-        console.error('Failed to get CSRF token:', error);
-      }
+    // Always get CSRF token before any request to ensure fresh token
+    try {
+      await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8001'}/sanctum/csrf-cookie`, {
+        withCredentials: true,
+      });
+    } catch (error) {
+      console.error('Failed to get CSRF token:', error);
     }
     return config;
   },
@@ -29,14 +28,11 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling - NO automatic redirects
+// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      console.log('401 Unauthorized - user needs to login');
-      // Don't redirect automatically to prevent loops
-    }
+    console.error('API Error:', error.response?.status, error.response?.data);
     return Promise.reject(error);
   }
 );
