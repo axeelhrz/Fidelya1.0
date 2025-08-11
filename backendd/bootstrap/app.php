@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'stripe/*',
+            'api/auth/*', // Temporarily disable CSRF for auth routes
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
