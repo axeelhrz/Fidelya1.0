@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import api from '@/lib/axios';
 import { User, LoginForm, RegisterForm, ApiResponse } from '@/types';
 
@@ -20,13 +20,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   const checkAuth = async () => {
     try {
       const response = await api.get<ApiResponse<{ user: User }>>('/api/auth/me');
       setUser(response.data.data.user);
+      
+      // If user is authenticated and on auth pages, redirect to dashboard
+      if (response.data.data.user && (pathname === '/auth/sign-in' || pathname === '/auth/sign-up')) {
+        router.push('/dashboard');
+      }
     } catch (error) {
       setUser(null);
+      
+      // If user is not authenticated and on protected routes, redirect to sign-in
+      const protectedRoutes = ['/dashboard', '/leagues', '/clubs', '/members', '/sports'];
+      const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+      
+      if (isProtectedRoute) {
+        router.push('/auth/sign-in');
+      }
     } finally {
       setLoading(false);
     }
@@ -64,8 +78,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // Only check auth on mount, not on every pathname change
     checkAuth();
-  }, []);
+  }, []); // Remove pathname dependency to prevent loops
 
   const value = {
     user,
