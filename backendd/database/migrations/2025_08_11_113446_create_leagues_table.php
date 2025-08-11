@@ -13,7 +13,12 @@ return new class extends Migration
     {
         Schema::create('leagues', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->string('region')->nullable();
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
+            
+            $table->index(['status']);
         });
     }
 
