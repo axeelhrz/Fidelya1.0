@@ -2,25 +2,27 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    // Simple form submission without AuthContext for testing
-    console.log('Form submitted:', { email, password });
-    
-    setTimeout(() => {
+    try {
+      await login({ email, password });
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'An error occurred during login');
+    } finally {
       setIsLoading(false);
-      setError('Authentication temporarily disabled for debugging');
-    }, 1000);
+    }
   };
 
   return (
@@ -92,12 +94,6 @@ export default function SignInPage() {
             </button>
           </div>
         </form>
-        
-        <div className="mt-4 p-4 bg-yellow-50 rounded-md">
-          <p className="text-sm text-yellow-700">
-            🔧 Debug Mode: AuthContext temporarily disabled to fix infinite reload issue.
-          </p>
-        </div>
       </div>
     </div>
   );
