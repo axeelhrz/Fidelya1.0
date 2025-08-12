@@ -24,7 +24,7 @@ import {
 import { useSimpleNotifications } from '@/hooks/useSimpleNotifications';
 import { DeliveryStats } from './DeliveryStats';
 import { SimpleNotificationSender } from './SimpleNotificationSender';
-import type { SimpleNotificationChannel } from '@/types/simple-notification';
+import { AsociacionNotificationDebug } from './AsociacionNotificationDebug';
 
 type TabType = 'dashboard' | 'send' | 'history';
 
@@ -42,10 +42,11 @@ export const ModernNotificationCenter = () => {
     loading,
   } = useSimpleNotifications();
 
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabType>('send');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showAdvancedStats, setShowAdvancedStats] = useState(false);
+  const [showDebug, setShowDebug] = useState(true);
 
   // Calculate stats
   const stats: NotificationStats = {
@@ -96,8 +97,8 @@ export const ModernNotificationCenter = () => {
                 <Bell className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Centro de Notificaciones</h1>
-                <p className="text-sm text-gray-500">Gestiona tus comunicaciones multicanal</p>
+                <h1 className="text-xl font-bold text-gray-900">Centro de Notificaciones - Asociación</h1>
+                <p className="text-sm text-gray-500">Gestiona las comunicaciones de tu asociación</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
@@ -113,6 +114,17 @@ export const ModernNotificationCenter = () => {
                   <Activity className="w-5 h-5" />
                 </button>
               )}
+              <button 
+                onClick={() => setShowDebug(!showDebug)}
+                className={`p-2 rounded-lg transition-colors ${
+                  showDebug 
+                    ? 'bg-blue-100 text-blue-600' 
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+                title="Toggle Debug Panel"
+              >
+                🔍
+              </button>
               <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
                 <Settings className="w-5 h-5" />
               </button>
@@ -156,6 +168,9 @@ export const ModernNotificationCenter = () => {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Debug Component */}
+        {showDebug && <AsociacionNotificationDebug />}
+        
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -173,7 +188,11 @@ export const ModernNotificationCenter = () => {
               />
             )}
             {activeTab === 'send' && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Enviar Notificación</h2>
+                  <p className="text-gray-600">Envía notificaciones por WhatsApp, email o dentro de la aplicación a tus socios y comercios.</p>
+                </div>
                 <SimpleNotificationSender />
               </div>
             )}
