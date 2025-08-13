@@ -3,6 +3,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  role: 'liga' | 'miembro' | 'club';
   email_verified_at?: string;
   created_at: string;
   updated_at: string;
@@ -76,6 +77,16 @@ export interface SportParameter {
   sport?: Sport;
 }
 
+// Role types
+export interface Role {
+  id: 'liga' | 'miembro' | 'club';
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  bgColor: string;
+}
+
 // API Response types
 export interface ApiResponse<T = unknown> {
   data: T;
@@ -111,6 +122,7 @@ export interface RegisterForm {
   email: string;
   password: string;
   password_confirmation: string;
+  role: 'liga' | 'miembro' | 'club';
 }
 
 export interface LeagueForm {

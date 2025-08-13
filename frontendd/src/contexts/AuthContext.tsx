@@ -67,8 +67,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // First get CSRF token
       await api.get('/sanctum/csrf-cookie');
       
-      // Then register
-      const response = await api.post<ApiResponse<{ user: User }>>('/api/auth/register', userData);
+      // Then register with role
+      const response = await api.post<ApiResponse<{ user: User }>>('/api/auth/register', {
+        name: userData.name,
+        email: userData.email,
+        password: userData.password,
+        password_confirmation: userData.password_confirmation,
+        role: userData.role
+      });
       const newUser = response.data.data.user;
       setUser(newUser);
       
