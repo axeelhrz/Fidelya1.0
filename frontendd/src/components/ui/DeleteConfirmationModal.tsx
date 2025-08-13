@@ -38,7 +38,7 @@ export default function DeleteConfirmationModal({
           <p className="text-gray-600">{message}</p>
           {itemName && (
             <p className="font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-              "{itemName}"
+              &quot;{itemName}&quot;
             </p>
           )}
           <p className="text-sm text-gray-500">Esta acción no se puede deshacer.</p>

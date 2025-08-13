@@ -18,8 +18,30 @@ export default function SignInPage() {
 
     try {
       await login({ email, password });
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Ocurrió un error durante el inicio de sesión');
+    } catch (err: unknown) {
+      type ErrorResponse = {
+        response?: {
+          data?: {
+            message?: string;
+          };
+        };
+      };
+
+      const errorObj = err as ErrorResponse;
+
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        errorObj.response &&
+        typeof errorObj.response === 'object' &&
+        errorObj.response.data &&
+        typeof errorObj.response.data === 'object' &&
+        'message' in errorObj.response.data
+      ) {
+        setError(errorObj.response.data.message || 'Ocurrió un error durante el inicio de sesión');
+      } else {
+        setError('Ocurrió un error durante el inicio de sesión');
+      }
     } finally {
       setIsLoading(false);
     }

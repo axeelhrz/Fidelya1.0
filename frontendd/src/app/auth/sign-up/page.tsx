@@ -42,8 +42,35 @@ export default function SignUpPage() {
 
     try {
       await registerUser(formData);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Ocurrió un error durante el registro');
+    } catch (err: unknown) {
+      interface ErrorResponse {
+        response?: {
+          data?: {
+            message?: string;
+          };
+        };
+        message?: string;
+      }
+
+      const errorObj = err as ErrorResponse;
+
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in errorObj &&
+        typeof errorObj.response === 'object' &&
+        errorObj.response !== null &&
+        'data' in errorObj.response &&
+        typeof errorObj.response.data === 'object' &&
+        errorObj.response.data !== null &&
+        'message' in errorObj.response.data
+      ) {
+        setError(errorObj.response?.data?.message || 'Ocurrió un error durante el registro');
+      } else if (err instanceof Error) {
+        setError(err.message || 'Ocurrió un error durante el registro');
+      } else {
+        setError('Ocurrió un error durante el registro');
+      }
     } finally {
       setIsLoading(false);
     }

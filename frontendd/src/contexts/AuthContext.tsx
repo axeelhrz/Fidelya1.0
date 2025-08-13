@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData = response.data.data.user;
       setUser(userData);
       return userData;
-    } catch (error) {
+    } catch {
       setUser(null);
       return null;
     }
