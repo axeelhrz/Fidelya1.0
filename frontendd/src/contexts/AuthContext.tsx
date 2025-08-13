@@ -141,24 +141,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, router, initialized]);
 
-  // Periodic auth check for authenticated users
-  useEffect(() => {
-    if (!user || !initialized) return;
-
-    const interval = setInterval(async () => {
-      try {
-        await checkAuth();
-      } catch (error) {
-        console.error('Periodic auth check failed:', error);
-        // If auth check fails, redirect to login
-        setUser(null);
-        router.push('/auth/sign-in');
-      }
-    }, 60000); // Check every minute
-
-    return () => clearInterval(interval);
-  }, [user, initialized, router]);
-
   const value = {
     user,
     loading,
