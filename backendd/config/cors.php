@@ -22,10 +22,7 @@ return [
     'allowed_origins' => [
         'http://localhost:3000',
         'http://127.0.0.1:3000',
-        'http://localhost:3001',
-        'http://127.0.0.1:3001',
-        'https://a34e7fb8521c.ngrok-free.app',
-        'https://straight-truly-continuity-glow.trycloudflare.com',
+        'https://bullet-knee-snap-realtor.trycloudflare.com',
         'https://belt-properly-recruitment-mike.trycloudflare.com',
         env('FRONTEND_URL', 'http://localhost:3000'),
     ],
