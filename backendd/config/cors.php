@@ -23,6 +23,7 @@ return [
         'http://localhost:3000',
         'http://127.0.0.1:3000',
         'https://bullet-knee-snap-realtor.trycloudflare.com',
+        'https://involved-retailers-occasionally-macintosh.trycloudflare.com',
         'https://belt-properly-recruitment-mike.trycloudflare.com',
         env('FRONTEND_URL', 'http://localhost:3000'),
     ],
