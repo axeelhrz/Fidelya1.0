@@ -20,11 +20,12 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://a34e7fb8521c.ngrok-free.app',  // Tu frontend
-        env('FRONTEND_URL', 'http://localhost:3000'),
         'http://localhost:3000',
-        'http://localhost:3001',
         'http://127.0.0.1:3000',
+        'http://localhost:3001',
+        'http://127.0.0.1:3001',
+        'https://a34e7fb8521c.ngrok-free.app',
+        env('FRONTEND_URL', 'http://localhost:3000'),
     ],
 
     'allowed_origins_patterns' => [
