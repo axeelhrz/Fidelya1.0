@@ -37,9 +37,19 @@ return [
         'https://*.trycloudflare.com',
     ],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => [
+        'Accept',
+        'Authorization',
+        'Content-Type',
+        'X-Requested-With',
+        'X-CSRF-TOKEN',
+        'X-XSRF-TOKEN',
+    ],
 
-    'exposed_headers' => [],
+    'exposed_headers' => [
+        'X-CSRF-TOKEN',
+        'X-XSRF-TOKEN',
+    ],
 
     'max_age' => 0,
 
