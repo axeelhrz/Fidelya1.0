@@ -100,14 +100,22 @@ api.interceptors.response.use(
       }
     }
     
-    // Handle 401 Unauthorized
-    if (error.response?.status === 401 && !originalRequest.url?.includes('/api/auth/')) {
-      if (typeof window !== 'undefined') {
+    // Handle 401 Unauthorized - but don't redirect if it's an auth endpoint
+    if (error.response?.status === 401) {
+      // Only redirect if it's not an auth endpoint and we're in the browser
+      if (!originalRequest.url?.includes('/api/auth/') && typeof window !== 'undefined') {
+        // Clear any stored user data
+        localStorage.removeItem('user');
+        // Redirect to login
         window.location.href = '/auth/sign-in';
       }
     }
     
-    console.error('API Error:', error.response?.status, error.response?.data);
+    // Log API errors for debugging
+    if (error.response?.status !== 401 || originalRequest.url?.includes('/api/auth/me')) {
+      console.error('API Error:', error.response?.status, error.response?.data);
+    }
+    
     return Promise.reject(error);
   }
 );
