@@ -2890,10 +2890,10 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
     border-radius: var(--cta-radius, 16px);
   }
   50% {
-    top:-3px; left:-3px; right:-3px; bottom:-3px;
+    top:-8px; left:-8px; right:-8px; bottom:-8px;
     opacity:0.6;
     background: rgba(255, 23, 68, 0.5);
-    border-radius: calc(var(--cta-radius, 16px) + 3px);
+    border-radius: calc(var(--cta-radius, 16px) + 8px);
   }
 }
 
@@ -2905,10 +2905,10 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
     border-radius: calc(var(--cta-radius, 16px) + 2px);
   }
   50% {
-    top:-6px; left:-6px; right:-6px; bottom:-6px;
+    top:-15px; left:-15px; right:-15px; bottom:-15px;
     opacity:0.4;
     background: rgba(255, 23, 68, 0.4);
-    border-radius: calc(var(--cta-radius, 16px) + 6px);
+    border-radius: calc(var(--cta-radius, 16px) + 15px);
   }
 }
 
