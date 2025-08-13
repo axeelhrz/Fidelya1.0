@@ -25,6 +25,7 @@ return [
         'http://localhost:3001',
         'http://127.0.0.1:3001',
         'https://a34e7fb8521c.ngrok-free.app',
+        'https://straight-truly-continuity-glow.trycloudflare.com',
         env('FRONTEND_URL', 'http://localhost:3000'),
     ],
 
@@ -32,6 +33,7 @@ return [
         'https://*.vercel.app',
         'https://*.vercel.com',
         'https://*.ngrok-free.app',
+        'https://*.trycloudflare.com',
     ],
 
     'allowed_headers' => ['*'],
