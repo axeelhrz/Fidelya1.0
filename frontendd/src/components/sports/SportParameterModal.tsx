@@ -9,7 +9,7 @@ import Modal from '@/components/ui/Modal';
 const sportParameterSchema = z.object({
   param_key: z.string().min(2, 'La clave debe tener al menos 2 caracteres'),
   param_type: z.enum(['number', 'string', 'boolean'], {
-    errorMap: () => ({ message: 'Por favor selecciona un tipo válido' })
+    message: 'Por favor selecciona un tipo válido'
   }),
   param_value: z.union([z.string(), z.number(), z.boolean()]),
 });

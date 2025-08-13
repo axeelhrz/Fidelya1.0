@@ -12,17 +12,47 @@ export const testCsrfConnection = async () => {
     try {
       const testResponse = await api.get('/api/leagues');
       console.log('✅ API test response:', testResponse.status);
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        console.log('⚠️ API requires authentication (expected)');
+    } catch (error: unknown) {
+      interface AxiosError {
+        response?: {
+          status?: number;
+          data?: unknown;
+        };
+      }
+
+      const err = error as AxiosError;
+
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof err.response === 'object' &&
+        err.response !== null &&
+        'status' in err.response
+      ) {
+        if (err.response?.status === 401) {
+          console.log('⚠️ API requires authentication (expected)');
+        } else {
+          console.error('❌ API test failed:', err.response?.status, err.response?.data);
+        }
       } else {
-        console.error('❌ API test failed:', error.response?.status, error.response?.data);
+        console.error('❌ API test failed:', error);
       }
     }
     
     return true;
-  } catch (error: any) {
-    console.error('❌ CSRF test failed:', error.response?.status, error.response?.data);
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'response' in error &&
+      typeof (error as { response?: { status?: number; data?: unknown } }).response === 'object'
+    ) {
+      const err = error as { response?: { status?: number; data?: unknown } };
+      console.error('❌ CSRF test failed:', err.response?.status, err.response?.data);
+    } else {
+      console.error('❌ CSRF test failed:', error);
+    }
     return false;
   }
 };
@@ -43,8 +73,18 @@ export const testRegistration = async () => {
     console.log('User data:', response.data.data.user);
     
     return response.data.data.user;
-  } catch (error: any) {
-    console.error('❌ Registration failed:', error.response?.status, error.response?.data);
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'response' in error &&
+      typeof (error as { response?: { status?: number; data?: unknown } }).response === 'object'
+    ) {
+      const err = error as { response?: { status?: number; data?: unknown } };
+      console.error('❌ Registration failed:', err.response?.status, err.response?.data);
+    } else {
+      console.error('❌ Registration failed:', error);
+    }
     return null;
   }
 };
@@ -63,8 +103,18 @@ export const testLogin = async () => {
     console.log('User data:', response.data.data.user);
     
     return response.data.data.user;
-  } catch (error: any) {
-    console.error('❌ Login failed:', error.response?.status, error.response?.data);
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'response' in error &&
+      typeof (error as { response?: { status?: number; data?: unknown } }).response === 'object'
+    ) {
+      const err = error as { response?: { status?: number; data?: unknown } };
+      console.error('❌ Login failed:', err.response?.status, err.response?.data);
+    } else {
+      console.error('❌ Login failed:', error);
+    }
     return null;
   }
 };
@@ -84,8 +134,18 @@ export const testLeagueCreation = async () => {
     console.log('League data:', response.data.data);
     
     return response.data.data;
-  } catch (error: any) {
-    console.error('❌ League creation failed:', error.response?.status, error.response?.data);
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'response' in error &&
+      typeof (error as { response?: { status?: number; data?: unknown } }).response === 'object'
+    ) {
+      const err = error as { response?: { status?: number; data?: unknown } };
+      console.error('❌ League creation failed:', err.response?.status, err.response?.data);
+    } else {
+      console.error('❌ League creation failed:', error);
+    }
     return null;
   }
 };
@@ -114,10 +174,19 @@ export const runFullTest = async () => {
 };
 
 // Make functions available in browser console
+interface TestWindow extends Window {
+  testCsrf: typeof testCsrfConnection;
+  testRegistration: typeof testRegistration;
+  testLogin: typeof testLogin;
+  testLeagueCreation: typeof testLeagueCreation;
+  runFullTest: typeof runFullTest;
+}
+
 if (typeof window !== 'undefined') {
-  (window as any).testCsrf = testCsrfConnection;
-  (window as any).testRegistration = testRegistration;
-  (window as any).testLogin = testLogin;
-  (window as any).testLeagueCreation = testLeagueCreation;
-  (window as any).runFullTest = runFullTest;
+  const testWindow = window as unknown as TestWindow;
+  testWindow.testCsrf = testCsrfConnection;
+  testWindow.testRegistration = testRegistration;
+  testWindow.testLogin = testLogin;
+  testWindow.testLeagueCreation = testLeagueCreation;
+  testWindow.runFullTest = runFullTest;
 }

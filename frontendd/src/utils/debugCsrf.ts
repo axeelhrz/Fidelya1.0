@@ -38,7 +38,14 @@ export const debugCsrfToken = () => {
   console.log('=== End Debug Info ===');
 };
 
+// Extend Window interface to include debugCsrf
+declare global {
+  interface Window {
+    debugCsrf: () => void;
+  }
+}
+
 // Make available in browser console
 if (typeof window !== 'undefined') {
-  (window as any).debugCsrf = debugCsrfToken;
+  window.debugCsrf = debugCsrfToken;
 }

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function middleware() {
   // Temporarily disable all redirects to stop the infinite loop
   // Let the AuthContext handle all authentication logic
   return NextResponse.next();

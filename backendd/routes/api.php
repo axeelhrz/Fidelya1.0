@@ -39,3 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/parameters/{parameter}', [SportParameterController::class, 'destroy']);
     });
 });
+// Health check endpoint
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok', 'timestamp' => now()]);
+});

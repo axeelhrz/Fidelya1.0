@@ -3,11 +3,12 @@ import es from '@/locales/es.json';
 import en from '@/locales/en.json';
 
 type TranslationKey = string;
-type Translations = typeof es;
+type TranslationValue = string | { [key: string]: TranslationValue };
+type Translations = { [key: string]: TranslationValue };
 
 const translations: Record<string, Translations> = {
-  es,
-  en,
+  es: es as Translations,
+  en: en as Translations,
 };
 
 export function useTranslation() {
@@ -16,17 +17,17 @@ export function useTranslation() {
 
   const t = (key: TranslationKey): string => {
     const keys = key.split('.');
-    let value: any = translations[locale];
+    let value: TranslationValue | undefined = translations[locale];
 
     for (const k of keys) {
-      if (value && typeof value === 'object' && k in value) {
-        value = value[k];
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        value = (value as { [key: string]: TranslationValue })[k];
       } else {
         // Fallback to Spanish if key not found
         value = translations['es'];
         for (const fallbackKey of keys) {
-          if (value && typeof value === 'object' && fallbackKey in value) {
-            value = value[fallbackKey];
+          if (value && typeof value === 'object' && !Array.isArray(value)) {
+            value = (value as { [key: string]: TranslationValue })[fallbackKey];
           } else {
             return key; // Return key if translation not found
           }
