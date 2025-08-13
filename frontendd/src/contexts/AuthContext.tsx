@@ -19,6 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -28,7 +29,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData = response.data.data.user;
       setUser(userData);
       return userData;
-    } catch {
+    } catch (error) {
+      console.error('Auth check failed:', error);
       setUser(null);
       return null;
     }
@@ -45,8 +47,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await api.post<ApiResponse<{ user: User }>>('/api/auth/login', credentials);
       const userData = response.data.data.user;
       setUser(userData);
+      
+      // Wait a bit to ensure session is properly set
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       router.push('/dashboard');
     } catch (error: unknown) {
+      console.error('Login error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -64,8 +71,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await api.post<ApiResponse<{ user: User }>>('/api/auth/register', userData);
       const newUser = response.data.data.user;
       setUser(newUser);
+      
+      // Wait a bit to ensure session is properly set
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       router.push('/dashboard');
     } catch (error: unknown) {
+      console.error('Register error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -88,16 +100,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Initialize authentication on mount
   useEffect(() => {
     const initAuth = async () => {
+      // Skip if already initialized
+      if (initialized) return;
+      
       setLoading(true);
       
       // Skip auth check for auth pages and home page
       if (pathname.startsWith('/auth/') || pathname === '/') {
         setLoading(false);
+        setInitialized(true);
         return;
       }
 
       try {
+        // Get CSRF token first
+        await api.get('/sanctum/csrf-cookie');
+        
+        // Then check auth
         const authUser = await checkAuth();
+        
         // If no user and on protected page, redirect to login
         if (!authUser && !pathname.startsWith('/auth/')) {
           router.push('/auth/sign-in');
@@ -110,6 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } finally {
         setLoading(false);
+        setInitialized(true);
       }
     };
 
@@ -117,7 +139,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (pathname) {
       initAuth();
     }
-  }, [pathname, router]);
+  }, [pathname, router, initialized]);
+
+  // Periodic auth check for authenticated users
+  useEffect(() => {
+    if (!user || !initialized) return;
+
+    const interval = setInterval(async () => {
+      try {
+        await checkAuth();
+      } catch (error) {
+        console.error('Periodic auth check failed:', error);
+        // If auth check fails, redirect to login
+        setUser(null);
+        router.push('/auth/sign-in');
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [user, initialized, router]);
 
   const value = {
     user,
