@@ -100,18 +100,19 @@ api.interceptors.response.use(
       }
     }
     
-    // Handle 401 Unauthorized - but don't redirect if it's an auth endpoint
+    // Handle 401 Unauthorized - only redirect for non-auth endpoints
     if (error.response?.status === 401) {
       // Only redirect if it's not an auth endpoint and we're in the browser
       if (!originalRequest.url?.includes('/api/auth/') && typeof window !== 'undefined') {
-        // Clear any stored user data
-        localStorage.removeItem('user');
-        // Redirect to login
-        window.location.href = '/auth/sign-in';
+        // Avoid infinite redirects by checking current location
+        if (!window.location.pathname.startsWith('/auth/')) {
+          console.log('401 error detected, redirecting to login');
+          window.location.href = '/auth/sign-in';
+        }
       }
     }
     
-    // Log API errors for debugging
+    // Only log non-auth related errors to reduce noise
     if (error.response?.status !== 401 || originalRequest.url?.includes('/api/auth/me')) {
       console.error('API Error:', error.response?.status, error.response?.data);
     }
