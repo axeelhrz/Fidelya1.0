@@ -22,9 +22,8 @@ return [
     'allowed_origins' => [
         'http://localhost:3000',
         'http://127.0.0.1:3000',
-        'https://bullet-knee-snap-realtor.trycloudflare.com',
         'https://involved-retailers-occasionally-macintosh.trycloudflare.com',
-        'https://belt-properly-recruitment-mike.trycloudflare.com',
+        'https://dancing-ate-medieval-lower.trycloudflare.com',
         env('FRONTEND_URL', 'http://localhost:3000'),
     ],
 
