@@ -24,13 +24,19 @@ return [
         'http://127.0.0.1:3000',
         'https://involved-retailers-occasionally-macintosh.trycloudflare.com',
         env('FRONTEND_URL', 'http://localhost:3000'),
+        // Agregar tu dominio de producción aquí
+        env('APP_URL', 'http://localhost'),
     ],
 
     'allowed_origins_patterns' => [
         'https://*.vercel.app',
         'https://*.vercel.com',
+        'https://*.netlify.app',
+        'https://*.netlify.com',
         'https://*.ngrok-free.app',
         'https://*.trycloudflare.com',
+        // Patrón para subdominios de tu dominio
+        'https://*.tudominio.com',
     ],
 
     'allowed_headers' => [
