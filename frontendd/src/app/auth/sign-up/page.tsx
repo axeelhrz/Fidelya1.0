@@ -112,15 +112,15 @@ export default function SignUpPage() {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6 shadow-medium">
+          <div className="mx-auto w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
             <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z" />
             </svg>
           </div>
-          <h1 className="font-display text-responsive-xl font-bold text-primary mb-2">
+          <h1 className="font-display text-3xl font-bold text-gray-900 mb-2">
             Únete a Raquet Power
           </h1>
-          <p className="text-secondary">
+          <p className="text-gray-600 text-base">
             Crea tu cuenta y comienza tu experiencia deportiva
           </p>
         </div>
@@ -128,27 +128,27 @@ export default function SignUpPage() {
         {/* Progress Indicator */}
         <div className="flex items-center justify-center space-x-4">
           <div className={`progress-step flex items-center justify-center w-10 h-10 rounded-full text-sm font-semibold transition-all duration-300 ${
-            currentStep >= 1 ? 'bg-primary text-white shadow-soft' : 'bg-gray-200 text-gray-600'
+            currentStep >= 1 ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-200 text-gray-600'
           }`}>
             1
           </div>
           <div className={`h-1 w-12 rounded-full transition-all duration-300 ${
-            currentStep >= 2 ? 'bg-primary' : 'bg-gray-200'
+            currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-200'
           }`}></div>
           <div className={`progress-step flex items-center justify-center w-10 h-10 rounded-full text-sm font-semibold transition-all duration-300 ${
-            currentStep >= 2 ? 'bg-primary text-white shadow-soft' : 'bg-gray-200 text-gray-600'
+            currentStep >= 2 ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-200 text-gray-600'
           }`}>
             2
           </div>
         </div>
 
-        <div className="flex justify-between text-sm text-secondary">
+        <div className="flex justify-between text-sm text-gray-600 font-medium">
           <span>Tipo de cuenta</span>
           <span>Información personal</span>
         </div>
 
         {/* Form Container */}
-        <div className="bg-white rounded-2xl shadow-medium p-8 border border-gray-100">
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
           {error && (
             <div className="rounded-lg bg-red-50 border border-red-200 p-4 mb-6">
               <div className="flex items-center">
@@ -174,7 +174,7 @@ export default function SignUpPage() {
                 type="button"
                 onClick={handleNextStep}
                 disabled={!formData.role}
-                className="btn-primary w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-soft"
+                className="btn-primary w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all duration-200"
               >
                 Continuar
               </button>
@@ -186,12 +186,12 @@ export default function SignUpPage() {
             <form className="space-y-6 animate-slide-in" onSubmit={handleSubmit}>
               <div className="space-y-5">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-primary mb-2">
+                  <label htmlFor="name" className="block text-sm font-semibold text-gray-900 mb-2">
                     Nombre completo
                   </label>
                   <div className="relative">
                     <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors duration-200 ${
-                      focusedField === 'name' || formData.name ? 'text-accent' : 'text-gray-400'
+                      focusedField === 'name' || formData.name ? 'text-blue-600' : 'text-gray-400'
                     }`}>
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -207,9 +207,9 @@ export default function SignUpPage() {
                       onBlur={() => setFocusedField(null)}
                       autoComplete="name"
                       required
-                      className={`form-input block w-full pl-10 pr-4 py-3 border rounded-lg transition-all duration-200 text-primary placeholder-gray-400 ${
+                      className={`form-input block w-full pl-10 pr-4 py-3 border rounded-lg transition-all duration-200 text-gray-900 placeholder-gray-500 font-medium ${
                         focusedField === 'name' 
-                          ? 'border-primary bg-blue-50/50' 
+                          ? 'border-blue-500 bg-blue-50/50 shadow-sm' 
                           : formData.name 
                             ? 'border-emerald-300 bg-emerald-50/50' 
                             : 'border-gray-300 hover:border-gray-400 bg-white'
@@ -229,12 +229,12 @@ export default function SignUpPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-primary mb-2">
+                  <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
                     Correo electrónico
                   </label>
                   <div className="relative">
                     <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors duration-200 ${
-                      focusedField === 'email' || formData.email ? 'text-accent' : 'text-gray-400'
+                      focusedField === 'email' || formData.email ? 'text-blue-600' : 'text-gray-400'
                     }`}>
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-9 9c1.657 0 3-1.007 3-2.25" />
@@ -250,9 +250,9 @@ export default function SignUpPage() {
                       onBlur={() => setFocusedField(null)}
                       autoComplete="email"
                       required
-                      className={`form-input block w-full pl-10 pr-4 py-3 border rounded-lg transition-all duration-200 text-primary placeholder-gray-400 ${
+                      className={`form-input block w-full pl-10 pr-4 py-3 border rounded-lg transition-all duration-200 text-gray-900 placeholder-gray-500 font-medium ${
                         focusedField === 'email' 
-                          ? 'border-primary bg-blue-50/50' 
+                          ? 'border-blue-500 bg-blue-50/50 shadow-sm' 
                           : formData.email 
                             ? 'border-emerald-300 bg-emerald-50/50' 
                             : 'border-gray-300 hover:border-gray-400 bg-white'
@@ -272,12 +272,12 @@ export default function SignUpPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-primary mb-2">
+                  <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
                     Contraseña
                   </label>
                   <div className="relative">
                     <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors duration-200 ${
-                      focusedField === 'password' || formData.password ? 'text-accent' : 'text-gray-400'
+                      focusedField === 'password' || formData.password ? 'text-blue-600' : 'text-gray-400'
                     }`}>
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
@@ -293,9 +293,9 @@ export default function SignUpPage() {
                       onBlur={() => setFocusedField(null)}
                       autoComplete="new-password"
                       required
-                      className={`form-input block w-full pl-10 pr-12 py-3 border rounded-lg transition-all duration-200 text-primary placeholder-gray-400 ${
+                      className={`form-input block w-full pl-10 pr-12 py-3 border rounded-lg transition-all duration-200 text-gray-900 placeholder-gray-500 font-medium ${
                         focusedField === 'password' 
-                          ? 'border-primary bg-blue-50/50' 
+                          ? 'border-blue-500 bg-blue-50/50 shadow-sm' 
                           : formData.password 
                             ? 'border-emerald-300 bg-emerald-50/50' 
                             : 'border-gray-300 hover:border-gray-400 bg-white'
@@ -322,12 +322,12 @@ export default function SignUpPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="password_confirmation" className="block text-sm font-medium text-primary mb-2">
+                  <label htmlFor="password_confirmation" className="block text-sm font-semibold text-gray-900 mb-2">
                     Confirmar contraseña
                   </label>
                   <div className="relative">
                     <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors duration-200 ${
-                      focusedField === 'password_confirmation' || formData.password_confirmation ? 'text-accent' : 'text-gray-400'
+                      focusedField === 'password_confirmation' || formData.password_confirmation ? 'text-blue-600' : 'text-gray-400'
                     }`}>
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -343,9 +343,9 @@ export default function SignUpPage() {
                       onBlur={() => setFocusedField(null)}
                       autoComplete="new-password"
                       required
-                      className={`form-input block w-full pl-10 pr-12 py-3 border rounded-lg transition-all duration-200 text-primary placeholder-gray-400 ${
+                      className={`form-input block w-full pl-10 pr-12 py-3 border rounded-lg transition-all duration-200 text-gray-900 placeholder-gray-500 font-medium ${
                         focusedField === 'password_confirmation' 
-                          ? 'border-primary bg-blue-50/50' 
+                          ? 'border-blue-500 bg-blue-50/50 shadow-sm' 
                           : formData.password_confirmation 
                             ? 'border-emerald-300 bg-emerald-50/50' 
                             : 'border-gray-300 hover:border-gray-400 bg-white'
@@ -376,14 +376,14 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   onClick={handlePrevStep}
-                  className="btn-secondary flex-1 flex justify-center py-3 px-4 border border-gray-300 rounded-lg text-sm font-semibold text-primary bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-subtle"
+                  className="btn-secondary flex-1 flex justify-center py-3 px-4 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm hover:shadow-md transition-all duration-200"
                 >
                   Atrás
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="btn-primary flex-1 flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-soft"
+                  className="btn-primary flex-1 flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all duration-200"
                 >
                   {isLoading ? (
                     <div className="flex items-center">
@@ -405,14 +405,14 @@ export default function SignUpPage() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-secondary">¿Ya tienes cuenta?</span>
+                <span className="px-2 bg-white text-gray-600 font-medium">¿Ya tienes cuenta?</span>
               </div>
             </div>
 
             <div className="mt-6">
               <Link
                 href="/auth/sign-in"
-                className="btn-secondary w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg text-sm font-semibold text-primary bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-subtle"
+                className="btn-secondary w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm hover:shadow-md transition-all duration-200"
               >
                 Iniciar sesión
               </Link>
@@ -422,11 +422,11 @@ export default function SignUpPage() {
 
         {/* Footer */}
         <div className="text-center">
-          <p className="text-xs text-secondary">
+          <p className="text-xs text-gray-500 leading-relaxed">
             Al crear una cuenta, aceptas nuestros{' '}
-            <a href="#" className="text-accent hover:underline">términos de servicio</a>
+            <a href="#" className="text-blue-600 hover:text-blue-700 hover:underline font-medium">términos de servicio</a>
             {' '}y{' '}
-            <a href="#" className="text-accent hover:underline">política de privacidad</a>
+            <a href="#" className="text-blue-600 hover:text-blue-700 hover:underline font-medium">política de privacidad</a>
           </p>
         </div>
       </div>
