@@ -4,7 +4,15 @@ import { greenAPIService } from './green-api.service';
 
 interface WhatsAppProvider {
   name: string;
-  service: any;
+  service: {
+    sendMessage: (to: string, message: string, title?: string) => Promise<SendResult>;
+    isConfigured: () => boolean;
+    isAvailable?: () => boolean;
+    getInstanceStatus?: () => Promise<{ status: string }>;
+    getConnectionStatus?: () => boolean;
+    initialize?: () => Promise<boolean>;
+    disconnect?: () => Promise<void>;
+  };
   isConfigured: () => boolean;
   isAvailable: () => boolean;
   priority: number;
@@ -144,7 +152,7 @@ class FreeWhatsAppService {
           try {
             const statusResult = await greenAPIService.getInstanceStatus();
             status = statusResult.status;
-          } catch (error) {
+          } catch {
             status = 'error';
           }
         } else if (provider.name === 'WhatsApp Web (Baileys)') {

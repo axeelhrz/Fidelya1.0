@@ -186,6 +186,12 @@ class WhatsAppWebService {
   isAvailable(): boolean {
     return this.isInitialized;
   }
+
+  isConfigured(): boolean {
+    // WhatsApp Web is considered "configured" if Baileys can be loaded
+    // The actual connection status is handled by isAvailable() and getConnectionStatus()
+    return true;
+  }
 }
 
 export const whatsAppWebService = new WhatsAppWebService();

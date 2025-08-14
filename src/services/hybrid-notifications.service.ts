@@ -46,7 +46,7 @@ class HybridNotificationsService {
     }
 
     // 3. Si todo falla, intentar notificación in-app
-    return await this.sendInAppFallback(payload);
+    return await this.sendInAppFallback();
   }
 
   private async sendWhatsApp(payload: NotificationPayload): Promise<NotificationResult> {
@@ -144,9 +144,20 @@ class HybridNotificationsService {
   private async sendEmailViaResend(to: string, subject: string, html: string) {
     try {
       const resendConfig = notificationConfig.getProviderConfig('email', 'resend');
-      
-      if (!resendConfig?.enabled) {
-        return { success: false, error: 'Resend no configurado' };
+
+      // Type guard for Resend config
+      function isResendConfig(config: unknown): config is { enabled: boolean; priority: number; apiKey: string; fromName: string; fromEmail: string } {
+        return (
+          typeof config === 'object' &&
+          config !== null &&
+          typeof (config as { apiKey?: unknown }).apiKey === 'string' &&
+          typeof (config as { fromName?: unknown }).fromName === 'string' &&
+          typeof (config as { fromEmail?: unknown }).fromEmail === 'string'
+        );
+      }
+
+      if (!isResendConfig(resendConfig) || !resendConfig.enabled) {
+        return { success: false, error: 'Resend no configurado correctamente' };
       }
 
       const response = await fetch('https://api.resend.com/emails', {
@@ -179,7 +190,7 @@ class HybridNotificationsService {
     }
   }
 
-  private async sendInAppFallback(payload: NotificationPayload): Promise<NotificationResult> {
+  private async sendInAppFallback(): Promise<NotificationResult> {
     try {
       console.log('📱 Guardando notificación in-app como último recurso...');
       
@@ -196,7 +207,7 @@ class HybridNotificationsService {
         cost: 0
       };
 
-    } catch (error) {
+    } catch {
       return {
         success: false,
         channel: 'whatsapp',
@@ -220,7 +231,6 @@ class HybridNotificationsService {
     const {
       batchSize = 10,
       delayBetweenBatches = 1000,
-      maxConcurrent = 3
     } = options;
 
     console.log(`📦 Enviando ${notifications.length} notificaciones en lotes de ${batchSize}`);
