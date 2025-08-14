@@ -1,12 +1,11 @@
 import { Boom } from '@hapi/boom';
 
 // Importaciones dinámicas para evitar errores de dependencias
-import type { WASocket, SocketConfig } from '@whiskeysockets/baileys';
-let makeWASocket: (config: SocketConfig) => WASocket;
-import type { AuthenticationState } from '@whiskeysockets/baileys';
-let multiFileAuthState: (sessionPath: string) => Promise<{ state: AuthenticationState; saveCreds: () => Promise<void>; }>;
-import type { DisconnectReason as BaileysDisconnectReason } from '@whiskeysockets/baileys';
-let DisconnectReason: typeof BaileysDisconnectReason;
+import type { WASocket, UserFacingSocketConfig, ConnectionState } from '@whiskeysockets/baileys';
+let makeWASocket: ((config: UserFacingSocketConfig) => WASocket) | undefined;
+
+let multiFileAuthState: (sessionPath: string) => Promise<{ state: import('@whiskeysockets/baileys').AuthenticationState; saveCreds: () => Promise<void> }>;
+let DisconnectReason: typeof import('@whiskeysockets/baileys').DisconnectReason;
 
 interface WhatsAppWebConfig {
   sessionPath: string;
@@ -22,7 +21,7 @@ interface SendMessageResult {
 }
 
 class WhatsAppWebService {
-  private socket: WASocket | null = null;
+  private socket: import('@whiskeysockets/baileys').WASocket | null = null;
   private isConnected = false;
   private config: WhatsAppWebConfig;
   private retryCount = 0;
@@ -54,6 +53,43 @@ class WhatsAppWebService {
     }
   }
 
+  private createSilentLogger(): {
+    level: string;
+    trace: (...args: unknown[]) => void;
+    debug: (...args: unknown[]) => void;
+    info: (...args: unknown[]) => void;
+    warn: (...args: unknown[]) => void;
+    error: (...args: unknown[]) => void;
+    child: () => {
+      level: string;
+      trace: (...args: unknown[]) => void;
+      debug: (...args: unknown[]) => void;
+      info: (...args: unknown[]) => void;
+      warn: (...args: unknown[]) => void;
+      error: (...args: unknown[]) => void;
+      child: () => {
+        level: string;
+        trace: (...args: unknown[]) => void;
+        debug: (...args: unknown[]) => void;
+        info: (...args: unknown[]) => void;
+        warn: (...args: unknown[]) => void;
+        error: (...args: unknown[]) => void;
+        child: () => typeof logger;
+      };
+    }; // Fix: child returns the same logger type
+  } {
+    const logger = {
+      level: 'silent',
+      trace: () => {},
+      debug: () => {},
+      info: () => {},
+      warn: () => {},
+      error: () => {},
+      child: () => logger
+    };
+    return logger;
+  }
+
   async initialize(): Promise<boolean> {
     try {
       console.log('🔄 Inicializando WhatsApp Web...');
@@ -69,40 +105,19 @@ class WhatsAppWebService {
       const { state, saveCreds } = await multiFileAuthState(this.config.sessionPath);
       
       // Crear socket de WhatsApp
+      if (!makeWASocket) {
+        throw new Error('makeWASocket no está definido. Verifica que Baileys se haya cargado correctamente.');
+      }
       this.socket = makeWASocket({
         auth: state,
         printQRInTerminal: true,
-        logger: {
-          level: 'silent',
-          trace: () => {},
-          debug: () => {},
-          info: () => {},
-          warn: () => {},
-          error: () => {},
-          child: () => ({
-            level: 'silent',
-            trace: () => {},
-            debug: () => {},
-            info: () => {},
-            warn: () => {},
-            error: () => {},
-            child: () => ({
-              level: 'silent',
-              trace: () => {},
-              debug: () => {},
-              info: () => {},
-              warn: () => {},
-              error: () => {},
-              child: () => ({} as any)
-            })
-          })
-        },
+        logger: this.createSilentLogger(),
         browser: ['Fidelya', 'Chrome', '1.0.0'],
         generateHighQualityLinkPreview: false, // Desactivar para evitar dependencias opcionales
       });
 
       // Manejar eventos de conexión
-      this.socket.ev.on('connection.update', (update: any) => {
+      this.socket.ev.on('connection.update', (update: Partial<ConnectionState>) => {
         const { connection, lastDisconnect, qr } = update;
         
         if (qr) {
