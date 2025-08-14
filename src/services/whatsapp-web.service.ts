@@ -2,7 +2,7 @@ import { Boom } from '@hapi/boom';
 
 // Importaciones dinámicas para evitar errores de dependencias
 let makeWASocket: any;
-let useMultiFileAuthState: any;
+let multiFileAuthState: any;
 let DisconnectReason: any;
 
 interface WhatsAppWebConfig {
@@ -40,7 +40,7 @@ class WhatsAppWebService {
 
       const baileys = await import('@whiskeysockets/baileys');
       makeWASocket = baileys.default;
-      useMultiFileAuthState = baileys.useMultiFileAuthState;
+      multiFileAuthState = baileys.useMultiFileAuthState;
       DisconnectReason = baileys.DisconnectReason;
       
       this.isInitialized = true;
@@ -63,7 +63,7 @@ class WhatsAppWebService {
       }
 
       // Configurar autenticación multi-archivo
-      const { state, saveCreds } = await useMultiFileAuthState(this.config.sessionPath);
+      const { state, saveCreds } = await multiFileAuthState(this.config.sessionPath);
       
       // Crear socket de WhatsApp
       this.socket = makeWASocket({
