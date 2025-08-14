@@ -1,9 +1,9 @@
 import { Boom } from '@hapi/boom';
 
 // Importaciones dinámicas para evitar errores de dependencias
-let makeWASocket: any;
-let multiFileAuthState: any;
-let DisconnectReason: any;
+let makeWASocket: typeof import('@whiskeysockets/baileys').default;
+let multiFileAuthState: (sessionPath: string) => Promise<{ state: import('@whiskeysockets/baileys').AuthenticationState; saveCreds: () => Promise<void> }>;
+let DisconnectReason: typeof import('@whiskeysockets/baileys').DisconnectReason;
 
 interface WhatsAppWebConfig {
   sessionPath: string;
@@ -19,7 +19,7 @@ interface SendMessageResult {
 }
 
 class WhatsAppWebService {
-  private socket: any = null;
+  private socket: import('@whiskeysockets/baileys').WASocket | null = null;
   private isConnected = false;
   private config: WhatsAppWebConfig;
   private retryCount = 0;
@@ -71,8 +71,21 @@ class WhatsAppWebService {
         printQRInTerminal: true,
         logger: {
           level: 'silent',
-          child: () => ({ level: 'silent' } as any)
-        } as any,
+          trace: () => {},
+          debug: () => {},
+          info: () => {},
+          warn: () => {},
+          error: () => {},
+          child: () => ({
+            level: 'silent',
+            trace: () => {},
+            debug: () => {},
+            info: () => {},
+            warn: () => {},
+            error: () => {},
+            child: () => ({} as any)
+          })
+        },
         browser: ['Fidelya', 'Chrome', '1.0.0'],
         generateHighQualityLinkPreview: false, // Desactivar para evitar dependencias opcionales
       });
