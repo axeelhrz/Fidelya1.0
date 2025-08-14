@@ -272,7 +272,7 @@ export const NotificationDashboard = () => {
             </button>
 
             <button
-              onClick={() => toast.info('Configuración próximamente')}
+              onClick={() => toast('Configuración próximamente')}
               className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
             >
               <div className="text-center">

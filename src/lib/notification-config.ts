@@ -141,15 +141,15 @@ class NotificationConfigService {
 
   public getWhatsAppProviders() {
     return Object.entries(this.config.whatsapp.providers)
-      .filter(([_, config]) => config.enabled)
-      .sort(([_, a], [__, b]) => a.priority - b.priority)
+      .filter(([, config]) => config.enabled)
+      .sort(([, a], [, b]) => a.priority - b.priority)
       .map(([name, config]) => ({ name, ...config }));
   }
 
   public getEmailProviders() {
     return Object.entries(this.config.email.providers)
-      .filter(([_, config]) => config.enabled)
-      .sort(([_, a], [__, b]) => a.priority - b.priority)
+      .filter(([, config]) => config.enabled)
+      .sort(([, a], [, b]) => a.priority - b.priority)
       .map(([name, config]) => ({ name, ...config }));
   }
 
@@ -157,8 +157,17 @@ class NotificationConfigService {
     return this.config.fallback;
   }
 
-  public getProviderConfig(type: 'whatsapp' | 'email', providerName: string) {
-    return this.config[type].providers[providerName as keyof typeof this.config[typeof type]['providers']];
+  public getProviderConfig(
+    type: 'whatsapp' | 'email',
+    providerName: string
+  ): NotificationConfig['whatsapp']['providers'][keyof NotificationConfig['whatsapp']['providers']] |
+     NotificationConfig['email']['providers'][keyof NotificationConfig['email']['providers']] | undefined {
+    if (type === 'whatsapp') {
+      return this.config.whatsapp.providers[providerName as keyof NotificationConfig['whatsapp']['providers']];
+    } else if (type === 'email') {
+      return this.config.email.providers[providerName as keyof NotificationConfig['email']['providers']];
+    }
+    return undefined;
   }
 
   public isProviderEnabled(type: 'whatsapp' | 'email', providerName: string): boolean {

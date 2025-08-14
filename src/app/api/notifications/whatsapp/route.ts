@@ -10,7 +10,7 @@ interface WhatsAppRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const { to, message, title, forceProvider }: WhatsAppRequest = await request.json();
+    const { to, message, title }: WhatsAppRequest = await request.json();
 
     if (!to || !message) {
       return NextResponse.json(
@@ -76,7 +76,7 @@ export async function GET() {
       providers,
       timestamp: new Date()
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { 
         success: false, 

@@ -1,10 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 export const DependencyInstaller = () => {
-  const [installing, setInstalling] = useState(false);
 
   const requiredDependencies = [
     {
@@ -138,7 +136,7 @@ export const DependencyInstaller = () => {
             <ol className="text-blue-700 text-sm space-y-1 list-decimal list-inside">
               <li>Reinicia el servidor de desarrollo</li>
               <li>Ve a la sección de notificaciones</li>
-              <li>Haz clic en "Configurar WhatsApp Web"</li>
+              <li>Haz clic en &quot;Configurar WhatsApp Web&quot;</li>
               <li>Escanea el QR con tu teléfono</li>
               <li>¡Disfruta de mensajes ilimitados gratis!</li>
             </ol>

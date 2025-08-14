@@ -81,7 +81,7 @@ export const FreeWhatsAppTester = () => {
         console.log('🎉 Resultado:', result);
         
         if (result.fallbackUsed) {
-          toast.info('ℹ️ Se usó proveedor de respaldo');
+          toast('Se usó proveedor de respaldo', { icon: 'ℹ️' });
         }
       } else {
         toast.error(`❌ Error: ${result.error}`);
