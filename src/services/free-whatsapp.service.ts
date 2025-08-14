@@ -6,6 +6,7 @@ interface WhatsAppProvider {
   name: string;
   service: any;
   isConfigured: () => boolean;
+  isAvailable: () => boolean;
   priority: number;
   cost: 'free' | 'paid';
   limitations?: string;
@@ -23,18 +24,11 @@ interface SendResult {
 class FreeWhatsAppService {
   private providers: WhatsAppProvider[] = [
     {
-      name: 'WhatsApp Web (Baileys)',
-      service: whatsAppWebService,
-      isConfigured: () => true, // Siempre disponible
-      priority: 1,
-      cost: 'free',
-      limitations: 'Requiere escanear QR una vez'
-    },
-    {
       name: 'Green API',
       service: greenAPIService,
       isConfigured: () => greenAPIService.isConfigured(),
-      priority: 2,
+      isAvailable: () => true, // Siempre disponible si está configurado
+      priority: 1, // Prioridad más alta por ser más confiable
       cost: 'free',
       limitations: '3000 mensajes gratis/mes'
     },
@@ -42,9 +36,19 @@ class FreeWhatsAppService {
       name: 'CallMeBot',
       service: callMeBotService,
       isConfigured: () => callMeBotService.isConfigured(),
-      priority: 3,
+      isAvailable: () => true,
+      priority: 2,
       cost: 'free',
       limitations: 'Limitado a números registrados'
+    },
+    {
+      name: 'WhatsApp Web (Baileys)',
+      service: whatsAppWebService,
+      isConfigured: () => true, // Siempre "configurado"
+      isAvailable: () => whatsAppWebService.isAvailable(), // Pero puede no estar disponible
+      priority: 3, // Menor prioridad por las dependencias
+      cost: 'free',
+      limitations: 'Requiere escanear QR y dependencias opcionales'
     }
   ];
 
@@ -53,13 +57,23 @@ class FreeWhatsAppService {
     
     // Ordenar proveedores por prioridad y disponibilidad
     const availableProviders = this.providers
-      .filter(p => p.isConfigured())
+      .filter(p => p.isConfigured() && p.isAvailable())
       .sort((a, b) => a.priority - b.priority);
 
     if (availableProviders.length === 0) {
+      console.log('⚠️ No hay proveedores disponibles. Verificando configuración...');
+      
+      // Mostrar estado de cada proveedor para debugging
+      for (const provider of this.providers) {
+        console.log(`📋 ${provider.name}:`);
+        console.log(`   - Configurado: ${provider.isConfigured()}`);
+        console.log(`   - Disponible: ${provider.isAvailable()}`);
+        console.log(`   - Limitaciones: ${provider.limitations}`);
+      }
+      
       return {
         success: false,
-        error: 'No hay proveedores de WhatsApp configurados',
+        error: 'No hay proveedores de WhatsApp configurados o disponibles. Revisa la configuración.',
         timestamp: new Date()
       };
     }
@@ -112,6 +126,7 @@ class FreeWhatsAppService {
   async getAvailableProviders(): Promise<Array<{
     name: string;
     configured: boolean;
+    available: boolean;
     cost: string;
     limitations?: string;
     status?: string;
@@ -120,26 +135,36 @@ class FreeWhatsAppService {
     
     for (const provider of this.providers) {
       const configured = provider.isConfigured();
+      const available = provider.isAvailable();
       let status = 'unknown';
       
       // Verificar estado específico para algunos proveedores
-      if (configured && provider.name === 'Green API') {
-        try {
-          const statusResult = await greenAPIService.getInstanceStatus();
-          status = statusResult.status;
-        } catch (error) {
-          status = 'error';
+      if (configured && available) {
+        if (provider.name === 'Green API') {
+          try {
+            const statusResult = await greenAPIService.getInstanceStatus();
+            status = statusResult.status;
+          } catch (error) {
+            status = 'error';
+          }
+        } else if (provider.name === 'WhatsApp Web (Baileys)') {
+          status = whatsAppWebService.getConnectionStatus() ? 'connected' : 'disconnected';
+        } else {
+          status = 'ready';
         }
-      } else if (configured && provider.name === 'WhatsApp Web (Baileys)') {
-        status = whatsAppWebService.getConnectionStatus() ? 'connected' : 'disconnected';
+      } else if (!available) {
+        status = 'dependencies_missing';
+      } else if (!configured) {
+        status = 'not_configured';
       }
       
       results.push({
         name: provider.name,
         configured,
+        available,
         cost: provider.cost,
         limitations: provider.limitations,
-        status: configured ? status : 'not_configured'
+        status
       });
     }
     
@@ -147,7 +172,12 @@ class FreeWhatsAppService {
   }
 
   async initializeWhatsAppWeb(): Promise<boolean> {
-    return await whatsAppWebService.initialize();
+    try {
+      return await whatsAppWebService.initialize();
+    } catch (error) {
+      console.error('Error inicializando WhatsApp Web:', error);
+      return false;
+    }
   }
 
   async disconnectWhatsAppWeb(): Promise<void> {

@@ -1,12 +1,9 @@
 import { Boom } from '@hapi/boom';
-import makeWASocket, { 
-  ConnectionState, 
-  DisconnectReason, 
-  useMultiFileAuthState,
-  WAMessage,
-  proto
-} from '@whiskeysockets/baileys';
-import { join } from 'path';
+
+// Importaciones dinámicas para evitar errores de dependencias
+let makeWASocket: any;
+let useMultiFileAuthState: any;
+let DisconnectReason: any;
 
 interface WhatsAppWebConfig {
   sessionPath: string;
@@ -22,50 +19,78 @@ interface SendMessageResult {
 }
 
 class WhatsAppWebService {
-  private socket: ReturnType<typeof makeWASocket> | null = null;
+  private socket: any = null;
   private isConnected = false;
   private config: WhatsAppWebConfig;
   private retryCount = 0;
+  private isInitialized = false;
 
   constructor(config?: Partial<WhatsAppWebConfig>) {
     this.config = {
-      sessionPath: join(process.cwd(), 'whatsapp-sessions'),
+      sessionPath: './whatsapp-sessions',
       autoReconnect: true,
       maxRetries: 3,
       ...config
     };
   }
 
+  private async loadBaileys() {
+    try {
+      if (this.isInitialized) return true;
+
+      const baileys = await import('@whiskeysockets/baileys');
+      makeWASocket = baileys.default;
+      useMultiFileAuthState = baileys.useMultiFileAuthState;
+      DisconnectReason = baileys.DisconnectReason;
+      
+      this.isInitialized = true;
+      return true;
+    } catch (error) {
+      console.error('❌ Error cargando Baileys:', error);
+      return false;
+    }
+  }
+
   async initialize(): Promise<boolean> {
     try {
       console.log('🔄 Inicializando WhatsApp Web...');
       
+      // Cargar Baileys dinámicamente
+      const loaded = await this.loadBaileys();
+      if (!loaded) {
+        console.error('❌ No se pudo cargar Baileys. Instala las dependencias: npm install jimp sharp link-preview-js');
+        return false;
+      }
+
       // Configurar autenticación multi-archivo
       const { state, saveCreds } = await useMultiFileAuthState(this.config.sessionPath);
       
       // Crear socket de WhatsApp
       this.socket = makeWASocket({
         auth: state,
-        printQRInTerminal: true, // Mostrar QR en terminal para escanear
+        printQRInTerminal: true,
         logger: {
-          level: 'silent', // Reducir logs
+          level: 'silent',
           child: () => ({ level: 'silent' } as any)
-        } as any
+        } as any,
+        browser: ['Fidelya', 'Chrome', '1.0.0'],
+        generateHighQualityLinkPreview: false, // Desactivar para evitar dependencias opcionales
       });
 
       // Manejar eventos de conexión
-      this.socket.ev.on('connection.update', (update: Partial<ConnectionState>) => {
+      this.socket.ev.on('connection.update', (update: any) => {
         const { connection, lastDisconnect, qr } = update;
         
         if (qr) {
-          console.log('📱 Escanea este QR con WhatsApp Web:');
-          console.log(qr);
+          console.log('📱 Escanea este QR con WhatsApp:');
+          console.log('QR generado - revisa la terminal para escanearlo');
         }
         
         if (connection === 'close') {
           const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
           
           console.log('🔌 Conexión cerrada. Reconectar:', shouldReconnect);
+          this.isConnected = false;
           
           if (shouldReconnect && this.config.autoReconnect && this.retryCount < this.config.maxRetries) {
             this.retryCount++;
@@ -90,16 +115,28 @@ class WhatsAppWebService {
 
   async sendMessage(to: string, message: string, title?: string): Promise<SendMessageResult> {
     try {
+      if (!this.isInitialized) {
+        const loaded = await this.loadBaileys();
+        if (!loaded) {
+          return {
+            success: false,
+            error: 'Baileys no está disponible. Instala las dependencias opcionales.',
+            timestamp: new Date()
+          };
+        }
+      }
+
       if (!this.socket || !this.isConnected) {
         return {
           success: false,
-          error: 'WhatsApp Web no está conectado',
+          error: 'WhatsApp Web no está conectado. Ejecuta initialize() primero.',
           timestamp: new Date()
         };
       }
 
-      // Formatear número (agregar @s.whatsapp.net si no lo tiene)
-      const formattedNumber = to.includes('@') ? to : `${to.replace(/\D/g, '')}@s.whatsapp.net`;
+      // Formatear número
+      const cleanNumber = to.replace(/\D/g, '');
+      const formattedNumber = cleanNumber.includes('@') ? cleanNumber : `${cleanNumber}@s.whatsapp.net`;
       
       // Formatear mensaje con branding
       const formattedMessage = title 
@@ -131,7 +168,11 @@ class WhatsAppWebService {
 
   async disconnect(): Promise<void> {
     if (this.socket) {
-      await this.socket.logout();
+      try {
+        await this.socket.logout();
+      } catch (error) {
+        console.log('Error durante logout:', error);
+      }
       this.socket = null;
       this.isConnected = false;
       console.log('🔌 WhatsApp Web desconectado');
@@ -140,6 +181,10 @@ class WhatsAppWebService {
 
   getConnectionStatus(): boolean {
     return this.isConnected;
+  }
+
+  isAvailable(): boolean {
+    return this.isInitialized;
   }
 }
 
