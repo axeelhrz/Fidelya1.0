@@ -47,7 +47,12 @@ class GreenAPIService {
         ? `🚀 *FIDELYA* 🚀\n\n*${title}*\n\n${message}\n\n━━━━━━━━━━━━━━━━━━━━\n📱 *Fidelya* - Tu plataforma de fidelización\n🌐 www.fidelya.com`
         : `🚀 *FIDELYA*\n\n${message}\n\n━━━━━━━━━━━━━━━━━━━━\n📱 *Fidelya* - Tu plataforma de fidelización`;
 
-      const response = await axios.post(
+      interface SendMessageResponse {
+        idMessage?: string;
+        [key: string]: unknown;
+      }
+
+      const response = await axios.post<SendMessageResponse>(
         `${this.baseUrl}/sendMessage/${this.config.apiToken}`,
         {
           chatId: formattedPhone,
@@ -95,7 +100,8 @@ class GreenAPIService {
         `${this.baseUrl}/getStateInstance/${this.config.apiToken}`
       );
 
-      return { status: response.data.stateInstance || 'unknown' };
+      const data = response.data as { stateInstance?: string };
+      return { status: data.stateInstance || 'unknown' };
     } catch (error) {
       return { 
         status: 'error', 

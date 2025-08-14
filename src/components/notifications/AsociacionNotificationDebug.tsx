@@ -4,6 +4,8 @@ import { useSimpleNotifications } from '@/hooks/useSimpleNotifications';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
+// Import the type from the correct location
+import type { SimpleNotificationResult } from '@/types/simple-notification';
 
 export const AsociacionNotificationDebug = () => {
   const { user, firebaseUser, loading: authLoading } = useAuth();
@@ -17,7 +19,7 @@ export const AsociacionNotificationDebug = () => {
     loadRecipients
   } = useSimpleNotifications();
 
-  const [testResult, setTestResult] = useState<any>(null);
+  const [testResult, setTestResult] = useState<SimpleNotificationResult | null>(null);
 
   const handleTestSend = async () => {
     if (recipients.length === 0) {
@@ -60,7 +62,7 @@ export const AsociacionNotificationDebug = () => {
       }
     } catch (err) {
       console.error('❌ Error en el envío:', err);
-      setTestResult({ success: false, error: err });
+      setTestResult({ success: false, sentCount: 0, failedCount: 1, errors: [err instanceof Error ? err.message : 'Error desconocido'] });
       toast.error('❌ Error crítico en el envío');
     }
   };
@@ -189,10 +191,10 @@ export const AsociacionNotificationDebug = () => {
 
       <div className="text-xs text-blue-600 mt-2">
         💡 <strong>Instrucciones:</strong> 
-        <br />1. Verifica que tengas rol "asociacion" y estés autenticado
+        <br />1. Verifica que tengas rol &quot;asociacion&quot; y estés autenticado
         <br />2. Asegúrate de que hay destinatarios con teléfonos válidos
-        <br />3. Usa "Prueba API Directa" para verificar que Twilio funciona
-        <br />4. Usa "Prueba Completa" para probar todo el flujo de notificaciones
+        <br />3. Usa &quot;Prueba API Directa&quot; para verificar que Twilio funciona
+        <br />4. Usa &quot;Prueba Completa&quot; para probar todo el flujo de notificaciones
       </div>
     </div>
   );
