@@ -216,6 +216,49 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
     }
   };
 
+  const stopScanning = useCallback(() => {
+    try {
+      console.log('🛑 Stopping QR scan...');
+      
+      // Cancel animation frame
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+
+      // Stop the scanner
+      if (scannerRef.current) {
+        try {
+          scannerRef.current.reset();
+        } catch (error) {
+          console.warn('Error resetting scanner:', error);
+        }
+      }
+
+      // Stop video stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => {
+          track.stop();
+          console.log('📹 Stopped video track:', track.kind);
+        });
+        streamRef.current = null;
+      }
+
+      // Clear video element
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+
+      setIsScanning(false);
+      setIsProcessing(false);
+      setFlashEnabled(false);
+      
+      console.log('✅ QR scan stopped successfully');
+    } catch (error) {
+      console.error('❌ Error stopping scanner:', error);
+    }
+  }, []);
+
   const startContinuousScanning = useCallback(() => {
     if (!scannerRef.current || !videoRef.current || !streamRef.current) {
       return;
@@ -276,50 +319,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
 
     // Start the scanning loop
     scanFrame();
-  }, [isScanning, isProcessing, onScan]);
-
-  const stopScanning = useCallback(() => {
-    try {
-      console.log('🛑 Stopping QR scan...');
-      
-      // Cancel animation frame
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
-
-      // Stop the scanner
-      if (scannerRef.current) {
-        try {
-          scannerRef.current.reset();
-        } catch (error) {
-          console.warn('Error resetting scanner:', error);
-        }
-      }
-
-      // Stop video stream
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => {
-          track.stop();
-          console.log('📹 Stopped video track:', track.kind);
-        });
-        streamRef.current = null;
-      }
-
-      // Clear video element
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-
-      setIsScanning(false);
-      setIsProcessing(false);
-      setFlashEnabled(false);
-      
-      console.log('✅ QR scan stopped successfully');
-    } catch (error) {
-      console.error('❌ Error stopping scanner:', error);
-    }
-  }, []);
+  }, [isScanning, isProcessing, onScan, stopScanning]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
