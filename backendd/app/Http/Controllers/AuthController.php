@@ -3,39 +3,189 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\League;
+use App\Models\Club;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
     /**
-     * Register a new user.
+     * Register a new user with role-specific information.
      */
     public function register(Request $request): JsonResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
+        // Validación básica común
+        $baseRules = [
+            'role' => 'required|in:liga,club,miembro',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-        ]);
+            'phone' => 'required|string|max:20',
+            'country' => 'required|string|max:100',
+        ];
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        // Validación específica por rol
+        $roleSpecificRules = $this->getRoleSpecificValidationRules($request->role);
+        $rules = array_merge($baseRules, $roleSpecificRules);
 
-        Auth::login($user);
+        $validatedData = $request->validate($rules);
 
-        return response()->json([
-            'data' => [
-                'user' => $user,
-            ],
-            'message' => 'User registered successfully',
-        ], 201);
+        try {
+            DB::beginTransaction();
+
+            // Crear el usuario base
+            $userData = [
+                'name' => $this->getUserName($validatedData),
+                'email' => $validatedData['email'],
+                'password' => Hash::make($validatedData['password']),
+                'role' => $validatedData['role'],
+                'phone' => $validatedData['phone'],
+                'country' => $validatedData['country'],
+            ];
+
+            // Agregar campos específicos del rol
+            $userData = array_merge($userData, $this->getRoleSpecificData($validatedData));
+
+            $user = User::create($userData);
+
+            // Crear la entidad correspondiente (League, Club, o Member)
+            $user->createRoleEntity();
+
+            // Autenticar al usuario
+            Auth::login($user);
+
+            DB::commit();
+
+            // Cargar relaciones para la respuesta
+            $user->load(['parentLeague', 'parentClub', 'leagueEntity', 'clubEntity', 'memberEntity']);
+
+            return response()->json([
+                'data' => [
+                    'user' => $user,
+                    'role_info' => $user->role_info,
+                ],
+                'message' => 'Usuario registrado exitosamente',
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'message' => 'Error al registrar usuario: ' . $e->getMessage(),
+                'errors' => ['general' => ['Ocurrió un error durante el registro']],
+            ], 500);
+        }
+    }
+
+    /**
+     * Get validation rules specific to each role.
+     */
+    private function getRoleSpecificValidationRules(string $role): array
+    {
+        switch ($role) {
+            case 'liga':
+                return [
+                    'league_name' => 'required|string|max:255',
+                    'province' => 'required|string|max:100',
+                    'logo_path' => 'nullable|string|max:500',
+                ];
+
+            case 'club':
+                return [
+                    'club_name' => 'required|string|max:255',
+                    'parent_league_id' => [
+                        'required',
+                        'integer',
+                        Rule::exists('leagues', 'id')->where('status', 'active')
+                    ],
+                    'city' => 'required|string|max:100',
+                    'address' => 'required|string|max:500',
+                    'logo_path' => 'nullable|string|max:500',
+                ];
+
+            case 'miembro':
+                return [
+                    'full_name' => 'required|string|max:255',
+                    'parent_club_id' => [
+                        'required',
+                        'integer',
+                        Rule::exists('clubs', 'id')->where('status', 'active')
+                    ],
+                    'birth_date' => 'required|date|before:today',
+                    'gender' => 'required|in:masculino,femenino',
+                    'rubber_type' => 'required|in:liso,pupo,ambos',
+                    'ranking' => 'nullable|string|max:100',
+                    'photo_path' => 'nullable|string|max:500',
+                ];
+
+            default:
+                return [];
+        }
+    }
+
+    /**
+     * Get role-specific data for user creation.
+     */
+    private function getRoleSpecificData(array $validatedData): array
+    {
+        $role = $validatedData['role'];
+        $data = [];
+
+        switch ($role) {
+            case 'liga':
+                $data = [
+                    'league_name' => $validatedData['league_name'],
+                    'province' => $validatedData['province'],
+                    'logo_path' => $validatedData['logo_path'] ?? null,
+                ];
+                break;
+
+            case 'club':
+                $data = [
+                    'club_name' => $validatedData['club_name'],
+                    'parent_league_id' => $validatedData['parent_league_id'],
+                    'city' => $validatedData['city'],
+                    'address' => $validatedData['address'],
+                    'logo_path' => $validatedData['logo_path'] ?? null,
+                ];
+                break;
+
+            case 'miembro':
+                $data = [
+                    'full_name' => $validatedData['full_name'],
+                    'parent_club_id' => $validatedData['parent_club_id'],
+                    'birth_date' => $validatedData['birth_date'],
+                    'gender' => $validatedData['gender'],
+                    'rubber_type' => $validatedData['rubber_type'],
+                    'ranking' => $validatedData['ranking'] ?? null,
+                    'photo_path' => $validatedData['photo_path'] ?? null,
+                ];
+                break;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get the user name based on role.
+     */
+    private function getUserName(array $validatedData): string
+    {
+        switch ($validatedData['role']) {
+            case 'liga':
+                return $validatedData['league_name'];
+            case 'club':
+                return $validatedData['club_name'];
+            case 'miembro':
+                return $validatedData['full_name'];
+            default:
+                return $validatedData['email'];
+        }
     }
 
     /**
@@ -50,17 +200,19 @@ class AuthController extends Controller
 
         if (!Auth::attempt($request->only('email', 'password'))) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'email' => ['Las credenciales proporcionadas son incorrectas.'],
             ]);
         }
 
         $user = Auth::user();
+        $user->load(['parentLeague', 'parentClub', 'leagueEntity', 'clubEntity', 'memberEntity']);
 
         return response()->json([
             'data' => [
                 'user' => $user,
+                'role_info' => $user->role_info,
             ],
-            'message' => 'Login successful',
+            'message' => 'Inicio de sesión exitoso',
         ]);
     }
 
@@ -75,19 +227,62 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return response()->json([
-            'message' => 'Logout successful',
+            'message' => 'Cierre de sesión exitoso',
         ]);
     }
 
     /**
-     * Get authenticated user.
+     * Get authenticated user with role information.
      */
     public function me(Request $request): JsonResponse
     {
+        $user = $request->user();
+        $user->load(['parentLeague', 'parentClub', 'leagueEntity', 'clubEntity', 'memberEntity']);
+
         return response()->json([
             'data' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'role_info' => $user->role_info,
             ],
+        ]);
+    }
+
+    /**
+     * Get available leagues for club registration.
+     */
+    public function getAvailableLeagues(): JsonResponse
+    {
+        $leagues = League::active()
+            ->select('id', 'name', 'region', 'province')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'data' => $leagues,
+            'message' => 'Ligas disponibles obtenidas exitosamente',
+        ]);
+    }
+
+    /**
+     * Get available clubs for member registration.
+     */
+    public function getAvailableClubs(Request $request): JsonResponse
+    {
+        $query = Club::active()
+            ->with('league:id,name')
+            ->select('id', 'name', 'city', 'league_id')
+            ->orderBy('name');
+
+        // Filtrar por liga si se proporciona
+        if ($request->has('league_id')) {
+            $query->where('league_id', $request->league_id);
+        }
+
+        $clubs = $query->get();
+
+        return response()->json([
+            'data' => $clubs,
+            'message' => 'Clubes disponibles obtenidos exitosamente',
         ]);
     }
 }
