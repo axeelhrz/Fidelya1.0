@@ -9,7 +9,8 @@ import {
   ChartBarIcon, 
   CogIcon,
   PlusIcon,
-  EyeIcon
+  EyeIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import axios from '@/lib/axios';
 import type { Club, Member, ApiResponse } from '@/types';
@@ -29,7 +30,7 @@ export default function LigaDashboardPage() {
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    if (user && user.role === 'liga') {
+    if (user && (user.role === 'liga' || user.role === 'super_admin')) {
       fetchDashboardData();
     }
   }, [user]);
@@ -74,7 +75,7 @@ export default function LigaDashboardPage() {
     );
   }
 
-  if (!user || user.role !== 'liga') {
+  if (!user || (user.role !== 'liga' && user.role !== 'super_admin')) {
     return (
       <Layout>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
@@ -86,26 +87,36 @@ export default function LigaDashboardPage() {
   }
 
   const roleInfo = user.role_info;
+  const isSuperAdmin = user.role === 'super_admin';
 
   return (
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-lg p-6 text-white">
+        <div className={`bg-gradient-to-r ${isSuperAdmin ? 'from-red-600 to-red-800' : 'from-blue-600 to-blue-800'} rounded-lg shadow-lg p-6 text-white`}>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Panel de Liga</h1>
-              <p className="text-blue-100 mt-2">
-                {roleInfo?.name || user.league_name}
+              <div className="flex items-center space-x-2">
+                <h1 className="text-3xl font-bold">Panel de Liga</h1>
+                {isSuperAdmin && (
+                  <ShieldCheckIcon className="h-8 w-8 text-white" />
+                )}
+              </div>
+              <p className={`${isSuperAdmin ? 'text-red-100' : 'text-blue-100'} mt-2`}>
+                {isSuperAdmin ? 'Vista de Super Administrador' : (roleInfo?.name || user.league_name)}
               </p>
-              <p className="text-blue-200 text-sm">
-                {roleInfo?.province || user.province} • Ecuador
-              </p>
+              {!isSuperAdmin && (
+                <p className="text-blue-200 text-sm">
+                  {roleInfo?.province || user.province} • Ecuador
+                </p>
+              )}
             </div>
             <div className="text-right">
-              <p className="text-blue-100 text-sm">Administrador</p>
+              <p className={`${isSuperAdmin ? 'text-red-100' : 'text-blue-100'} text-sm`}>
+                {isSuperAdmin ? 'Super Administrador' : 'Administrador'}
+              </p>
               <p className="text-white font-semibold">{user.name}</p>
-              <p className="text-blue-200 text-sm">{user.email}</p>
+              <p className={`${isSuperAdmin ? 'text-red-200' : 'text-blue-200'} text-sm`}>{user.email}</p>
             </div>
           </div>
         </div>
