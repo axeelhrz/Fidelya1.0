@@ -9,7 +9,6 @@ import {
   Checkbox,
   Link,
   Typography,
-  Divider,
   Alert,
   InputAdornment,
   IconButton,
@@ -24,7 +23,6 @@ import LockIcon from '@mui/icons-material/Lock';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useSignIn } from '@/hooks/useSignIn';
-import SocialButtons from './SocialButtons';
 import NextLink from 'next/link';
 
 // Zod schema for form validation
@@ -229,7 +227,7 @@ const SignInForm: React.FC = () => {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              mb: 3,
+              mb: 4,
             }}
           >
             <Controller
@@ -274,7 +272,7 @@ const SignInForm: React.FC = () => {
             disabled={isLoading || !isValid}
             sx={{
               height: 52,
-              mb: 3,
+              mb: 4,
               fontSize: '1rem',
               fontWeight: 600,
             }}
@@ -293,23 +291,9 @@ const SignInForm: React.FC = () => {
           </Button>
         </motion.div>
 
-        {/* Divider */}
-        <motion.div variants={itemVariants}>
-          <Divider sx={{ mb: 3 }}>
-            <Typography variant="body2" color="text.secondary">
-              o continúa con
-            </Typography>
-          </Divider>
-        </motion.div>
-
-        {/* Social Buttons */}
-        <motion.div variants={itemVariants}>
-          <SocialButtons disabled={isLoading} />
-        </motion.div>
-
         {/* Sign Up Link */}
         <motion.div variants={itemVariants}>
-          <Box sx={{ textAlign: 'center', mt: 3 }}>
+          <Box sx={{ textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
               ¿No tienes cuenta?{' '}
               <Link
