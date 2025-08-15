@@ -11,7 +11,8 @@ import {
   PlusIcon,
   EyeIcon,
   MapPinIcon,
-  BuildingOfficeIcon
+  BuildingOfficeIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import axios from '@/lib/axios';
 import type { Member, ApiResponse } from '@/types';
@@ -30,7 +31,7 @@ export default function ClubDashboardPage() {
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    if (user && user.role === 'club') {
+    if (user && (user.role === 'club' || user.role === 'super_admin')) {
       fetchDashboardData();
     }
   }, [user]);
@@ -69,7 +70,7 @@ export default function ClubDashboardPage() {
     );
   }
 
-  if (!user || user.role !== 'club') {
+  if (!user || (user.role !== 'club' && user.role !== 'super_admin')) {
     return (
       <Layout>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
@@ -81,39 +82,51 @@ export default function ClubDashboardPage() {
   }
 
   const roleInfo = user.role_info;
+  const isSuperAdmin = user.role === 'super_admin';
 
   return (
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-600 to-green-800 rounded-lg shadow-lg p-6 text-white">
+        <div className={`bg-gradient-to-r ${isSuperAdmin ? 'from-red-600 to-red-800' : 'from-green-600 to-green-800'} rounded-lg shadow-lg p-6 text-white`}>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Panel de Club</h1>
-              <p className="text-green-100 mt-2">
-                {roleInfo?.name || user.club_name}
-              </p>
-              <div className="flex items-center mt-2 text-green-200 text-sm">
-                <MapPinIcon className="h-4 w-4 mr-1" />
-                <span>{roleInfo?.city || user.city}</span>
-                {roleInfo?.address || user.address && (
-                  <>
-                    <span className="mx-2">•</span>
-                    <span>{roleInfo?.address || user.address}</span>
-                  </>
+              <div className="flex items-center space-x-2">
+                <h1 className="text-3xl font-bold">Panel de Club</h1>
+                {isSuperAdmin && (
+                  <ShieldCheckIcon className="h-8 w-8 text-white" />
                 )}
               </div>
-              {user.parent_league && (
-                <div className="flex items-center mt-1 text-green-200 text-sm">
-                  <BuildingOfficeIcon className="h-4 w-4 mr-1" />
-                  <span>Liga: {user.parent_league.name}</span>
-                </div>
+              <p className={`${isSuperAdmin ? 'text-red-100' : 'text-green-100'} mt-2`}>
+                {isSuperAdmin ? 'Vista de Super Administrador' : (roleInfo?.name || user.club_name)}
+              </p>
+              {!isSuperAdmin && (
+                <>
+                  <div className="flex items-center mt-2 text-green-200 text-sm">
+                    <MapPinIcon className="h-4 w-4 mr-1" />
+                    <span>{roleInfo?.city || user.city}</span>
+                    {roleInfo?.address || user.address && (
+                      <>
+                        <span className="mx-2">•</span>
+                        <span>{roleInfo?.address || user.address}</span>
+                      </>
+                    )}
+                  </div>
+                  {user.parent_league && (
+                    <div className="flex items-center mt-1 text-green-200 text-sm">
+                      <BuildingOfficeIcon className="h-4 w-4 mr-1" />
+                      <span>Liga: {user.parent_league.name}</span>
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <div className="text-right">
-              <p className="text-green-100 text-sm">Administrador</p>
+              <p className={`${isSuperAdmin ? 'text-red-100' : 'text-green-100'} text-sm`}>
+                {isSuperAdmin ? 'Super Administrador' : 'Administrador'}
+              </p>
               <p className="text-white font-semibold">{user.name}</p>
-              <p className="text-green-200 text-sm">{user.email}</p>
+              <p className={`${isSuperAdmin ? 'text-red-200' : 'text-green-200'} text-sm`}>{user.email}</p>
             </div>
           </div>
         </div>
