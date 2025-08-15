@@ -1,14 +1,37 @@
+// frontendd/src/hooks/useSignUp.ts
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSnackbar } from 'notistack';
 
 interface SignUpData {
-  name: string;
+  role: 'liga' | 'miembro' | 'club';
   email: string;
   password: string;
   password_confirmation: string;
-  role: 'liga' | 'miembro' | 'club';
+  phone: string;
+  country: string;
+  
+  // Campos específicos de Liga
+  league_name?: string;
+  province?: string;
+  logo?: File;
+  
+  // Campos específicos de Club
+  club_name?: string;
+  league_id?: string;
+  city?: string;
+  address?: string;
+  
+  // Campos específicos de Miembro
+  full_name?: string;
+  club_id?: string;
+  birth_date?: string;
+  gender?: 'masculino' | 'femenino';
+  rubber_type?: 'liso' | 'pupo' | 'ambos';
+  ranking?: string;
+  profile_photo?: File;
 }
 
 interface UseSignUpReturn {
@@ -69,14 +92,54 @@ export const useSignUp = (): UseSignUpReturn => {
       setIsLoading(true);
       setError(null);
 
-      // Use the existing register function from AuthContext
-      await register({
-        name: data.name.trim(),
+      // Preparar datos según el rol
+      let registrationData: any = {
         email: data.email.trim(),
         password: data.password,
         password_confirmation: data.password_confirmation,
+        phone: data.phone.trim(),
+        country: data.country.trim(),
         role: data.role,
-      });
+      };
+
+      // Agregar campos específicos según el rol
+      switch (data.role) {
+        case 'liga':
+          registrationData = {
+            ...registrationData,
+            name: data.league_name?.trim(),
+            league_name: data.league_name?.trim(),
+            province: data.province?.trim(),
+          };
+          break;
+          
+        case 'club':
+          registrationData = {
+            ...registrationData,
+            name: data.club_name?.trim(),
+            club_name: data.club_name?.trim(),
+            league_id: data.league_id,
+            city: data.city?.trim(),
+            address: data.address?.trim(),
+          };
+          break;
+          
+        case 'miembro':
+          registrationData = {
+            ...registrationData,
+            name: data.full_name?.trim(),
+            full_name: data.full_name?.trim(),
+            club_id: data.club_id,
+            birth_date: data.birth_date,
+            gender: data.gender,
+            rubber_type: data.rubber_type,
+            ranking: data.ranking?.trim() || null,
+          };
+          break;
+      }
+
+      // Use the existing register function from AuthContext
+      await register(registrationData);
 
       // Show success message
       enqueueSnackbar('¡Cuenta creada exitosamente! Bienvenido a Raquet Power.', {
