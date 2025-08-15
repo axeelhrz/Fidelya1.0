@@ -68,76 +68,38 @@ const CustomStepConnector = styled(StepConnector)(({ theme }) => ({
   },
 }));
 
-// Esquemas de validación dinámicos
-const baseSchema = {
-  email: z
-    .string()
-    .trim()
-    .min(1, 'El correo electrónico es requerido')
-    .email('Ingresa un correo electrónico válido'),
-  password: z
-    .string()
-    .trim()
-    .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'La contraseña debe contener al menos una mayúscula, una minúscula y un número'),
-  password_confirmation: z
-    .string()
-    .trim()
-    .min(1, 'Confirma tu contraseña'),
-  phone: z
-    .string()
-    .trim()
-    .min(1, 'El teléfono es requerido')
-    .regex(/^[0-9+\-\s()]+$/, 'Formato de teléfono inválido'),
-  country: z
-    .string()
-    .trim()
-    .min(1, 'El país es requerido'),
-};
+// Esquema de validación simplificado - solo para el paso 1
+const roleSchema = z.object({
+  role: z.enum(['liga', 'miembro', 'club'], {
+    required_error: 'Selecciona un tipo de cuenta',
+  }),
+});
 
-const createSignUpSchema = (role: string) => {
-  const baseValidation = z.object(baseSchema).refine((data) => data.password === data.password_confirmation, {
-    message: 'Las contraseñas no coinciden',
-    path: ['password_confirmation'],
-  });
-
-  switch (role) {
-    case 'liga':
-      return baseValidation.extend({
-        role: z.literal('liga'),
-        league_name: z.string().trim().min(1, 'El nombre de la liga es requerido'),
-        province: z.string().trim().min(1, 'La provincia/región es requerida'),
-        logo: z.any().optional(),
-      });
-    
-    case 'club':
-      return baseValidation.extend({
-        role: z.literal('club'),
-        club_name: z.string().trim().min(1, 'El nombre del club es requerido'),
-        league_id: z.string().min(1, 'Selecciona una liga'),
-        city: z.string().trim().min(1, 'La ciudad es requerida'),
-        address: z.string().trim().min(1, 'La dirección es requerida'),
-        logo: z.any().optional(),
-      });
-    
-    case 'miembro':
-      return baseValidation.extend({
-        role: z.literal('miembro'),
-        full_name: z.string().trim().min(1, 'El nombre completo es requerido'),
-        club_id: z.string().min(1, 'Selecciona un club'),
-        birth_date: z.string().min(1, 'La fecha de nacimiento es requerida'),
-        gender: z.enum(['masculino', 'femenino'], { required_error: 'Selecciona el sexo' }),
-        rubber_type: z.enum(['liso', 'pupo', 'ambos'], { required_error: 'Selecciona el tipo de caucho' }),
-        ranking: z.string().optional(),
-        profile_photo: z.any().optional(),
-      });
-    
-    default:
-      return z.object({
-        role: z.enum(['liga', 'miembro', 'club'], { required_error: 'Selecciona un tipo de cuenta' }),
-      });
-  }
-};
+// Esquema completo para el paso 2 (sin validación estricta para permitir campos dinámicos)
+const completeSchema = z.object({
+  role: z.enum(['liga', 'miembro', 'club']),
+  email: z.string().trim().min(1, 'El correo electrónico es requerido').email('Ingresa un correo electrónico válido'),
+  password: z.string().trim().min(8, 'La contraseña debe tener al menos 8 caracteres'),
+  password_confirmation: z.string().trim().min(1, 'Confirma tu contraseña'),
+  phone: z.string().trim().min(1, 'El teléfono es requerido'),
+  country: z.string().trim().min(1, 'El país es requerido'),
+  // Campos opcionales que se validarán dinámicamente
+  league_name: z.string().optional(),
+  province: z.string().optional(),
+  club_name: z.string().optional(),
+  league_id: z.string().optional(),
+  city: z.string().optional(),
+  address: z.string().optional(),
+  full_name: z.string().optional(),
+  club_id: z.string().optional(),
+  birth_date: z.string().optional(),
+  gender: z.enum(['masculino', 'femenino']).optional(),
+  rubber_type: z.enum(['liso', 'pupo', 'ambos']).optional(),
+  ranking: z.string().optional(),
+}).refine((data) => data.password === data.password_confirmation, {
+  message: 'Las contraseñas no coinciden',
+  path: ['password_confirmation'],
+});
 
 const SignUpForm: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -150,7 +112,8 @@ const SignUpForm: React.FC = () => {
   const [clubs, setClubs] = useState<any[]>([]);
   const { signUp, isLoading, error, clearError } = useSignUp();
 
-  const [selectedRole, setSelectedRole] = useState<string>('');
+  // Usar esquema diferente según el paso
+  const currentSchema = currentStep === 0 ? roleSchema : completeSchema;
 
   const {
     control,
@@ -159,17 +122,34 @@ const SignUpForm: React.FC = () => {
     watch,
     trigger,
     setValue,
-    reset,
+    getValues,
   } = useForm({
-    resolver: zodResolver(createSignUpSchema(selectedRole)),
+    resolver: zodResolver(currentSchema),
     mode: 'onChange',
     defaultValues: {
       role: undefined,
       country: 'Ecuador',
+      email: '',
+      password: '',
+      password_confirmation: '',
+      phone: '',
+      league_name: '',
+      province: '',
+      club_name: '',
+      league_id: '',
+      city: '',
+      address: '',
+      full_name: '',
+      club_id: '',
+      birth_date: '',
+      gender: undefined,
+      rubber_type: undefined,
+      ranking: '',
     },
   });
 
   const watchedFields = watch();
+  const selectedRole = watchedFields.role;
   const steps = ['Tipo de cuenta', 'Información personal'];
 
   // Cargar datos simulados
@@ -187,28 +167,57 @@ const SignUpForm: React.FC = () => {
     ]);
   }, []);
 
-  // Actualizar esquema cuando cambia el rol
-  useEffect(() => {
-    if (selectedRole) {
-      reset({
-        role: selectedRole,
-        country: 'Ecuador',
-      });
-    }
-  }, [selectedRole, reset]);
-
   const onSubmit = async (data: any) => {
+    if (currentStep === 0) {
+      // Validar solo el rol en el paso 1
+      if (!data.role) {
+        return;
+      }
+      setCurrentStep(1);
+      return;
+    }
+
+    // Paso 2: Enviar datos completos
     clearError();
+    
+    // Validar campos específicos según el rol
+    const validationErrors: string[] = [];
+    
+    if (selectedRole === 'liga') {
+      if (!data.league_name?.trim()) validationErrors.push('El nombre de la liga es requerido');
+      if (!data.province?.trim()) validationErrors.push('La provincia es requerida');
+    } else if (selectedRole === 'club') {
+      if (!data.club_name?.trim()) validationErrors.push('El nombre del club es requerido');
+      if (!data.league_id) validationErrors.push('Selecciona una liga');
+      if (!data.city?.trim()) validationErrors.push('La ciudad es requerida');
+      if (!data.address?.trim()) validationErrors.push('La dirección es requerida');
+    } else if (selectedRole === 'miembro') {
+      if (!data.full_name?.trim()) validationErrors.push('El nombre completo es requerido');
+      if (!data.club_id) validationErrors.push('Selecciona un club');
+      if (!data.birth_date) validationErrors.push('La fecha de nacimiento es requerida');
+      if (!data.gender) validationErrors.push('Selecciona el sexo');
+      if (!data.rubber_type) validationErrors.push('Selecciona el tipo de caucho');
+    }
+
+    if (validationErrors.length > 0) {
+      clearError();
+      setTimeout(() => {
+        clearError();
+        // Mostrar el primer error
+        const errorMessage = validationErrors[0];
+        // Aquí podrías usar un estado local para mostrar el error
+        console.error('Validation errors:', validationErrors);
+      }, 100);
+      return;
+    }
+
     await signUp(data);
   };
 
   const handleNext = async () => {
-    if (currentStep === 0) {
-      const isRoleValid = await trigger('role');
-      if (isRoleValid && watchedFields.role) {
-        setSelectedRole(watchedFields.role);
-        setCurrentStep(1);
-      }
+    const isRoleValid = await trigger('role');
+    if (isRoleValid && watchedFields.role) {
+      setCurrentStep(1);
     }
   };
 
@@ -220,7 +229,6 @@ const SignUpForm: React.FC = () => {
 
   const handleRoleSelect = (role: 'liga' | 'miembro' | 'club') => {
     setValue('role', role);
-    setSelectedRole(role);
     trigger('role');
   };
 
@@ -306,57 +314,6 @@ const SignUpForm: React.FC = () => {
                     </InputAdornment>
                   ),
                   endAdornment: field.value && !errors.league_name && (
-                    <InputAdornment position="end">
-                      <Fade in={true}>
-                        <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
-                      </Fade>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
-                    borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&.Mui-focused': {
-                      transform: 'scale(1.005)',
-                      boxShadow: fieldState === 'error' ? 
-                        '0 0 0 4px rgba(244, 67, 54, 0.08)' :
-                        '0 0 0 4px rgba(47, 109, 251, 0.08)',
-                    },
-                  },
-                }}
-              />
-            );
-          }}
-        />
-      </motion.div>
-
-      {/* País */}
-      <motion.div variants={itemVariants}>
-        <Controller
-          name="country"
-          control={control}
-          render={({ field }) => {
-            const fieldState = getFieldState('country', field.value || '', !!errors.country);
-            return (
-              <TextField
-                {...field}
-                fullWidth
-                label="País"
-                error={!!errors.country}
-                helperText={errors.country?.message}
-                disabled={isLoading}
-                onFocus={() => setFocusedField('country')}
-                onBlur={() => setFocusedField(null)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PublicIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: field.value && !errors.country && (
                     <InputAdornment position="end">
                       <Fade in={true}>
                         <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
@@ -556,11 +513,6 @@ const SignUpForm: React.FC = () => {
                 {...field}
                 label="Liga a la que pertenece"
                 disabled={isLoading}
-                startAdornment={
-                  <InputAdornment position="start">
-                    <SportsIcon sx={{ color: field.value ? 'primary.main' : 'text.secondary', fontSize: 20, ml: 1 }} />
-                  </InputAdornment>
-                }
               >
                 {leagues.map((league) => (
                   <MenuItem key={league.id} value={league.id}>
@@ -573,50 +525,6 @@ const SignUpForm: React.FC = () => {
               )}
             </FormControl>
           )}
-        />
-      </motion.div>
-
-      {/* País */}
-      <motion.div variants={itemVariants}>
-        <Controller
-          name="country"
-          control={control}
-          render={({ field }) => {
-            const fieldState = getFieldState('country', field.value || '', !!errors.country);
-            return (
-              <TextField
-                {...field}
-                fullWidth
-                label="País"
-                error={!!errors.country}
-                helperText={errors.country?.message}
-                disabled={isLoading}
-                onFocus={() => setFocusedField('country')}
-                onBlur={() => setFocusedField(null)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PublicIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
-                    borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&.Mui-focused': {
-                      transform: 'scale(1.005)',
-                      boxShadow: fieldState === 'error' ? 
-                        '0 0 0 4px rgba(244, 67, 54, 0.08)' :
-                        '0 0 0 4px rgba(47, 109, 251, 0.08)',
-                    },
-                  },
-                }}
-              />
-            );
-          }}
         />
       </motion.div>
 
@@ -879,11 +787,6 @@ const SignUpForm: React.FC = () => {
                 {...field}
                 label="Club de pertenencia"
                 disabled={isLoading}
-                startAdornment={
-                  <InputAdornment position="start">
-                    <SportsIcon sx={{ color: field.value ? 'primary.main' : 'text.secondary', fontSize: 20, ml: 1 }} />
-                  </InputAdornment>
-                }
               >
                 {clubs.map((club) => (
                   <MenuItem key={club.id} value={club.id}>
@@ -1090,9 +993,60 @@ const SignUpForm: React.FC = () => {
     </>
   );
 
-  // Campos comunes (email, teléfono, contraseñas)
+  // Campos comunes (país, email, teléfono, contraseñas)
   const renderCommonFields = () => (
     <>
+      {/* País */}
+      <motion.div variants={itemVariants}>
+        <Controller
+          name="country"
+          control={control}
+          render={({ field }) => {
+            const fieldState = getFieldState('country', field.value || '', !!errors.country);
+            return (
+              <TextField
+                {...field}
+                fullWidth
+                label="País"
+                error={!!errors.country}
+                helperText={errors.country?.message}
+                disabled={isLoading}
+                onFocus={() => setFocusedField('country')}
+                onBlur={() => setFocusedField(null)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PublicIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: field.value && !errors.country && (
+                    <InputAdornment position="end">
+                      <Fade in={true}>
+                        <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
+                      </Fade>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    height: 56,
+                    borderRadius: 2,
+                    backgroundColor: 'background.paper',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&.Mui-focused': {
+                      transform: 'scale(1.005)',
+                      boxShadow: fieldState === 'error' ? 
+                        '0 0 0 4px rgba(244, 67, 54, 0.08)' :
+                        '0 0 0 4px rgba(47, 109, 251, 0.08)',
+                    },
+                  },
+                }}
+              />
+            );
+          }}
+        />
+      </motion.div>
+
       {/* Email */}
       <motion.div variants={itemVariants}>
         <Controller
@@ -1473,7 +1427,7 @@ const SignUpForm: React.FC = () => {
           )}
 
           {/* Step 2: Personal Information */}
-          {currentStep === 1 && (
+          {currentStep === 1 && selectedRole && (
             <motion.div
               key="step2"
               initial={{ opacity: 0, x: 20 }}
@@ -1515,7 +1469,7 @@ const SignUpForm: React.FC = () => {
                   <Button
                     type="submit"
                     variant="contained"
-                    disabled={isLoading || !isValid}
+                    disabled={isLoading}
                     sx={{
                       height: 56,
                       flex: 1,
