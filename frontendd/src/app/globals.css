@@ -1,12 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
-
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-primary: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 @theme inline {
@@ -47,19 +46,19 @@ body {
 }
 
 .text-accent {
-  color: #3b82f6;
+  color: #2F6DFB;
 }
 
 .bg-primary {
-  background-color: #3b82f6;
+  background-color: #2F6DFB;
 }
 
 .bg-primary-hover {
-  background-color: #2563eb;
+  background-color: #295FE1;
 }
 
 .border-primary {
-  border-color: #3b82f6;
+  border-color: #2F6DFB;
 }
 
 /* Subtle animations */
@@ -99,7 +98,7 @@ body {
 }
 
 .form-input:focus {
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(47, 109, 251, 0.1);
 }
 
 /* Professional buttons */
@@ -109,7 +108,7 @@ body {
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 4px 12px rgba(47, 109, 251, 0.15);
 }
 
 .btn-secondary {
@@ -157,7 +156,7 @@ body {
 /* Loading spinner */
 .spinner {
   border: 2px solid #e2e8f0;
-  border-top: 2px solid #3b82f6;
+  border-top: 2px solid #2F6DFB;
   border-radius: 50%;
   width: 20px;
   height: 20px;
@@ -171,13 +170,13 @@ body {
 
 /* Text selection */
 ::selection {
-  background: rgba(59, 130, 246, 0.15);
+  background: rgba(47, 109, 251, 0.15);
   color: inherit;
 }
 
 /* Focus states */
 .focus-ring:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid #2F6DFB;
   outline-offset: 2px;
 }
 
