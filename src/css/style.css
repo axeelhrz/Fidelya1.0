@@ -3296,5 +3296,3 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
         filter: brightness(0.95) contrast(1.05) saturate(1.05);
     }
 }
-
-/* ... rest of existing CSS continues unchanged ... */
