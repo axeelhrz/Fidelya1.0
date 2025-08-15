@@ -15,6 +15,10 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
+    
+    // Registration helper endpoints
+    Route::get('/leagues', [AuthController::class, 'getAvailableLeagues']);
+    Route::get('/clubs', [AuthController::class, 'getAvailableClubs']);
 });
 
 // Protected routes
@@ -39,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/parameters/{parameter}', [SportParameterController::class, 'destroy']);
     });
 });
+
 // Health check endpoint
 Route::get('/health', function () {
     return response()->json(['status' => 'ok', 'timestamp' => now()]);
