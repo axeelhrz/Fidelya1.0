@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Campos básicos de rol
-            $table->enum('role', ['liga', 'club', 'miembro'])->after('email');
+            // Campos básicos de rol - nullable inicialmente para evitar problemas con SQLite
+            $table->enum('role', ['liga', 'club', 'miembro'])->nullable()->after('email');
             $table->string('phone')->nullable()->after('role');
             $table->string('country')->default('Ecuador')->after('phone');
             
@@ -46,11 +46,15 @@ return new class extends Migration
             $table->index(['roleable_id', 'roleable_type']);
             $table->index(['parent_league_id']);
             $table->index(['parent_club_id']);
-            
-            // Claves foráneas
-            $table->foreign('parent_league_id')->references('id')->on('leagues')->onDelete('set null');
-            $table->foreign('parent_club_id')->references('id')->on('clubs')->onDelete('set null');
         });
+
+        // Agregar claves foráneas en una segunda operación para evitar problemas con SQLite
+        if (Schema::hasTable('leagues') && Schema::hasTable('clubs')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->foreign('parent_league_id')->references('id')->on('leagues')->onDelete('set null');
+                $table->foreign('parent_club_id')->references('id')->on('clubs')->onDelete('set null');
+            });
+        }
     }
 
     /**
@@ -59,15 +63,32 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Eliminar claves foráneas primero
-            $table->dropForeign(['parent_league_id']);
-            $table->dropForeign(['parent_club_id']);
+            // Eliminar claves foráneas primero si existen
+            if (Schema::hasColumn('users', 'parent_league_id')) {
+                try {
+                    $table->dropForeign(['parent_league_id']);
+                } catch (Exception $e) {
+                    // Ignorar si la clave foránea no existe
+                }
+            }
+            
+            if (Schema::hasColumn('users', 'parent_club_id')) {
+                try {
+                    $table->dropForeign(['parent_club_id']);
+                } catch (Exception $e) {
+                    // Ignorar si la clave foránea no existe
+                }
+            }
             
             // Eliminar índices
-            $table->dropIndex(['role']);
-            $table->dropIndex(['roleable_id', 'roleable_type']);
-            $table->dropIndex(['parent_league_id']);
-            $table->dropIndex(['parent_club_id']);
+            try {
+                $table->dropIndex(['role']);
+                $table->dropIndex(['roleable_id', 'roleable_type']);
+                $table->dropIndex(['parent_league_id']);
+                $table->dropIndex(['parent_club_id']);
+            } catch (Exception $e) {
+                // Ignorar si los índices no existen
+            }
             
             // Eliminar columnas
             $table->dropColumn([
