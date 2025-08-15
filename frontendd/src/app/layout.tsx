@@ -4,6 +4,9 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import AuthDebug from "@/components/AuthDebug";
 import DevTools from "@/components/DevTools";
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import authTheme from '@/theme/authTheme';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,11 +33,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          {children}
-          <AuthDebug />
-          <DevTools />
-        </AuthProvider>
+        <ThemeProvider theme={authTheme}>
+          <CssBaseline />
+          <AuthProvider>
+            {children}
+            <AuthDebug />
+            <DevTools />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
