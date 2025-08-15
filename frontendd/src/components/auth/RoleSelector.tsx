@@ -1,6 +1,12 @@
 'use client';
 
+import React from 'react';
+import { Box, Typography, Card, Avatar } from '@mui/material';
+import { motion } from 'framer-motion';
 import { Role } from '@/types';
+import SportsTennisIcon from '@mui/icons-material/SportsTennis';
+import PersonIcon from '@mui/icons-material/Person';
+import BusinessIcon from '@mui/icons-material/Business';
 
 interface RoleSelectorProps {
   selectedRole: string;
@@ -13,92 +19,236 @@ const roles: Role[] = [
     name: 'Liga',
     description: 'Administra múltiples clubes y competencias deportivas',
     icon: 'M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z',
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+    color: '#2F6DFB',
+    bgColor: 'linear-gradient(135deg, rgba(47, 109, 251, 0.08) 0%, rgba(47, 109, 251, 0.04) 100%)'
   },
   {
     id: 'miembro',
     name: 'Miembro',
     description: 'Participa en actividades y competencias del club',
     icon: 'M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z',
-    color: 'text-emerald-600',
-    bgColor: 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
+    color: '#10B981',
+    bgColor: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%)'
   },
   {
     id: 'club',
     name: 'Club',
     description: 'Gestiona miembros y actividades deportivas del club',
     icon: 'M12 2L2 7V10C2 16 6 20.5 12 22C18 20.5 22 16 22 10V7L12 2ZM12 7C13.1 7 14 7.9 14 9S13.1 11 12 11 10 10.1 10 9 10.9 7 12 7ZM18 15C18 12.34 15.33 10.5 12 10.5S6 12.34 6 15V16H18V15Z',
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-50 border-purple-200 hover:bg-purple-100'
+    color: '#8B5CF6',
+    bgColor: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(139, 92, 246, 0.04) 100%)'
   }
 ];
 
-export default function RoleSelector({ selectedRole, onRoleSelect }: RoleSelectorProps) {
+const getIconComponent = (roleId: string) => {
+  switch (roleId) {
+    case 'liga':
+      return SportsTennisIcon;
+    case 'miembro':
+      return PersonIcon;
+    case 'club':
+      return BusinessIcon;
+    default:
+      return PersonIcon;
+  }
+};
+
+const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onRoleSelect }) => {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.3, ease: 'easeOut' }
+    },
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="font-display text-xl font-semibold text-gray-900 mb-3">
-          Selecciona tu tipo de cuenta
-        </h3>
-        <p className="text-gray-600 leading-relaxed">
-          Elige el rol que mejor describa tu participación en Raquet Power
-        </p>
-      </div>
-      
-      <div className="space-y-3">
-        {roles.map((role) => (
-          <button
-            key={role.id}
-            type="button"
-            onClick={() => onRoleSelect(role.id)}
-            className={`
-              role-card w-full p-5 rounded-xl border-2 text-left transition-all duration-200 hover:shadow-md
-              ${selectedRole === role.id 
-                ? `${role.bgColor.split(' ')[0]} border-current shadow-lg ring-2 ring-opacity-20 ${role.color.replace('text-', 'ring-')}` 
-                : `${role.bgColor} shadow-sm`
-              }
-            `}
-          >
-            <div className="flex items-start space-x-4">
-              <div className={`
-                flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors duration-200
-                ${selectedRole === role.id 
-                  ? `${role.color.replace('text-', 'bg-')} text-white shadow-md` 
-                  : `bg-white ${role.color} shadow-sm`
-                }
-              `}>
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d={role.icon} />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className={`font-display font-semibold text-lg mb-2 ${
-                  selectedRole === role.id ? role.color : 'text-gray-900'
-                }`}>
-                  {role.name}
-                </div>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {role.description}
-                </p>
-              </div>
-              <div className={`
-                flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
-                ${selectedRole === role.id 
-                  ? `${role.color.replace('text-', 'border-')} ${role.color.replace('text-', 'bg-')}` 
-                  : 'border-gray-300 bg-white'
-                }
-              `}>
-                {selectedRole === role.id && (
-                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                )}
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <Box sx={{ mb: 4 }}>
+        {/* Header */}
+        <motion.div variants={itemVariants}>
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Typography
+              variant="h3"
+              sx={{
+                fontSize: '1.5rem',
+                fontWeight: 700,
+                color: 'text.primary',
+                mb: 1.5,
+                letterSpacing: '-0.01em',
+              }}
+            >
+              Selecciona tu tipo de cuenta
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: 'text.secondary',
+                fontSize: '1rem',
+                lineHeight: 1.6,
+                maxWidth: 400,
+                mx: 'auto',
+              }}
+            >
+              Elige el rol que mejor describa tu participación en Raquet Power
+            </Typography>
+          </Box>
+        </motion.div>
+
+        {/* Role Cards */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {roles.map((role, index) => {
+            const IconComponent = getIconComponent(role.id);
+            const isSelected = selectedRole === role.id;
+            
+            return (
+              <motion.div
+                key={role.id}
+                variants={itemVariants}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Card
+                  onClick={() => onRoleSelect(role.id)}
+                  sx={{
+                    p: 3,
+                    cursor: 'pointer',
+                    border: isSelected ? `2px solid ${role.color}` : '2px solid transparent',
+                    borderRadius: 3,
+                    background: isSelected ? role.bgColor : 'background.paper',
+                    boxShadow: isSelected 
+                      ? `0 8px 25px ${role.color}20, 0 4px 10px ${role.color}10`
+                      : '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&:hover': {
+                      boxShadow: isSelected 
+                        ? `0 12px 35px ${role.color}25, 0 6px 15px ${role.color}15`
+                        : '0 4px 15px rgba(0, 0, 0, 0.08)',
+                      transform: 'translateY(-2px)',
+                    },
+                  }}
+                >
+                  {/* Selection Indicator */}
+                  {isSelected && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 3,
+                        background: `linear-gradient(90deg, ${role.color} 0%, ${role.color}80 100%)`,
+                      }}
+                    />
+                  )}
+
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 3 }}>
+                    {/* Icon */}
+                    <Avatar
+                      sx={{
+                        width: 56,
+                        height: 56,
+                        backgroundColor: isSelected ? role.color : 'background.default',
+                        color: isSelected ? 'white' : role.color,
+                        transition: 'all 0.3s ease',
+                        boxShadow: isSelected 
+                          ? `0 4px 12px ${role.color}30`
+                          : '0 2px 8px rgba(0, 0, 0, 0.08)',
+                      }}
+                    >
+                      <IconComponent sx={{ fontSize: 28 }} />
+                    </Avatar>
+
+                    {/* Content */}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontSize: '1.125rem',
+                          fontWeight: 600,
+                          color: isSelected ? role.color : 'text.primary',
+                          mb: 0.5,
+                          transition: 'color 0.3s ease',
+                        }}
+                      >
+                        {role.name}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: 'text.secondary',
+                          fontSize: '0.875rem',
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {role.description}
+                      </Typography>
+                    </Box>
+
+                    {/* Selection Indicator */}
+                    <Box
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: '50%',
+                        border: isSelected ? `2px solid ${role.color}` : '2px solid',
+                        borderColor: isSelected ? role.color : 'divider',
+                        backgroundColor: isSelected ? role.color : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.3s ease',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {isSelected && (
+                        <motion.svg
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ duration: 0.2, delay: 0.1 }}
+                          width="12"
+                          height="12"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                        >
+                          <path
+                            d="M10 3L4.5 8.5L2 6"
+                            stroke="white"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </motion.svg>
+                      )}
+                    </Box>
+                  </Box>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </Box>
+      </Box>
+    </motion.div>
   );
-}
+};
+
+export default RoleSelector;
