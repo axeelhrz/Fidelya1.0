@@ -3,7 +3,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: 'liga' | 'miembro' | 'club';
+  role: 'liga' | 'miembro' | 'club' | 'super_admin';
   phone?: string;
   country?: string;
   email_verified_at?: string;
@@ -47,8 +47,9 @@ export interface User {
 
 // Role-specific information
 export interface RoleInfo {
-  type: 'liga' | 'club' | 'miembro';
+  type: 'liga' | 'club' | 'miembro' | 'super_admin';
   name?: string;
+  description?: string;
   province?: string;
   city?: string;
   address?: string;
@@ -213,7 +214,7 @@ export interface SportParameter {
 
 // Role types for UI
 export interface Role {
-  id: 'liga' | 'miembro' | 'club';
+  id: 'liga' | 'miembro' | 'club' | 'super_admin';
   name: string;
   description: string;
   icon: string;
