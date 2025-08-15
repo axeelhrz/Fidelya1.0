@@ -3086,3 +3086,215 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
     text-align: left !important;
   }
 }
+
+/* ... existing CSS continues unchanged until the feature images section ... */
+
+/* ===== IMÁGENES DE CARACTERÍSTICAS CON SOPORTE MULTIIDIOMA ===== */
+.phone__app-image{
+    position:absolute;
+    top:0;
+    left:0;
+    z-index:1;
+    width:100%;
+    height:100%;
+    background-repeat:no-repeat;
+    background-position:center;
+    background-size:cover;
+    border-radius:var(--phone-border-radius);
+    filter:brightness(1.05) contrast(1.08) saturate(1.1);
+    image-rendering:-webkit-optimize-contrast;
+    image-rendering:optimize-contrast;
+    opacity:1;
+    transform:scale(1);
+    display:block!important;
+    visibility:visible!important;
+    transition: background-image 0.3s ease-in-out;
+}
+
+/* IMÁGENES POR DEFECTO (INGLÉS) */
+.feature[data-feature="schedule"] .phone__app-image{
+    background-image:url('../../assets/phones/Schedule.webp')
+}
+.feature[data-feature="stations"] .phone__app-image{
+    background-image:url('../../assets/phones/Stations.webp')
+}
+.feature[data-feature="calendar"] .phone__app-image{
+    background-image:url('../../assets/phones/Calendar.webp')
+}
+.feature[data-feature="log"] .phone__app-image{
+    background-image:url('../../assets/phones/Log.webp')
+}
+.feature[data-feature="notifications"] .phone__app-image{
+    background-image:url('../../assets/phones/Notifications.webp')
+}
+.feature[data-feature="referrals"] .phone__app-image{
+    background-image:url('../../assets/phones/Referrals.webp')
+}
+
+/* IMÁGENES ESPECÍFICAS PARA ESPAÑOL */
+.feature[data-feature="calendar"] .phone__app-image.lang-es{
+    background-image:url('../../assets/phones/Calendar_es.webp')!important
+}
+.feature[data-feature="log"] .phone__app-image.lang-es{
+    background-image:url('../../assets/phones/Log_es.webp')!important
+}
+.feature[data-feature="referrals"] .phone__app-image.lang-es{
+    background-image:url('../../assets/phones/Referrals_es.webp')!important
+}
+
+/* IMÁGENES ESPECÍFICAS PARA INGLÉS (EXPLÍCITAS) */
+.feature[data-feature="schedule"] .phone__app-image.lang-en{
+    background-image:url('../../assets/phones/Schedule.webp')!important
+}
+.feature[data-feature="stations"] .phone__app-image.lang-en{
+    background-image:url('../../assets/phones/Stations.webp')!important
+}
+.feature[data-feature="calendar"] .phone__app-image.lang-en{
+    background-image:url('../../assets/phones/Calendar.webp')!important
+}
+.feature[data-feature="log"] .phone__app-image.lang-en{
+    background-image:url('../../assets/phones/Log.webp')!important
+}
+.feature[data-feature="notifications"] .phone__app-image.lang-en{
+    background-image:url('../../assets/phones/Notifications.webp')!important
+}
+.feature[data-feature="referrals"] .phone__app-image.lang-en{
+    background-image:url('../../assets/phones/Referrals.webp')!important
+}
+
+/* SOPORTE PARA IDIOMAS ADICIONALES EN EL FUTURO */
+.phone__app-image.lang-transition {
+    opacity: 0.8;
+    transform: scale(0.98);
+}
+
+/* ANIMACIONES MEJORADAS PARA CAMBIO DE IDIOMA */
+@media (prefers-reduced-motion: no-preference) {
+    .phone__app-image {
+        transition: background-image 0.4s ease-in-out, opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+    }
+    
+    .phone__app-image.lang-transition {
+        transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+    }
+}
+
+/* CORRECCIÓN PARA DISPOSITIVOS DE ALTO RENDIMIENTO */
+@media (min-width: 1024px) {
+    /* Imágenes por defecto (inglés) para desktop */
+    .feature[data-feature="schedule"] .phone__app-image{
+        background-image:url('../../assets/phones/Schedule.webp')!important;
+        background-size:cover!important;
+        background-position:center!important;
+        background-repeat:no-repeat!important;
+        opacity:1!important;
+        transform:scale(1)!important;
+        display:block!important;
+        visibility:visible!important
+    }
+    .feature[data-feature="stations"] .phone__app-image{
+        background-image:url('../../assets/phones/Stations.webp')!important;
+        background-size:cover!important;
+        background-position:center!important;
+        background-repeat:no-repeat!important;
+        opacity:1!important;
+        transform:scale(1)!important;
+        display:block!important;
+        visibility:visible!important
+    }
+    .feature[data-feature="calendar"] .phone__app-image{
+        background-image:url('../../assets/phones/Calendar.webp')!important;
+        background-size:cover!important;
+        background-position:center!important;
+        background-repeat:no-repeat!important;
+        opacity:1!important;
+        transform:scale(1)!important;
+        display:block!important;
+        visibility:visible!important
+    }
+    .feature[data-feature="log"] .phone__app-image{
+        background-image:url('../../assets/phones/Log.webp')!important;
+        background-size:cover!important;
+        background-position:center!important;
+        background-repeat:no-repeat!important;
+        opacity:1!important;
+        transform:scale(1)!important;
+        display:block!important;
+        visibility:visible!important
+    }
+    .feature[data-feature="notifications"] .phone__app-image{
+        background-image:url('../../assets/phones/Notifications.webp')!important;
+        background-size:cover!important;
+        background-position:center!important;
+        background-repeat:no-repeat!important;
+        opacity:1!important;
+        transform:scale(1)!important;
+        display:block!important;
+        visibility:visible!important
+    }
+    .feature[data-feature="referrals"] .phone__app-image{
+        background-image:url('../../assets/phones/Referrals.webp')!important;
+        background-size:cover!important;
+        background-position:center!important;
+        background-repeat:no-repeat!important;
+        opacity:1!important;
+        transform:scale(1)!important;
+        display:block!important;
+        visibility:visible!important
+    }
+    
+    /* Imágenes específicas para español en desktop */
+    .feature[data-feature="calendar"] .phone__app-image.lang-es{
+        background-image:url('../../assets/phones/Calendar_es.webp')!important;
+        background-size:cover!important;
+        background-position:center!important;
+        background-repeat:no-repeat!important;
+        opacity:1!important;
+        transform:scale(1)!important;
+        display:block!important;
+        visibility:visible!important
+    }
+    .feature[data-feature="log"] .phone__app-image.lang-es{
+        background-image:url('../../assets/phones/Log_es.webp')!important;
+        background-size:cover!important;
+        background-position:center!important;
+        background-repeat:no-repeat!important;
+        opacity:1!important;
+        transform:scale(1)!important;
+        display:block!important;
+        visibility:visible!important
+    }
+    .feature[data-feature="referrals"] .phone__app-image.lang-es{
+        background-image:url('../../assets/phones/Referrals_es.webp')!important;
+        background-size:cover!important;
+        background-position:center!important;
+        background-repeat:no-repeat!important;
+        opacity:1!important;
+        transform:scale(1)!important;
+        display:block!important;
+        visibility:visible!important
+    }
+}
+
+/* OPTIMIZACIONES PARA DISPOSITIVOS MÓVILES */
+@media (max-width: 1023px) {
+    .phone__app-image {
+        transition-duration: 0.2s; /* Transiciones más rápidas en móvil */
+    }
+}
+
+/* MODO DE ALTO CONTRASTE Y ACCESIBILIDAD */
+@media (prefers-contrast: high) {
+    .phone__app-image {
+        filter: brightness(1.1) contrast(1.2) saturate(1.2);
+    }
+}
+
+/* MODO OSCURO (SI SE IMPLEMENTA EN EL FUTURO) */
+@media (prefers-color-scheme: dark) {
+    .phone__app-image {
+        filter: brightness(0.95) contrast(1.05) saturate(1.05);
+    }
+}
+
+/* ... rest of existing CSS continues unchanged ... */

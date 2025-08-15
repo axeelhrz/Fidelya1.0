@@ -34,7 +34,7 @@ const CONFIG = {
         JPEG: 'image/jpeg'
     },
     
-    // Rutas de imágenes optimizadas - CORREGIDAS PARA COINCIDIR CON ARCHIVOS REALES
+    // Rutas de imágenes optimizadas - ACTUALIZADAS CON SOPORTE MULTIIDIOMA
     IMAGE_PATHS: {
         hero: {
             webp: './assets/phones/Hero.webp'
@@ -44,22 +44,28 @@ const CONFIG = {
         },
         phones: {
             schedule: {
-                webp: './assets/phones/Schedule.webp'
+                en: { webp: './assets/phones/Schedule.webp' },
+                es: { webp: './assets/phones/Schedule.webp' } // Fallback a inglés hasta que exista Schedule_es.webp
             },
             stations: {
-                webp: './assets/phones/Stations.webp'
+                en: { webp: './assets/phones/Stations.webp' },
+                es: { webp: './assets/phones/Stations.webp' } // Fallback a inglés hasta que exista Stations_es.webp
             },
             calendar: {
-                webp: './assets/phones/Calendar.webp'
+                en: { webp: './assets/phones/Calendar.webp' },
+                es: { webp: './assets/phones/Calendar_es.webp' }
             },
             log: {
-                webp: './assets/phones/Log.webp'
+                en: { webp: './assets/phones/Log.webp' },
+                es: { webp: './assets/phones/Log_es.webp' }
             },
             notifications: {
-                webp: './assets/phones/Notifications.webp'
+                en: { webp: './assets/phones/Notifications.webp' },
+                es: { webp: './assets/phones/Notifications.webp' } // Fallback a inglés hasta que exista Notifications_es.webp
             },
             referrals: {
-                webp: './assets/phones/Referrals.webp'
+                en: { webp: './assets/phones/Referrals.webp' },
+                es: { webp: './assets/phones/Referrals_es.webp' }
             }
         },
         downloads: {
@@ -75,6 +81,91 @@ const CONFIG = {
         }
     }
 };
+
+// ===== FUNCIÓN PARA OBTENER IMAGEN LOCALIZADA =====
+function getLocalizedImagePath(imageKey, language = currentLanguage) {
+    console.log(`🖼️ Obteniendo imagen localizada para: ${imageKey}, idioma: ${language}`);
+    
+    const parts = imageKey.split('.');
+    let config = CONFIG.IMAGE_PATHS;
+    
+    // Navegar hasta la configuración de la imagen
+    for (let i = 0; i < parts.length; i++) {
+        config = config[parts[i]];
+        if (!config) {
+            console.warn(`❌ Configuración no encontrada para: ${imageKey}`);
+            return null;
+        }
+    }
+    
+    // Si la configuración tiene idiomas específicos
+    if (config[language]) {
+        const localizedConfig = config[language];
+        console.log(`✅ Imagen localizada encontrada para ${language}:`, localizedConfig);
+        return localizedConfig.webp || localizedConfig.png || localizedConfig.jpg || localizedConfig.jpeg;
+    }
+    
+    // Fallback a inglés si no existe el idioma solicitado
+    if (config.en) {
+        console.log(`🔄 Usando fallback en inglés para: ${imageKey}`);
+        const fallbackConfig = config.en;
+        return fallbackConfig.webp || fallbackConfig.png || fallbackConfig.jpg || fallbackConfig.jpeg;
+    }
+    
+    // Fallback a configuración simple (sin idiomas)
+    if (config.webp || config.png || config.jpg || config.jpeg) {
+        console.log(`🔄 Usando configuración simple para: ${imageKey}`);
+        return config.webp || config.png || config.jpg || config.jpeg;
+    }
+    
+    console.warn(`❌ No se encontró imagen para: ${imageKey}`);
+    return null;
+}
+
+// ===== FUNCIÓN PARA ACTUALIZAR IMÁGENES DE CARACTERÍSTICAS SEGÚN IDIOMA =====
+function updateFeatureImages(language = currentLanguage) {
+    console.log(`🔄 Actualizando imágenes de características para idioma: ${language}`);
+    
+    const featureImageMap = {
+        'schedule': 'phones.schedule',
+        'stations': 'phones.stations', 
+        'calendar': 'phones.calendar',
+        'log': 'phones.log',
+        'notifications': 'phones.notifications',
+        'referrals': 'phones.referrals'
+    };
+    
+    const features = document.querySelectorAll('.feature[data-feature]');
+    features.forEach((feature, index) => {
+        const featureType = feature.getAttribute('data-feature');
+        const phoneImage = feature.querySelector('.phone__app-image');
+        
+        if (phoneImage && featureImageMap[featureType]) {
+            const imageKey = featureImageMap[featureType];
+            const localizedImagePath = getLocalizedImagePath(imageKey, language);
+            
+            if (localizedImagePath) {
+                console.log(`📱 Actualizando imagen de ${featureType} a: ${localizedImagePath}`);
+                
+                // Actualizar la imagen de fondo
+                phoneImage.style.backgroundImage = `url('${localizedImagePath}')`;
+                phoneImage.style.backgroundSize = 'cover';
+                phoneImage.style.backgroundPosition = 'center';
+                phoneImage.style.backgroundRepeat = 'no-repeat';
+                
+                // Agregar clase de idioma para CSS específico si es necesario
+                phoneImage.classList.remove('lang-en', 'lang-es');
+                phoneImage.classList.add(`lang-${language}`);
+                
+                console.log(`✅ Imagen actualizada para ${featureType} en ${language}`);
+            } else {
+                console.warn(`❌ No se pudo obtener imagen localizada para ${featureType}`);
+            }
+        }
+    });
+    
+    console.log(`✅ Actualización de imágenes de características completada para ${language}`);
+}
 
 // ===== FUNCIÓN PARA CORREGIR ALTURA DEL CTA DEL DRAWER - ACTUALIZADA =====
 (function fixDrawerCTAHeight(){
@@ -675,6 +766,7 @@ function handleRouteChange() {
         currentLanguage = detectedLanguage;
         applyTranslations();
         updateLanguageButtons();
+        updateFeatureImages(detectedLanguage); // NUEVO: Actualizar imágenes al cambiar idioma por URL
         document.documentElement.lang = currentLanguage;
     }
     
@@ -922,6 +1014,9 @@ function initializeLanguageSystem() {
     applyTranslations();
     updateLanguageButtons();
     setupLanguageToggle();
+    
+    // NUEVO: Actualizar imágenes según el idioma inicial
+    updateFeatureImages(currentLanguage);
 }
 
 function setupLanguageToggle() {
@@ -996,6 +1091,7 @@ function switchLanguage(newLanguage) {
     
     console.log(`🔄 Cambiando idioma de ${currentLanguage} a ${newLanguage}`);
     
+    const oldLanguage = currentLanguage;
     currentLanguage = newLanguage;
     
     // Navegar a la ruta correcta del idioma
@@ -1003,6 +1099,11 @@ function switchLanguage(newLanguage) {
     
     applyTranslations();
     updateLanguageButtons();
+    
+    // NUEVO: Actualizar imágenes de características según el nuevo idioma con transición
+    if (oldLanguage !== newLanguage) {
+        updateFeatureImagesWithTransition(newLanguage);
+    }
     
     document.documentElement.lang = newLanguage;
     
@@ -1229,14 +1330,9 @@ class UltraOptimizedImageLoader {
     
     async loadImage(element) {
         const imageKey = element.dataset.imageKey;
-        const imageConfig = this.getImageConfig(imageKey);
         
-        if (!imageConfig) {
-            console.warn(`Configuración de imagen no encontrada para: ${imageKey}`);
-            return;
-        }
-        
-        const imageUrl = this.getBestImageUrl(imageConfig);
+        // ACTUALIZADO: Usar imagen localizada
+        const imageUrl = getLocalizedImagePath(imageKey, currentLanguage);
         
         if (!imageUrl) {
             console.warn(`No se encontró URL válida para: ${imageKey}`);
@@ -1301,15 +1397,12 @@ class UltraOptimizedImageLoader {
         ];
         
         const preloadPromises = criticalImages.map(async (key) => {
-            const config = this.getImageConfig(key);
-            if (config) {
-                const url = this.getBestImageUrl(config);
-                if (url) {
-                    try {
-                        await this.preloadImage(url);
-                    } catch (error) {
-                        console.warn(`Error precargando imagen crítica ${key}:`, error);
-                    }
+            const imageUrl = getLocalizedImagePath(key, currentLanguage);
+            if (imageUrl) {
+                try {
+                    await this.preloadImage(imageUrl);
+                } catch (error) {
+                    console.warn(`Error precargando imagen crítica ${key}:`, error);
                 }
             }
         });
@@ -1317,9 +1410,9 @@ class UltraOptimizedImageLoader {
         await Promise.all(preloadPromises);
     }
     
-    // Nueva función para forzar la carga de imágenes de características
+    // ACTUALIZADA: Nueva función para forzar la carga de imágenes de características localizadas
     forceLoadFeatureImages() {
-        console.log('🖼️ Forzando carga de imágenes de características...');
+        console.log('🖼️ Forzando carga de imágenes de características localizadas...');
         
         // Mapeo de data-feature a imagen
         const featureImageMap = {
@@ -1339,25 +1432,32 @@ class UltraOptimizedImageLoader {
             
             if (phoneImage && featureImageMap[featureType]) {
                 const imageKey = featureImageMap[featureType];
-                console.log(`📱 Cargando imagen para característica ${featureType}: ${imageKey}`);
+                console.log(`📱 Cargando imagen localizada para característica ${featureType}: ${imageKey}`);
                 
-                // Cargar imagen inmediatamente
-                this.loadImageImmediately(phoneImage, imageKey);
-                
-                // También establecer la imagen de fondo directamente como fallback
-                const imageConfig = this.getImageConfig(imageKey);
-                if (imageConfig) {
-                    const imageUrl = this.getBestImageUrl(imageConfig);
-                    if (imageUrl) {
-                        phoneImage.style.backgroundImage = `url('${imageUrl}')`;
-                        phoneImage.style.backgroundSize = 'cover';
-                        phoneImage.style.backgroundPosition = 'center';
-                        phoneImage.style.backgroundRepeat = 'no-repeat';
-                        console.log(`✅ Imagen establecida para ${featureType}: ${imageUrl}`);
-                    }
-                }
+                // Cargar imagen localizada inmediatamente
+                this.loadLocalizedImageImmediately(phoneImage, imageKey);
             }
         });
+    }
+    
+    // NUEVA: Función para cargar imagen localizada inmediatamente
+    loadLocalizedImageImmediately(element, imageKey) {
+        const imageUrl = getLocalizedImagePath(imageKey, currentLanguage);
+        
+        if (imageUrl) {
+            element.style.backgroundImage = `url('${imageUrl}')`;
+            element.style.backgroundSize = 'cover';
+            element.style.backgroundPosition = 'center';
+            element.style.backgroundRepeat = 'no-repeat';
+            
+            // Agregar clase de idioma
+            element.classList.remove('lang-en', 'lang-es');
+            element.classList.add(`lang-${currentLanguage}`);
+            
+            console.log(`✅ Imagen localizada establecida para ${imageKey} en ${currentLanguage}: ${imageUrl}`);
+        } else {
+            console.warn(`❌ No se pudo cargar imagen localizada para ${imageKey}`);
+        }
     }
     
     observeImage(element, imageKey) {
@@ -2315,7 +2415,7 @@ function loadYouTubeVideo(videoId, container) {
     container.innerHTML = '';
     container.appendChild(iframe);
     
-    console.log('✅ Video de YouTube cargado:', videoId);
+    console.log('✅ Video de YouTube cargado correctamente');
 }
 
 function formatTime(seconds) {
@@ -2325,25 +2425,27 @@ function formatTime(seconds) {
 }
 
 function showVideoError() {
-    const playOverlay = document.getElementById('play-overlay');
-    if (playOverlay) {
-        playOverlay.innerHTML = `
-            <div class="videos__error">
-                <div class="videos__error-icon">⚠️</div>
-                <div class="videos__error-text">Error al cargar el video</div>
-                <div class="videos__error-subtitle">Por favor, intenta recargar la página</div>
+    const videoContainer = document.querySelector('.videos__player-container');
+    if (videoContainer) {
+        videoContainer.innerHTML = `
+            <div class="video-error">
+                <div class="video-error__icon">⚠️</div>
+                <div class="video-error__message">Error loading video</div>
+                <div class="video-error__suggestion">Please try refreshing the page</div>
             </div>
         `;
     }
 }
 
-// ===== FAQ ULTRA-OPTIMIZADO =====
+// ===== FAQ INTERACTIVO ULTRA-OPTIMIZADO =====
 function initializeFAQ() {
     const faqItems = document.querySelectorAll('.faq__item');
-    const searchInput = document.getElementById('faq-search');
+    const faqSearch = document.getElementById('faq-search');
+    const faqList = document.getElementById('faq-list');
     const noResults = document.getElementById('faq-no-results');
     
-    faqItems.forEach(item => {
+    // Configurar eventos para cada pregunta
+    faqItems.forEach((item, index) => {
         const question = item.querySelector('.faq__question');
         const answer = item.querySelector('.faq__answer');
         const icon = item.querySelector('.faq__icon');
@@ -2351,29 +2453,55 @@ function initializeFAQ() {
         if (!question || !answer) return;
         
         question.addEventListener('click', () => {
-            const isActive = item.classList.contains('active');
+            const isExpanded = question.getAttribute('aria-expanded') === 'true';
             
-            // Cerrar todos los otros items
+            // Cerrar todas las otras preguntas
             faqItems.forEach(otherItem => {
                 if (otherItem !== item) {
-                    otherItem.classList.remove('active');
+                    const otherQuestion = otherItem.querySelector('.faq__question');
                     const otherAnswer = otherItem.querySelector('.faq__answer');
-                    if (otherAnswer) {
-                        otherAnswer.classList.remove('active');
+                    const otherIcon = otherItem.querySelector('.faq__icon');
+                    
+                    if (otherQuestion && otherAnswer) {
+                        otherQuestion.setAttribute('aria-expanded', 'false');
+                        otherAnswer.style.maxHeight = '0';
+                        otherAnswer.style.opacity = '0';
+                        otherItem.classList.remove('active');
+                        if (otherIcon) otherIcon.style.transform = 'rotate(0deg)';
                     }
                 }
             });
             
-            // Toggle el item actual
-            if (isActive) {
+            // Toggle la pregunta actual
+            if (isExpanded) {
+                question.setAttribute('aria-expanded', 'false');
+                answer.style.maxHeight = '0';
+                answer.style.opacity = '0';
                 item.classList.remove('active');
-                answer.classList.remove('active');
+                if (icon) icon.style.transform = 'rotate(0deg)';
             } else {
+                question.setAttribute('aria-expanded', 'true');
+                answer.style.maxHeight = answer.scrollHeight + 'px';
+                answer.style.opacity = '1';
                 item.classList.add('active');
-                answer.classList.add('active');
+                if (icon) icon.style.transform = 'rotate(45deg)';
+                
+                // Scroll suave hacia la pregunta expandida
+                setTimeout(() => {
+                    const headerHeight = isMobile ? 80 : 100;
+                    const targetPosition = item.offsetTop - headerHeight - 20;
+                    
+                    if ('scrollBehavior' in document.documentElement.style && !performanceMode) {
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 300);
             }
         });
-
+        
+        // Efectos táctiles para móvil
         if (isMobile) {
             question.addEventListener('touchstart', () => {
                 question.style.transform = 'scale(0.98)';
@@ -2384,21 +2512,25 @@ function initializeFAQ() {
         }
     });
     
-    // Búsqueda en FAQ
-    if (searchInput) {
-        let searchTimeout;
-        searchInput.addEventListener('input', (e) => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                filterFAQItems(e.target.value.toLowerCase());
-            }, 300);
+    // Funcionalidad de búsqueda
+    if (faqSearch) {
+        faqSearch.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            filterFAQItems(searchTerm, faqItems, noResults);
+        });
+        
+        // Limpiar búsqueda con Escape
+        faqSearch.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                faqSearch.value = '';
+                filterFAQItems('', faqItems, noResults);
+                faqSearch.blur();
+            }
         });
     }
 }
 
-function filterFAQItems(searchTerm) {
-    const faqItems = document.querySelectorAll('.faq__item');
-    const noResults = document.getElementById('faq-no-results');
+function filterFAQItems(searchTerm, faqItems, noResults) {
     let visibleCount = 0;
     
     faqItems.forEach(item => {
@@ -2410,149 +2542,297 @@ function filterFAQItems(searchTerm) {
         const questionText = question.textContent.toLowerCase();
         const answerText = answer.textContent.toLowerCase();
         
-        if (searchTerm === '' || questionText.includes(searchTerm) || answerText.includes(searchTerm)) {
+        const isVisible = searchTerm === '' || 
+                         questionText.includes(searchTerm) || 
+                         answerText.includes(searchTerm);
+        
+        if (isVisible) {
             item.style.display = 'block';
             visibleCount++;
+            
+            // Highlight search terms
+            if (searchTerm !== '') {
+                highlightSearchTerm(question, searchTerm);
+                highlightSearchTerm(answer, searchTerm);
+            } else {
+                removeHighlight(question);
+                removeHighlight(answer);
+            }
         } else {
             item.style.display = 'none';
-            item.classList.remove('active');
-            const answerElement = item.querySelector('.faq__answer');
-            if (answerElement) {
-                answerElement.classList.remove('active');
+            // Cerrar la pregunta si estaba abierta
+            const questionBtn = item.querySelector('.faq__question');
+            const answerDiv = item.querySelector('.faq__answer');
+            if (questionBtn && answerDiv) {
+                questionBtn.setAttribute('aria-expanded', 'false');
+                answerDiv.style.maxHeight = '0';
+                answerDiv.style.opacity = '0';
+                item.classList.remove('active');
             }
         }
     });
     
+    // Mostrar/ocultar mensaje de "no resultados"
     if (noResults) {
         if (visibleCount === 0 && searchTerm !== '') {
-            noResults.classList.add('show');
+            noResults.style.display = 'block';
         } else {
-            noResults.classList.remove('show');
+            noResults.style.display = 'none';
         }
     }
 }
 
-// ===== INICIALIZACIÓN PRINCIPAL ULTRA-OPTIMIZADA =====
-document.addEventListener('DOMContentLoaded', async () => {
+function highlightSearchTerm(element, term) {
+    if (!element || !term) return;
+    
+    const originalText = element.getAttribute('data-original-text') || element.innerHTML;
+    if (!element.getAttribute('data-original-text')) {
+        element.setAttribute('data-original-text', originalText);
+    }
+    
+    const regex = new RegExp(`(${term})`, 'gi');
+    const highlightedText = originalText.replace(regex, '<mark class="faq-highlight">$1</mark>');
+    element.innerHTML = highlightedText;
+}
+
+function removeHighlight(element) {
+    if (!element) return;
+    
+    const originalText = element.getAttribute('data-original-text');
+    if (originalText) {
+        element.innerHTML = originalText;
+    }
+}
+
+// ===== FUNCIÓN PARA TRANSICIÓN SUAVE DE IMÁGENES =====
+function smoothImageTransition(element, newImageUrl, callback) {
+    if (!element || !newImageUrl) {
+        if (callback) callback();
+        return;
+    }
+    
+    // Agregar clase de transición
+    element.classList.add('lang-transition');
+    
+    // Precargar la nueva imagen
+    const img = new Image();
+    img.onload = () => {
+        // Cambiar la imagen después de un breve delay
+        setTimeout(() => {
+            element.style.backgroundImage = `url('${newImageUrl}')`;
+            
+            // Remover clase de transición después de que se complete
+            setTimeout(() => {
+                element.classList.remove('lang-transition');
+                if (callback) callback();
+            }, 200);
+        }, 100);
+    };
+    
+    img.onerror = () => {
+        // En caso de error, remover la clase de transición
+        element.classList.remove('lang-transition');
+        if (callback) callback();
+    };
+    
+    img.src = newImageUrl;
+}
+
+// ===== FUNCIÓN MEJORADA PARA ACTUALIZAR IMÁGENES CON TRANSICIÓN =====
+function updateFeatureImagesWithTransition(language = currentLanguage) {
+    console.log(`🎬 Actualizando imágenes de características con transición para idioma: ${language}`);
+    
+    const featureImageMap = {
+        'schedule': 'phones.schedule',
+        'stations': 'phones.stations', 
+        'calendar': 'phones.calendar',
+        'log': 'phones.log',
+        'notifications': 'phones.notifications',
+        'referrals': 'phones.referrals'
+    };
+    
+    const features = document.querySelectorAll('.feature[data-feature]');
+    let transitionsCompleted = 0;
+    const totalTransitions = features.length;
+    
+    features.forEach((feature, index) => {
+        const featureType = feature.getAttribute('data-feature');
+        const phoneImage = feature.querySelector('.phone__app-image');
+        
+        if (phoneImage && featureImageMap[featureType]) {
+            const imageKey = featureImageMap[featureType];
+            const localizedImagePath = getLocalizedImagePath(imageKey, language);
+            
+            if (localizedImagePath) {
+                console.log(`🎬 Transición de imagen para ${featureType} a: ${localizedImagePath}`);
+                
+                // Usar transición suave con delay escalonado
+                setTimeout(() => {
+                    smoothImageTransition(phoneImage, localizedImagePath, () => {
+                        // Agregar clase de idioma
+                        phoneImage.classList.remove('lang-en', 'lang-es');
+                        phoneImage.classList.add(`lang-${language}`);
+                        
+                        transitionsCompleted++;
+                        console.log(`✅ Transición completada para ${featureType} (${transitionsCompleted}/${totalTransitions})`);
+                        
+                        if (transitionsCompleted === totalTransitions) {
+                            console.log(`🎉 Todas las transiciones de imágenes completadas para ${language}`);
+                        }
+                    });
+                }, index * 100); // Delay escalonado de 100ms entre cada imagen
+                
+            } else {
+                console.warn(`❌ No se pudo obtener imagen localizada para ${featureType}`);
+                transitionsCompleted++;
+            }
+        } else {
+            transitionsCompleted++;
+        }
+    });
+}
+
+// ===== FUNCIÓN PARA INICIALIZAR IMÁGENES LOCALIZADAS AL CARGAR LA PÁGINA =====
+function initializeLocalizedImages() {
+    console.log('🚀 Inicializando sistema de imágenes localizadas...');
+    
+    // Detectar idioma actual y cargar imágenes correspondientes
+    const currentLang = getCurrentLanguage();
+    console.log(`🌐 Idioma detectado para imágenes: ${currentLang}`);
+    
+    // Actualizar imágenes sin transición en la carga inicial
+    updateFeatureImages(currentLang);
+    
+    console.log('✅ Sistema de imágenes localizadas inicializado');
+}
+
+// ===== INICIALIZACIÓN PRINCIPAL =====
+document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Iniciando aplicación StarFlex...');
     
-    try {
-        // 1. Detectar capacidades del dispositivo PRIMERO
-        detectDeviceCapabilities();
+    // Detectar capacidades del dispositivo
+    detectDeviceCapabilities();
+    
+    // Inicializar sistema de imágenes localizadas
+    initializeLocalizedImages();
+    
+    // Inicializar sistema de idiomas
+    initializeLanguageSystem();
+    
+    // Inicializar routing
+    initializeRouting();
+    
+    // Inicializar navegación
+    initializeNavigation();
+    
+    // Inicializar selector de idioma flotante (solo desktop)
+    if (!isMobile) {
+        initializeLanguageSwitcher();
+    }
+    
+    // Inicializar widget flotante
+    initializeFloatingWidget();
+    
+    // Inicializar efectos de scroll
+    initializeScrollEffects();
+    
+    // Inicializar reproductor de video
+    initializeVideoPlayer();
+    
+    // Inicializar reproductor de YouTube
+    initializeYouTubePlayer();
+    
+    // Inicializar FAQ
+    initializeFAQ();
+    
+    // Inicializar optimizador de imágenes
+    imageOptimizer = new UltraOptimizedImageLoader();
+    
+    // Actualizar metadatos dinámicos
+    updateDynamicMetadata();
+    
+    console.log('✅ Aplicación StarFlex inicializada correctamente');
+});
+
+// ===== MANEJO DE REDIMENSIONAMIENTO DE VENTANA =====
+window.addEventListener('resize', () => {
+    const wasMobile = isMobile;
+    isMobile = window.innerWidth <= 1023;
+    
+    // Si cambió el tipo de dispositivo, reinicializar navegación
+    if (wasMobile !== isMobile) {
+        console.log(`📱 Cambio de dispositivo detectado: ${isMobile ? 'móvil' : 'desktop'}`);
         
-        // 2. Inicializar sistema de idiomas
-        initializeLanguageSystem();
+        // Cerrar menús abiertos
+        if (isMobileMenuOpen) closeMobileMenu();
+        if (isFloatingMenuOpen) closeFloatingMenu();
+        if (isLanguageSwitcherOpen) closeLanguageSwitcher();
         
-        // 3. Inicializar sistema de routing
-        initializeRouting();
-        
-        // 4. Inicializar optimizador de imágenes
-        imageOptimizer = new UltraOptimizedImageLoader();
-        
-        // 5. Inicializar navegación
-        initializeNavigation();
-        
-        // 6. Inicializar efectos de scroll
-        initializeScrollEffects();
-        
-        // 7. Inicializar componentes específicos
-        if (!isMobile) {
-            initializeLanguageSwitcher();
-        }
-        
-        initializeFloatingWidget();
-        initializeVideoPlayer();
-        initializeYouTubePlayer();
-        initializeFAQ();
-        
-        // 8. Actualizar metadatos dinámicos
-        updateDynamicMetadata();
-        
-        console.log('✅ Aplicación StarFlex inicializada correctamente');
-        
-    } catch (error) {
-        console.error('❌ Error durante la inicialización:', error);
+        // Reinicializar navegación
+        setTimeout(() => {
+            initializeNavigation();
+            if (!isMobile) {
+                initializeLanguageSwitcher();
+            }
+        }, 100);
     }
 });
 
-// ===== MANEJO DE REDIMENSIONAMIENTO OPTIMIZADO =====
-let resizeTimeout;
-window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-        const wasMobile = isMobile;
-        detectDeviceCapabilities();
-        
-        // Si cambió de móvil a desktop o viceversa, reinicializar navegación
-        if (wasMobile !== isMobile) {
-            console.log(`📱➡️🖥️ Cambio de dispositivo detectado: ${isMobile ? 'móvil' : 'desktop'}`);
-            
-            // Cerrar menús abiertos
-            if (isMobileMenuOpen) closeMobileMenu();
-            if (isFloatingMenuOpen) closeFloatingMenu();
-            if (isLanguageSwitcherOpen) closeLanguageSwitcher();
-            
-            // Reinicializar navegación
-            setTimeout(() => {
-                initializeNavigation();
-                if (!isMobile) {
-                    initializeLanguageSwitcher();
-                }
-            }, 100);
-        }
-        
-        // Actualizar metadatos
-        updateDynamicMetadata();
-        
-    }, 250);
-}, { passive: true });
-
-// ===== MANEJO DE ORIENTACIÓN MÓVIL =====
+// ===== MANEJO DE CAMBIOS DE ORIENTACIÓN =====
 window.addEventListener('orientationchange', () => {
     setTimeout(() => {
-        detectDeviceCapabilities();
-        updateDynamicMetadata();
-    }, 500);
-}, { passive: true });
+        // Recalcular variables móviles
+        isMobile = window.innerWidth <= 1023;
+        
+        // Actualizar altura del viewport
+        document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+        
+        // Cerrar menús si están abiertos
+        if (isMobileMenuOpen) closeMobileMenu();
+        if (isFloatingMenuOpen) closeFloatingMenu();
+    }, 100);
+});
 
-// ===== PREVENCIÓN DE ZOOM EN INPUTS MÓVILES =====
-if (isMobile) {
-    const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], textarea');
+// ===== MANEJO DE VISIBILIDAD DE LA PÁGINA =====
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // Pausar videos cuando la página no es visible
+        const videos = document.querySelectorAll('video');
+        videos.forEach(video => {
+            if (!video.paused) {
+                video.pause();
+            }
+        });
+    }
+});
+
+// ===== PREVENCIÓN DE ZOOM EN INPUTS EN iOS =====
+if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+    const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="search"], textarea');
     inputs.forEach(input => {
         input.addEventListener('focus', () => {
-            if (input.style.fontSize !== '16px') {
-                input.style.fontSize = '16px';
-            }
+            input.style.fontSize = '16px';
+        });
+        input.addEventListener('blur', () => {
+            input.style.fontSize = '';
         });
     });
 }
 
-// ===== MANEJO DE ERRORES GLOBALES =====
-window.addEventListener('error', (e) => {
-    console.error('Error global capturado:', e.error);
-});
-
-window.addEventListener('unhandledrejection', (e) => {
-    console.error('Promesa rechazada no manejada:', e.reason);
-});
-
-// ===== OPTIMIZACIONES DE RENDIMIENTO FINALES =====
+// ===== OPTIMIZACIÓN DE RENDIMIENTO PARA DISPOSITIVOS LENTOS =====
 if (performanceMode) {
-    // Deshabilitar animaciones costosas
-    document.documentElement.style.setProperty('--transition', '0.1s ease');
-    document.documentElement.style.setProperty('--transition-slow', '0.1s ease');
+    // Reducir la frecuencia de eventos de scroll
+    let scrollTimer;
+    window.addEventListener('scroll', () => {
+        if (scrollTimer) return;
+        scrollTimer = setTimeout(() => {
+            updateActiveNavOnScroll();
+            scrollTimer = null;
+        }, 100);
+    }, { passive: true });
     
-    // Reducir frecuencia de scroll
-    let lastScrollTime = 0;
-    const originalScrollHandler = window.onscroll;
-    window.onscroll = (e) => {
-        const now = Date.now();
-        if (now - lastScrollTime > 100) {
-            lastScrollTime = now;
-            if (originalScrollHandler) originalScrollHandler(e);
-        }
-    };
+    // Deshabilitar transiciones complejas
+    document.body.classList.add('reduced-motion');
 }
 
-console.log('🎯 StarFlex App cargada completamente');
-    
+console.log('📱 StarFlex App.js cargado completamente');
