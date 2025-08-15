@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Box, Typography, Card, Avatar } from '@mui/material';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { Role } from '@/types';
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
 import PersonIcon from '@mui/icons-material/Person';
@@ -54,7 +54,7 @@ const getIconComponent = (roleId: string) => {
 };
 
 const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onRoleSelect }) => {
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -65,12 +65,12 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onRoleSelect 
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.3, ease: 'easeOut' }
+      transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] } // replaced string easing with cubic-bezier array
     },
   };
 
@@ -130,7 +130,8 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onRoleSelect 
                   sx={{
                     p: 3,
                     cursor: 'pointer',
-                    border: isSelected ? `2px solid ${role.color}` : '2px solid transparent',
+                    border: isSelected ? `2px solid ${role.color}` : '2px solid',
+                    borderColor: isSelected ? role.color : 'divider',
                     borderRadius: 3,
                     background: isSelected ? role.bgColor : 'background.paper',
                     boxShadow: isSelected 
@@ -144,6 +145,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onRoleSelect 
                         ? `0 12px 35px ${role.color}25, 0 6px 15px ${role.color}15`
                         : '0 4px 15px rgba(0, 0, 0, 0.08)',
                       transform: 'translateY(-2px)',
+                      borderColor: isSelected ? role.color : 'primary.light',
                     },
                   }}
                 >
@@ -210,7 +212,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onRoleSelect 
                         width: 24,
                         height: 24,
                         borderRadius: '50%',
-                        border: isSelected ? `2px solid ${role.color}` : '2px solid',
+                        border: '2px solid',
                         borderColor: isSelected ? role.color : 'divider',
                         backgroundColor: isSelected ? role.color : 'transparent',
                         display: 'flex',

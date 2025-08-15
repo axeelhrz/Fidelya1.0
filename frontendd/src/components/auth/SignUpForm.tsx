@@ -27,7 +27,7 @@ import {
   FormLabel,
   Avatar,
 } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -50,6 +50,7 @@ import { styled } from '@mui/material/styles';
 import { useSignUp } from '@/hooks/useSignUp';
 import RoleSelector from './RoleSelector';
 import NextLink from 'next/link';
+import type { SvgIconProps } from '@mui/material/SvgIcon';
 
 // Custom Stepper Connector
 const CustomStepConnector = styled(StepConnector)(({ theme }) => ({
@@ -70,7 +71,7 @@ const CustomStepConnector = styled(StepConnector)(({ theme }) => ({
 // Esquema completo para todo el formulario
 const signUpSchema = z.object({
   role: z.enum(['liga', 'miembro', 'club'], {
-    required_error: 'Selecciona un tipo de cuenta',
+    error: 'Selecciona un tipo de cuenta',
   }),
   email: z.string().trim().min(1, 'El correo electrónico es requerido').email('Ingresa un correo electrónico válido'),
   password: z.string().trim().min(8, 'La contraseña debe tener al menos 8 caracteres'),
@@ -289,7 +290,7 @@ const SignUpForm: React.FC = () => {
     );
   }
 
-  // Variantes de animación simplificadas para evitar problemas de hidratación
+  // Variantes de animación simplificadas
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -301,231 +302,196 @@ const SignUpForm: React.FC = () => {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { duration: 0.3, ease: 'easeOut' }
+      transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
     },
   };
+  // Función para crear campos de texto con el estilo de SignIn
+    const createTextField = (
+      name: keyof SignUpFormData,
+      label: string,
+      icon: React.ReactElement<SvgIconProps>,
+      options: {
+        type?: string;
+        placeholder?: string;
+        multiline?: boolean;
+        rows?: number;
+        required?: boolean;
+      } = {}
+    ) => (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field }) => {
+        const fieldError = getFieldError(name);
+        const fieldState = getFieldState(name, field.value || '', !!fieldError);
+        
+        return (
+          <Box sx={{ position: 'relative', mb: 3 }}>
+            <TextField
+              {...field}
+              fullWidth
+              label={label}
+              type={options.type || 'text'}
+              error={!!fieldError}
+              helperText={fieldError?.message}
+              disabled={isLoading}
+              onFocus={() => setFocusedField(name)}
+              onBlur={() => setFocusedField(null)}
+              placeholder={options.placeholder}
+              multiline={options.multiline}
+              rows={options.rows}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position={options.multiline ? 'start' : 'start'} 
+                    sx={options.multiline ? { alignSelf: 'flex-start', mt: 1 } : {}}>
+                    {React.isValidElement(icon) && React.cloneElement(icon, {
+                      sx: { 
+                        color: getIconColor(fieldState),
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        fontSize: 20,
+                      }
+                    })}
+                  </InputAdornment>
+                ),
+                endAdornment: field.value && !fieldError && !options.multiline && (
+                  <InputAdornment position="end">
+                    <Fade in={true}>
+                      <CheckCircleIcon 
+                        sx={{ 
+                          color: 'success.main',
+                          fontSize: 20,
+                        }} 
+                      />
+                    </Fade>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  minHeight: options.multiline ? 'auto' : 56,
+                  borderRadius: 2,
+                  backgroundColor: 'background.paper',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '& fieldset': {
+                    borderColor: fieldState === 'error' ? 'error.main' : 
+                                fieldState === 'success' ? 'success.light' :
+                                fieldState === 'focused' ? 'primary.main' : 'divider',
+                    borderWidth: fieldState === 'focused' ? 2 : 1,
+                  },
+                  '&:hover fieldset': {
+                    borderColor: fieldState === 'error' ? 'error.main' : 
+                                fieldState === 'success' ? 'success.main' :
+                                'primary.light',
+                  },
+                  '&.Mui-focused': {
+                    transform: 'scale(1.005)',
+                    boxShadow: fieldState === 'error' ? 
+                      '0 0 0 4px rgba(244, 67, 54, 0.08)' :
+                      '0 0 0 4px rgba(47, 109, 251, 0.08)',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: fieldState === 'error' ? 'error.main' : 'text.secondary',
+                  fontWeight: 500,
+                  fontSize: '0.9375rem',
+                  '&.Mui-focused': {
+                    color: fieldState === 'error' ? 'error.main' : 'primary.main',
+                  },
+                },
+                '& .MuiOutlinedInput-input': {
+                  fontSize: '0.9375rem',
+                  fontWeight: 400,
+                  '&::placeholder': {
+                    color: 'text.disabled',
+                    opacity: 0.7,
+                  },
+                },
+                '& .MuiFormHelperText-root': {
+                  fontSize: '0.8125rem',
+                  fontWeight: 500,
+                  marginLeft: 0,
+                  marginTop: 1,
+                },
+              }}
+            />
+          </Box>
+        );
+      }}
+    />
+  );
 
   // Componente para campos de Liga
   const renderLeagueFields = () => (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       {/* Nombre de la Liga */}
-      <motion.div variants={itemVariants}>
-        <Controller
-          name="league_name"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('league_name');
-            const fieldState = getFieldState('league_name', field.value || '', !!fieldError);
-            return (
-              <TextField
-                {...field}
-                fullWidth
-                label="Nombre de la liga"
-                error={!!fieldError}
-                helperText={fieldError?.message}
-                disabled={isLoading}
-                onFocus={() => setFocusedField('league_name')}
-                onBlur={() => setFocusedField(null)}
-                placeholder="Ej: Liga Nacional de Tenis de Mesa"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <BusinessIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: field.value && !fieldError && (
-                      <InputAdornment position="end">
-                        <Fade in={true}>
-                          <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
-                        </Fade>
-                      </InputAdornment>
-                    ),
-                  }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
-                    borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&.Mui-focused': {
-                      transform: 'scale(1.005)',
-                      boxShadow: fieldState === 'error' ? 
-                        '0 0 0 4px rgba(244, 67, 54, 0.08)' :
-                        '0 0 0 4px rgba(47, 109, 251, 0.08)',
-                    },
-                  },
-                }}
-              />
-            );
-          }}
-        />
-      </motion.div>
+      {createTextField('league_name', 'Nombre de la liga', <BusinessIcon />, {
+        placeholder: 'Ej: Liga Nacional de Tenis de Mesa',
+        required: true
+      })}
 
       {/* Provincia */}
-      <motion.div variants={itemVariants}>
-        <Controller
-          name="province"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('province');
-            const fieldState = getFieldState('province', field.value || '', !!fieldError);
-            return (
-              <TextField
-                {...field}
-                fullWidth
-                label="Provincia / Región"
-                error={!!fieldError}
-                helperText={fieldError?.message}
-                disabled={isLoading}
-                onFocus={() => setFocusedField('province')}
-                onBlur={() => setFocusedField(null)}
-                placeholder="Ej: Pichincha, Guayas, Azuay"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LocationOnIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: field.value && !fieldError && (
-                      <InputAdornment position="end">
-                        <Fade in={true}>
-                          <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
-                        </Fade>
-                      </InputAdornment>
-                    ),
-                  }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
-                    borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&.Mui-focused': {
-                      transform: 'scale(1.005)',
-                      boxShadow: fieldState === 'error' ? 
-                        '0 0 0 4px rgba(244, 67, 54, 0.08)' :
-                        '0 0 0 4px rgba(47, 109, 251, 0.08)',
-                    },
-                  },
-                }}
-              />
-            );
-          }}
-        />
-      </motion.div>
+      {createTextField('province', 'Provincia / Región', <LocationOnIcon />, {
+        placeholder: 'Ej: Pichincha, Guayas, Azuay',
+        required: true
+      })}
 
       {/* Logo Upload */}
-      <motion.div variants={itemVariants}>
-        <Box>
-          <Typography variant="body2" sx={{ mb: 2, fontWeight: 500, color: 'text.primary' }}>
-            Logo de la liga (opcional)
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar
-              src={logoPreview || undefined}
-              sx={{
-                width: 64,
-                height: 64,
-                backgroundColor: 'primary.light',
-                color: 'primary.main',
-              }}
-            >
-              <BusinessIcon sx={{ fontSize: 32 }} />
-            </Avatar>
-            <Button
-              component="label"
-              variant="outlined"
-              startIcon={<CloudUploadIcon />}
-              sx={{
-                height: 48,
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 500,
-              }}
-            >
-              Subir logo
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, 'logo')}
-              />
-            </Button>
-          </Box>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="body2" sx={{ mb: 2, fontWeight: 500, color: 'text.primary' }}>
+          Logo de la liga (opcional)
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            src={logoPreview || undefined}
+            sx={{
+              width: 64,
+              height: 64,
+              backgroundColor: 'primary.light',
+              color: 'primary.main',
+            }}
+          >
+            <BusinessIcon sx={{ fontSize: 32 }} />
+          </Avatar>
+          <Button
+            component="label"
+            variant="outlined"
+            startIcon={<CloudUploadIcon />}
+            sx={{
+              height: 48,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 500,
+            }}
+          >
+            Subir logo
+            <input
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={(e) => handleFileChange(e, 'logo')}
+            />
+          </Button>
         </Box>
-      </motion.div>
-    </>
+      </Box>
+    </Box>
   );
 
   // Componente para campos de Club
   const renderClubFields = () => (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       {/* Nombre del Club */}
-      <motion.div variants={itemVariants}>
-        <Controller
-          name="club_name"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('club_name');
-            const fieldState = getFieldState('club_name', field.value || '', !!fieldError);
-            return (
-              <TextField
-                {...field}
-                fullWidth
-                label="Nombre del club"
-                error={!!fieldError}
-                helperText={fieldError?.message}
-                disabled={isLoading}
-                onFocus={() => setFocusedField('club_name')}
-                onBlur={() => setFocusedField(null)}
-                placeholder="Ej: Club Deportivo Los Campeones"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <BusinessIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: field.value && !fieldError && (
-                      <InputAdornment position="end">
-                        <Fade in={true}>
-                          <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
-                        </Fade>
-                      </InputAdornment>
-                    ),
-                  }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
-                    borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&.Mui-focused': {
-                      transform: 'scale(1.005)',
-                      boxShadow: fieldState === 'error' ? 
-                        '0 0 0 4px rgba(244, 67, 54, 0.08)' :
-                        '0 0 0 4px rgba(47, 109, 251, 0.08)',
-                    },
-                  },
-                }}
-              />
-            );
-          }}
-        />
-      </motion.div>
+      {createTextField('club_name', 'Nombre del club', <BusinessIcon />, {
+        placeholder: 'Ej: Club Deportivo Los Campeones',
+        required: true
+      })}
 
       {/* Liga a la que pertenece */}
-      <motion.div variants={itemVariants}>
+      <Box sx={{ mb: 3 }}>
         <Controller
           name="league_id"
           control={control}
@@ -540,6 +506,24 @@ const SignUpForm: React.FC = () => {
                     height: 56,
                     borderRadius: 2,
                     backgroundColor: 'background.paper',
+                    '& fieldset': {
+                      borderColor: fieldError ? 'error.main' : 'divider',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: fieldError ? 'error.main' : 'primary.light',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: fieldError ? 'error.main' : 'primary.main',
+                      borderWidth: 2,
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: fieldError ? 'error.main' : 'text.secondary',
+                    fontWeight: 500,
+                    fontSize: '0.9375rem',
+                    '&.Mui-focused': {
+                      color: fieldError ? 'error.main' : 'primary.main',
+                    },
                   },
                 }}
               >
@@ -556,262 +540,121 @@ const SignUpForm: React.FC = () => {
                   ))}
                 </Select>
                 {fieldError && (
-                  <FormHelperText>{fieldError.message}</FormHelperText>
+                  <FormHelperText sx={{ fontSize: '0.8125rem', fontWeight: 500, ml: 0, mt: 1 }}>
+                    {fieldError.message}
+                  </FormHelperText>
                 )}
               </FormControl>
             );
           }}
         />
-      </motion.div>
+      </Box>
 
       {/* Ciudad */}
-      <motion.div variants={itemVariants}>
-        <Controller
-          name="city"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('city');
-            const fieldState = getFieldState('city', field.value || '', !!fieldError);
-            return (
-              <TextField
-                {...field}
-                fullWidth
-                label="Provincia / Ciudad"
-                error={!!fieldError}
-                helperText={fieldError?.message}
-                disabled={isLoading}
-                onFocus={() => setFocusedField('city')}
-                onBlur={() => setFocusedField(null)}
-                placeholder="Ej: Quito, Guayaquil, Cuenca"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LocationOnIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: field.value && !fieldError && (
-                      <InputAdornment position="end">
-                        <Fade in={true}>
-                          <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
-                        </Fade>
-                      </InputAdornment>
-                    ),
-                  }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
-                    borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&.Mui-focused': {
-                      transform: 'scale(1.005)',
-                      boxShadow: fieldState === 'error' ? 
-                        '0 0 0 4px rgba(244, 67, 54, 0.08)' :
-                        '0 0 0 4px rgba(47, 109, 251, 0.08)',
-                    },
-                  },
-                }}
-              />
-            );
-          }}
-        />
-      </motion.div>
+      {createTextField('city', 'Provincia / Ciudad', <LocationOnIcon />, {
+        placeholder: 'Ej: Quito, Guayaquil, Cuenca',
+        required: true
+      })}
 
       {/* Dirección */}
-      <motion.div variants={itemVariants}>
-        <Controller
-          name="address"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('address');
-            const fieldState = getFieldState('address', field.value || '', !!fieldError);
-            return (
-              <TextField
-                {...field}
-                fullWidth
-                label="Dirección completa"
-                multiline
-                rows={2}
-                error={!!fieldError}
-                helperText={fieldError?.message}
-                disabled={isLoading}
-                onFocus={() => setFocusedField('address')}
-                onBlur={() => setFocusedField(null)}
-                placeholder="Ej: Av. 6 de Diciembre N24-253 y Wilson"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
-                        <HomeIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                  }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&.Mui-focused': {
-                      transform: 'scale(1.005)',
-                      boxShadow: fieldState === 'error' ? 
-                        '0 0 0 4px rgba(244, 67, 54, 0.08)' :
-                        '0 0 0 4px rgba(47, 109, 251, 0.08)',
-                    },
-                  },
-                }}
-              />
-            );
-          }}
-        />
-      </motion.div>
+      {createTextField('address', 'Dirección completa', <HomeIcon />, {
+        placeholder: 'Ej: Av. 6 de Diciembre N24-253 y Wilson',
+        multiline: true,
+        rows: 2,
+        required: true
+      })}
 
       {/* Logo Upload */}
-      <motion.div variants={itemVariants}>
-        <Box>
-          <Typography variant="body2" sx={{ mb: 2, fontWeight: 500, color: 'text.primary' }}>
-            Logo del club (opcional)
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar
-              src={logoPreview || undefined}
-              sx={{
-                width: 64,
-                height: 64,
-                backgroundColor: 'primary.light',
-                color: 'primary.main',
-              }}
-            >
-              <BusinessIcon sx={{ fontSize: 32 }} />
-            </Avatar>
-            <Button
-              component="label"
-              variant="outlined"
-              startIcon={<CloudUploadIcon />}
-              sx={{
-                height: 48,
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 500,
-              }}
-            >
-              Subir logo
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, 'logo')}
-              />
-            </Button>
-          </Box>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="body2" sx={{ mb: 2, fontWeight: 500, color: 'text.primary' }}>
+          Logo del club (opcional)
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            src={logoPreview || undefined}
+            sx={{
+              width: 64,
+              height: 64,
+              backgroundColor: 'primary.light',
+              color: 'primary.main',
+            }}
+          >
+            <BusinessIcon sx={{ fontSize: 32 }} />
+          </Avatar>
+          <Button
+            component="label"
+            variant="outlined"
+            startIcon={<CloudUploadIcon />}
+            sx={{
+              height: 48,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 500,
+            }}
+          >
+            Subir logo
+            <input
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={(e) => handleFileChange(e, 'logo')}
+            />
+          </Button>
         </Box>
-      </motion.div>
-    </>
+      </Box>
+    </Box>
   );
 
   // Componente para campos de Miembro
   const renderMemberFields = () => (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       {/* Nombre completo */}
-      <motion.div variants={itemVariants}>
-        <Controller
-          name="full_name"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('full_name');
-            const fieldState = getFieldState('full_name', field.value || '', !!fieldError);
-            return (
-              <TextField
-                {...field}
-                fullWidth
-                label="Nombre completo"
-                error={!!fieldError}
-                helperText={fieldError?.message}
-                disabled={isLoading}
-                onFocus={() => setFocusedField('full_name')}
-                onBlur={() => setFocusedField(null)}
-                placeholder="Ej: Juan Carlos Pérez González"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <PersonIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: field.value && !fieldError && (
-                      <InputAdornment position="end">
-                        <Fade in={true}>
-                          <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
-                        </Fade>
-                      </InputAdornment>
-                    ),
-                  }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
-                    borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&.Mui-focused': {
-                      transform: 'scale(1.005)',
-                      boxShadow: fieldState === 'error' ? 
-                        '0 0 0 4px rgba(244, 67, 54, 0.08)' :
-                        '0 0 0 4px rgba(47, 109, 251, 0.08)',
-                    },
-                  },
-                }}
-              />
-            );
-          }}
-        />
-      </motion.div>
+      {createTextField('full_name', 'Nombre completo', <PersonIcon />, {
+        placeholder: 'Ej: Juan Carlos Pérez González',
+        required: true
+      })}
 
       {/* Foto de perfil */}
-      <motion.div variants={itemVariants}>
-        <Box>
-          <Typography variant="body2" sx={{ mb: 2, fontWeight: 500, color: 'text.primary' }}>
-            Foto de perfil (opcional pero recomendable)
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar
-              src={photoPreview || undefined}
-              sx={{
-                width: 64,
-                height: 64,
-                backgroundColor: 'primary.light',
-                color: 'primary.main',
-              }}
-            >
-              <PersonIcon sx={{ fontSize: 32 }} />
-            </Avatar>
-            <Button
-              component="label"
-              variant="outlined"
-              startIcon={<CloudUploadIcon />}
-              sx={{
-                height: 48,
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 500,
-              }}
-            >
-              Subir foto
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, 'photo')}
-              />
-            </Button>
-          </Box>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="body2" sx={{ mb: 2, fontWeight: 500, color: 'text.primary' }}>
+          Foto de perfil (opcional pero recomendable)
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            src={photoPreview || undefined}
+            sx={{
+              width: 64,
+              height: 64,
+              backgroundColor: 'primary.light',
+              color: 'primary.main',
+            }}
+          >
+            <PersonIcon sx={{ fontSize: 32 }} />
+          </Avatar>
+          <Button
+            component="label"
+            variant="outlined"
+            startIcon={<CloudUploadIcon />}
+            sx={{
+              height: 48,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 500,
+            }}
+          >
+            Subir foto
+            <input
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={(e) => handleFileChange(e, 'photo')}
+            />
+          </Button>
         </Box>
-      </motion.div>
+      </Box>
 
       {/* Club de pertenencia */}
-      <motion.div variants={itemVariants}>
+      <Box sx={{ mb: 3 }}>
         <Controller
           name="club_id"
           control={control}
@@ -826,6 +669,24 @@ const SignUpForm: React.FC = () => {
                     height: 56,
                     borderRadius: 2,
                     backgroundColor: 'background.paper',
+                    '& fieldset': {
+                      borderColor: fieldError ? 'error.main' : 'divider',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: fieldError ? 'error.main' : 'primary.light',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: fieldError ? 'error.main' : 'primary.main',
+                      borderWidth: 2,
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: fieldError ? 'error.main' : 'text.secondary',
+                    fontWeight: 500,
+                    fontSize: '0.9375rem',
+                    '&.Mui-focused': {
+                      color: fieldError ? 'error.main' : 'primary.main',
+                    },
                   },
                 }}
               >
@@ -842,56 +703,23 @@ const SignUpForm: React.FC = () => {
                   ))}
                 </Select>
                 {fieldError && (
-                  <FormHelperText>{fieldError.message}</FormHelperText>
+                  <FormHelperText sx={{ fontSize: '0.8125rem', fontWeight: 500, ml: 0, mt: 1 }}>
+                    {fieldError.message}
+                  </FormHelperText>
                 )}
               </FormControl>
             );
           }}
         />
-      </motion.div>
+      </Box>
 
       {/* Ranking inicial */}
-      <motion.div variants={itemVariants}>
-        <Controller
-          name="ranking"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              fullWidth
-              label="Ranking inicial (opcional)"
-              placeholder="Ej: 1500 puntos o 'Sin ranking'"
-              disabled={isLoading}
-              onFocus={() => setFocusedField('ranking')}
-              onBlur={() => setFocusedField(null)}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmojiEventsIcon sx={{ color: field.value ? 'primary.main' : 'text.secondary', fontSize: 20 }} />
-                    </InputAdornment>
-                  ),
-                }
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  height: 56,
-                  borderRadius: 2,
-                  backgroundColor: 'background.paper',
-                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&.Mui-focused': {
-                    transform: 'scale(1.005)',
-                    boxShadow: '0 0 0 4px rgba(47, 109, 251, 0.08)',
-                  },
-                },
-              }}
-            />
-          )}
-        />
-      </motion.div>
+      {createTextField('ranking', 'Ranking inicial (opcional)', <EmojiEventsIcon />, {
+        placeholder: 'Ej: 1500 puntos o "Sin ranking"'
+      })}
 
       {/* Fecha de nacimiento */}
-      <motion.div variants={itemVariants}>
+      <Box sx={{ mb: 3 }}>
         <Controller
           name="birth_date"
           control={control}
@@ -909,17 +737,19 @@ const SignUpForm: React.FC = () => {
                 disabled={isLoading}
                 onFocus={() => setFocusedField('birth_date')}
                 onBlur={() => setFocusedField(null)}
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <CakeIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                  }
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <CakeIcon sx={{ 
+                        color: getIconColor(fieldState),
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        fontSize: 20,
+                      }} />
+                    </InputAdornment>
+                  ),
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
@@ -927,6 +757,17 @@ const SignUpForm: React.FC = () => {
                     borderRadius: 2,
                     backgroundColor: 'background.paper',
                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '& fieldset': {
+                      borderColor: fieldState === 'error' ? 'error.main' : 
+                                  fieldState === 'success' ? 'success.light' :
+                                  fieldState === 'focused' ? 'primary.main' : 'divider',
+                      borderWidth: fieldState === 'focused' ? 2 : 1,
+                    },
+                    '&:hover fieldset': {
+                      borderColor: fieldState === 'error' ? 'error.main' : 
+                                  fieldState === 'success' ? 'success.main' :
+                                  'primary.light',
+                    },
                     '&.Mui-focused': {
                       transform: 'scale(1.005)',
                       boxShadow: fieldState === 'error' ? 
@@ -934,15 +775,33 @@ const SignUpForm: React.FC = () => {
                         '0 0 0 4px rgba(47, 109, 251, 0.08)',
                     },
                   },
+                  '& .MuiInputLabel-root': {
+                    color: fieldState === 'error' ? 'error.main' : 'text.secondary',
+                    fontWeight: 500,
+                    fontSize: '0.9375rem',
+                    '&.Mui-focused': {
+                      color: fieldState === 'error' ? 'error.main' : 'primary.main',
+                    },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    fontSize: '0.9375rem',
+                    fontWeight: 400,
+                  },
+                  '& .MuiFormHelperText-root': {
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    marginLeft: 0,
+                    marginTop: 1,
+                  },
                 }}
               />
             );
           }}
         />
-      </motion.div>
+      </Box>
 
       {/* Sexo */}
-      <motion.div variants={itemVariants}>
+      <Box sx={{ mb: 3 }}>
         <Controller
           name="gender"
           control={control}
@@ -950,7 +809,12 @@ const SignUpForm: React.FC = () => {
             const fieldError = getFieldError('gender');
             return (
               <FormControl error={!!fieldError}>
-                <FormLabel sx={{ mb: 1, fontWeight: 500, color: 'text.primary' }}>
+                <FormLabel sx={{ 
+                  mb: 1, 
+                  fontWeight: 500, 
+                  color: fieldError ? 'error.main' : 'text.primary',
+                  fontSize: '0.9375rem'
+                }}>
                   Sexo
                 </FormLabel>
                 <RadioGroup
@@ -960,38 +824,42 @@ const SignUpForm: React.FC = () => {
                 >
                   <FormControlLabel 
                     value="masculino" 
-                    control={<Radio />} 
+                    control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
                     label="Masculino"
                     sx={{
                       '& .MuiFormControlLabel-label': {
                         fontSize: '0.9375rem',
                         fontWeight: 500,
+                        color: 'text.secondary',
                       },
                     }}
                   />
                   <FormControlLabel 
                     value="femenino" 
-                    control={<Radio />} 
+                    control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
                     label="Femenino"
                     sx={{
                       '& .MuiFormControlLabel-label': {
                         fontSize: '0.9375rem',
                         fontWeight: 500,
+                        color: 'text.secondary',
                       },
                     }}
                   />
                 </RadioGroup>
                 {fieldError && (
-                  <FormHelperText>{fieldError.message}</FormHelperText>
+                  <FormHelperText sx={{ fontSize: '0.8125rem', fontWeight: 500, ml: 0, mt: 1 }}>
+                    {fieldError.message}
+                  </FormHelperText>
                 )}
               </FormControl>
             );
           }}
         />
-      </motion.div>
+      </Box>
 
       {/* Tipo de caucho */}
-      <motion.div variants={itemVariants}>
+      <Box sx={{ mb: 3 }}>
         <Controller
           name="rubber_type"
           control={control}
@@ -999,7 +867,12 @@ const SignUpForm: React.FC = () => {
             const fieldError = getFieldError('rubber_type');
             return (
               <FormControl error={!!fieldError}>
-                <FormLabel sx={{ mb: 1, fontWeight: 500, color: 'text.primary' }}>
+                <FormLabel sx={{ 
+                  mb: 1, 
+                  fontWeight: 500, 
+                  color: fieldError ? 'error.main' : 'text.primary',
+                  fontSize: '0.9375rem'
+                }}>
                   Tipo de caucho
                 </FormLabel>
                 <RadioGroup
@@ -1009,221 +882,78 @@ const SignUpForm: React.FC = () => {
                 >
                   <FormControlLabel 
                     value="liso" 
-                    control={<Radio />} 
+                    control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
                     label="Liso"
                     sx={{
                       '& .MuiFormControlLabel-label': {
                         fontSize: '0.9375rem',
                         fontWeight: 500,
+                        color: 'text.secondary',
                       },
                     }}
                   />
                   <FormControlLabel 
                     value="pupo" 
-                    control={<Radio />} 
+                    control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
                     label="Pupo"
                     sx={{
                       '& .MuiFormControlLabel-label': {
                         fontSize: '0.9375rem',
                         fontWeight: 500,
+                        color: 'text.secondary',
                       },
                     }}
                   />
                   <FormControlLabel 
                     value="ambos" 
-                    control={<Radio />} 
+                    control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
                     label="Ambos"
                     sx={{
                       '& .MuiFormControlLabel-label': {
                         fontSize: '0.9375rem',
                         fontWeight: 500,
+                        color: 'text.secondary',
                       },
                     }}
                   />
                 </RadioGroup>
                 {fieldError && (
-                  <FormHelperText>{fieldError.message}</FormHelperText>
+                  <FormHelperText sx={{ fontSize: '0.8125rem', fontWeight: 500, ml: 0, mt: 1 }}>
+                    {fieldError.message}
+                  </FormHelperText>
                 )}
               </FormControl>
             );
           }}
         />
-      </motion.div>
-    </>
+      </Box>
+    </Box>
   );
 
   // Campos comunes (país, email, teléfono, contraseñas)
   const renderCommonFields = () => (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       {/* País */}
-      <motion.div variants={itemVariants}>
-        <Controller
-          name="country"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('country');
-            const fieldState = getFieldState('country', field.value || '', !!fieldError);
-            return (
-              <TextField
-                {...field}
-                fullWidth
-                label="País"
-                error={!!fieldError}
-                helperText={fieldError?.message}
-                disabled={isLoading}
-                onFocus={() => setFocusedField('country')}
-                onBlur={() => setFocusedField(null)}
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <PublicIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: field.value && !fieldError && (
-                      <InputAdornment position="end">
-                        <Fade in={true}>
-                          <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
-                        </Fade>
-                      </InputAdornment>
-                    ),
-                  }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
-                    borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&.Mui-focused': {
-                      transform: 'scale(1.005)',
-                      boxShadow: fieldState === 'error' ? 
-                        '0 0 0 4px rgba(244, 67, 54, 0.08)' :
-                        '0 0 0 4px rgba(47, 109, 251, 0.08)',
-                    },
-                  },
-                }}
-              />
-            );
-          }}
-        />
-      </motion.div>
+      {createTextField('country', 'País', <PublicIcon />, {
+        required: true
+      })}
 
       {/* Email */}
-      <motion.div variants={itemVariants}>
-        <Controller
-          name="email"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('email');
-            const fieldState = getFieldState('email', field.value || '', !!fieldError);
-            return (
-              <TextField
-                {...field}
-                fullWidth
-                label="Correo electrónico"
-                type="email"
-                autoComplete="email"
-                error={!!fieldError}
-                helperText={fieldError?.message}
-                disabled={isLoading}
-                onFocus={() => setFocusedField('email')}
-                onBlur={() => setFocusedField(null)}
-                placeholder="tu@email.com"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <EmailIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: field.value && !fieldError && (
-                      <InputAdornment position="end">
-                        <Fade in={true}>
-                          <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
-                        </Fade>
-                      </InputAdornment>
-                    ),
-                  }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
-                    borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&.Mui-focused': {
-                      transform: 'scale(1.005)',
-                      boxShadow: fieldState === 'error' ? 
-                        '0 0 0 4px rgba(244, 67, 54, 0.08)' :
-                        '0 0 0 4px rgba(47, 109, 251, 0.08)',
-                    },
-                  },
-                }}
-              />
-            );
-          }}
-        />
-      </motion.div>
+      {createTextField('email', 'Correo electrónico', <EmailIcon />, {
+        type: 'email',
+        placeholder: 'tu@email.com',
+        required: true
+      })}
 
       {/* Teléfono */}
-      <motion.div variants={itemVariants}>
-        <Controller
-          name="phone"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('phone');
-            const fieldState = getFieldState('phone', field.value || '', !!fieldError);
-            return (
-              <TextField
-                {...field}
-                fullWidth
-                label="Teléfono de contacto"
-                type="tel"
-                error={!!fieldError}
-                helperText={fieldError?.message}
-                disabled={isLoading}
-                onFocus={() => setFocusedField('phone')}
-                onBlur={() => setFocusedField(null)}
-                placeholder="+593 99 123 4567"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <PhoneIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: field.value && !fieldError && (
-                      <InputAdornment position="end">
-                        <Fade in={true}>
-                          <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
-                        </Fade>
-                      </InputAdornment>
-                    ),
-                  }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
-                    borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&.Mui-focused': {
-                      transform: 'scale(1.005)',
-                      boxShadow: fieldState === 'error' ? 
-                        '0 0 0 4px rgba(244, 67, 54, 0.08)' :
-                        '0 0 0 4px rgba(47, 109, 251, 0.08)',
-                    },
-                  },
-                }}
-              />
-            );
-          }}
-        />
-      </motion.div>
+      {createTextField('phone', 'Teléfono de contacto', <PhoneIcon />, {
+        type: 'tel',
+        placeholder: '+593 99 123 4567',
+        required: true
+      })}
 
       {/* Contraseña */}
-      <motion.div variants={itemVariants}>
+      <Box sx={{ mb: 3 }}>
         <Controller
           name="password"
           control={control}
@@ -1243,40 +973,42 @@ const SignUpForm: React.FC = () => {
                 onFocus={() => setFocusedField('password')}
                 onBlur={() => setFocusedField(null)}
                 placeholder="Mínimo 8 caracteres"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LockIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          {field.value && !fieldError && (
-                            <Fade in={true}>
-                              <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
-                            </Fade>
-                          )}
-                          <IconButton
-                            onClick={togglePasswordVisibility}
-                            edge="end"
-                            disabled={isLoading}
-                            sx={{ 
-                              color: 'text.secondary',
-                              '&:hover': {
-                                color: 'text.primary',
-                                backgroundColor: 'action.hover',
-                              },
-                              transition: 'all 0.2s ease',
-                            }}
-                          >
-                            {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                          </IconButton>
-                        </Box>
-                      </InputAdornment>
-                    ),
-                  }
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon sx={{ 
+                        color: getIconColor(fieldState),
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        fontSize: 20,
+                      }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        {field.value && !fieldError && (
+                          <Fade in={true}>
+                            <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
+                          </Fade>
+                        )}
+                        <IconButton
+                          onClick={togglePasswordVisibility}
+                          edge="end"
+                          disabled={isLoading}
+                          sx={{ 
+                            color: 'text.secondary',
+                            '&:hover': {
+                              color: 'text.primary',
+                              backgroundColor: 'action.hover',
+                            },
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        </IconButton>
+                      </Box>
+                    </InputAdornment>
+                  ),
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
@@ -1284,6 +1016,17 @@ const SignUpForm: React.FC = () => {
                     borderRadius: 2,
                     backgroundColor: 'background.paper',
                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '& fieldset': {
+                      borderColor: fieldState === 'error' ? 'error.main' : 
+                                  fieldState === 'success' ? 'success.light' :
+                                  fieldState === 'focused' ? 'primary.main' : 'divider',
+                      borderWidth: fieldState === 'focused' ? 2 : 1,
+                    },
+                    '&:hover fieldset': {
+                      borderColor: fieldState === 'error' ? 'error.main' : 
+                                  fieldState === 'success' ? 'success.main' :
+                                  'primary.light',
+                    },
                     '&.Mui-focused': {
                       transform: 'scale(1.005)',
                       boxShadow: fieldState === 'error' ? 
@@ -1291,15 +1034,37 @@ const SignUpForm: React.FC = () => {
                         '0 0 0 4px rgba(47, 109, 251, 0.08)',
                     },
                   },
+                  '& .MuiInputLabel-root': {
+                    color: fieldState === 'error' ? 'error.main' : 'text.secondary',
+                    fontWeight: 500,
+                    fontSize: '0.9375rem',
+                    '&.Mui-focused': {
+                      color: fieldState === 'error' ? 'error.main' : 'primary.main',
+                    },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    fontSize: '0.9375rem',
+                    fontWeight: 400,
+                    '&::placeholder': {
+                      color: 'text.disabled',
+                      opacity: 0.7,
+                    },
+                  },
+                  '& .MuiFormHelperText-root': {
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    marginLeft: 0,
+                    marginTop: 1,
+                  },
                 }}
               />
             );
           }}
         />
-      </motion.div>
+      </Box>
 
       {/* Confirmar Contraseña */}
-      <motion.div variants={itemVariants}>
+      <Box sx={{ mb: 3 }}>
         <Controller
           name="password_confirmation"
           control={control}
@@ -1320,40 +1085,42 @@ const SignUpForm: React.FC = () => {
                 onFocus={() => setFocusedField('password_confirmation')}
                 onBlur={() => setFocusedField(null)}
                 placeholder="Repite tu contraseña"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LockIcon sx={{ color: getIconColor(fieldState), fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          {field.value && !fieldError && field.value === passwordValue && (
-                            <Fade in={true}>
-                              <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
-                            </Fade>
-                          )}
-                          <IconButton
-                            onClick={toggleConfirmPasswordVisibility}
-                            edge="end"
-                            disabled={isLoading}
-                            sx={{ 
-                              color: 'text.secondary',
-                              '&:hover': {
-                                color: 'text.primary',
-                                backgroundColor: 'action.hover',
-                              },
-                              transition: 'all 0.2s ease',
-                            }}
-                          >
-                            {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                          </IconButton>
-                        </Box>
-                      </InputAdornment>
-                    ),
-                  }
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon sx={{ 
+                        color: getIconColor(fieldState),
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        fontSize: 20,
+                      }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        {field.value && !fieldError && field.value === passwordValue && (
+                          <Fade in={true}>
+                            <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
+                          </Fade>
+                        )}
+                        <IconButton
+                          onClick={toggleConfirmPasswordVisibility}
+                          edge="end"
+                          disabled={isLoading}
+                          sx={{ 
+                            color: 'text.secondary',
+                            '&:hover': {
+                              color: 'text.primary',
+                              backgroundColor: 'action.hover',
+                            },
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        </IconButton>
+                      </Box>
+                    </InputAdornment>
+                  ),
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
@@ -1361,6 +1128,17 @@ const SignUpForm: React.FC = () => {
                     borderRadius: 2,
                     backgroundColor: 'background.paper',
                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '& fieldset': {
+                      borderColor: fieldState === 'error' ? 'error.main' : 
+                                  fieldState === 'success' ? 'success.light' :
+                                  fieldState === 'focused' ? 'primary.main' : 'divider',
+                      borderWidth: fieldState === 'focused' ? 2 : 1,
+                    },
+                    '&:hover fieldset': {
+                      borderColor: fieldState === 'error' ? 'error.main' : 
+                                  fieldState === 'success' ? 'success.main' :
+                                  'primary.light',
+                    },
                     '&.Mui-focused': {
                       transform: 'scale(1.005)',
                       boxShadow: fieldState === 'error' ? 
@@ -1368,13 +1146,35 @@ const SignUpForm: React.FC = () => {
                         '0 0 0 4px rgba(47, 109, 251, 0.08)',
                     },
                   },
+                  '& .MuiInputLabel-root': {
+                    color: fieldState === 'error' ? 'error.main' : 'text.secondary',
+                    fontWeight: 500,
+                    fontSize: '0.9375rem',
+                    '&.Mui-focused': {
+                      color: fieldState === 'error' ? 'error.main' : 'primary.main',
+                    },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    fontSize: '0.9375rem',
+                    fontWeight: 400,
+                    '&::placeholder': {
+                      color: 'text.disabled',
+                      opacity: 0.7,
+                    },
+                  },
+                  '& .MuiFormHelperText-root': {
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    marginLeft: 0,
+                    marginTop: 1,
+                  },
                 }}
               />
             );
           }}
         />
-      </motion.div>
-    </>
+      </Box>
+    </Box>
   );
 
   return (
@@ -1448,15 +1248,15 @@ const SignUpForm: React.FC = () => {
         </AnimatePresence>
 
         {/* Step 1: Role Selection */}
-        <AnimatePresence mode="wait">
-          {currentStep === 0 && (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
-            >
+        {currentStep === 0 && (
+          <motion.div
+            key="step1"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div variants={itemVariants}>
               <Controller
                 name="role"
                 control={control}
@@ -1490,89 +1290,116 @@ const SignUpForm: React.FC = () => {
                     fontWeight: 600,
                     borderRadius: 2,
                     textTransform: 'none',
+                    boxShadow: '0 4px 12px rgba(47, 109, 251, 0.15)',
+                    '&:hover': {
+                      boxShadow: '0 8px 20px rgba(47, 109, 251, 0.25)',
+                      transform: 'translateY(-1px)',
+                    },
+                    '&:active': {
+                      transform: 'translateY(0)',
+                    },
+                    '&:disabled': {
+                      backgroundColor: 'action.disabledBackground',
+                      color: 'action.disabled',
+                      boxShadow: 'none',
+                      transform: 'none',
+                    },
                   }}
-                  component={motion.button}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.1 }}
                 >
                   Continuar
                 </Button>
               </Box>
             </motion.div>
-          )}
+          </motion.div>
+        )}
 
-          {/* Step 2: Personal Information */}
-          {currentStep === 1 && selectedRole && (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {/* Renderizar campos específicos según el rol */}
-                {selectedRole === 'liga' && renderLeagueFields()}
-                {selectedRole === 'club' && renderClubFields()}
-                {selectedRole === 'miembro' && renderMemberFields()}
+        {/* Step 2: Personal Information */}
+        {currentStep === 1 && selectedRole && (
+          <motion.div
+            key="step2"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div variants={itemVariants}>
+              {/* Renderizar campos específicos según el rol */}
+              {selectedRole === 'liga' && renderLeagueFields()}
+              {selectedRole === 'club' && renderClubFields()}
+              {selectedRole === 'miembro' && renderMemberFields()}
+              
+              {/* Campos comunes para todos los roles */}
+              {renderCommonFields()}
+
+              {/* Action Buttons */}
+              <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                <Button
+                  onClick={handleBack}
+                  variant="outlined"
+                  startIcon={<ArrowBackIcon />}
+                  sx={{
+                    height: 56,
+                    px: 3,
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    minWidth: 120,
+                    borderColor: 'divider',
+                    color: 'text.secondary',
+                    backgroundColor: 'background.paper',
+                    '&:hover': {
+                      borderColor: 'primary.light',
+                      backgroundColor: 'action.hover',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                    },
+                  }}
+                >
+                  Atrás
+                </Button>
                 
-                {/* Campos comunes para todos los roles */}
-                {renderCommonFields()}
-
-                {/* Action Buttons */}
-                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                  <Button
-                    onClick={handleBack}
-                    variant="outlined"
-                    startIcon={<ArrowBackIcon />}
-                    sx={{
-                      height: 56,
-                      px: 3,
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      minWidth: 120,
-                    }}
-                    component={motion.button}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ duration: 0.1 }}
-                  >
-                    Atrás
-                  </Button>
-                  
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={isLoading}
-                    sx={{
-                      height: 56,
-                      flex: 1,
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      borderRadius: 2,
-                      textTransform: 'none',
-                    }}
-                    component={motion.button}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ duration: 0.1 }}
-                  >
-                    {isLoading ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <CircularProgress size={20} color="inherit" />
-                        <Typography variant="button" sx={{ fontWeight: 600 }}>
-                          Creando cuenta...
-                        </Typography>
-                      </Box>
-                    ) : (
-                      'Crear cuenta'
-                    )}
-                  </Button>
-                </Box>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={isLoading}
+                  sx={{
+                    height: 56,
+                    flex: 1,
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    boxShadow: '0 4px 12px rgba(47, 109, 251, 0.15)',
+                    '&:hover': {
+                      boxShadow: '0 8px 20px rgba(47, 109, 251, 0.25)',
+                      transform: 'translateY(-1px)',
+                    },
+                    '&:active': {
+                      transform: 'translateY(0)',
+                    },
+                    '&:disabled': {
+                      backgroundColor: 'action.disabledBackground',
+                      color: 'action.disabled',
+                      boxShadow: 'none',
+                      transform: 'none',
+                    },
+                  }}
+                >
+                  {isLoading ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <CircularProgress size={20} color="inherit" />
+                      <Typography variant="button" sx={{ fontWeight: 600 }}>
+                        Creando cuenta...
+                      </Typography>
+                    </Box>
+                  ) : (
+                    'Crear cuenta'
+                  )}
+                </Button>
               </Box>
             </motion.div>
-          )}
-        </AnimatePresence>
+          </motion.div>
+        )}
 
         {/* Sign In Link */}
         <motion.div variants={itemVariants}>
@@ -1610,3 +1437,4 @@ const SignUpForm: React.FC = () => {
 };
 
 export default SignUpForm;
+
