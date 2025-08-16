@@ -9,12 +9,12 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- GSAP for advanced animations -->
+    <!-- GSAP for animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     
@@ -25,12 +25,15 @@
     <div class="loading-screen" id="loadingScreen">
         <div class="loading-content">
             <div class="loading-logo">
-                <div class="logo-icon"></div>
+                <div class="logo-icon">
+                    <div class="logo-inner"></div>
+                </div>
                 <span class="logo-text">Nodo Locker</span>
             </div>
             <div class="loading-bar">
                 <div class="loading-progress"></div>
             </div>
+            <p class="loading-text">Cargando experiencia inteligente...</p>
         </div>
     </div>
 
@@ -38,11 +41,13 @@
     <nav class="navbar" id="navbar">
         <div class="nav-container">
             <div class="nav-logo">
-                <div class="logo-icon"></div>
+                <div class="logo-icon">
+                    <div class="logo-inner"></div>
+                </div>
                 <span class="logo-text">Nodo Locker</span>
             </div>
             <div class="nav-menu" id="navMenu">
-                <a href="#inicio" class="nav-link">Inicio</a>
+                <a href="#inicio" class="nav-link active">Inicio</a>
                 <a href="#que-es" class="nav-link">Qué es</a>
                 <a href="#beneficios" class="nav-link">Beneficios</a>
                 <a href="#como-funciona" class="nav-link">Cómo funciona</a>
@@ -50,7 +55,10 @@
                 <a href="#contacto" class="nav-link">Contacto</a>
             </div>
             <div class="nav-cta">
-                <button class="btn-secondary">Lista de espera</button>
+                <button class="btn-secondary" id="waitlistNavBtn">
+                    <i class="ph ph-bell"></i>
+                    Lista de espera
+                </button>
             </div>
             <div class="nav-toggle" id="navToggle">
                 <span></span>
@@ -63,109 +71,144 @@
     <!-- Hero Section -->
     <section class="hero" id="inicio">
         <div class="hero-background">
-            <div class="hero-video-container">
-                <video autoplay muted loop playsinline class="hero-video">
-                    <source src="assets/hero-video.mp4" type="video/mp4">
-                </video>
-                <div class="hero-overlay"></div>
-            </div>
+            <div class="hero-gradient"></div>
+            <div class="hero-pattern"></div>
             <div class="hero-particles" id="particles"></div>
         </div>
         
         <div class="hero-content">
-            <div class="hero-text">
-                <h1 class="hero-title">
-                    <span class="title-line">Nodo Locker:</span>
-                    <span class="title-line">tu red inteligente</span>
-                    <span class="title-line">de lockers</span>
-                </h1>
-                <p class="hero-subtitle">
-                    Revolucionamos la logística urbana con tecnología inteligente, 
-                    sostenibilidad y conveniencia para todos.
-                </p>
-                <div class="hero-ctas">
-                    <button class="btn-primary" id="downloadBtn">
-                        <i class="ph ph-download-simple"></i>
-                        Descargar presentación
-                    </button>
-                    <button class="btn-secondary" id="waitlistBtn">
-                        <i class="ph ph-bell"></i>
-                        Unirme a la lista de espera
-                    </button>
+            <div class="hero-badge">
+                <i class="ph ph-lightning-fill"></i>
+                <span>Revolucionando la logística urbana</span>
+            </div>
+            
+            <h1 class="hero-title">
+                <span class="title-line">Nodo Locker:</span>
+                <span class="title-line highlight-gradient">tu red inteligente</span>
+                <span class="title-line">de lockers</span>
+            </h1>
+            
+            <p class="hero-subtitle">
+                Conectamos couriers, retailers y usuarios en un ecosistema logístico 
+                inteligente, seguro y sostenible. La revolución de las entregas urbanas 
+                comienza aquí.
+            </p>
+            
+            <div class="hero-ctas">
+                <button class="btn-primary" id="downloadBtn">
+                    <i class="ph ph-download-simple"></i>
+                    <span>Descargar presentación</span>
+                    <div class="btn-shine"></div>
+                </button>
+                <button class="btn-secondary" id="waitlistBtn">
+                    <i class="ph ph-bell"></i>
+                    <span>Unirme a la lista</span>
+                </button>
+            </div>
+            
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <div class="stat-number" data-counter="40">0</div>
+                    <div class="stat-label">% Menos tiempo</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-counter="24">0</div>
+                    <div class="stat-label">Horas disponible</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-counter="100">0</div>
+                    <div class="stat-label">% Seguridad</div>
                 </div>
             </div>
-            <div class="hero-scroll-indicator">
-                <div class="scroll-mouse">
-                    <div class="scroll-wheel"></div>
-                </div>
-                <span>Descubre más</span>
+        </div>
+        
+        <div class="hero-scroll-indicator">
+            <div class="scroll-mouse">
+                <div class="scroll-wheel"></div>
             </div>
+            <span>Descubre más</span>
         </div>
     </section>
 
     <!-- What is Nodo Locker -->
     <section class="what-is" id="que-es">
         <div class="container">
+            <div class="section-header">
+                <div class="section-badge">
+                    <i class="ph ph-cube"></i>
+                    <span>Innovación</span>
+                </div>
+                <h2 class="section-title">
+                    ¿Qué es <span class="highlight-gradient">Nodo Locker</span>?
+                </h2>
+                <p class="section-description">
+                    La primera red inteligente de lockers en México que transforma 
+                    la logística urbana con tecnología de vanguardia.
+                </p>
+            </div>
+            
             <div class="what-is-content">
                 <div class="what-is-visual">
-                    <div class="locker-3d">
-                        <div class="locker-model">
-                            <div class="locker-front"></div>
+                    <div class="locker-showcase">
+                        <div class="locker-3d">
+                            <div class="locker-front">
+                                <div class="locker-door">
+                                    <div class="locker-handle"></div>
+                                    <div class="locker-display">
+                                        <div class="display-line"></div>
+                                        <div class="display-line short"></div>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="locker-side"></div>
                             <div class="locker-top"></div>
                         </div>
-                        <div class="floating-icons">
-                            <div class="floating-icon" data-icon="package">
-                                <i class="ph ph-package"></i>
-                            </div>
-                            <div class="floating-icon" data-icon="shield">
+                        
+                        <div class="floating-elements">
+                            <div class="floating-icon" data-delay="0">
                                 <i class="ph ph-shield-check"></i>
                             </div>
-                            <div class="floating-icon" data-icon="clock">
+                            <div class="floating-icon" data-delay="0.5">
                                 <i class="ph ph-clock"></i>
                             </div>
-                            <div class="floating-icon" data-icon="leaf">
+                            <div class="floating-icon" data-delay="1">
                                 <i class="ph ph-leaf"></i>
+                            </div>
+                            <div class="floating-icon" data-delay="1.5">
+                                <i class="ph ph-lightning"></i>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="what-is-text">
-                    <h2 class="section-title">
-                        ¿Qué es <span class="highlight">Nodo Locker</span>?
-                    </h2>
-                    <p class="section-description">
-                        Somos la primera red inteligente de lockers en México que conecta 
-                        couriers, retailers y usuarios en un ecosistema logístico eficiente 
-                        y sostenible.
-                    </p>
-                    <div class="features-list">
-                        <div class="feature-item">
-                            <div class="feature-icon">
-                                <i class="ph ph-shield-check"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>Máxima Seguridad</h3>
-                                <p>Tecnología de encriptación y códigos únicos para cada entrega</p>
-                            </div>
+                
+                <div class="what-is-features">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="ph ph-shield-check"></i>
                         </div>
-                        <div class="feature-item">
-                            <div class="feature-icon">
-                                <i class="ph ph-clock"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>Disponible 24/7</h3>
-                                <p>Recoge y envía paquetes cuando más te convenga</p>
-                            </div>
+                        <div class="feature-content">
+                            <h3>Máxima Seguridad</h3>
+                            <p>Encriptación avanzada y códigos únicos para cada transacción</p>
                         </div>
-                        <div class="feature-item">
-                            <div class="feature-icon">
-                                <i class="ph ph-leaf"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>Eco-Friendly</h3>
-                                <p>Reducimos hasta 40% las emisiones de CO2 en entregas</p>
-                            </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="ph ph-clock"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Disponible 24/7</h3>
+                            <p>Acceso completo las 24 horas, los 7 días de la semana</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="ph ph-leaf"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Eco-Friendly</h3>
+                            <p>Reducimos hasta 40% las emisiones de CO2 en entregas</p>
                         </div>
                     </div>
                 </div>
@@ -173,13 +216,19 @@
         </div>
     </section>
 
-    <!-- Benefits by Segment -->
+    <!-- Benefits Section -->
     <section class="benefits" id="beneficios">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Beneficios para <span class="highlight">todos</span></h2>
+                <div class="section-badge">
+                    <i class="ph ph-users-three"></i>
+                    <span>Beneficios</span>
+                </div>
+                <h2 class="section-title">
+                    Ventajas para <span class="highlight-gradient">todos</span>
+                </h2>
                 <p class="section-description">
-                    Cada actor del ecosistema obtiene ventajas únicas con Nodo Locker
+                    Cada actor del ecosistema obtiene beneficios únicos y medibles
                 </p>
             </div>
             
@@ -189,35 +238,36 @@
                         <div class="card-icon">
                             <i class="ph ph-truck"></i>
                         </div>
-                        <h3 class="card-title">Couriers</h3>
+                        <div class="card-title-section">
+                            <h3>Couriers</h3>
+                            <span class="card-subtitle">Optimización total</span>
+                        </div>
                     </div>
-                    <div class="card-content">
-                        <ul class="benefit-list">
-                            <li>
-                                <i class="ph ph-check-circle"></i>
-                                Rutas optimizadas automáticamente
-                            </li>
-                            <li>
-                                <i class="ph ph-check-circle"></i>
-                                Reducción de intentos fallidos
-                            </li>
-                            <li>
-                                <i class="ph ph-check-circle"></i>
-                                Mayor eficiencia operativa
-                            </li>
-                            <li>
-                                <i class="ph ph-check-circle"></i>
-                                Menos tiempo en tráfico
-                            </li>
-                        </ul>
+                    
+                    <div class="card-benefits">
+                        <div class="benefit-item">
+                            <i class="ph ph-check-circle"></i>
+                            <span>Rutas optimizadas automáticamente</span>
+                        </div>
+                        <div class="benefit-item">
+                            <i class="ph ph-check-circle"></i>
+                            <span>Reducción de intentos fallidos</span>
+                        </div>
+                        <div class="benefit-item">
+                            <i class="ph ph-check-circle"></i>
+                            <span>Mayor eficiencia operativa</span>
+                        </div>
                     </div>
+                    
                     <div class="card-stats">
                         <div class="stat">
-                            <span class="stat-number">40%</span>
+                            <span class="stat-number" data-counter="40">0</span>
+                            <span class="stat-unit">%</span>
                             <span class="stat-label">Menos tiempo</span>
                         </div>
                         <div class="stat">
-                            <span class="stat-number">60%</span>
+                            <span class="stat-number" data-counter="60">0</span>
+                            <span class="stat-unit">%</span>
                             <span class="stat-label">Más entregas</span>
                         </div>
                     </div>
@@ -228,35 +278,36 @@
                         <div class="card-icon">
                             <i class="ph ph-storefront"></i>
                         </div>
-                        <h3 class="card-title">Retail</h3>
+                        <div class="card-title-section">
+                            <h3>Retail</h3>
+                            <span class="card-subtitle">Crecimiento inteligente</span>
+                        </div>
                     </div>
-                    <div class="card-content">
-                        <ul class="benefit-list">
-                            <li>
-                                <i class="ph ph-check-circle"></i>
-                                Mejor experiencia de cliente
-                            </li>
-                            <li>
-                                <i class="ph ph-check-circle"></i>
-                                Aumento en conversiones
-                            </li>
-                            <li>
-                                <i class="ph ph-check-circle"></i>
-                                Reducción de costos logísticos
-                            </li>
-                            <li>
-                                <i class="ph ph-check-circle"></i>
-                                Expansión de cobertura
-                            </li>
-                        </ul>
+                    
+                    <div class="card-benefits">
+                        <div class="benefit-item">
+                            <i class="ph ph-check-circle"></i>
+                            <span>Mejor experiencia de cliente</span>
+                        </div>
+                        <div class="benefit-item">
+                            <i class="ph ph-check-circle"></i>
+                            <span>Aumento en conversiones</span>
+                        </div>
+                        <div class="benefit-item">
+                            <i class="ph ph-check-circle"></i>
+                            <span>Reducción de costos logísticos</span>
+                        </div>
                     </div>
+                    
                     <div class="card-stats">
                         <div class="stat">
-                            <span class="stat-number">25%</span>
+                            <span class="stat-number" data-counter="25">0</span>
+                            <span class="stat-unit">%</span>
                             <span class="stat-label">Más ventas</span>
                         </div>
                         <div class="stat">
-                            <span class="stat-number">30%</span>
+                            <span class="stat-number" data-counter="30">0</span>
+                            <span class="stat-unit">%</span>
                             <span class="stat-label">Menos costos</span>
                         </div>
                     </div>
@@ -267,35 +318,36 @@
                         <div class="card-icon">
                             <i class="ph ph-package"></i>
                         </div>
-                        <h3 class="card-title">Usuarios</h3>
+                        <div class="card-title-section">
+                            <h3>Usuarios</h3>
+                            <span class="card-subtitle">Conveniencia total</span>
+                        </div>
                     </div>
-                    <div class="card-content">
-                        <ul class="benefit-list">
-                            <li>
-                                <i class="ph ph-check-circle"></i>
-                                Conveniencia total 24/7
-                            </li>
-                            <li>
-                                <i class="ph ph-check-circle"></i>
-                                Seguridad garantizada
-                            </li>
-                            <li>
-                                <i class="ph ph-check-circle"></i>
-                                Ubicaciones estratégicas
-                            </li>
-                            <li>
-                                <i class="ph ph-check-circle"></i>
-                                Notificaciones en tiempo real
-                            </li>
-                        </ul>
+                    
+                    <div class="card-benefits">
+                        <div class="benefit-item">
+                            <i class="ph ph-check-circle"></i>
+                            <span>Conveniencia total 24/7</span>
+                        </div>
+                        <div class="benefit-item">
+                            <i class="ph ph-check-circle"></i>
+                            <span>Seguridad garantizada</span>
+                        </div>
+                        <div class="benefit-item">
+                            <i class="ph ph-check-circle"></i>
+                            <span>Ubicaciones estratégicas</span>
+                        </div>
                     </div>
+                    
                     <div class="card-stats">
                         <div class="stat">
-                            <span class="stat-number">100%</span>
+                            <span class="stat-number" data-counter="100">0</span>
+                            <span class="stat-unit">%</span>
                             <span class="stat-label">Seguridad</span>
                         </div>
                         <div class="stat">
-                            <span class="stat-number">24/7</span>
+                            <span class="stat-number" data-counter="24">0</span>
+                            <span class="stat-unit">h</span>
                             <span class="stat-label">Disponible</span>
                         </div>
                     </div>
@@ -308,7 +360,13 @@
     <section class="how-it-works" id="como-funciona">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">¿Cómo <span class="highlight">funciona</span>?</h2>
+                <div class="section-badge">
+                    <i class="ph ph-gear"></i>
+                    <span>Proceso</span>
+                </div>
+                <h2 class="section-title">
+                    ¿Cómo <span class="highlight-gradient">funciona</span>?
+                </h2>
                 <p class="section-description">
                     Tres simples pasos para revolucionar tus entregas
                 </p>
@@ -316,66 +374,81 @@
             
             <div class="steps-container">
                 <div class="step" data-step="1">
+                    <div class="step-number">01</div>
                     <div class="step-visual">
-                        <div class="step-illustration">
+                        <div class="step-icon">
+                            <i class="ph ph-user-plus"></i>
+                        </div>
+                        <div class="step-animation">
                             <div class="phone-mockup">
                                 <div class="phone-screen">
-                                    <div class="app-interface">
-                                        <div class="app-header"></div>
-                                        <div class="app-form"></div>
-                                        <div class="app-button"></div>
+                                    <div class="app-header"></div>
+                                    <div class="app-form">
+                                        <div class="form-field"></div>
+                                        <div class="form-field"></div>
+                                        <div class="form-button"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="step-content">
-                        <div class="step-number">01</div>
-                        <h3 class="step-title">Regístrate</h3>
-                        <p class="step-description">
-                            Crea tu cuenta en segundos y accede a toda nuestra red 
-                            de lockers inteligentes en la ciudad.
-                        </p>
+                        <h3>Regístrate</h3>
+                        <p>Crea tu cuenta en segundos y accede a toda nuestra red de lockers inteligentes distribuidos estratégicamente por la ciudad.</p>
                     </div>
                 </div>
 
                 <div class="step" data-step="2">
+                    <div class="step-number">02</div>
                     <div class="step-visual">
-                        <div class="step-illustration">
+                        <div class="step-icon">
+                            <i class="ph ph-map-pin"></i>
+                        </div>
+                        <div class="step-animation">
                             <div class="package-flow">
-                                <div class="package-item"></div>
-                                <div class="flow-arrow"></div>
-                                <div class="locker-mini"></div>
+                                <div class="package-item">
+                                    <i class="ph ph-package"></i>
+                                </div>
+                                <div class="flow-arrow">
+                                    <div class="arrow-line"></div>
+                                    <div class="arrow-head"></div>
+                                </div>
+                                <div class="locker-mini">
+                                    <div class="mini-door"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="step-content">
-                        <div class="step-number">02</div>
-                        <h3 class="step-title">Envía o recibe</h3>
-                        <p class="step-description">
-                            Selecciona el locker más conveniente, programa tu entrega 
-                            y recibe un código único de acceso.
-                        </p>
+                        <h3>Envía o recibe</h3>
+                        <p>Selecciona el locker más conveniente, programa tu entrega y recibe un código único de acceso seguro en tiempo real.</p>
                     </div>
                 </div>
 
                 <div class="step" data-step="3">
+                    <div class="step-number">03</div>
                     <div class="step-visual">
-                        <div class="step-illustration">
+                        <div class="step-icon">
+                            <i class="ph ph-key"></i>
+                        </div>
+                        <div class="step-animation">
                             <div class="pickup-scene">
-                                <div class="person-icon"></div>
-                                <div class="locker-open"></div>
-                                <div class="success-check"></div>
+                                <div class="person-icon">
+                                    <i class="ph ph-user"></i>
+                                </div>
+                                <div class="interaction-line"></div>
+                                <div class="locker-open">
+                                    <div class="open-door"></div>
+                                    <div class="success-indicator">
+                                        <i class="ph ph-check-circle"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="step-content">
-                        <div class="step-number">03</div>
-                        <h3 class="step-title">Retira en locker</h3>
-                        <p class="step-description">
-                            Usa tu código para abrir el locker cuando más te convenga. 
-                            ¡Así de simple y seguro!
-                        </p>
+                        <h3>Retira cuando quieras</h3>
+                        <p>Usa tu código para abrir el locker cuando más te convenga. Disponible 24/7 con la máxima seguridad garantizada.</p>
                     </div>
                 </div>
             </div>
@@ -386,23 +459,30 @@
     <section class="roadmap" id="roadmap">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Nuestro <span class="highlight">Roadmap</span></h2>
+                <div class="section-badge">
+                    <i class="ph ph-rocket"></i>
+                    <span>Futuro</span>
+                </div>
+                <h2 class="section-title">
+                    Nuestro <span class="highlight-gradient">Roadmap</span>
+                </h2>
                 <p class="section-description">
-                    El futuro de la logística urbana está aquí
+                    El camino hacia la transformación de la logística urbana
                 </p>
             </div>
             
             <div class="timeline">
+                <div class="timeline-line"></div>
+                
                 <div class="timeline-item completed" data-phase="research">
                     <div class="timeline-marker">
                         <i class="ph ph-check"></i>
                     </div>
                     <div class="timeline-content">
                         <div class="timeline-date">Q1 2024</div>
-                        <h3 class="timeline-title">Investigación y Desarrollo</h3>
-                        <p class="timeline-description">
-                            Análisis de mercado, desarrollo de tecnología y validación del concepto.
-                        </p>
+                        <h3>Investigación y Desarrollo</h3>
+                        <p>Análisis profundo de mercado, desarrollo de tecnología core y validación exhaustiva del concepto con stakeholders clave.</p>
+                        <div class="timeline-status completed">Completado</div>
                     </div>
                 </div>
 
@@ -412,10 +492,9 @@
                     </div>
                     <div class="timeline-content">
                         <div class="timeline-date">Q2 2024</div>
-                        <h3 class="timeline-title">Prototipo Funcional</h3>
-                        <p class="timeline-description">
-                            Primer prototipo de locker inteligente y desarrollo de la app móvil.
-                        </p>
+                        <h3>Prototipo Funcional</h3>
+                        <p>Desarrollo del primer prototipo de locker inteligente y creación de la aplicación móvil con interfaz intuitiva.</p>
+                        <div class="timeline-status completed">Completado</div>
                     </div>
                 </div>
 
@@ -425,10 +504,9 @@
                     </div>
                     <div class="timeline-content">
                         <div class="timeline-date">Q3 2024</div>
-                        <h3 class="timeline-title">MVP y Alianzas</h3>
-                        <p class="timeline-description">
-                            Lanzamiento del MVP con primeros aliados estratégicos en CDMX.
-                        </p>
+                        <h3>MVP y Alianzas Estratégicas</h3>
+                        <p>Lanzamiento del MVP con primeros aliados estratégicos en Ciudad de México y validación del modelo de negocio.</p>
+                        <div class="timeline-status current">En progreso</div>
                     </div>
                 </div>
 
@@ -438,10 +516,9 @@
                     </div>
                     <div class="timeline-content">
                         <div class="timeline-date">Q4 2024</div>
-                        <h3 class="timeline-title">Programa Piloto</h3>
-                        <p class="timeline-description">
-                            Despliegue de 50 lockers en ubicaciones estratégicas de la ciudad.
-                        </p>
+                        <h3>Programa Piloto</h3>
+                        <p>Despliegue de 50 lockers en ubicaciones estratégicas de alta densidad poblacional y comercial.</p>
+                        <div class="timeline-status future">Próximamente</div>
                     </div>
                 </div>
 
@@ -451,10 +528,9 @@
                     </div>
                     <div class="timeline-content">
                         <div class="timeline-date">Q1 2025</div>
-                        <h3 class="timeline-title">Expansión Nacional</h3>
-                        <p class="timeline-description">
-                            Escalamiento a 500+ lockers y expansión a Guadalajara y Monterrey.
-                        </p>
+                        <h3>Expansión Nacional</h3>
+                        <p>Escalamiento a 500+ lockers y expansión a las principales ciudades: Guadalajara, Monterrey y Puebla.</p>
+                        <div class="timeline-status future">Planificado</div>
                     </div>
                 </div>
             </div>
@@ -465,9 +541,13 @@
     <section class="mvp-section">
         <div class="container">
             <div class="mvp-content">
-                <div class="mvp-text">
+                <div class="mvp-info">
+                    <div class="section-badge">
+                        <i class="ph ph-handshake"></i>
+                        <span>Alianzas</span>
+                    </div>
                     <h2 class="section-title">
-                        Únete al <span class="highlight">MVP</span>
+                        Únete al <span class="highlight-gradient">MVP</span>
                     </h2>
                     <p class="section-description">
                         Sé parte de los primeros aliados en revolucionar la logística urbana. 
@@ -475,48 +555,76 @@
                         preferenciales para early adopters.
                     </p>
                     
-                    <div class="mvp-features">
-                        <div class="mvp-feature">
-                            <i class="ph ph-lightning"></i>
-                            <span>Implementación rápida</span>
+                    <div class="mvp-benefits">
+                        <div class="mvp-benefit">
+                            <div class="benefit-icon">
+                                <i class="ph ph-lightning"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <h4>Implementación rápida</h4>
+                                <p>Setup en menos de 48 horas</p>
+                            </div>
                         </div>
-                        <div class="mvp-feature">
-                            <i class="ph ph-headset"></i>
-                            <span>Soporte 24/7</span>
+                        
+                        <div class="mvp-benefit">
+                            <div class="benefit-icon">
+                                <i class="ph ph-headset"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <h4>Soporte 24/7</h4>
+                                <p>Equipo dedicado siempre disponible</p>
+                            </div>
                         </div>
-                        <div class="mvp-feature">
-                            <i class="ph ph-chart-line-up"></i>
-                            <span>Analytics en tiempo real</span>
-                        </div>
-                        <div class="mvp-feature">
-                            <i class="ph ph-handshake"></i>
-                            <span>Condiciones preferenciales</span>
+                        
+                        <div class="mvp-benefit">
+                            <div class="benefit-icon">
+                                <i class="ph ph-chart-line-up"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <h4>Analytics en tiempo real</h4>
+                                <p>Dashboard completo de métricas</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="mvp-form-container">
                     <form class="mvp-form" id="mvpForm">
-                        <h3 class="form-title">Quiero ser aliado</h3>
-                        <div class="form-group">
-                            <input type="text" id="name" name="name" placeholder="Nombre completo" required>
-                            <label for="name">Nombre completo</label>
+                        <div class="form-header">
+                            <h3>Quiero ser aliado</h3>
+                            <p>Completa el formulario y te contactaremos en 24 horas</p>
                         </div>
-                        <div class="form-group">
-                            <input type="text" id="company" name="company" placeholder="Empresa" required>
-                            <label for="company">Empresa</label>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <input type="text" id="name" name="name" placeholder=" " required>
+                                <label for="name">Nombre completo</label>
+                                <div class="form-line"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <input type="text" id="company" name="company" placeholder=" " required>
+                                <label for="company">Empresa</label>
+                                <div class="form-line"></div>
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <input type="email" id="email" name="email" placeholder=" " required>
+                                <label for="email">Correo electrónico</label>
+                                <div class="form-line"></div>
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <textarea id="message" name="message" placeholder=" " rows="4"></textarea>
+                                <label for="message">Cuéntanos sobre tu proyecto</label>
+                                <div class="form-line"></div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <input type="email" id="email" name="email" placeholder="Correo electrónico" required>
-                            <label for="email">Correo electrónico</label>
-                        </div>
-                        <div class="form-group">
-                            <textarea id="message" name="message" placeholder="Cuéntanos sobre tu proyecto" rows="4"></textarea>
-                            <label for="message">Mensaje</label>
-                        </div>
+                        
                         <button type="submit" class="btn-primary form-submit">
                             <span class="btn-text">Enviar solicitud</span>
                             <i class="ph ph-arrow-right"></i>
+                            <div class="btn-shine"></div>
                         </button>
                     </form>
                 </div>
@@ -524,19 +632,22 @@
         </div>
     </section>
 
-    <!-- Contact & Footer -->
+    <!-- Footer -->
     <footer class="footer" id="contacto">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-main">
                     <div class="footer-brand">
                         <div class="footer-logo">
-                            <div class="logo-icon"></div>
+                            <div class="logo-icon">
+                                <div class="logo-inner"></div>
+                            </div>
                             <span class="logo-text">Nodo Locker</span>
                         </div>
                         <p class="footer-description">
                             Revolucionando la logística urbana con tecnología inteligente, 
-                            sostenibilidad y conveniencia para todos.
+                            sostenibilidad y conveniencia para todos. El futuro de las 
+                            entregas está aquí.
                         </p>
                         <div class="social-links">
                             <a href="#" class="social-link" aria-label="LinkedIn">
@@ -556,8 +667,8 @@
                     
                     <div class="footer-links">
                         <div class="footer-column">
-                            <h4 class="footer-title">Producto</h4>
-                            <ul class="footer-list">
+                            <h4>Producto</h4>
+                            <ul>
                                 <li><a href="#que-es">Qué es Nodo Locker</a></li>
                                 <li><a href="#beneficios">Beneficios</a></li>
                                 <li><a href="#como-funciona">Cómo funciona</a></li>
@@ -566,8 +677,8 @@
                         </div>
                         
                         <div class="footer-column">
-                            <h4 class="footer-title">Empresa</h4>
-                            <ul class="footer-list">
+                            <h4>Empresa</h4>
+                            <ul>
                                 <li><a href="#">Sobre nosotros</a></li>
                                 <li><a href="#">Equipo</a></li>
                                 <li><a href="#">Carreras</a></li>
@@ -576,8 +687,8 @@
                         </div>
                         
                         <div class="footer-column">
-                            <h4 class="footer-title">Soporte</h4>
-                            <ul class="footer-list">
+                            <h4>Soporte</h4>
+                            <ul>
                                 <li><a href="#">Centro de ayuda</a></li>
                                 <li><a href="#">Contacto</a></li>
                                 <li><a href="#">Términos de uso</a></li>
