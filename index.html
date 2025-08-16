@@ -14,9 +14,34 @@
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
+    <!-- Three.js for 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- GSAP for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"></script>
+    
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <img src="Assets/NODO-LOCKER_ICONO.gif" alt="Nodo Locker">
+            </div>
+            <div class="loading-text">Cargando experiencia...</div>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Particles Background -->
+    <div class="particles-container" id="particles"></div>
+
     <!-- Navigation -->
     <nav class="navbar" id="navbar">
         <div class="nav-container">
@@ -25,16 +50,35 @@
                 <span class="logo-text">Nodo Locker</span>
             </div>
             <div class="nav-menu" id="navMenu">
-                <a href="#inicio" class="nav-link">Inicio</a>
-                <a href="#que-es" class="nav-link">Qué es</a>
-                <a href="#beneficios" class="nav-link">Beneficios</a>
-                <a href="#como-funciona" class="nav-link">Cómo funciona</a>
-                <a href="#roadmap" class="nav-link">Roadmap</a>
-                <a href="#contacto" class="nav-link">Contacto</a>
+                <a href="#inicio" class="nav-link" data-section="inicio">
+                    <span class="nav-link-text">Inicio</span>
+                    <div class="nav-link-indicator"></div>
+                </a>
+                <a href="#que-es" class="nav-link" data-section="que-es">
+                    <span class="nav-link-text">Qué es</span>
+                    <div class="nav-link-indicator"></div>
+                </a>
+                <a href="#beneficios" class="nav-link" data-section="beneficios">
+                    <span class="nav-link-text">Beneficios</span>
+                    <div class="nav-link-indicator"></div>
+                </a>
+                <a href="#como-funciona" class="nav-link" data-section="como-funciona">
+                    <span class="nav-link-text">Cómo funciona</span>
+                    <div class="nav-link-indicator"></div>
+                </a>
+                <a href="#roadmap" class="nav-link" data-section="roadmap">
+                    <span class="nav-link-text">Roadmap</span>
+                    <div class="nav-link-indicator"></div>
+                </a>
+                <a href="#contacto" class="nav-link" data-section="contacto">
+                    <span class="nav-link-text">Contacto</span>
+                    <div class="nav-link-indicator"></div>
+                </a>
             </div>
             <div class="nav-cta">
-                <button class="btn-primary" id="joinWaitlistBtn">
-                    Únete al MVP
+                <button class="btn-primary pulse-animation" id="joinWaitlistBtn">
+                    <span class="btn-text">Únete al MVP</span>
+                    <div class="btn-gradient-overlay"></div>
                 </button>
             </div>
             <div class="nav-toggle" id="navToggle">
@@ -43,59 +87,91 @@
                 <span></span>
             </div>
         </div>
+        <div class="nav-progress-bar" id="navProgressBar"></div>
     </nav>
 
     <!-- Hero Section -->
     <section class="hero" id="inicio">
+        <div class="hero-background">
+            <div class="hero-gradient"></div>
+            <div class="hero-pattern"></div>
+        </div>
+        
         <div class="hero-container">
             <div class="hero-content">
-                <div class="hero-badge">
+                <div class="hero-badge animate-fade-in">
                     <i class="ph ph-lightning-fill"></i>
                     <span>Revolucionando la logística urbana</span>
                 </div>
                 
                 <h1 class="hero-title">
-                    La red inteligente de <span class="highlight">lockers</span> que transforma las entregas
+                    <span class="typewriter-text" id="typewriterText"></span>
+                    <span class="cursor">|</span>
                 </h1>
                 
-                <p class="hero-description">
+                <p class="hero-description animate-fade-in-up">
                     Conectamos couriers, retailers y usuarios en un ecosistema logístico 
                     inteligente, seguro y sostenible para las ciudades del futuro.
                 </p>
                 
-                <div class="hero-actions">
-                    <button class="btn-primary large" id="downloadBtn">
+                <div class="hero-actions animate-fade-in-up">
+                    <button class="btn-primary large gradient-hover" id="downloadBtn">
                         <i class="ph ph-download-simple"></i>
-                        Descargar presentación
+                        <span class="btn-text">Descargar presentación</span>
+                        <div class="btn-gradient-overlay"></div>
                     </button>
                     <button class="btn-secondary large" id="learnMoreBtn">
                         <i class="ph ph-play"></i>
-                        Ver demo
+                        <span class="btn-text">Ver demo</span>
                     </button>
                 </div>
                 
-                <div class="hero-stats">
+                <div class="hero-stats animate-fade-in-up">
                     <div class="stat">
-                        <div class="stat-number">40%</div>
+                        <div class="stat-number" data-target="40">0</div>
+                        <div class="stat-suffix">%</div>
                         <div class="stat-label">Menos tiempo de entrega</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-number">24/7</div>
+                        <div class="stat-number" data-target="24">0</div>
+                        <div class="stat-suffix">/7</div>
                         <div class="stat-label">Disponibilidad</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-number">100%</div>
+                        <div class="stat-number" data-target="100">0</div>
+                        <div class="stat-suffix">%</div>
                         <div class="stat-label">Seguridad garantizada</div>
                     </div>
                 </div>
             </div>
             
             <div class="hero-visual">
+                <div class="hero-3d-container" id="hero3D">
+                    <!-- 3D Locker Model will be rendered here -->
+                </div>
                 <div class="hero-image-container">
                     <img src="Assets/NODO LOCKER.jpg" alt="Nodo Locker Sistema" class="hero-image">
                     <div class="hero-overlay"></div>
+                    <div class="floating-elements">
+                        <div class="floating-icon" style="--delay: 0s">
+                            <i class="ph ph-shield-check"></i>
+                        </div>
+                        <div class="floating-icon" style="--delay: 1s">
+                            <i class="ph ph-clock"></i>
+                        </div>
+                        <div class="floating-icon" style="--delay: 2s">
+                            <i class="ph ph-leaf"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
+        
+        <div class="scroll-indicator">
+            <div class="scroll-arrow">
+                <i class="ph ph-arrow-down"></i>
+            </div>
+            <span>Desliza para explorar</span>
         </div>
     </section>
 
@@ -103,45 +179,53 @@
     <section class="section what-is" id="que-es">
         <div class="container">
             <div class="section-header">
-                <span class="section-tag">Innovación</span>
-                <h2 class="section-title">¿Qué es Nodo Locker?</h2>
-                <p class="section-description">
+                <span class="section-tag animate-on-scroll">Innovación</span>
+                <h2 class="section-title animate-on-scroll">¿Qué es Nodo Locker?</h2>
+                <p class="section-description animate-on-scroll">
                     La primera red inteligente de lockers en México que transforma 
                     la logística urbana con tecnología de vanguardia.
                 </p>
             </div>
             
             <div class="features-grid">
-                <div class="feature-card">
+                <div class="feature-card animate-on-scroll" data-delay="0.1">
                     <div class="feature-icon">
                         <i class="ph ph-shield-check"></i>
+                        <div class="icon-glow"></div>
                     </div>
                     <h3>Máxima Seguridad</h3>
                     <p>Encriptación avanzada y códigos únicos para cada transacción, garantizando la protección total de tus paquetes.</p>
+                    <div class="feature-hover-effect"></div>
                 </div>
                 
-                <div class="feature-card">
+                <div class="feature-card animate-on-scroll" data-delay="0.2">
                     <div class="feature-icon">
                         <i class="ph ph-clock"></i>
+                        <div class="icon-glow"></div>
                     </div>
                     <h3>Disponible 24/7</h3>
                     <p>Acceso completo las 24 horas del día, los 7 días de la semana, adaptándose a tu horario y necesidades.</p>
+                    <div class="feature-hover-effect"></div>
                 </div>
                 
-                <div class="feature-card">
+                <div class="feature-card animate-on-scroll" data-delay="0.3">
                     <div class="feature-icon">
                         <i class="ph ph-leaf"></i>
+                        <div class="icon-glow"></div>
                     </div>
                     <h3>Eco-Friendly</h3>
                     <p>Reducimos hasta 40% las emisiones de CO2 en entregas, contribuyendo a un futuro más sostenible.</p>
+                    <div class="feature-hover-effect"></div>
                 </div>
                 
-                <div class="feature-card">
+                <div class="feature-card animate-on-scroll" data-delay="0.4">
                     <div class="feature-icon">
                         <i class="ph ph-lightning"></i>
+                        <div class="icon-glow"></div>
                     </div>
                     <h3>Tecnología Avanzada</h3>
                     <p>Sistema inteligente con IA que optimiza rutas y predice demanda para máxima eficiencia.</p>
+                    <div class="feature-hover-effect"></div>
                 </div>
             </div>
         </div>
@@ -151,97 +235,136 @@
     <section class="section benefits" id="beneficios">
         <div class="container">
             <div class="section-header">
-                <span class="section-tag">Beneficios</span>
-                <h2 class="section-title">Ventajas para todos</h2>
-                <p class="section-description">
+                <span class="section-tag animate-on-scroll">Beneficios</span>
+                <h2 class="section-title animate-on-scroll">Ventajas para todos</h2>
+                <p class="section-description animate-on-scroll">
                     Cada actor del ecosistema obtiene beneficios únicos y medibles
                 </p>
             </div>
             
             <div class="benefits-grid">
-                <div class="benefit-card">
-                    <div class="benefit-header">
-                        <div class="benefit-icon">
-                            <i class="ph ph-truck"></i>
+                <div class="benefit-card flip-card animate-on-scroll" data-delay="0.1">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="benefit-header">
+                                <div class="benefit-icon">
+                                    <i class="ph ph-truck"></i>
+                                </div>
+                                <div>
+                                    <h3>Couriers</h3>
+                                    <span class="benefit-subtitle">Optimización total</span>
+                                </div>
+                            </div>
+                            
+                            <ul class="benefit-list">
+                                <li><i class="ph ph-check"></i> Rutas optimizadas automáticamente</li>
+                                <li><i class="ph ph-check"></i> Reducción de intentos fallidos</li>
+                                <li><i class="ph ph-check"></i> Mayor eficiencia operativa</li>
+                            </ul>
+                            
+                            <div class="benefit-stats">
+                                <div class="stat-item">
+                                    <span class="stat-value">40%</span>
+                                    <span class="stat-desc">Menos tiempo</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">60%</span>
+                                    <span class="stat-desc">Más entregas</span>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <h3>Couriers</h3>
-                            <span class="benefit-subtitle">Optimización total</span>
-                        </div>
-                    </div>
-                    
-                    <ul class="benefit-list">
-                        <li><i class="ph ph-check"></i> Rutas optimizadas automáticamente</li>
-                        <li><i class="ph ph-check"></i> Reducción de intentos fallidos</li>
-                        <li><i class="ph ph-check"></i> Mayor eficiencia operativa</li>
-                    </ul>
-                    
-                    <div class="benefit-stats">
-                        <div class="stat-item">
-                            <span class="stat-value">40%</span>
-                            <span class="stat-desc">Menos tiempo</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">60%</span>
-                            <span class="stat-desc">Más entregas</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="benefit-card">
-                    <div class="benefit-header">
-                        <div class="benefit-icon">
-                            <i class="ph ph-storefront"></i>
-                        </div>
-                        <div>
-                            <h3>Retail</h3>
-                            <span class="benefit-subtitle">Crecimiento inteligente</span>
-                        </div>
-                    </div>
-                    
-                    <ul class="benefit-list">
-                        <li><i class="ph ph-check"></i> Mejor experiencia de cliente</li>
-                        <li><i class="ph ph-check"></i> Aumento en conversiones</li>
-                        <li><i class="ph ph-check"></i> Reducción de costos logísticos</li>
-                    </ul>
-                    
-                    <div class="benefit-stats">
-                        <div class="stat-item">
-                            <span class="stat-value">25%</span>
-                            <span class="stat-desc">Más ventas</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">30%</span>
-                            <span class="stat-desc">Menos costos</span>
+                        <div class="flip-card-back">
+                            <h4>Datos adicionales</h4>
+                            <ul>
+                                <li>Ahorro promedio: $2,500 MXN/mes</li>
+                                <li>Reducción de combustible: 35%</li>
+                                <li>Satisfacción del cliente: 95%</li>
+                                <li>Tiempo de entrega promedio: 2.5 horas</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
 
-                <div class="benefit-card">
-                    <div class="benefit-header">
-                        <div class="benefit-icon">
-                            <i class="ph ph-package"></i>
+                <div class="benefit-card flip-card animate-on-scroll" data-delay="0.2">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="benefit-header">
+                                <div class="benefit-icon">
+                                    <i class="ph ph-storefront"></i>
+                                </div>
+                                <div>
+                                    <h3>Retail</h3>
+                                    <span class="benefit-subtitle">Crecimiento inteligente</span>
+                                </div>
+                            </div>
+                            
+                            <ul class="benefit-list">
+                                <li><i class="ph ph-check"></i> Mejor experiencia de cliente</li>
+                                <li><i class="ph ph-check"></i> Aumento en conversiones</li>
+                                <li><i class="ph ph-check"></i> Reducción de costos logísticos</li>
+                            </ul>
+                            
+                            <div class="benefit-stats">
+                                <div class="stat-item">
+                                    <span class="stat-value">25%</span>
+                                    <span class="stat-desc">Más ventas</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">30%</span>
+                                    <span class="stat-desc">Menos costos</span>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <h3>Usuarios</h3>
-                            <span class="benefit-subtitle">Conveniencia total</span>
+                        <div class="flip-card-back">
+                            <h4>Impacto en ventas</h4>
+                            <ul>
+                                <li>ROI promedio: 180%</li>
+                                <li>Reducción de devoluciones: 45%</li>
+                                <li>NPS Score: 8.7/10</li>
+                                <li>Tiempo de implementación: 2 semanas</li>
+                            </ul>
                         </div>
                     </div>
-                    
-                    <ul class="benefit-list">
-                        <li><i class="ph ph-check"></i> Conveniencia total 24/7</li>
-                        <li><i class="ph ph-check"></i> Seguridad garantizada</li>
-                        <li><i class="ph ph-check"></i> Ubicaciones estratégicas</li>
-                    </ul>
-                    
-                    <div class="benefit-stats">
-                        <div class="stat-item">
-                            <span class="stat-value">100%</span>
-                            <span class="stat-desc">Seguridad</span>
+                </div>
+
+                <div class="benefit-card flip-card animate-on-scroll" data-delay="0.3">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="benefit-header">
+                                <div class="benefit-icon">
+                                    <i class="ph ph-package"></i>
+                                </div>
+                                <div>
+                                    <h3>Usuarios</h3>
+                                    <span class="benefit-subtitle">Conveniencia total</span>
+                                </div>
+                            </div>
+                            
+                            <ul class="benefit-list">
+                                <li><i class="ph ph-check"></i> Conveniencia total 24/7</li>
+                                <li><i class="ph ph-check"></i> Seguridad garantizada</li>
+                                <li><i class="ph ph-check"></i> Ubicaciones estratégicas</li>
+                            </ul>
+                            
+                            <div class="benefit-stats">
+                                <div class="stat-item">
+                                    <span class="stat-value">100%</span>
+                                    <span class="stat-desc">Seguridad</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">24h</span>
+                                    <span class="stat-desc">Disponible</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <span class="stat-value">24h</span>
-                            <span class="stat-desc">Disponible</span>
+                        <div class="flip-card-back">
+                            <h4>Experiencia del usuario</h4>
+                            <ul>
+                                <li>Tiempo promedio de retiro: 30 segundos</li>
+                                <li>Ubicaciones disponibles: 150+</li>
+                                <li>Satisfacción: 4.8/5 estrellas</li>
+                                <li>App rating: 4.9/5</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -253,44 +376,94 @@
     <section class="section how-it-works" id="como-funciona">
         <div class="container">
             <div class="section-header">
-                <span class="section-tag">Proceso</span>
-                <h2 class="section-title">¿Cómo funciona?</h2>
-                <p class="section-description">
+                <span class="section-tag animate-on-scroll">Proceso</span>
+                <h2 class="section-title animate-on-scroll">¿Cómo funciona?</h2>
+                <p class="section-description animate-on-scroll">
                     Tres simples pasos para revolucionar tus entregas
                 </p>
             </div>
             
             <div class="steps-container">
-                <div class="step">
+                <svg class="connecting-line" id="connectingLine">
+                    <path d="M 0 0" stroke="url(#gradient)" stroke-width="3" fill="none" stroke-dasharray="10,5"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#1a365d"/>
+                            <stop offset="100%" style="stop-color:#00a693"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                
+                <div class="step animate-on-scroll" data-delay="0.1">
                     <div class="step-number">01</div>
                     <div class="step-content">
                         <div class="step-icon">
                             <i class="ph ph-user-plus"></i>
+                            <div class="step-pulse"></div>
                         </div>
                         <h3>Regístrate</h3>
                         <p>Crea tu cuenta en segundos y accede a toda nuestra red de lockers inteligentes distribuidos estratégicamente por la ciudad.</p>
                     </div>
                 </div>
 
-                <div class="step">
+                <div class="step animate-on-scroll" data-delay="0.3">
                     <div class="step-number">02</div>
                     <div class="step-content">
                         <div class="step-icon">
                             <i class="ph ph-map-pin"></i>
+                            <div class="step-pulse"></div>
                         </div>
                         <h3>Envía o recibe</h3>
                         <p>Selecciona el locker más conveniente, programa tu entrega y recibe un código único de acceso seguro en tiempo real.</p>
                     </div>
                 </div>
 
-                <div class="step">
+                <div class="step animate-on-scroll" data-delay="0.5">
                     <div class="step-number">03</div>
                     <div class="step-content">
                         <div class="step-icon">
                             <i class="ph ph-key"></i>
+                            <div class="step-pulse"></div>
                         </div>
                         <h3>Retira cuando quieras</h3>
                         <p>Usa tu código para abrir el locker cuando más te convenga. Disponible 24/7 con la máxima seguridad garantizada.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Map Section -->
+    <section class="section live-map">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag animate-on-scroll">Disponibilidad</span>
+                <h2 class="section-title animate-on-scroll">Mapa en tiempo real</h2>
+                <p class="section-description animate-on-scroll">
+                    Encuentra lockers disponibles cerca de ti
+                </p>
+            </div>
+            
+            <div class="map-container animate-on-scroll">
+                <div id="liveMap" class="live-map-element">
+                    <!-- Google Maps will be loaded here -->
+                    <div class="map-placeholder">
+                        <i class="ph ph-map-pin"></i>
+                        <p>Cargando mapa interactivo...</p>
+                    </div>
+                </div>
+                <div class="map-stats">
+                    <div class="map-stat">
+                        <div class="stat-number" data-target="47">0</div>
+                        <div class="stat-label">Lockers activos</div>
+                    </div>
+                    <div class="map-stat">
+                        <div class="stat-number" data-target="156">0</div>
+                        <div class="stat-label">Entregas hoy</div>
+                    </div>
+                    <div class="map-stat">
+                        <div class="stat-number" data-target="98">0</div>
+                        <div class="stat-label">% Disponibilidad</div>
                     </div>
                 </div>
             </div>
@@ -301,63 +474,124 @@
     <section class="section roadmap" id="roadmap">
         <div class="container">
             <div class="section-header">
-                <span class="section-tag">Futuro</span>
-                <h2 class="section-title">Nuestro Roadmap</h2>
-                <p class="section-description">
+                <span class="section-tag animate-on-scroll">Futuro</span>
+                <h2 class="section-title animate-on-scroll">Nuestro Roadmap</h2>
+                <p class="section-description animate-on-scroll">
                     El camino hacia la transformación de la logística urbana
                 </p>
             </div>
             
             <div class="timeline">
-                <div class="timeline-item completed">
-                    <div class="timeline-marker"></div>
+                <svg class="timeline-svg" id="timelineSvg">
+                    <path id="timelinePath" d="M 30 0 L 30 100" stroke="url(#timelineGradient)" stroke-width="3" fill="none"/>
+                    <defs>
+                        <linearGradient id="timelineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#00a693"/>
+                            <stop offset="50%" style="stop-color:#f7931e"/>
+                            <stop offset="100%" style="stop-color:#94a3b8"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                
+                <div class="timeline-item completed animate-on-scroll" data-delay="0.1">
+                    <div class="timeline-marker">
+                        <i class="ph ph-check"></i>
+                    </div>
                     <div class="timeline-content">
                         <div class="timeline-date">Q1 2024</div>
                         <h3>Investigación y Desarrollo</h3>
                         <p>Análisis profundo de mercado, desarrollo de tecnología core y validación exhaustiva del concepto.</p>
                         <span class="status completed">Completado</span>
+                        <div class="timeline-progress" style="width: 100%"></div>
                     </div>
                 </div>
 
-                <div class="timeline-item completed">
-                    <div class="timeline-marker"></div>
+                <div class="timeline-item completed animate-on-scroll" data-delay="0.2">
+                    <div class="timeline-marker">
+                        <i class="ph ph-check"></i>
+                    </div>
                     <div class="timeline-content">
                         <div class="timeline-date">Q2 2024</div>
                         <h3>Prototipo Funcional</h3>
                         <p>Desarrollo del primer prototipo de locker inteligente y creación de la aplicación móvil.</p>
                         <span class="status completed">Completado</span>
+                        <div class="timeline-progress" style="width: 100%"></div>
                     </div>
                 </div>
 
-                <div class="timeline-item current">
-                    <div class="timeline-marker"></div>
+                <div class="timeline-item current animate-on-scroll" data-delay="0.3">
+                    <div class="timeline-marker">
+                        <i class="ph ph-gear"></i>
+                        <div class="marker-pulse"></div>
+                    </div>
                     <div class="timeline-content">
                         <div class="timeline-date">Q3 2024</div>
                         <h3>MVP y Alianzas Estratégicas</h3>
                         <p>Lanzamiento del MVP con primeros aliados estratégicos en Ciudad de México.</p>
                         <span class="status current">En progreso</span>
+                        <div class="timeline-progress" style="width: 65%"></div>
                     </div>
                 </div>
 
-                <div class="timeline-item future">
-                    <div class="timeline-marker"></div>
+                <div class="timeline-item future animate-on-scroll" data-delay="0.4">
+                    <div class="timeline-marker">
+                        <i class="ph ph-rocket"></i>
+                    </div>
                     <div class="timeline-content">
                         <div class="timeline-date">Q4 2024</div>
                         <h3>Programa Piloto</h3>
                         <p>Despliegue de 50 lockers en ubicaciones estratégicas de alta densidad poblacional.</p>
                         <span class="status future">Próximamente</span>
+                        <div class="timeline-progress" style="width: 0%"></div>
                     </div>
                 </div>
 
-                <div class="timeline-item future">
-                    <div class="timeline-marker"></div>
+                <div class="timeline-item future animate-on-scroll" data-delay="0.5">
+                    <div class="timeline-marker">
+                        <i class="ph ph-globe"></i>
+                    </div>
                     <div class="timeline-content">
                         <div class="timeline-date">Q1 2025</div>
                         <h3>Expansión Nacional</h3>
                         <p>Escalamiento a 500+ lockers y expansión a las principales ciudades del país.</p>
                         <span class="status future">Planificado</span>
+                        <div class="timeline-progress" style="width: 0%"></div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Waitlist Section -->
+    <section class="section waitlist-section">
+        <div class="container">
+            <div class="waitlist-content animate-on-scroll">
+                <div class="waitlist-header">
+                    <h2>Únete a la lista de espera</h2>
+                    <p>Sé de los primeros en experimentar el futuro de las entregas</p>
+                </div>
+                
+                <div class="waitlist-counter">
+                    <div class="counter-display">
+                        <span class="counter-number" id="waitlistCounter">1,247</span>
+                        <span class="counter-label">personas ya registradas</span>
+                    </div>
+                    <div class="counter-animation">
+                        <div class="pulse-ring"></div>
+                        <div class="pulse-ring"></div>
+                        <div class="pulse-ring"></div>
+                    </div>
+                </div>
+                
+                <form class="waitlist-form" id="waitlistForm">
+                    <div class="form-group">
+                        <input type="email" placeholder="tu@email.com" required>
+                        <button type="submit" class="btn-primary">
+                            <span class="btn-text">Unirme ahora</span>
+                            <i class="ph ph-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </section>
@@ -365,15 +599,16 @@
     <!-- CTA Section -->
     <section class="section cta-section">
         <div class="container">
-            <div class="cta-content">
+            <div class="cta-content animate-on-scroll">
                 <div class="cta-text">
                     <h2>¿Listo para revolucionar tus entregas?</h2>
                     <p>Únete al futuro de la logística urbana y sé parte de los primeros en experimentar la revolución de Nodo Locker.</p>
                 </div>
                 <div class="cta-actions">
-                    <button class="btn-primary large" id="ctaJoinBtn">
+                    <button class="btn-primary large gradient-hover" id="ctaJoinBtn">
                         <i class="ph ph-rocket-launch"></i>
-                        Únete al MVP
+                        <span class="btn-text">Únete al MVP</span>
+                        <div class="btn-gradient-overlay"></div>
                     </button>
                 </div>
             </div>
@@ -383,7 +618,7 @@
     <!-- Contact Form -->
     <section class="section contact-form" id="contacto">
         <div class="container">
-            <div class="form-container">
+            <div class="form-container animate-on-scroll">
                 <div class="form-header">
                     <h2>Contáctanos</h2>
                     <p>Completa el formulario y te contactaremos en menos de 24 horas</p>
@@ -394,26 +629,31 @@
                         <div class="form-group">
                             <label for="name">Nombre completo</label>
                             <input type="text" id="name" name="name" required>
+                            <div class="input-focus-line"></div>
                         </div>
                         <div class="form-group">
                             <label for="company">Empresa</label>
                             <input type="text" id="company" name="company" required>
+                            <div class="input-focus-line"></div>
                         </div>
                     </div>
                     
                     <div class="form-group">
                         <label for="email">Correo electrónico</label>
                         <input type="email" id="email" name="email" required>
+                        <div class="input-focus-line"></div>
                     </div>
                     
                     <div class="form-group">
                         <label for="message">Cuéntanos sobre tu proyecto</label>
                         <textarea id="message" name="message" rows="4" placeholder="Describe cómo Nodo Locker puede ayudar a tu negocio..."></textarea>
+                        <div class="input-focus-line"></div>
                     </div>
                     
-                    <button type="submit" class="btn-primary large full-width">
+                    <button type="submit" class="btn-primary large full-width gradient-hover">
                         <i class="ph ph-paper-plane-tilt"></i>
-                        Enviar mensaje
+                        <span class="btn-text">Enviar mensaje</span>
+                        <div class="btn-gradient-overlay"></div>
                     </button>
                 </form>
             </div>
@@ -435,12 +675,15 @@
                     <div class="social-links">
                         <a href="#" class="social-link" aria-label="LinkedIn">
                             <i class="ph ph-linkedin-logo"></i>
+                            <div class="social-hover-effect"></div>
                         </a>
                         <a href="#" class="social-link" aria-label="Instagram">
                             <i class="ph ph-instagram-logo"></i>
+                            <div class="social-hover-effect"></div>
                         </a>
                         <a href="#" class="social-link" aria-label="Twitter">
                             <i class="ph ph-twitter-logo"></i>
+                            <div class="social-hover-effect"></div>
                         </a>
                     </div>
                 </div>
@@ -484,6 +727,11 @@
             </div>
         </div>
     </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop">
+        <i class="ph ph-arrow-up"></i>
+    </button>
 
     <script src="script.js"></script>
 </body>
