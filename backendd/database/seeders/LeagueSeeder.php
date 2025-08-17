@@ -10,75 +10,85 @@ use Illuminate\Support\Facades\Hash;
 class LeagueSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Run the database seeder.
      */
     public function run(): void
     {
-        // Crear algunas ligas de ejemplo
         $leagues = [
             [
                 'name' => 'Liga Nacional de Tenis de Mesa',
+                'province' => 'Nacional',
                 'region' => 'Nacional',
-                'province' => 'Pichincha',
-                'admin_name' => 'Liga Nacional',
-                'admin_email' => 'admin@liganacional.com',
-                'admin_phone' => '+593 99 123 4567',
+                'admin_email' => 'liga.nacional@raquetpower.com',
+                'admin_name' => 'Liga Nacional de Tenis de Mesa',
+                'admin_phone' => '+593 99 111 1111',
             ],
             [
                 'name' => 'Liga Provincial de Pichincha',
-                'region' => 'Provincial',
                 'province' => 'Pichincha',
-                'admin_name' => 'Liga Pichincha',
-                'admin_email' => 'admin@ligapichincha.com',
-                'admin_phone' => '+593 99 234 5678',
+                'region' => 'Sierra',
+                'admin_email' => 'liga.pichincha@raquetpower.com',
+                'admin_name' => 'Liga Provincial de Pichincha',
+                'admin_phone' => '+593 99 222 2222',
             ],
             [
                 'name' => 'Liga Regional del Guayas',
-                'region' => 'Regional',
                 'province' => 'Guayas',
-                'admin_name' => 'Liga Guayas',
-                'admin_email' => 'admin@ligaguayas.com',
-                'admin_phone' => '+593 99 345 6789',
+                'region' => 'Costa',
+                'admin_email' => 'liga.guayas@raquetpower.com',
+                'admin_name' => 'Liga Regional del Guayas',
+                'admin_phone' => '+593 99 333 3333',
             ],
             [
-                'name' => 'Liga de Azuay',
-                'region' => 'Provincial',
+                'name' => 'Liga Provincial del Azuay',
                 'province' => 'Azuay',
-                'admin_name' => 'Liga Azuay',
-                'admin_email' => 'admin@ligaazuay.com',
-                'admin_phone' => '+593 99 456 7890',
+                'region' => 'Sierra',
+                'admin_email' => 'liga.azuay@raquetpower.com',
+                'admin_name' => 'Liga Provincial del Azuay',
+                'admin_phone' => '+593 99 444 4444',
             ],
         ];
 
         foreach ($leagues as $leagueData) {
-            // Crear usuario administrador de la liga
-            $user = User::create([
-                'name' => $leagueData['admin_name'],
-                'email' => $leagueData['admin_email'],
-                'password' => Hash::make('password123'),
-                'role' => 'liga',
-                'phone' => $leagueData['admin_phone'],
-                'country' => 'Ecuador',
-                'league_name' => $leagueData['name'],
-                'province' => $leagueData['province'],
-            ]);
+            // Check if league already exists
+            $existingLeague = League::where('name', $leagueData['name'])->first();
+            
+            if (!$existingLeague) {
+                // Create league admin user
+                $adminUser = User::create([
+                    'name' => $leagueData['admin_name'],
+                    'email' => $leagueData['admin_email'],
+                    'password' => Hash::make('liga123456'),
+                    'role' => 'liga',
+                    'phone' => $leagueData['admin_phone'],
+                    'country' => 'Ecuador',
+                    'league_name' => $leagueData['name'],
+                    'province' => $leagueData['province'],
+                    'email_verified_at' => now(),
+                ]);
 
-            // Crear la entidad liga
-            $league = League::create([
-                'user_id' => $user->id,
-                'name' => $leagueData['name'],
-                'region' => $leagueData['region'],
-                'province' => $leagueData['province'],
-                'status' => 'active',
-            ]);
+                // Create league entity
+                $league = League::create([
+                    'user_id' => $adminUser->id,
+                    'name' => $leagueData['name'],
+                    'region' => $leagueData['region'],
+                    'province' => $leagueData['province'],
+                    'status' => 'active',
+                ]);
 
-            // Actualizar el usuario con la relación polimórfica
-            $user->update([
-                'roleable_id' => $league->id,
-                'roleable_type' => League::class,
-            ]);
+                // Update user with polymorphic relation
+                $adminUser->update([
+                    'roleable_id' => $league->id,
+                    'roleable_type' => League::class,
+                ]);
 
-            $this->command->info("Liga creada: {$league->name} con admin: {$user->email}");
+                $this->command->info("Liga '{$leagueData['name']}' created successfully!");
+            } else {
+                $this->command->info("Liga '{$leagueData['name']}' already exists.");
+            }
         }
+
+        $this->command->info('League seeding completed!');
+        $this->command->info('Default password for all league admins: liga123456');
     }
 }
