@@ -18,6 +18,15 @@ Route::get('/test', function () {
     ]);
 });
 
+// Test registration endpoint without CSRF for debugging
+Route::post('/test-register', function (Request $request) {
+    return response()->json([
+        'message' => 'Test registration endpoint working',
+        'data' => $request->all(),
+        'timestamp' => now()
+    ]);
+});
+
 // Authentication routes (no middleware)
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
