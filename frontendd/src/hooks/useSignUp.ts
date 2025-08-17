@@ -2,11 +2,41 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from '@/lib/axios';
+import api from '@/lib/axios';
 import { useAuth } from '@/contexts/AuthContext';
-import type { RegisterForm, ApiResponse, User, RoleInfo, AvailableLeague, AvailableClub } from '@/types';
+
+interface SignUpData {
+  email: string;
+  password: string;
+  password_confirmation: string;
+  full_name: string;
+  role: string;
+  country?: string;
+  address?: string;
+  club_id?: string;
+  birth_date?: string;
+  gender?: string;
+  rubber_type?: string;
+  ranking?: string;
+}
+
+interface User {
+  id: number;
+  email: string;
+  full_name: string;
+  role: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface RoleInfo {
+  role: string;
+  club_id?: string;
+  league_id?: string;
+}
 
 interface SignUpResponse {
+  message: string;
   user: User;
   role_info: RoleInfo;
 }
@@ -17,77 +47,56 @@ export const useSignUp = () => {
   const router = useRouter();
   const { login } = useAuth();
 
-  const signUp = async (data: RegisterForm) => {
+  const signUp = async (data: SignUpData): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Prepare the data for the API
-      const apiData = {
-        role: data.role,
-        email: data.email,
-        password: data.password,
-        password_confirmation: data.password_confirmation,
-        phone: data.phone,
-        country: data.country,
-      };
+      console.log('🚀 Starting sign up process...');
+      console.log('📝 Sign up data:', { ...data, password: '[HIDDEN]', password_confirmation: '[HIDDEN]' });
 
-      // Add role-specific fields
-      switch (data.role) {
-        case 'liga':
-          Object.assign(apiData, {
-            league_name: data.league_name,
-            province: data.province,
-            logo_path: data.logo_path,
-          });
-          break;
-        case 'club':
-          Object.assign(apiData, {
-            club_name: data.club_name,
-            parent_league_id: data.parent_league_id,
-            city: data.city,
-            address: data.address,
-            logo_path: data.logo_path,
-          });
-          break;
-        case 'miembro':
-          Object.assign(apiData, {
-            full_name: data.full_name,
-            parent_club_id: data.parent_club_id,
-            birth_date: data.birth_date,
-            gender: data.gender,
-            rubber_type: data.rubber_type,
-            ranking: data.ranking,
-            photo_path: data.photo_path,
-          });
-          break;
-      }
-
-      const response = await axios.post<ApiResponse<SignUpResponse>>('/auth/register', apiData);
+      // Make the registration request to the correct endpoint
+      const response = await api.post<SignUpResponse>('/api/auth/register', data);
       
-      if (response.data?.data?.user) {
-        // Update auth context with the new user
-        login(response.data.data.user);
+      console.log('✅ Registration successful:', response.data);
+
+      // Auto-login after successful registration
+      if (response.data.user) {
+        await login(data.email, data.password);
         
-        // Redirect to dashboard
-        router.push('/dashboard');
-      } else {
-        throw new Error('Respuesta del servidor inválida');
+        // Redirect based on role
+        const role = response.data.user.role;
+        switch (role) {
+          case 'super_admin':
+            router.push('/dashboard');
+            break;
+          case 'liga':
+            router.push('/dashboard/liga');
+            break;
+          case 'club':
+            router.push('/dashboard/club');
+            break;
+          case 'miembro':
+            router.push('/dashboard/miembro');
+            break;
+          default:
+            router.push('/dashboard');
+        }
       }
     } catch (err: any) {
-      console.error('Sign up error:', err);
+      console.error('❌ Sign up error:', err);
       
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.response?.data?.errors) {
         // Handle validation errors
         const errors = err.response.data.errors;
-        const firstError = Object.values(errors)[0] as string[];
-        setError(firstError[0] || 'Error de validación');
+        const errorMessages = Object.values(errors).flat();
+        setError(errorMessages.join(', '));
       } else if (err.message) {
         setError(err.message);
       } else {
-        setError('Error al crear la cuenta. Por favor, intenta de nuevo.');
+        setError('Registration failed. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -103,64 +112,5 @@ export const useSignUp = () => {
     isLoading,
     error,
     clearError,
-  };
-};
-
-// Hook for getting available leagues
-export const useAvailableLeagues = () => {
-  const [leagues, setLeagues] = useState<AvailableLeague[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchLeagues = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await axios.get<ApiResponse<AvailableLeague[]>>('/auth/leagues');
-      setLeagues(response.data.data || []);
-    } catch (err: any) {
-      console.error('Error fetching leagues:', err);
-      setError('Error al cargar las ligas disponibles');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return {
-    leagues,
-    isLoading,
-    error,
-    fetchLeagues,
-  };
-};
-
-// Hook for getting available clubs
-export const useAvailableClubs = () => {
-  const [clubs, setClubs] = useState<AvailableClub[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchClubs = async (leagueId?: number) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const params = leagueId ? { league_id: leagueId } : {};
-      const response = await axios.get<ApiResponse<AvailableClub[]>>('/auth/clubs', { params });
-      setClubs(response.data.data || []);
-    } catch (err: any) {
-      console.error('Error fetching clubs:', err);
-      setError('Error al cargar los clubes disponibles');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return {
-    clubs,
-    isLoading,
-    error,
-    fetchClubs,
   };
 };
