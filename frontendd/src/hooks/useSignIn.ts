@@ -11,16 +11,41 @@ interface SignInData {
 interface User {
   id: number;
   email: string;
-  full_name: string;
+  name: string;
   role: string;
+  phone: string;
+  country: string;
   created_at: string;
   updated_at: string;
+  // Role-specific fields
+  league_name?: string;
+  province?: string;
+  club_name?: string;
+  parent_league_id?: number;
+  city?: string;
+  address?: string;
+  full_name?: string;
+  parent_club_id?: number;
+  birth_date?: string;
+  gender?: string;
+  rubber_type?: string;
+  ranking?: string;
+  logo_path?: string;
+  photo_path?: string;
+}
+
+interface RoleInfo {
+  type: string;
+  name?: string;
+  [key: string]: any;
 }
 
 interface SignInResponse {
+  data: {
+    user: User;
+    role_info: RoleInfo;
+  };
   message: string;
-  user: User;
-  token?: string;
 }
 
 export const useSignIn = () => {
@@ -43,11 +68,11 @@ export const useSignIn = () => {
       console.log('✅ Login successful:', response.data);
 
       // Set user in context
-      if (response.data.user) {
-        setUser(response.data.user);
+      if (response.data.data.user) {
+        setUser(response.data.data.user);
         
         // Redirect based on role
-        const role = response.data.user.role;
+        const role = response.data.data.user.role;
         switch (role) {
           case 'super_admin':
             router.push('/dashboard');
