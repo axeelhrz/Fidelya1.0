@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,11 +11,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            SuperAdminSeeder::class,
+            LeagueSeeder::class,
+            ClubSeeder::class,
         ]);
+
+        $this->command->info('🎉 Database seeding completed successfully!');
+        $this->command->info('');
+        $this->command->info('📧 Default credentials:');
+        $this->command->info('Super Admin: admin@raquetpower.com / admin123456');
+        $this->command->info('League Admins: liga123456');
+        $this->command->info('Club Admins: club123456');
+        $this->command->info('');
+        $this->command->info('🚀 You can now test the authentication system!');
     }
 }
