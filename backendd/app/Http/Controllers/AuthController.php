@@ -54,10 +54,7 @@ class AuthController extends Controller
             $user = User::create($userData);
 
             // Crear la entidad correspondiente (League, Club, o Member)
-            $user->createRoleEntity();
-
-            // Autenticar al usuario
-            Auth::login($user);
+            $this->createRoleEntity($user, $validatedData);
 
             DB::commit();
 
@@ -185,6 +182,66 @@ class AuthController extends Controller
                 return $validatedData['full_name'];
             default:
                 return $validatedData['email'];
+        }
+    }
+
+    /**
+     * Create the corresponding entity based on user role.
+     */
+    private function createRoleEntity(User $user, array $validatedData): void
+    {
+        switch ($user->role) {
+            case 'liga':
+                $league = League::create([
+                    'user_id' => $user->id,
+                    'name' => $validatedData['league_name'],
+                    'region' => $validatedData['province'],
+                    'province' => $validatedData['province'],
+                    'logo_path' => $validatedData['logo_path'] ?? null,
+                    'status' => 'active',
+                ]);
+                $user->update([
+                    'roleable_id' => $league->id,
+                    'roleable_type' => League::class,
+                ]);
+                break;
+
+            case 'club':
+                $club = Club::create([
+                    'user_id' => $user->id,
+                    'league_id' => $validatedData['parent_league_id'],
+                    'name' => $validatedData['club_name'],
+                    'city' => $validatedData['city'],
+                    'address' => $validatedData['address'],
+                    'logo_path' => $validatedData['logo_path'] ?? null,
+                    'status' => 'active',
+                ]);
+                $user->update([
+                    'roleable_id' => $club->id,
+                    'roleable_type' => Club::class,
+                ]);
+                break;
+
+            case 'miembro':
+                $member = \App\Models\Member::create([
+                    'user_id' => $user->id,
+                    'club_id' => $validatedData['parent_club_id'],
+                    'first_name' => explode(' ', $validatedData['full_name'])[0] ?? '',
+                    'last_name' => implode(' ', array_slice(explode(' ', $validatedData['full_name']), 1)) ?: '',
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'birthdate' => $validatedData['birth_date'],
+                    'gender' => $validatedData['gender'] === 'masculino' ? 'male' : 'female',
+                    'rubber_type' => $validatedData['rubber_type'],
+                    'ranking' => $validatedData['ranking'] ?? null,
+                    'photo_path' => $validatedData['photo_path'] ?? null,
+                    'status' => 'active',
+                ]);
+                $user->update([
+                    'roleable_id' => $member->id,
+                    'roleable_type' => \App\Models\Member::class,
+                ]);
+                break;
         }
     }
 
