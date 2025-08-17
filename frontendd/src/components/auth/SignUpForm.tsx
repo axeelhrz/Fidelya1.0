@@ -49,6 +49,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
 import { styled } from '@mui/material/styles';
 import { useSignUp } from '@/hooks/useSignUp';
+import api from '@/lib/axios';
 import NextLink from 'next/link';
 
 // Styled Components
@@ -107,11 +108,11 @@ const signUpSchema = z.object({
   league_name: z.string().optional(),
   province: z.string().optional(),
   club_name: z.string().optional(),
-  league_id: z.string().optional(),
+  parent_league_id: z.string().optional(),
   city: z.string().optional(),
   address: z.string().optional(),
   full_name: z.string().optional(),
-  club_id: z.string().optional(),
+  parent_club_id: z.string().optional(),
   birth_date: z.string().optional(),
   gender: z.enum(['masculino', 'femenino']).optional(),
   rubber_type: z.enum(['liso', 'pupo', 'ambos']).optional(),
@@ -126,12 +127,17 @@ type SignUpFormData = z.infer<typeof signUpSchema>;
 interface League {
   id: string;
   name: string;
+  province?: string;
 }
 
 interface Club {
   id: string;
   name: string;
-  league: string;
+  city?: string;
+  league?: {
+    id: string;
+    name: string;
+  };
 }
 
 const roles = [
@@ -166,22 +172,60 @@ const SignUpForm: React.FC = () => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [clubs, setClubs] = useState<Club[]>([]);
+  const [loadingLeagues, setLoadingLeagues] = useState(false);
+  const [loadingClubs, setLoadingClubs] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const { signUp, isLoading, error, clearError } = useSignUp();
 
   useEffect(() => {
     setIsClient(true);
-    setLeagues([
-      { id: '1', name: 'Liga Nacional de Tenis de Mesa' },
-      { id: '2', name: 'Liga Provincial de Pichincha' },
-      { id: '3', name: 'Liga Regional del Guayas' },
-    ]);
-    setClubs([
-      { id: '1', name: 'Club Deportivo Los Campeones', league: 'Liga Nacional' },
-      { id: '2', name: 'Club Raqueta de Oro', league: 'Liga Provincial' },
-      { id: '3', name: 'Club Tenis de Mesa Quito', league: 'Liga Nacional' },
-    ]);
+    // Load leagues when component mounts
+    fetchLeagues();
   }, []);
+
+  const fetchLeagues = async () => {
+    try {
+      setLoadingLeagues(true);
+      const response = await api.get('/api/auth/leagues');
+      setLeagues(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching leagues:', error);
+      // Fallback data
+      setLeagues([
+        { id: '1', name: 'Liga Nacional de Tenis de Mesa', province: 'Nacional' },
+        { id: '2', name: 'Liga Provincial de Pichincha', province: 'Pichincha' },
+        { id: '3', name: 'Liga Regional del Guayas', province: 'Guayas' },
+      ]);
+    } finally {
+      setLoadingLeagues(false);
+    }
+  };
+
+  const fetchClubs = async (leagueId?: string) => {
+    try {
+      setLoadingClubs(true);
+      const url = leagueId ? `/api/auth/clubs?league_id=${leagueId}` : '/api/auth/clubs';
+      const response = await api.get(url);
+      setClubs(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching clubs:', error);
+      // Fallback data
+      setClubs([
+        { id: '1', name: 'Club Deportivo Los Campeones', city: 'Quito', league: { id: '1', name: 'Liga Nacional' } },
+        { id: '2', name: 'Club Raqueta de Oro', city: 'Guayaquil', league: { id: '2', name: 'Liga Provincial' } },
+        { id: '3', name: 'Club Tenis de Mesa Quito', city: 'Quito', league: { id: '1', name: 'Liga Nacional' } },
+      ]);
+    } finally {
+      setLoadingClubs(false);
+    }
+  };
+
+  // Load clubs when component mounts or when needed for member registration
+  useEffect(() => {
+    if (isClient) {
+      fetchClubs();
+    }
+  }, [isClient]);
 
   const {
     control,
@@ -203,11 +247,11 @@ const SignUpForm: React.FC = () => {
       league_name: '',
       province: '',
       club_name: '',
-      league_id: '',
+      parent_league_id: '',
       city: '',
       address: '',
       full_name: '',
-      club_id: '',
+      parent_club_id: '',
       birth_date: '',
       gender: undefined,
       rubber_type: undefined,
@@ -232,12 +276,12 @@ const SignUpForm: React.FC = () => {
       if (!data.province?.trim()) isValid = false;
     } else if (watchedRole === 'club') {
       if (!data.club_name?.trim()) isValid = false;
-      if (!data.league_id) isValid = false;
+      if (!data.parent_league_id) isValid = false;
       if (!data.city?.trim()) isValid = false;
       if (!data.address?.trim()) isValid = false;
     } else if (watchedRole === 'miembro') {
       if (!data.full_name?.trim()) isValid = false;
-      if (!data.club_id) isValid = false;
+      if (!data.parent_club_id) isValid = false;
       if (!data.birth_date) isValid = false;
       if (!data.gender) isValid = false;
       if (!data.rubber_type) isValid = false;
@@ -637,14 +681,15 @@ const SignUpForm: React.FC = () => {
                         })}
                         
                         <Controller
-                          name="league_id"
+                          name="parent_league_id"
                           control={control}
                           render={({ field }) => (
-                            <FormControl fullWidth error={!!errors.league_id}>
+                            <FormControl fullWidth error={!!errors.parent_league_id}>
                               <InputLabel>Liga a la que pertenece</InputLabel>
                               <Select
                                 {...field}
                                 label="Liga a la que pertenece"
+                                disabled={loadingLeagues}
                                 sx={{
                                   borderRadius: 2,
                                   backgroundColor: 'rgba(255, 255, 255, 0.8)',
@@ -654,14 +699,21 @@ const SignUpForm: React.FC = () => {
                                   },
                                 }}
                               >
-                                {leagues.map((league) => (
-                                  <MenuItem key={league.id} value={league.id}>
-                                    {league.name}
+                                {loadingLeagues ? (
+                                  <MenuItem disabled>
+                                    <CircularProgress size={20} sx={{ mr: 1 }} />
+                                    Cargando ligas...
                                   </MenuItem>
-                                ))}
+                                ) : (
+                                  leagues.map((league) => (
+                                    <MenuItem key={league.id} value={league.id}>
+                                      {league.name} {league.province && `(${league.province})`}
+                                    </MenuItem>
+                                  ))
+                                )}
                               </Select>
-                              {errors.league_id && (
-                                <FormHelperText>{errors.league_id.message}</FormHelperText>
+                              {errors.parent_league_id && (
+                                <FormHelperText>{errors.parent_league_id.message}</FormHelperText>
                               )}
                             </FormControl>
                           )}
@@ -728,14 +780,15 @@ const SignUpForm: React.FC = () => {
                         })}
                         
                         <Controller
-                          name="club_id"
+                          name="parent_club_id"
                           control={control}
                           render={({ field }) => (
-                            <FormControl fullWidth error={!!errors.club_id}>
+                            <FormControl fullWidth error={!!errors.parent_club_id}>
                               <InputLabel>Club de pertenencia</InputLabel>
                               <Select
                                 {...field}
                                 label="Club de pertenencia"
+                                disabled={loadingClubs}
                                 sx={{
                                   borderRadius: 2,
                                   backgroundColor: 'rgba(255, 255, 255, 0.8)',
@@ -745,14 +798,21 @@ const SignUpForm: React.FC = () => {
                                   },
                                 }}
                               >
-                                {clubs.map((club) => (
-                                  <MenuItem key={club.id} value={club.id}>
-                                    {club.name}
+                                {loadingClubs ? (
+                                  <MenuItem disabled>
+                                    <CircularProgress size={20} sx={{ mr: 1 }} />
+                                    Cargando clubes...
                                   </MenuItem>
-                                ))}
+                                ) : (
+                                  clubs.map((club) => (
+                                    <MenuItem key={club.id} value={club.id}>
+                                      {club.name} {club.city && `(${club.city})`}
+                                    </MenuItem>
+                                  ))
+                                )}
                               </Select>
-                              {errors.club_id && (
-                                <FormHelperText>{errors.club_id.message}</FormHelperText>
+                              {errors.parent_club_id && (
+                                <FormHelperText>{errors.parent_club_id.message}</FormHelperText>
                               )}
                             </FormControl>
                           )}
