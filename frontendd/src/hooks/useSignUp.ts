@@ -9,43 +9,73 @@ interface SignUpData {
   email: string;
   password: string;
   password_confirmation: string;
-  full_name: string;
   role: string;
-  country?: string;
+  phone: string;
+  country: string;
+  // Liga fields
+  league_name?: string;
+  province?: string;
+  logo_path?: string;
+  // Club fields
+  club_name?: string;
+  parent_league_id?: string;
+  city?: string;
   address?: string;
-  club_id?: string;
+  // Member fields
+  full_name?: string;
+  parent_club_id?: string;
   birth_date?: string;
   gender?: string;
   rubber_type?: string;
   ranking?: string;
+  photo_path?: string;
 }
 
 interface User {
   id: number;
   email: string;
-  full_name: string;
+  name: string;
   role: string;
+  phone: string;
+  country: string;
   created_at: string;
   updated_at: string;
+  // Role-specific fields
+  league_name?: string;
+  province?: string;
+  club_name?: string;
+  parent_league_id?: number;
+  city?: string;
+  address?: string;
+  full_name?: string;
+  parent_club_id?: number;
+  birth_date?: string;
+  gender?: string;
+  rubber_type?: string;
+  ranking?: string;
+  logo_path?: string;
+  photo_path?: string;
 }
 
 interface RoleInfo {
-  role: string;
-  club_id?: string;
-  league_id?: string;
+  type: string;
+  name?: string;
+  [key: string]: any;
 }
 
 interface SignUpResponse {
+  data: {
+    user: User;
+    role_info: RoleInfo;
+  };
   message: string;
-  user: User;
-  role_info: RoleInfo;
 }
 
 export const useSignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { login } = useAuth();
+  const { setUser } = useAuth();
 
   const signUp = async (data: SignUpData): Promise<void> => {
     setIsLoading(true);
@@ -60,12 +90,12 @@ export const useSignUp = () => {
       
       console.log('✅ Registration successful:', response.data);
 
-      // Auto-login after successful registration
-      if (response.data.user) {
-        await login(data.email, data.password);
+      // Set user in context
+      if (response.data.data.user) {
+        setUser(response.data.data.user);
         
         // Redirect based on role
-        const role = response.data.user.role;
+        const role = response.data.data.user.role;
         switch (role) {
           case 'super_admin':
             router.push('/dashboard');
