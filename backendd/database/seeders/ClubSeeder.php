@@ -11,107 +11,111 @@ use Illuminate\Support\Facades\Hash;
 class ClubSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Run the database seeder.
      */
     public function run(): void
     {
-        // Obtener las ligas existentes
-        $leagues = League::all();
+        // Get existing leagues
+        $ligaNacional = League::where('name', 'Liga Nacional de Tenis de Mesa')->first();
+        $ligaPichincha = League::where('name', 'Liga Provincial de Pichincha')->first();
+        $ligaGuayas = League::where('name', 'Liga Regional del Guayas')->first();
 
-        if ($leagues->isEmpty()) {
-            $this->command->error('No hay ligas disponibles. Ejecuta primero LeagueSeeder.');
+        if (!$ligaNacional || !$ligaPichincha || !$ligaGuayas) {
+            $this->command->error('Please run LeagueSeeder first!');
             return;
         }
 
-        // Crear clubes de ejemplo
         $clubs = [
             [
                 'name' => 'Club Deportivo Los Campeones',
                 'city' => 'Quito',
                 'address' => 'Av. 6 de Diciembre N24-253 y Wilson',
-                'admin_name' => 'Club Los Campeones',
-                'admin_email' => 'admin@loscampeones.com',
-                'admin_phone' => '+593 99 567 8901',
-                'league_name' => 'Liga Nacional de Tenis de Mesa',
+                'league_id' => $ligaNacional->id,
+                'admin_email' => 'club.campeones@raquetpower.com',
+                'admin_name' => 'Club Deportivo Los Campeones',
+                'admin_phone' => '+593 99 555 5555',
             ],
             [
                 'name' => 'Club Raqueta de Oro',
-                'city' => 'Quito',
-                'address' => 'Av. Amazonas N21-147 y Roca',
+                'city' => 'Guayaquil',
+                'address' => 'Av. Francisco de Orellana y 9 de Octubre',
+                'league_id' => $ligaGuayas->id,
+                'admin_email' => 'club.raquetadeoro@raquetpower.com',
                 'admin_name' => 'Club Raqueta de Oro',
-                'admin_email' => 'admin@raquetadeoro.com',
-                'admin_phone' => '+593 99 678 9012',
-                'league_name' => 'Liga Provincial de Pichincha',
+                'admin_phone' => '+593 99 666 6666',
             ],
             [
                 'name' => 'Club Tenis de Mesa Quito',
                 'city' => 'Quito',
-                'address' => 'Av. República del Salvador N34-377 y Suiza',
-                'admin_name' => 'Club TM Quito',
-                'admin_email' => 'admin@tmquito.com',
-                'admin_phone' => '+593 99 789 0123',
-                'league_name' => 'Liga Nacional de Tenis de Mesa',
+                'address' => 'Av. Amazonas N21-217 y Roca',
+                'league_id' => $ligaPichincha->id,
+                'admin_email' => 'club.tenismesaquito@raquetpower.com',
+                'admin_name' => 'Club Tenis de Mesa Quito',
+                'admin_phone' => '+593 99 777 7777',
             ],
             [
-                'name' => 'Club Deportivo Guayaquil',
-                'city' => 'Guayaquil',
-                'address' => 'Av. 9 de Octubre 100 y Malecón',
-                'admin_name' => 'Club Guayaquil',
-                'admin_email' => 'admin@clubguayaquil.com',
-                'admin_phone' => '+593 99 890 1234',
-                'league_name' => 'Liga Regional del Guayas',
+                'name' => 'Club Deportivo Machala',
+                'city' => 'Machala',
+                'address' => 'Av. Las Palmeras y Circunvalación Sur',
+                'league_id' => $ligaGuayas->id,
+                'admin_email' => 'club.machala@raquetpower.com',
+                'admin_name' => 'Club Deportivo Machala',
+                'admin_phone' => '+593 99 888 8888',
             ],
             [
-                'name' => 'Club Ping Pong Cuenca',
+                'name' => 'Club Ping Pong Elite',
                 'city' => 'Cuenca',
-                'address' => 'Calle Larga 7-07 y Borrero',
-                'admin_name' => 'Club Cuenca',
-                'admin_email' => 'admin@clubcuenca.com',
-                'admin_phone' => '+593 99 901 2345',
-                'league_name' => 'Liga de Azuay',
+                'address' => 'Av. Solano 1-38 y Av. 12 de Abril',
+                'league_id' => $ligaNacional->id,
+                'admin_email' => 'club.pingpongelite@raquetpower.com',
+                'admin_name' => 'Club Ping Pong Elite',
+                'admin_phone' => '+593 99 999 9999',
             ],
         ];
 
         foreach ($clubs as $clubData) {
-            // Buscar la liga correspondiente
-            $league = $leagues->where('name', $clubData['league_name'])->first();
+            // Check if club already exists
+            $existingClub = Club::where('name', $clubData['name'])->first();
             
-            if (!$league) {
-                $this->command->warn("Liga no encontrada: {$clubData['league_name']}");
-                continue;
+            if (!$existingClub) {
+                // Create club admin user
+                $adminUser = User::create([
+                    'name' => $clubData['admin_name'],
+                    'email' => $clubData['admin_email'],
+                    'password' => Hash::make('club123456'),
+                    'role' => 'club',
+                    'phone' => $clubData['admin_phone'],
+                    'country' => 'Ecuador',
+                    'club_name' => $clubData['name'],
+                    'parent_league_id' => $clubData['league_id'],
+                    'city' => $clubData['city'],
+                    'address' => $clubData['address'],
+                    'email_verified_at' => now(),
+                ]);
+
+                // Create club entity
+                $club = Club::create([
+                    'user_id' => $adminUser->id,
+                    'league_id' => $clubData['league_id'],
+                    'name' => $clubData['name'],
+                    'city' => $clubData['city'],
+                    'address' => $clubData['address'],
+                    'status' => 'active',
+                ]);
+
+                // Update user with polymorphic relation
+                $adminUser->update([
+                    'roleable_id' => $club->id,
+                    'roleable_type' => Club::class,
+                ]);
+
+                $this->command->info("Club '{$clubData['name']}' created successfully!");
+            } else {
+                $this->command->info("Club '{$clubData['name']}' already exists.");
             }
-
-            // Crear usuario administrador del club
-            $user = User::create([
-                'name' => $clubData['admin_name'],
-                'email' => $clubData['admin_email'],
-                'password' => Hash::make('password123'),
-                'role' => 'club',
-                'phone' => $clubData['admin_phone'],
-                'country' => 'Ecuador',
-                'club_name' => $clubData['name'],
-                'parent_league_id' => $league->id,
-                'city' => $clubData['city'],
-                'address' => $clubData['address'],
-            ]);
-
-            // Crear la entidad club
-            $club = Club::create([
-                'user_id' => $user->id,
-                'league_id' => $league->id,
-                'name' => $clubData['name'],
-                'city' => $clubData['city'],
-                'address' => $clubData['address'],
-                'status' => 'active',
-            ]);
-
-            // Actualizar el usuario con la relación polimórfica
-            $user->update([
-                'roleable_id' => $club->id,
-                'roleable_type' => Club::class,
-            ]);
-
-            $this->command->info("Club creado: {$club->name} en liga: {$league->name} con admin: {$user->email}");
         }
+
+        $this->command->info('Club seeding completed!');
+        $this->command->info('Default password for all club admins: club123456');
     }
 }
