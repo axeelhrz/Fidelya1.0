@@ -68,30 +68,50 @@ const CustomStepConnector = styled(StepConnector)(({ theme }) => ({
   },
 }));
 
-// Esquema completo para todo el formulario
-const signUpSchema = z.object({
+// Esquema base para validación
+const baseSchema = z.object({
   role: z.enum(['liga', 'miembro', 'club'], {
-    error: 'Selecciona un tipo de cuenta',
+    errorMap: () => ({ message: 'Selecciona un tipo de cuenta' }),
   }),
   email: z.string().trim().min(1, 'El correo electrónico es requerido').email('Ingresa un correo electrónico válido'),
   password: z.string().trim().min(8, 'La contraseña debe tener al menos 8 caracteres'),
   password_confirmation: z.string().trim().min(1, 'Confirma tu contraseña'),
   phone: z.string().trim().min(1, 'El teléfono es requerido'),
   country: z.string().trim().min(1, 'El país es requerido'),
-  // Campos opcionales que se validarán dinámicamente
-  league_name: z.string().optional(),
-  province: z.string().optional(),
-  club_name: z.string().optional(),
-  league_id: z.string().optional(),
-  city: z.string().optional(),
-  address: z.string().optional(),
-  full_name: z.string().optional(),
-  club_id: z.string().optional(),
-  birth_date: z.string().optional(),
-  gender: z.enum(['masculino', 'femenino']).optional(),
-  rubber_type: z.enum(['liso', 'pupo', 'ambos']).optional(),
+});
+
+// Esquemas específicos por rol
+const ligaSchema = baseSchema.extend({
+  league_name: z.string().trim().min(1, 'El nombre de la liga es requerido'),
+  province: z.string().trim().min(1, 'La provincia es requerida'),
+});
+
+const clubSchema = baseSchema.extend({
+  club_name: z.string().trim().min(1, 'El nombre del club es requerido'),
+  league_id: z.string().min(1, 'Selecciona una liga'),
+  city: z.string().trim().min(1, 'La ciudad es requerida'),
+  address: z.string().trim().min(1, 'La dirección es requerida'),
+});
+
+const miembroSchema = baseSchema.extend({
+  full_name: z.string().trim().min(1, 'El nombre completo es requerido'),
+  club_id: z.string().min(1, 'Selecciona un club'),
+  birth_date: z.string().min(1, 'La fecha de nacimiento es requerida'),
+  gender: z.enum(['masculino', 'femenino'], {
+    errorMap: () => ({ message: 'Selecciona el sexo' }),
+  }),
+  rubber_type: z.enum(['liso', 'pupo', 'ambos'], {
+    errorMap: () => ({ message: 'Selecciona el tipo de caucho' }),
+  }),
   ranking: z.string().optional(),
-}).refine((data) => data.password === data.password_confirmation, {
+});
+
+// Esquema completo con validación condicional
+const signUpSchema = z.discriminatedUnion('role', [
+  ligaSchema.extend({ role: z.literal('liga') }),
+  clubSchema.extend({ role: z.literal('club') }),
+  miembroSchema.extend({ role: z.literal('miembro') }),
+]).refine((data) => data.password === data.password_confirmation, {
   message: 'Las contraseñas no coinciden',
   path: ['password_confirmation'],
 });
@@ -118,12 +138,24 @@ const SignUpForm: React.FC = () => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [clubs, setClubs] = useState<Club[]>([]);
-  const [mounted, setMounted] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const { signUp, isLoading, error, clearError } = useSignUp();
 
   // Evitar problemas de hidratación
   useEffect(() => {
-    setMounted(true);
+    setIsClient(true);
+    // Cargar datos simulados
+    setLeagues([
+      { id: '1', name: 'Liga Nacional de Tenis de Mesa' },
+      { id: '2', name: 'Liga Provincial de Pichincha' },
+      { id: '3', name: 'Liga Regional del Guayas' },
+    ]);
+
+    setClubs([
+      { id: '1', name: 'Club Deportivo Los Campeones', league: 'Liga Nacional' },
+      { id: '2', name: 'Club Raqueta de Oro', league: 'Liga Provincial' },
+      { id: '3', name: 'Club Tenis de Mesa Quito', league: 'Liga Nacional' },
+    ]);
   }, []);
 
   const {
@@ -133,16 +165,18 @@ const SignUpForm: React.FC = () => {
     watch,
     trigger,
     setValue,
+    reset,
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     mode: 'onChange',
     defaultValues: {
-      role: undefined,
+      role: 'liga', // Valor por defecto para evitar undefined
       country: 'Ecuador',
       email: '',
       password: '',
       password_confirmation: '',
       phone: '',
+      // Campos opcionales con valores por defecto
       league_name: '',
       province: '',
       club_name: '',
@@ -152,88 +186,57 @@ const SignUpForm: React.FC = () => {
       full_name: '',
       club_id: '',
       birth_date: '',
-      gender: undefined,
-      rubber_type: undefined,
+      gender: 'masculino',
+      rubber_type: 'liso',
       ranking: '',
     },
   });
 
-  const watchedFields = watch();
-  const selectedRole = watchedFields.role;
+  const watchedRole = watch('role');
   const steps = ['Tipo de cuenta', 'Información personal'];
-
-  // Cargar datos simulados
-  useEffect(() => {
-    if (mounted) {
-      setLeagues([
-        { id: '1', name: 'Liga Nacional de Tenis de Mesa' },
-        { id: '2', name: 'Liga Provincial de Pichincha' },
-        { id: '3', name: 'Liga Regional del Guayas' },
-      ]);
-
-      setClubs([
-        { id: '1', name: 'Club Deportivo Los Campeones', league: 'Liga Nacional' },
-        { id: '2', name: 'Club Raqueta de Oro', league: 'Liga Provincial' },
-        { id: '3', name: 'Club Tenis de Mesa Quito', league: 'Liga Nacional' },
-      ]);
-    }
-  }, [mounted]);
 
   const onSubmit = async (data: SignUpFormData) => {
     if (currentStep === 0) {
       // Validar solo el rol en el paso 1
-      if (!data.role) {
-        return;
+      const isRoleValid = await trigger('role');
+      if (isRoleValid && data.role) {
+        setCurrentStep(1);
       }
-      setCurrentStep(1);
       return;
     }
 
     // Paso 2: Enviar datos completos
     clearError();
-    
-    // Validar campos específicos según el rol
-    const validationErrors: string[] = [];
-    
-    if (selectedRole === 'liga') {
-      if (!data.league_name?.trim()) validationErrors.push('El nombre de la liga es requerido');
-      if (!data.province?.trim()) validationErrors.push('La provincia es requerida');
-    } else if (selectedRole === 'club') {
-      if (!data.club_name?.trim()) validationErrors.push('El nombre del club es requerido');
-      if (!data.league_id) validationErrors.push('Selecciona una liga');
-      if (!data.city?.trim()) validationErrors.push('La ciudad es requerida');
-      if (!data.address?.trim()) validationErrors.push('La dirección es requerida');
-    } else if (selectedRole === 'miembro') {
-      if (!data.full_name?.trim()) validationErrors.push('El nombre completo es requerido');
-      if (!data.club_id) validationErrors.push('Selecciona un club');
-      if (!data.birth_date) validationErrors.push('La fecha de nacimiento es requerida');
-      if (!data.gender) validationErrors.push('Selecciona el sexo');
-      if (!data.rubber_type) validationErrors.push('Selecciona el tipo de caucho');
-    }
-
-    if (validationErrors.length > 0) {
-      console.error('Validation errors:', validationErrors);
-      return;
-    }
-
     await signUp(data);
   };
 
   const handleNext = async () => {
     const isRoleValid = await trigger('role');
-    if (isRoleValid && watchedFields.role) {
+    if (isRoleValid && watchedRole) {
       setCurrentStep(1);
     }
   };
 
   const handleBack = () => {
-    if (currentStep === 1) {
-      setCurrentStep(0);
-    }
+    setCurrentStep(0);
   };
 
   const handleRoleSelect = (role: 'liga' | 'miembro' | 'club') => {
     setValue('role', role);
+    // Limpiar campos específicos del rol anterior
+    setValue('league_name', '');
+    setValue('province', '');
+    setValue('club_name', '');
+    setValue('league_id', '');
+    setValue('city', '');
+    setValue('address', '');
+    setValue('full_name', '');
+    setValue('club_id', '');
+    setValue('birth_date', '');
+    setValue('gender', 'masculino');
+    setValue('rubber_type', 'liso');
+    setValue('ranking', '');
+    
     trigger('role');
   };
 
@@ -271,63 +274,24 @@ const SignUpForm: React.FC = () => {
     }
   };
 
-  // Función helper para obtener errores de campos específicos
-  const getFieldError = (fieldName: keyof SignUpFormData) => {
-    return errors[fieldName];
-  };
-
-  // Función helper para obtener valores de campos específicos
-  const getFieldValue = (fieldName: keyof SignUpFormData) => {
-    return watchedFields[fieldName];
-  };
-
-  // Si no está montado, mostrar un loading simple
-  if (!mounted) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  // Variantes de animación simplificadas
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
-    },
-  };
-  // Función para crear campos de texto con el estilo de SignIn
-    const createTextField = (
-      name: keyof SignUpFormData,
-      label: string,
-      icon: React.ReactElement<SvgIconProps>,
-      options: {
-        type?: string;
-        placeholder?: string;
-        multiline?: boolean;
-        rows?: number;
-        required?: boolean;
-      } = {}
-    ) => (
+  // Función helper para crear campos de texto
+  const createTextField = (
+    name: keyof SignUpFormData,
+    label: string,
+    icon: React.ReactElement<SvgIconProps>,
+    options: {
+      type?: string;
+      placeholder?: string;
+      multiline?: boolean;
+      rows?: number;
+      required?: boolean;
+    } = {}
+  ) => (
     <Controller
       name={name}
       control={control}
       render={({ field }) => {
-        const fieldError = getFieldError(name);
+        const fieldError = errors[name];
         const fieldState = getFieldState(name, field.value || '', !!fieldError);
         
         return (
@@ -425,540 +389,531 @@ const SignUpForm: React.FC = () => {
     />
   );
 
-  // Componente para campos de Liga
-  const renderLeagueFields = () => (
-    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-      {/* Nombre de la Liga */}
-      {createTextField('league_name', 'Nombre de la liga', <BusinessIcon />, {
-        placeholder: 'Ej: Liga Nacional de Tenis de Mesa',
-        required: true
-      })}
+  // Renderizar campos específicos por rol
+  const renderRoleSpecificFields = () => {
+    if (!watchedRole) return null;
 
-      {/* Provincia */}
-      {createTextField('province', 'Provincia / Región', <LocationOnIcon />, {
-        placeholder: 'Ej: Pichincha, Guayas, Azuay',
-        required: true
-      })}
+    switch (watchedRole) {
+      case 'liga':
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            {createTextField('league_name', 'Nombre de la liga', <BusinessIcon />, {
+              placeholder: 'Ej: Liga Nacional de Tenis de Mesa',
+              required: true
+            })}
 
-      {/* Logo Upload */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="body2" sx={{ mb: 2, fontWeight: 500, color: 'text.primary' }}>
-          Logo de la liga (opcional)
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar
-            src={logoPreview || undefined}
-            sx={{
-              width: 64,
-              height: 64,
-              backgroundColor: 'primary.light',
-              color: 'primary.main',
-            }}
-          >
-            <BusinessIcon sx={{ fontSize: 32 }} />
-          </Avatar>
-          <Button
-            component="label"
-            variant="outlined"
-            startIcon={<CloudUploadIcon />}
-            sx={{
-              height: 48,
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 500,
-            }}
-          >
-            Subir logo
-            <input
-              type="file"
-              hidden
-              accept="image/*"
-              onChange={(e) => handleFileChange(e, 'logo')}
-            />
-          </Button>
-        </Box>
-      </Box>
-    </Box>
-  );
+            {createTextField('province', 'Provincia / Región', <LocationOnIcon />, {
+              placeholder: 'Ej: Pichincha, Guayas, Azuay',
+              required: true
+            })}
 
-  // Componente para campos de Club
-  const renderClubFields = () => (
-    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-      {/* Nombre del Club */}
-      {createTextField('club_name', 'Nombre del club', <BusinessIcon />, {
-        placeholder: 'Ej: Club Deportivo Los Campeones',
-        required: true
-      })}
-
-      {/* Liga a la que pertenece */}
-      <Box sx={{ mb: 3 }}>
-        <Controller
-          name="league_id"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('league_id');
-            return (
-              <FormControl 
-                fullWidth 
-                error={!!fieldError}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
-                    borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    '& fieldset': {
-                      borderColor: fieldError ? 'error.main' : 'divider',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: fieldError ? 'error.main' : 'primary.light',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: fieldError ? 'error.main' : 'primary.main',
-                      borderWidth: 2,
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: fieldError ? 'error.main' : 'text.secondary',
-                    fontWeight: 500,
-                    fontSize: '0.9375rem',
-                    '&.Mui-focused': {
-                      color: fieldError ? 'error.main' : 'primary.main',
-                    },
-                  },
-                }}
-              >
-                <InputLabel>Liga a la que pertenece</InputLabel>
-                <Select
-                  {...field}
-                  label="Liga a la que pertenece"
-                  disabled={isLoading}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" sx={{ mb: 2, fontWeight: 500, color: 'text.primary' }}>
+                Logo de la liga (opcional)
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar
+                  src={logoPreview || undefined}
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    backgroundColor: 'primary.light',
+                    color: 'primary.main',
+                  }}
                 >
-                  {leagues.map((league) => (
-                    <MenuItem key={league.id} value={league.id}>
-                      {league.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {fieldError && (
-                  <FormHelperText sx={{ fontSize: '0.8125rem', fontWeight: 500, ml: 0, mt: 1 }}>
-                    {fieldError.message}
-                  </FormHelperText>
-                )}
-              </FormControl>
-            );
-          }}
-        />
-      </Box>
-
-      {/* Ciudad */}
-      {createTextField('city', 'Provincia / Ciudad', <LocationOnIcon />, {
-        placeholder: 'Ej: Quito, Guayaquil, Cuenca',
-        required: true
-      })}
-
-      {/* Dirección */}
-      {createTextField('address', 'Dirección completa', <HomeIcon />, {
-        placeholder: 'Ej: Av. 6 de Diciembre N24-253 y Wilson',
-        multiline: true,
-        rows: 2,
-        required: true
-      })}
-
-      {/* Logo Upload */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="body2" sx={{ mb: 2, fontWeight: 500, color: 'text.primary' }}>
-          Logo del club (opcional)
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar
-            src={logoPreview || undefined}
-            sx={{
-              width: 64,
-              height: 64,
-              backgroundColor: 'primary.light',
-              color: 'primary.main',
-            }}
-          >
-            <BusinessIcon sx={{ fontSize: 32 }} />
-          </Avatar>
-          <Button
-            component="label"
-            variant="outlined"
-            startIcon={<CloudUploadIcon />}
-            sx={{
-              height: 48,
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 500,
-            }}
-          >
-            Subir logo
-            <input
-              type="file"
-              hidden
-              accept="image/*"
-              onChange={(e) => handleFileChange(e, 'logo')}
-            />
-          </Button>
-        </Box>
-      </Box>
-    </Box>
-  );
-
-  // Componente para campos de Miembro
-  const renderMemberFields = () => (
-    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-      {/* Nombre completo */}
-      {createTextField('full_name', 'Nombre completo', <PersonIcon />, {
-        placeholder: 'Ej: Juan Carlos Pérez González',
-        required: true
-      })}
-
-      {/* Foto de perfil */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="body2" sx={{ mb: 2, fontWeight: 500, color: 'text.primary' }}>
-          Foto de perfil (opcional pero recomendable)
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar
-            src={photoPreview || undefined}
-            sx={{
-              width: 64,
-              height: 64,
-              backgroundColor: 'primary.light',
-              color: 'primary.main',
-            }}
-          >
-            <PersonIcon sx={{ fontSize: 32 }} />
-          </Avatar>
-          <Button
-            component="label"
-            variant="outlined"
-            startIcon={<CloudUploadIcon />}
-            sx={{
-              height: 48,
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 500,
-            }}
-          >
-            Subir foto
-            <input
-              type="file"
-              hidden
-              accept="image/*"
-              onChange={(e) => handleFileChange(e, 'photo')}
-            />
-          </Button>
-        </Box>
-      </Box>
-
-      {/* Club de pertenencia */}
-      <Box sx={{ mb: 3 }}>
-        <Controller
-          name="club_id"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('club_id');
-            return (
-              <FormControl 
-                fullWidth 
-                error={!!fieldError}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
+                  <BusinessIcon sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{
+                    height: 48,
                     borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    '& fieldset': {
-                      borderColor: fieldError ? 'error.main' : 'divider',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: fieldError ? 'error.main' : 'primary.light',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: fieldError ? 'error.main' : 'primary.main',
-                      borderWidth: 2,
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: fieldError ? 'error.main' : 'text.secondary',
+                    textTransform: 'none',
                     fontWeight: 500,
-                    fontSize: '0.9375rem',
-                    '&.Mui-focused': {
-                      color: fieldError ? 'error.main' : 'primary.main',
-                    },
-                  },
-                }}
-              >
-                <InputLabel>Club de pertenencia</InputLabel>
-                <Select
-                  {...field}
-                  label="Club de pertenencia"
-                  disabled={isLoading}
+                  }}
                 >
-                  {clubs.map((club) => (
-                    <MenuItem key={club.id} value={club.id}>
-                      {club.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {fieldError && (
-                  <FormHelperText sx={{ fontSize: '0.8125rem', fontWeight: 500, ml: 0, mt: 1 }}>
-                    {fieldError.message}
-                  </FormHelperText>
-                )}
-              </FormControl>
-            );
-          }}
-        />
-      </Box>
+                  Subir logo
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, 'logo')}
+                  />
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+        );
 
-      {/* Ranking inicial */}
-      {createTextField('ranking', 'Ranking inicial (opcional)', <EmojiEventsIcon />, {
-        placeholder: 'Ej: 1500 puntos o "Sin ranking"'
-      })}
+      case 'club':
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            {createTextField('club_name', 'Nombre del club', <BusinessIcon />, {
+              placeholder: 'Ej: Club Deportivo Los Campeones',
+              required: true
+            })}
 
-      {/* Fecha de nacimiento */}
-      <Box sx={{ mb: 3 }}>
-        <Controller
-          name="birth_date"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('birth_date');
-            const fieldState = getFieldState('birth_date', field.value || '', !!fieldError);
-            return (
-              <TextField
-                {...field}
-                fullWidth
-                label="Fecha de nacimiento"
-                type="date"
-                error={!!fieldError}
-                helperText={fieldError?.message}
-                disabled={isLoading}
-                onFocus={() => setFocusedField('birth_date')}
-                onBlur={() => setFocusedField(null)}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <CakeIcon sx={{ 
-                        color: getIconColor(fieldState),
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        fontSize: 20,
-                      }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
-                    borderRadius: 2,
-                    backgroundColor: 'background.paper',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '& fieldset': {
-                      borderColor: fieldState === 'error' ? 'error.main' : 
-                                  fieldState === 'success' ? 'success.light' :
-                                  fieldState === 'focused' ? 'primary.main' : 'divider',
-                      borderWidth: fieldState === 'focused' ? 2 : 1,
-                    },
-                    '&:hover fieldset': {
-                      borderColor: fieldState === 'error' ? 'error.main' : 
-                                  fieldState === 'success' ? 'success.main' :
-                                  'primary.light',
-                    },
-                    '&.Mui-focused': {
-                      transform: 'scale(1.005)',
-                      boxShadow: fieldState === 'error' ? 
-                        '0 0 0 4px rgba(244, 67, 54, 0.08)' :
-                        '0 0 0 4px rgba(47, 109, 251, 0.08)',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: fieldState === 'error' ? 'error.main' : 'text.secondary',
-                    fontWeight: 500,
-                    fontSize: '0.9375rem',
-                    '&.Mui-focused': {
-                      color: fieldState === 'error' ? 'error.main' : 'primary.main',
-                    },
-                  },
-                  '& .MuiOutlinedInput-input': {
-                    fontSize: '0.9375rem',
-                    fontWeight: 400,
-                  },
-                  '& .MuiFormHelperText-root': {
-                    fontSize: '0.8125rem',
-                    fontWeight: 500,
-                    marginLeft: 0,
-                    marginTop: 1,
-                  },
+            <Box sx={{ mb: 3 }}>
+              <Controller
+                name="league_id"
+                control={control}
+                render={({ field }) => {
+                  const fieldError = errors.league_id;
+                  return (
+                    <FormControl 
+                      fullWidth 
+                      error={!!fieldError}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          height: 56,
+                          borderRadius: 2,
+                          backgroundColor: 'background.paper',
+                          '& fieldset': {
+                            borderColor: fieldError ? 'error.main' : 'divider',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: fieldError ? 'error.main' : 'primary.light',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: fieldError ? 'error.main' : 'primary.main',
+                            borderWidth: 2,
+                          },
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: fieldError ? 'error.main' : 'text.secondary',
+                          fontWeight: 500,
+                          fontSize: '0.9375rem',
+                          '&.Mui-focused': {
+                            color: fieldError ? 'error.main' : 'primary.main',
+                          },
+                        },
+                      }}
+                    >
+                      <InputLabel>Liga a la que pertenece</InputLabel>
+                      <Select
+                        {...field}
+                        label="Liga a la que pertenece"
+                        disabled={isLoading}
+                      >
+                        {leagues.map((league) => (
+                          <MenuItem key={league.id} value={league.id}>
+                            {league.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {fieldError && (
+                        <FormHelperText sx={{ fontSize: '0.8125rem', fontWeight: 500, ml: 0, mt: 1 }}>
+                          {fieldError.message}
+                        </FormHelperText>
+                      )}
+                    </FormControl>
+                  );
                 }}
               />
-            );
-          }}
-        />
-      </Box>
+            </Box>
 
-      {/* Sexo */}
-      <Box sx={{ mb: 3 }}>
-        <Controller
-          name="gender"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('gender');
-            return (
-              <FormControl error={!!fieldError}>
-                <FormLabel sx={{ 
-                  mb: 1, 
-                  fontWeight: 500, 
-                  color: fieldError ? 'error.main' : 'text.primary',
-                  fontSize: '0.9375rem'
-                }}>
-                  Sexo
-                </FormLabel>
-                <RadioGroup
-                  {...field}
-                  row
-                  sx={{ gap: 2 }}
-                >
-                  <FormControlLabel 
-                    value="masculino" 
-                    control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
-                    label="Masculino"
-                    sx={{
-                      '& .MuiFormControlLabel-label': {
-                        fontSize: '0.9375rem',
-                        fontWeight: 500,
-                        color: 'text.secondary',
-                      },
-                    }}
-                  />
-                  <FormControlLabel 
-                    value="femenino" 
-                    control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
-                    label="Femenino"
-                    sx={{
-                      '& .MuiFormControlLabel-label': {
-                        fontSize: '0.9375rem',
-                        fontWeight: 500,
-                        color: 'text.secondary',
-                      },
-                    }}
-                  />
-                </RadioGroup>
-                {fieldError && (
-                  <FormHelperText sx={{ fontSize: '0.8125rem', fontWeight: 500, ml: 0, mt: 1 }}>
-                    {fieldError.message}
-                  </FormHelperText>
-                )}
-              </FormControl>
-            );
-          }}
-        />
-      </Box>
+            {createTextField('city', 'Provincia / Ciudad', <LocationOnIcon />, {
+              placeholder: 'Ej: Quito, Guayaquil, Cuenca',
+              required: true
+            })}
 
-      {/* Tipo de caucho */}
-      <Box sx={{ mb: 3 }}>
-        <Controller
-          name="rubber_type"
-          control={control}
-          render={({ field }) => {
-            const fieldError = getFieldError('rubber_type');
-            return (
-              <FormControl error={!!fieldError}>
-                <FormLabel sx={{ 
-                  mb: 1, 
-                  fontWeight: 500, 
-                  color: fieldError ? 'error.main' : 'text.primary',
-                  fontSize: '0.9375rem'
-                }}>
-                  Tipo de caucho
-                </FormLabel>
-                <RadioGroup
-                  {...field}
-                  row
-                  sx={{ gap: 2 }}
+            {createTextField('address', 'Dirección completa', <HomeIcon />, {
+              placeholder: 'Ej: Av. 6 de Diciembre N24-253 y Wilson',
+              multiline: true,
+              rows: 2,
+              required: true
+            })}
+
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" sx={{ mb: 2, fontWeight: 500, color: 'text.primary' }}>
+                Logo del club (opcional)
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar
+                  src={logoPreview || undefined}
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    backgroundColor: 'primary.light',
+                    color: 'primary.main',
+                  }}
                 >
-                  <FormControlLabel 
-                    value="liso" 
-                    control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
-                    label="Liso"
-                    sx={{
-                      '& .MuiFormControlLabel-label': {
-                        fontSize: '0.9375rem',
-                        fontWeight: 500,
-                        color: 'text.secondary',
-                      },
-                    }}
+                  <BusinessIcon sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{
+                    height: 48,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  Subir logo
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, 'logo')}
                   />
-                  <FormControlLabel 
-                    value="pupo" 
-                    control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
-                    label="Pupo"
-                    sx={{
-                      '& .MuiFormControlLabel-label': {
-                        fontSize: '0.9375rem',
-                        fontWeight: 500,
-                        color: 'text.secondary',
-                      },
-                    }}
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+        );
+
+      case 'miembro':
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            {createTextField('full_name', 'Nombre completo', <PersonIcon />, {
+              placeholder: 'Ej: Juan Carlos Pérez González',
+              required: true
+            })}
+
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" sx={{ mb: 2, fontWeight: 500, color: 'text.primary' }}>
+                Foto de perfil (opcional pero recomendable)
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar
+                  src={photoPreview || undefined}
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    backgroundColor: 'primary.light',
+                    color: 'primary.main',
+                  }}
+                >
+                  <PersonIcon sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{
+                    height: 48,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  Subir foto
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, 'photo')}
                   />
-                  <FormControlLabel 
-                    value="ambos" 
-                    control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
-                    label="Ambos"
-                    sx={{
-                      '& .MuiFormControlLabel-label': {
-                        fontSize: '0.9375rem',
-                        fontWeight: 500,
-                        color: 'text.secondary',
-                      },
-                    }}
-                  />
-                </RadioGroup>
-                {fieldError && (
-                  <FormHelperText sx={{ fontSize: '0.8125rem', fontWeight: 500, ml: 0, mt: 1 }}>
-                    {fieldError.message}
-                  </FormHelperText>
-                )}
-              </FormControl>
-            );
-          }}
-        />
-      </Box>
-    </Box>
-  );
+                </Button>
+              </Box>
+            </Box>
+
+            <Box sx={{ mb: 3 }}>
+              <Controller
+                name="club_id"
+                control={control}
+                render={({ field }) => {
+                  const fieldError = errors.club_id;
+                  return (
+                    <FormControl 
+                      fullWidth 
+                      error={!!fieldError}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          height: 56,
+                          borderRadius: 2,
+                          backgroundColor: 'background.paper',
+                          '& fieldset': {
+                            borderColor: fieldError ? 'error.main' : 'divider',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: fieldError ? 'error.main' : 'primary.light',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: fieldError ? 'error.main' : 'primary.main',
+                            borderWidth: 2,
+                          },
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: fieldError ? 'error.main' : 'text.secondary',
+                          fontWeight: 500,
+                          fontSize: '0.9375rem',
+                          '&.Mui-focused': {
+                            color: fieldError ? 'error.main' : 'primary.main',
+                          },
+                        },
+                      }}
+                    >
+                      <InputLabel>Club de pertenencia</InputLabel>
+                      <Select
+                        {...field}
+                        label="Club de pertenencia"
+                        disabled={isLoading}
+                      >
+                        {clubs.map((club) => (
+                          <MenuItem key={club.id} value={club.id}>
+                            {club.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {fieldError && (
+                        <FormHelperText sx={{ fontSize: '0.8125rem', fontWeight: 500, ml: 0, mt: 1 }}>
+                          {fieldError.message}
+                        </FormHelperText>
+                      )}
+                    </FormControl>
+                  );
+                }}
+              />
+            </Box>
+
+            {createTextField('ranking', 'Ranking inicial (opcional)', <EmojiEventsIcon />, {
+              placeholder: 'Ej: 1500 puntos o "Sin ranking"'
+            })}
+
+            <Box sx={{ mb: 3 }}>
+              <Controller
+                name="birth_date"
+                control={control}
+                render={({ field }) => {
+                  const fieldError = errors.birth_date;
+                  const fieldState = getFieldState('birth_date', field.value || '', !!fieldError);
+                  return (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="Fecha de nacimiento"
+                      type="date"
+                      error={!!fieldError}
+                      helperText={fieldError?.message}
+                      disabled={isLoading}
+                      onFocus={() => setFocusedField('birth_date')}
+                      onBlur={() => setFocusedField(null)}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <CakeIcon sx={{ 
+                              color: getIconColor(fieldState),
+                              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                              fontSize: 20,
+                            }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          height: 56,
+                          borderRadius: 2,
+                          backgroundColor: 'background.paper',
+                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                          '& fieldset': {
+                            borderColor: fieldState === 'error' ? 'error.main' : 
+                                        fieldState === 'success' ? 'success.light' :
+                                        fieldState === 'focused' ? 'primary.main' : 'divider',
+                            borderWidth: fieldState === 'focused' ? 2 : 1,
+                          },
+                          '&:hover fieldset': {
+                            borderColor: fieldState === 'error' ? 'error.main' : 
+                                        fieldState === 'success' ? 'success.main' :
+                                        'primary.light',
+                          },
+                          '&.Mui-focused': {
+                            transform: 'scale(1.005)',
+                            boxShadow: fieldState === 'error' ? 
+                              '0 0 0 4px rgba(244, 67, 54, 0.08)' :
+                              '0 0 0 4px rgba(47, 109, 251, 0.08)',
+                          },
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: fieldState === 'error' ? 'error.main' : 'text.secondary',
+                          fontWeight: 500,
+                          fontSize: '0.9375rem',
+                          '&.Mui-focused': {
+                            color: fieldState === 'error' ? 'error.main' : 'primary.main',
+                          },
+                        },
+                        '& .MuiOutlinedInput-input': {
+                          fontSize: '0.9375rem',
+                          fontWeight: 400,
+                        },
+                        '& .MuiFormHelperText-root': {
+                          fontSize: '0.8125rem',
+                          fontWeight: 500,
+                          marginLeft: 0,
+                          marginTop: 1,
+                        },
+                      }}
+                    />
+                  );
+                }}
+              />
+            </Box>
+
+            <Box sx={{ mb: 3 }}>
+              <Controller
+                name="gender"
+                control={control}
+                render={({ field }) => {
+                  const fieldError = errors.gender;
+                  return (
+                    <FormControl error={!!fieldError}>
+                      <FormLabel sx={{ 
+                        mb: 1, 
+                        fontWeight: 500, 
+                        color: fieldError ? 'error.main' : 'text.primary',
+                        fontSize: '0.9375rem'
+                      }}>
+                        Sexo
+                      </FormLabel>
+                      <RadioGroup
+                        {...field}
+                        row
+                        sx={{ gap: 2 }}
+                      >
+                        <FormControlLabel 
+                          value="masculino" 
+                          control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
+                          label="Masculino"
+                          sx={{
+                            '& .MuiFormControlLabel-label': {
+                              fontSize: '0.9375rem',
+                              fontWeight: 500,
+                              color: 'text.secondary',
+                            },
+                          }}
+                        />
+                        <FormControlLabel 
+                          value="femenino" 
+                          control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
+                          label="Femenino"
+                          sx={{
+                            '& .MuiFormControlLabel-label': {
+                              fontSize: '0.9375rem',
+                              fontWeight: 500,
+                              color: 'text.secondary',
+                            },
+                          }}
+                        />
+                      </RadioGroup>
+                      {fieldError && (
+                        <FormHelperText sx={{ fontSize: '0.8125rem', fontWeight: 500, ml: 0, mt: 1 }}>
+                          {fieldError.message}
+                        </FormHelperText>
+                      )}
+                    </FormControl>
+                  );
+                }}
+              />
+            </Box>
+
+            <Box sx={{ mb: 3 }}>
+              <Controller
+                name="rubber_type"
+                control={control}
+                render={({ field }) => {
+                  const fieldError = errors.rubber_type;
+                  return (
+                    <FormControl error={!!fieldError}>
+                      <FormLabel sx={{ 
+                        mb: 1, 
+                        fontWeight: 500, 
+                        color: fieldError ? 'error.main' : 'text.primary',
+                        fontSize: '0.9375rem'
+                      }}>
+                        Tipo de caucho
+                      </FormLabel>
+                      <RadioGroup
+                        {...field}
+                        row
+                        sx={{ gap: 2 }}
+                      >
+                        <FormControlLabel 
+                          value="liso" 
+                          control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
+                          label="Liso"
+                          sx={{
+                            '& .MuiFormControlLabel-label': {
+                              fontSize: '0.9375rem',
+                              fontWeight: 500,
+                              color: 'text.secondary',
+                            },
+                          }}
+                        />
+                        <FormControlLabel 
+                          value="pupo" 
+                          control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
+                          label="Pupo"
+                          sx={{
+                            '& .MuiFormControlLabel-label': {
+                              fontSize: '0.9375rem',
+                              fontWeight: 500,
+                              color: 'text.secondary',
+                            },
+                          }}
+                        />
+                        <FormControlLabel 
+                          value="ambos" 
+                          control={<Radio sx={{ '&.Mui-checked': { color: 'primary.main' } }} />} 
+                          label="Ambos"
+                          sx={{
+                            '& .MuiFormControlLabel-label': {
+                              fontSize: '0.9375rem',
+                              fontWeight: 500,
+                              color: 'text.secondary',
+                            },
+                          }}
+                        />
+                      </RadioGroup>
+                      {fieldError && (
+                        <FormHelperText sx={{ fontSize: '0.8125rem', fontWeight: 500, ml: 0, mt: 1 }}>
+                          {fieldError.message}
+                        </FormHelperText>
+                      )}
+                    </FormControl>
+                  );
+                }}
+              />
+            </Box>
+          </Box>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   // Campos comunes (país, email, teléfono, contraseñas)
   const renderCommonFields = () => (
     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-      {/* País */}
       {createTextField('country', 'País', <PublicIcon />, {
         required: true
       })}
 
-      {/* Email */}
       {createTextField('email', 'Correo electrónico', <EmailIcon />, {
         type: 'email',
         placeholder: 'tu@email.com',
         required: true
       })}
 
-      {/* Teléfono */}
       {createTextField('phone', 'Teléfono de contacto', <PhoneIcon />, {
         type: 'tel',
         placeholder: '+593 99 123 4567',
         required: true
       })}
 
-      {/* Contraseña */}
       <Box sx={{ mb: 3 }}>
         <Controller
           name="password"
           control={control}
           render={({ field }) => {
-            const fieldError = getFieldError('password');
+            const fieldError = errors.password;
             const fieldState = getFieldState('password', field.value || '', !!fieldError);
             return (
               <TextField
@@ -1063,15 +1018,14 @@ const SignUpForm: React.FC = () => {
         />
       </Box>
 
-      {/* Confirmar Contraseña */}
       <Box sx={{ mb: 3 }}>
         <Controller
           name="password_confirmation"
           control={control}
           render={({ field }) => {
-            const fieldError = getFieldError('password_confirmation');
+            const fieldError = errors.password_confirmation;
             const fieldState = getFieldState('password_confirmation', field.value || '', !!fieldError);
-            const passwordValue = getFieldValue('password');
+            const passwordValue = watch('password');
             return (
               <TextField
                 {...field}
@@ -1177,6 +1131,35 @@ const SignUpForm: React.FC = () => {
     </Box>
   );
 
+  // Si no está montado, mostrar loading
+  if (!isClient) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+    },
+  };
+
   return (
     <motion.div
       variants={containerVariants}
@@ -1211,7 +1194,7 @@ const SignUpForm: React.FC = () => {
                         },
                       },
                     }}
-                  >
+                          >
                     {label}
                   </StepLabel>
                 </Step>
@@ -1247,159 +1230,164 @@ const SignUpForm: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Step 1: Role Selection */}
-        {currentStep === 0 && (
-          <motion.div
-            key="step1"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <motion.div variants={itemVariants}>
-              <Controller
-                name="role"
-                control={control}
-                render={({ field }) => (
-                  <RoleSelector
-                    selectedRole={field.value || ''}
-                    onRoleSelect={handleRoleSelect}
-                  />
-                )}
-              />
-
-              {errors.role && (
-                <Typography 
-                  variant="body2" 
-                  color="error" 
-                  sx={{ mt: 1, fontSize: '0.8125rem', fontWeight: 500 }}
-                >
-                  {errors.role.message}
-                </Typography>
-              )}
-
-              <Box sx={{ mt: 4 }}>
-                <Button
-                  onClick={handleNext}
-                  disabled={!watchedFields.role}
-                  fullWidth
-                  variant="contained"
-                  sx={{
-                    height: 56,
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    boxShadow: '0 4px 12px rgba(47, 109, 251, 0.15)',
-                    '&:hover': {
-                      boxShadow: '0 8px 20px rgba(47, 109, 251, 0.25)',
-                      transform: 'translateY(-1px)',
-                    },
-                    '&:active': {
-                      transform: 'translateY(0)',
-                    },
-                    '&:disabled': {
-                      backgroundColor: 'action.disabledBackground',
-                      color: 'action.disabled',
-                      boxShadow: 'none',
-                      transform: 'none',
-                    },
-                  }}
-                >
-                  Continuar
-                </Button>
-              </Box>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* Step 2: Personal Information */}
-        {currentStep === 1 && selectedRole && (
-          <motion.div
-            key="step2"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <motion.div variants={itemVariants}>
-              {/* Renderizar campos específicos según el rol */}
-              {selectedRole === 'liga' && renderLeagueFields()}
-              {selectedRole === 'club' && renderClubFields()}
-              {selectedRole === 'miembro' && renderMemberFields()}
-              
-              {/* Campos comunes para todos los roles */}
-              {renderCommonFields()}
-
-              {/* Action Buttons */}
-              <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                <Button
-                  onClick={handleBack}
-                  variant="outlined"
-                  startIcon={<ArrowBackIcon />}
-                  sx={{
-                    height: 56,
-                    px: 3,
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    minWidth: 120,
-                    borderColor: 'divider',
-                    color: 'text.secondary',
-                    backgroundColor: 'background.paper',
-                    '&:hover': {
-                      borderColor: 'primary.light',
-                      backgroundColor: 'action.hover',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                    },
-                  }}
-                >
-                  Atrás
-                </Button>
-                
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={isLoading}
-                  sx={{
-                    height: 56,
-                    flex: 1,
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    boxShadow: '0 4px 12px rgba(47, 109, 251, 0.15)',
-                    '&:hover': {
-                      boxShadow: '0 8px 20px rgba(47, 109, 251, 0.25)',
-                      transform: 'translateY(-1px)',
-                    },
-                    '&:active': {
-                      transform: 'translateY(0)',
-                    },
-                    '&:disabled': {
-                      backgroundColor: 'action.disabledBackground',
-                      color: 'action.disabled',
-                      boxShadow: 'none',
-                      transform: 'none',
-                    },
-                  }}
-                >
-                  {isLoading ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <CircularProgress size={20} color="inherit" />
-                      <Typography variant="button" sx={{ fontWeight: 600 }}>
-                        Creando cuenta...
-                      </Typography>
-                    </Box>
-                  ) : (
-                    'Crear cuenta'
+        {/* Step Content */}
+        <AnimatePresence mode="wait">
+          {currentStep === 0 && (
+            <motion.div
+              key="step1"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div variants={itemVariants}>
+                <Controller
+                  name="role"
+                  control={control}
+                  render={({ field }) => (
+                    <RoleSelector
+                      selectedRole={field.value || ''}
+                      onRoleSelect={handleRoleSelect}
+                    />
                   )}
-                </Button>
-              </Box>
+                />
+
+                {errors.role && (
+                  <Typography 
+                    variant="body2" 
+                    color="error" 
+                    sx={{ mt: 1, fontSize: '0.8125rem', fontWeight: 500 }}
+                  >
+                    {errors.role.message}
+                  </Typography>
+                )}
+
+                <Box sx={{ mt: 4 }}>
+                  <Button
+                    onClick={handleNext}
+                    disabled={!watchedRole || isLoading}
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      height: 56,
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      boxShadow: '0 4px 12px rgba(47, 109, 251, 0.15)',
+                      '&:hover': {
+                        boxShadow: '0 8px 20px rgba(47, 109, 251, 0.25)',
+                        transform: 'translateY(-1px)',
+                      },
+                      '&:active': {
+                        transform: 'translateY(0)',
+                      },
+                      '&:disabled': {
+                        backgroundColor: 'action.disabledBackground',
+                        color: 'action.disabled',
+                        boxShadow: 'none',
+                        transform: 'none',
+                      },
+                    }}
+                  >
+                    Continuar
+                  </Button>
+                </Box>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          )}
+
+          {currentStep === 1 && watchedRole && (
+            <motion.div
+              key="step2"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div variants={itemVariants}>
+                {/* Campos específicos del rol */}
+                {renderRoleSpecificFields()}
+                
+                {/* Campos comunes */}
+                {renderCommonFields()}
+
+                {/* Action Buttons */}
+                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                  <Button
+                    onClick={handleBack}
+                    variant="outlined"
+                    startIcon={<ArrowBackIcon />}
+                    disabled={isLoading}
+                    sx={{
+                      height: 56,
+                      px: 3,
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      minWidth: 120,
+                      borderColor: 'divider',
+                      color: 'text.secondary',
+                      backgroundColor: 'background.paper',
+                      '&:hover': {
+                        borderColor: 'primary.light',
+                        backgroundColor: 'action.hover',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                      },
+                      '&:disabled': {
+                        borderColor: 'action.disabled',
+                        color: 'action.disabled',
+                        backgroundColor: 'action.disabledBackground',
+                      },
+                    }}
+                  >
+                    Atrás
+                  </Button>
+                  
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={isLoading}
+                    sx={{
+                      height: 56,
+                      flex: 1,
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      boxShadow: '0 4px 12px rgba(47, 109, 251, 0.15)',
+                      '&:hover': {
+                        boxShadow: '0 8px 20px rgba(47, 109, 251, 0.25)',
+                        transform: 'translateY(-1px)',
+                      },
+                      '&:active': {
+                        transform: 'translateY(0)',
+                      },
+                      '&:disabled': {
+                        backgroundColor: 'action.disabledBackground',
+                        color: 'action.disabled',
+                        boxShadow: 'none',
+                        transform: 'none',
+                      },
+                    }}
+                  >
+                    {isLoading ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <CircularProgress size={20} color="inherit" />
+                        <Typography variant="button" sx={{ fontWeight: 600 }}>
+                          Creando cuenta...
+                        </Typography>
+                      </Box>
+                    ) : (
+                      'Crear cuenta'
+                    )}
+                  </Button>
+                </Box>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Sign In Link */}
         <motion.div variants={itemVariants}>
@@ -1437,4 +1425,4 @@ const SignUpForm: React.FC = () => {
 };
 
 export default SignUpForm;
-
+          
