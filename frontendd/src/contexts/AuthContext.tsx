@@ -1,17 +1,24 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
 import api from '@/lib/axios';
-import { User, LoginForm, RegisterForm, ApiResponse } from '@/types';
+
+interface User {
+  id: number;
+  email: string;
+  full_name: string;
+  role: string;
+  created_at: string;
+  updated_at: string;
+}
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (credentials: LoginForm) => Promise<void>;
-  register: (userData: RegisterForm) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<User | null>;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,144 +26,77 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
+
+  const login = async (email: string, password: string): Promise<User> => {
+    try {
+      console.log('🔐 Logging in user...');
+      const response = await api.post('/api/auth/login', { email, password });
+      const userData = response.data.user;
+      setUser(userData);
+      console.log('✅ Login successful:', userData);
+      return userData;
+    } catch (error) {
+      console.error('❌ Login failed:', error);
+      throw error;
+    }
+  };
+
+  const logout = async (): Promise<void> => {
+    try {
+      console.log('🚪 Logging out user...');
+      await api.post('/api/auth/logout');
+      setUser(null);
+      console.log('✅ Logout successful');
+    } catch (error) {
+      console.error('❌ Logout failed:', error);
+      // Even if logout fails on server, clear local state
+      setUser(null);
+    }
+  };
 
   const checkAuth = async (): Promise<User | null> => {
     try {
-      const response = await api.get<ApiResponse<{ user: User }>>('/api/auth/me');
-      const userData = response.data.data.user;
+      console.log('🔍 Checking authentication...');
+      const response = await api.get('/api/auth/me');
+      const userData = response.data.user;
       setUser(userData);
+      console.log('✅ Auth check successful:', userData);
       return userData;
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.log('ℹ️ User not authenticated');
       setUser(null);
       return null;
     }
   };
 
-  const login = async (credentials: LoginForm) => {
-    try {
-      setLoading(true);
-      
-      // First get CSRF token
-      await api.get('/sanctum/csrf-cookie');
-      
-      // Then login
-      const response = await api.post<ApiResponse<{ user: User }>>('/api/auth/login', credentials);
-      const userData = response.data.data.user;
-      setUser(userData);
-      
-      // Wait a bit to ensure session is properly set
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      router.push('/dashboard');
-    } catch (error: unknown) {
-      console.error('Login error:', error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const register = async (userData: RegisterForm) => {
-    try {
-      setLoading(true);
-      
-      // First get CSRF token
-      await api.get('/sanctum/csrf-cookie');
-      
-      // Then register with role
-      const response = await api.post<ApiResponse<{ user: User }>>('/api/auth/register', {
-        name: userData.name,
-        email: userData.email,
-        password: userData.password,
-        password_confirmation: userData.password_confirmation,
-        role: userData.role
-      });
-      const newUser = response.data.data.user;
-      setUser(newUser);
-      
-      // Wait a bit to ensure session is properly set
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      router.push('/dashboard');
-    } catch (error: unknown) {
-      console.error('Register error:', error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    try {
-      setLoading(true);
-      await api.post('/api/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setUser(null);
-      setLoading(false);
-      router.push('/auth/sign-in');
-    }
-  };
-
-  // Initialize authentication on mount
   useEffect(() => {
     const initAuth = async () => {
-      // Skip if already initialized
-      if (initialized) return;
-      
-      setLoading(true);
-      
-      // Skip auth check for auth pages and home page
-      if (pathname.startsWith('/auth/') || pathname === '/') {
-        setLoading(false);
-        setInitialized(true);
-        return;
-      }
-
       try {
-        // Get CSRF token first
-        await api.get('/sanctum/csrf-cookie');
-        
-        // Then check auth
-        const authUser = await checkAuth();
-        
-        // If no user and on protected page, redirect to login
-        if (!authUser && !pathname.startsWith('/auth/')) {
-          router.push('/auth/sign-in');
-        }
+        await checkAuth();
       } catch (error) {
-        console.error('Auth initialization error:', error);
-        // If auth check fails on protected page, redirect to login
-        if (!pathname.startsWith('/auth/')) {
-          router.push('/auth/sign-in');
-        }
+        console.log('ℹ️ Initial auth check failed');
       } finally {
         setLoading(false);
-        setInitialized(true);
       }
     };
 
-    // Only run if we have a pathname
-    if (pathname) {
-      initAuth();
-    }
-  }, [pathname, router, initialized]);
+    initAuth();
+  }, []);
 
   const value = {
     user,
     loading,
     login,
-    register,
     logout,
     checkAuth,
+    setUser,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
