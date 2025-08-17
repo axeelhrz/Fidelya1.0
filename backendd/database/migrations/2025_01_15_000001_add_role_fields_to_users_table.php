@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             // Campos básicos de rol - nullable inicialmente para evitar problemas con SQLite
-            $table->enum('role', ['liga', 'club', 'miembro'])->nullable()->after('email');
+            $table->enum('role', ['liga', 'club', 'miembro', 'super_admin'])->nullable()->after('email');
             $table->string('phone')->nullable()->after('role');
             $table->string('country')->default('Ecuador')->after('phone');
             
