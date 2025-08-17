@@ -20,11 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
         ]);
 
-        // For SPA authentication, we rely on Sanctum's middleware to handle CSRF
-        // The EnsureFrontendRequestsAreStateful middleware will handle CSRF validation
+        // Disable CSRF validation for API routes - Sanctum handles this
         $middleware->validateCsrfTokens(except: [
-            'stripe/*',
-            'api/*', // Disable Laravel's default CSRF for API routes - Sanctum handles this
+            'api/*', // Disable Laravel's default CSRF for all API routes
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
