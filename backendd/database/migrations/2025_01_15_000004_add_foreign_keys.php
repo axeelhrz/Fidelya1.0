@@ -16,7 +16,8 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
 
-        Schema::table('clubs', function (Blueprint $table) {\n            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
+        Schema::table('clubs', function (Blueprint $table) {
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
 
         Schema::table('members', function (Blueprint $table) {
