@@ -6,10 +6,42 @@ import api from '@/lib/axios';
 interface User {
   id: number;
   email: string;
-  full_name: string;
+  name: string;
   role: string;
+  phone: string;
+  country: string;
   created_at: string;
   updated_at: string;
+  // Role-specific fields
+  league_name?: string;
+  province?: string;
+  club_name?: string;
+  parent_league_id?: number;
+  city?: string;
+  address?: string;
+  full_name?: string;
+  parent_club_id?: number;
+  birth_date?: string;
+  gender?: string;
+  rubber_type?: string;
+  ranking?: string;
+  logo_path?: string;
+  photo_path?: string;
+  // Relations
+  parentLeague?: any;
+  parentClub?: any;
+  leagueEntity?: any;
+  clubEntity?: any;
+  memberEntity?: any;
+  role_info?: any;
+}
+
+interface AuthResponse {
+  data: {
+    user: User;
+    role_info?: any;
+  };
+  message: string;
 }
 
 interface AuthContextType {
@@ -30,8 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<User> => {
     try {
       console.log('🔐 Logging in user...');
-      const response = await api.post('/api/auth/login', { email, password });
-      const userData = response.data.user;
+      const response = await api.post<AuthResponse>('/api/auth/login', { email, password });
+      const userData = response.data.data.user;
       setUser(userData);
       console.log('✅ Login successful:', userData);
       return userData;
@@ -57,8 +89,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAuth = async (): Promise<User | null> => {
     try {
       console.log('🔍 Checking authentication...');
-      const response = await api.get('/api/auth/me');
-      const userData = response.data.user;
+      const response = await api.get<AuthResponse>('/api/auth/me');
+      const userData = response.data.data.user;
       setUser(userData);
       console.log('✅ Auth check successful:', userData);
       return userData;
