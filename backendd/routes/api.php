@@ -9,6 +9,15 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\SportController;
 use App\Http\Controllers\SportParameterController;
 
+// Test endpoint for debugging
+Route::get('/test', function () {
+    return response()->json([
+        'message' => 'API is working',
+        'timestamp' => now(),
+        'cors_test' => 'success'
+    ]);
+});
+
 // Authentication routes (no middleware)
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
