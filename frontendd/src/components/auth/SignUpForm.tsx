@@ -14,8 +14,6 @@ import {
   Card,
   CardContent,
   Fade,
-  Grow,
-  Slide,
   FormControl,
   InputLabel,
   Select,
@@ -26,10 +24,8 @@ import {
   Radio,
   FormLabel,
   Avatar,
-  Chip,
   Divider,
-  Paper,
-  Grid,
+  Stack,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
@@ -51,69 +47,50 @@ import HomeIcon from '@mui/icons-material/Home';
 import CakeIcon from '@mui/icons-material/Cake';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
-import GroupIcon from '@mui/icons-material/Group';
-import StarIcon from '@mui/icons-material/Star';
 import { styled } from '@mui/material/styles';
 import { useSignUp } from '@/hooks/useSignUp';
 import NextLink from 'next/link';
 
 // Styled Components
 const StyledCard = styled(Card)(({ theme }) => ({
-  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%)',
-  backdropFilter: 'blur(20px)',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
-  borderRadius: 24,
-  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+  background: 'rgba(255, 255, 255, 0.95)',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  borderRadius: 16,
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.06)',
   overflow: 'hidden',
-  position: 'relative',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-    background: 'linear-gradient(90deg, #2F6DFB 0%, #6AA6FF 50%, #8B5CF6 100%)',
-  },
 }));
 
 const RoleCard = styled(Card)<{ selected?: boolean; roleColor?: string }>(({ theme, selected, roleColor }) => ({
   cursor: 'pointer',
-  borderRadius: 20,
+  borderRadius: 12,
   border: selected ? `2px solid ${roleColor}` : '2px solid transparent',
   background: selected 
-    ? `linear-gradient(135deg, ${roleColor}08 0%, ${roleColor}04 100%)`
-    : 'rgba(255, 255, 255, 0.8)',
-  backdropFilter: 'blur(10px)',
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    ? `linear-gradient(135deg, ${roleColor}05 0%, ${roleColor}02 100%)`
+    : 'rgba(255, 255, 255, 0.7)',
+  transition: 'all 0.2s ease',
   position: 'relative',
-  overflow: 'hidden',
   '&:hover': {
-    transform: 'translateY(-4px) scale(1.02)',
+    transform: 'translateY(-2px)',
     boxShadow: selected 
-      ? `0 20px 40px ${roleColor}20`
-      : '0 20px 40px rgba(0, 0, 0, 0.1)',
-    borderColor: selected ? roleColor : theme.palette.primary.light,
+      ? `0 8px 25px ${roleColor}15`
+      : '0 8px 25px rgba(0, 0, 0, 0.08)',
+    borderColor: selected ? roleColor : theme.palette.divider,
   },
-  '&::before': selected ? {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    background: `linear-gradient(90deg, ${roleColor} 0%, ${roleColor}80 100%)`,
-  } : {},
 }));
 
-const FormSection = styled(Box)(({ theme }) => ({
-  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%)',
-  backdropFilter: 'blur(20px)',
-  borderRadius: 20,
-  padding: theme.spacing(3),
-  marginBottom: theme.spacing(3),
-  border: '1px solid rgba(255, 255, 255, 0.2)',
-  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
+const StepIndicator = styled(Box)<{ active?: boolean }>(({ theme, active }) => ({
+  width: 32,
+  height: 32,
+  borderRadius: '50%',
+  backgroundColor: active ? theme.palette.primary.main : theme.palette.action.disabled,
+  color: 'white',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '0.875rem',
+  fontWeight: 600,
+  transition: 'all 0.3s ease',
 }));
 
 // Validation Schema
@@ -161,26 +138,23 @@ const roles = [
   {
     id: 'liga',
     name: 'Liga',
-    description: 'Administra múltiples clubes y competencias deportivas',
+    description: 'Administra múltiples clubes y competencias',
     icon: SportsTennisIcon,
     color: '#2F6DFB',
-    features: ['Gestión de clubes', 'Organización de torneos', 'Estadísticas avanzadas']
   },
   {
     id: 'club',
     name: 'Club',
-    description: 'Gestiona miembros y actividades deportivas del club',
+    description: 'Gestiona miembros y actividades deportivas',
     icon: BusinessIcon,
     color: '#8B5CF6',
-    features: ['Gestión de miembros', 'Programación de entrenamientos', 'Reportes de rendimiento']
   },
   {
     id: 'miembro',
     name: 'Miembro',
-    description: 'Participa en actividades y competencias del club',
+    description: 'Participa en actividades y competencias',
     icon: PersonIcon,
     color: '#10B981',
-    features: ['Seguimiento personal', 'Participación en torneos', 'Estadísticas individuales']
   },
 ];
 
@@ -308,6 +282,58 @@ const SignUpForm: React.FC = () => {
 
   const selectedRoleData = roles.find(role => role.id === watchedRole);
 
+  // Helper function to create text fields
+  const createTextField = (
+    name: keyof SignUpFormData,
+    label: string,
+    icon: React.ReactNode,
+    options: {
+      type?: string;
+      placeholder?: string;
+      multiline?: boolean;
+      rows?: number;
+    } = {}
+  ) => (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field }) => (
+        <TextField
+          {...field}
+          fullWidth
+          label={label}
+          type={options.type || 'text'}
+          placeholder={options.placeholder}
+          multiline={options.multiline}
+          rows={options.rows}
+          error={!!errors[name]}
+          helperText={errors[name]?.message}
+          disabled={isLoading}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                {icon}
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              '&.Mui-focused fieldset': {
+                borderColor: selectedRoleData?.color || 'primary.main',
+                borderWidth: 2,
+              },
+            },
+            '& .MuiInputLabel-root.Mui-focused': {
+              color: selectedRoleData?.color || 'primary.main',
+            },
+          }}
+        />
+      )}
+    />
+  );
+
   if (!isClient) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
@@ -317,55 +343,23 @@ const SignUpForm: React.FC = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', p: 2 }}>
-      {/* Progress Indicator */}
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+    <Box sx={{ maxWidth: 600, mx: 'auto' }}>
+      {/* Progress Steps */}
+      <Box sx={{ mb: 6 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3 }}>
+          <StepIndicator active={true}>1</StepIndicator>
           <Box
             sx={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              backgroundColor: 'primary.main',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-            }}
-          >
-            1
-          </Box>
-          <Box
-            sx={{
-              flex: 1,
-              height: 4,
+              width: 80,
+              height: 2,
               mx: 2,
-              borderRadius: 2,
               backgroundColor: currentStep >= 1 ? 'primary.main' : 'divider',
               transition: 'all 0.3s ease',
             }}
           />
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              backgroundColor: currentStep >= 1 ? 'primary.main' : 'action.disabled',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              transition: 'all 0.3s ease',
-            }}
-          >
-            2
-          </Box>
+          <StepIndicator active={currentStep >= 1}>2</StepIndicator>
         </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2 }}>
           <Typography variant="body2" sx={{ fontWeight: 500, color: 'primary.main' }}>
             Tipo de cuenta
           </Typography>
@@ -377,7 +371,7 @@ const SignUpForm: React.FC = () => {
               transition: 'color 0.3s ease',
             }}
           >
-            Información personal
+            Información
           </Typography>
         </Box>
       </Box>
@@ -386,22 +380,15 @@ const SignUpForm: React.FC = () => {
       <AnimatePresence>
         {error && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
           >
             <Alert 
               severity="error" 
               onClose={clearError}
-              sx={{ 
-                mb: 3,
-                borderRadius: 3,
-                '& .MuiAlert-message': {
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                }
-              }}
+              sx={{ mb: 3, borderRadius: 2 }}
             >
               {error}
             </Alert>
@@ -415,194 +402,137 @@ const SignUpForm: React.FC = () => {
           {currentStep === 0 && (
             <motion.div
               key="step1"
-              initial={{ opacity: 0, x: -50 }}
+              initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 50 }}
-              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
             >
               <StyledCard>
                 <CardContent sx={{ p: 4 }}>
                   <Box sx={{ textAlign: 'center', mb: 4 }}>
                     <Typography
-                      variant="h3"
+                      variant="h4"
                       sx={{
-                        fontSize: '2rem',
+                        fontSize: '1.75rem',
                         fontWeight: 700,
-                        background: 'linear-gradient(135deg, #2F6DFB 0%, #8B5CF6 100%)',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        mb: 2,
+                        color: 'text.primary',
+                        mb: 1,
                       }}
                     >
-                      ¡Bienvenido a Raquet Power!
+                      Selecciona tu tipo de cuenta
                     </Typography>
                     <Typography
-                      variant="h6"
+                      variant="body1"
                       sx={{
                         color: 'text.secondary',
-                        fontSize: '1.125rem',
-                        fontWeight: 400,
-                        maxWidth: 500,
+                        fontSize: '1rem',
+                        maxWidth: 400,
                         mx: 'auto',
-                        lineHeight: 1.6,
                       }}
                     >
-                      Selecciona el tipo de cuenta que mejor se adapte a tus necesidades
+                      Elige el rol que mejor se adapte a tus necesidades
                     </Typography>
                   </Box>
 
-                  <Grid container spacing={3}>
-                    {roles.map((role, index) => {
+                  <Stack spacing={2}>
+                    {roles.map((role) => {
                       const IconComponent = role.icon;
                       const isSelected = watchedRole === role.id;
                       
                       return (
-                        <Grid item xs={12} md={4} key={role.id}>
-                          <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: index * 0.1 }}
-                            whileHover={{ y: -4 }}
-                            whileTap={{ scale: 0.98 }}
+                        <motion.div
+                          key={role.id}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <RoleCard
+                            selected={isSelected}
+                            roleColor={role.color}
+                            onClick={() => handleRoleSelect(role.id)}
                           >
-                            <RoleCard
-                              selected={isSelected}
-                              roleColor={role.color}
-                              onClick={() => handleRoleSelect(role.id)}
-                            >
-                              <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                            <CardContent sx={{ p: 3 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                                 <Avatar
                                   sx={{
-                                    width: 64,
-                                    height: 64,
-                                    backgroundColor: isSelected ? role.color : 'background.default',
+                                    width: 48,
+                                    height: 48,
+                                    backgroundColor: isSelected ? role.color : 'grey.100',
                                     color: isSelected ? 'white' : role.color,
-                                    mx: 'auto',
-                                    mb: 2,
-                                    transition: 'all 0.3s ease',
-                                    boxShadow: isSelected 
-                                      ? `0 8px 24px ${role.color}40`
-                                      : '0 4px 12px rgba(0, 0, 0, 0.1)',
+                                    transition: 'all 0.2s ease',
                                   }}
                                 >
-                                  <IconComponent sx={{ fontSize: 32 }} />
+                                  <IconComponent sx={{ fontSize: 24 }} />
                                 </Avatar>
 
-                                <Typography
-                                  variant="h6"
-                                  sx={{
-                                    fontSize: '1.25rem',
-                                    fontWeight: 600,
-                                    color: isSelected ? role.color : 'text.primary',
-                                    mb: 1,
-                                    transition: 'color 0.3s ease',
-                                  }}
-                                >
-                                  {role.name}
-                                </Typography>
-
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    color: 'text.secondary',
-                                    fontSize: '0.875rem',
-                                    lineHeight: 1.5,
-                                    mb: 2,
-                                  }}
-                                >
-                                  {role.description}
-                                </Typography>
-
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center' }}>
-                                  {role.features.map((feature, idx) => (
-                                    <Chip
-                                      key={idx}
-                                      label={feature}
-                                      size="small"
-                                      sx={{
-                                        fontSize: '0.75rem',
-                                        backgroundColor: isSelected 
-                                          ? `${role.color}20`
-                                          : 'action.hover',
-                                        color: isSelected ? role.color : 'text.secondary',
-                                        border: 'none',
-                                      }}
-                                    />
-                                  ))}
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography
+                                    variant="h6"
+                                    sx={{
+                                      fontSize: '1.125rem',
+                                      fontWeight: 600,
+                                      color: isSelected ? role.color : 'text.primary',
+                                      mb: 0.5,
+                                    }}
+                                  >
+                                    {role.name}
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      color: 'text.secondary',
+                                      fontSize: '0.875rem',
+                                    }}
+                                  >
+                                    {role.description}
+                                  </Typography>
                                 </Box>
 
                                 {isSelected && (
-                                  <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ duration: 0.2, delay: 0.1 }}
-                                  >
-                                    <CheckCircleIcon
-                                      sx={{
-                                        position: 'absolute',
-                                        top: 16,
-                                        right: 16,
-                                        color: role.color,
-                                        fontSize: 24,
-                                      }}
-                                    />
-                                  </motion.div>
+                                  <CheckCircleIcon
+                                    sx={{
+                                      color: role.color,
+                                      fontSize: 24,
+                                    }}
+                                  />
                                 )}
-                              </CardContent>
-                            </RoleCard>
-                          </motion.div>
-                        </Grid>
+                              </Box>
+                            </CardContent>
+                          </RoleCard>
+                        </motion.div>
                       );
                     })}
-                  </Grid>
+                  </Stack>
 
                   {errors.role && (
                     <Typography 
                       variant="body2" 
                       color="error" 
-                      sx={{ mt: 2, textAlign: 'center', fontSize: '0.875rem', fontWeight: 500 }}
+                      sx={{ mt: 2, textAlign: 'center' }}
                     >
                       {errors.role.message}
                     </Typography>
                   )}
 
-                  <Box sx={{ mt: 4 }}>
-                    <Button
-                      onClick={handleNext}
-                      disabled={!watchedRole || isLoading}
-                      fullWidth
-                      variant="contained"
-                      size="large"
-                      sx={{
-                        height: 56,
-                        fontSize: '1.125rem',
-                        fontWeight: 600,
-                        borderRadius: 3,
-                        textTransform: 'none',
-                        background: selectedRoleData 
-                          ? `linear-gradient(135deg, ${selectedRoleData.color} 0%, ${selectedRoleData.color}CC 100%)`
-                          : 'linear-gradient(135deg, #2F6DFB 0%, #6AA6FF 100%)',
-                        boxShadow: selectedRoleData
-                          ? `0 8px 24px ${selectedRoleData.color}40`
-                          : '0 8px 24px rgba(47, 109, 251, 0.3)',
-                        '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: selectedRoleData
-                            ? `0 12px 32px ${selectedRoleData.color}50`
-                            : '0 12px 32px rgba(47, 109, 251, 0.4)',
-                        },
-                        '&:disabled': {
-                          background: 'action.disabledBackground',
-                          color: 'action.disabled',
-                          boxShadow: 'none',
-                          transform: 'none',
-                        },
-                      }}
-                    >
-                      Continuar como {selectedRoleData?.name || 'Usuario'}
-                    </Button>
-                  </Box>
+                  <Button
+                    onClick={handleNext}
+                    disabled={!watchedRole || isLoading}
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      mt: 4,
+                      height: 48,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      backgroundColor: selectedRoleData?.color || 'primary.main',
+                      '&:hover': {
+                        backgroundColor: selectedRoleData?.color || 'primary.dark',
+                      },
+                    }}
+                  >
+                    Continuar
+                  </Button>
                 </CardContent>
               </StyledCard>
             </motion.div>
@@ -612,138 +542,75 @@ const SignUpForm: React.FC = () => {
           {currentStep === 1 && watchedRole && selectedRoleData && (
             <motion.div
               key="step2"
-              initial={{ opacity: 0, x: 50 }}
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
             >
-              {/* Header Card */}
-              <StyledCard sx={{ mb: 3 }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <StyledCard>
+                <CardContent sx={{ p: 4 }}>
+                  {/* Header */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
                     <Avatar
                       sx={{
-                        width: 48,
-                        height: 48,
+                        width: 40,
+                        height: 40,
                         backgroundColor: selectedRoleData.color,
                         color: 'white',
                       }}
                     >
-                      <selectedRoleData.icon sx={{ fontSize: 24 }} />
+                      <selectedRoleData.icon sx={{ fontSize: 20 }} />
                     </Avatar>
                     <Box>
                       <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
                         Cuenta de {selectedRoleData.name}
                       </Typography>
                       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        {selectedRoleData.description}
+                        Completa tu información personal
                       </Typography>
                     </Box>
                   </Box>
-                </CardContent>
-              </StyledCard>
 
-              {/* Role-specific Fields */}
-              {watchedRole === 'liga' && (
-                <FormSection>
-                  <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary', display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <SportsTennisIcon sx={{ color: selectedRoleData.color }} />
-                    Información de la Liga
-                  </Typography>
-                  
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                      <Controller
-                        name="league_name"
-                        control={control}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            fullWidth
-                            label="Nombre de la liga"
-                            placeholder="Ej: Liga Nacional de Tenis de Mesa"
-                            error={!!errors.league_name}
-                            helperText={errors.league_name?.message}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <BusinessIcon sx={{ color: selectedRoleData.color }} />
-                                </InputAdornment>
-                              ),
-                            }}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&.Mui-focused fieldset': {
-                                  borderColor: selectedRoleData.color,
-                                },
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: selectedRoleData.color,
-                              },
-                            }}
+                  <Stack spacing={3}>
+                    {/* Role-specific Fields */}
+                    {watchedRole === 'liga' && (
+                      <>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', mt: 2 }}>
+                          Información de la Liga
+                        </Typography>
+                        {createTextField('league_name', 'Nombre de la liga', <BusinessIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'Ej: Liga Nacional de Tenis de Mesa'
+                        })}
+                        {createTextField('province', 'Provincia / Región', <LocationOnIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'Ej: Pichincha, Guayas, Azuay'
+                        })}
+                        
+                        {/* Logo Upload */}
+                        <Box
+                          component="label"
+                          sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 2,
+                            p: 3,
+                            border: '2px dashed',
+                            borderColor: 'divider',
+                            borderRadius: 2,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              borderColor: selectedRoleData.color,
+                              backgroundColor: `${selectedRoleData.color}08`,
+                            },
+                          }}
+                        >
+                          <input
+                            type="file"
+                            hidden
+                            accept="image/*"
+                            onChange={(e) => handleFileChange(e, 'logo')}
                           />
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Controller
-                        name="province"
-                        control={control}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            fullWidth
-                            label="Provincia / Región"
-                            placeholder="Ej: Pichincha, Guayas, Azuay"
-                            error={!!errors.province}
-                            helperText={errors.province?.message}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <LocationOnIcon sx={{ color: selectedRoleData.color }} />
-                                </InputAdornment>
-                              ),
-                            }}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&.Mui-focused fieldset': {
-                                  borderColor: selectedRoleData.color,
-                                },
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: selectedRoleData.color,
-                              },
-                            }}
-                          />
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Paper
-                        sx={{
-                          p: 3,
-                          borderRadius: 2,
-                          border: '2px dashed',
-                          borderColor: 'divider',
-                          textAlign: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            borderColor: selectedRoleData.color,
-                            backgroundColor: `${selectedRoleData.color}08`,
-                          },
-                        }}
-                        component="label"
-                      >
-                        <input
-                          type="file"
-                          hidden
-                          accept="image/*"
-                          onChange={(e) => handleFileChange(e, 'logo')}
-                        />
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                           {logoPreview ? (
                             <Avatar src={logoPreview} sx={{ width: 64, height: 64 }} />
                           ) : (
@@ -751,198 +618,90 @@ const SignUpForm: React.FC = () => {
                               <CloudUploadIcon sx={{ fontSize: 32 }} />
                             </Avatar>
                           )}
-                          <Box>
-                            <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
-                              Logo de la liga (opcional)
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                              Haz clic para subir una imagen
-                            </Typography>
-                          </Box>
+                          <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
+                            Logo de la liga (opcional)
+                            <br />
+                            Haz clic para subir una imagen
+                          </Typography>
                         </Box>
-                      </Paper>
-                    </Grid>
-                  </Grid>
-                </FormSection>
-              )}
+                      </>
+                    )}
 
-              {watchedRole === 'club' && (
-                <FormSection>
-                  <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary', display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <BusinessIcon sx={{ color: selectedRoleData.color }} />
-                    Información del Club
-                  </Typography>
-                  
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                      <Controller
-                        name="club_name"
-                        control={control}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            fullWidth
-                            label="Nombre del club"
-                            placeholder="Ej: Club Deportivo Los Campeones"
-                            error={!!errors.club_name}
-                            helperText={errors.club_name?.message}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <BusinessIcon sx={{ color: selectedRoleData.color }} />
-                                </InputAdornment>
-                              ),
-                            }}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&.Mui-focused fieldset': {
-                                  borderColor: selectedRoleData.color,
-                                },
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: selectedRoleData.color,
-                              },
-                            }}
-                          />
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Controller
-                        name="league_id"
-                        control={control}
-                        render={({ field }) => (
-                          <FormControl 
-                            fullWidth 
-                            error={!!errors.league_id}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&.Mui-focused fieldset': {
-                                  borderColor: selectedRoleData.color,
-                                },
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: selectedRoleData.color,
-                              },
-                            }}
-                          >
-                            <InputLabel>Liga a la que pertenece</InputLabel>
-                            <Select
-                              {...field}
-                              label="Liga a la que pertenece"
-                              startAdornment={
-                                <InputAdornment position="start">
-                                  <SportsTennisIcon sx={{ color: selectedRoleData.color, ml: 1 }} />
-                                </InputAdornment>
-                              }
-                            >
-                              {leagues.map((league) => (
-                                <MenuItem key={league.id} value={league.id}>
-                                  {league.name}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                            {errors.league_id && (
-                              <FormHelperText>{errors.league_id.message}</FormHelperText>
-                            )}
-                          </FormControl>
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Controller
-                        name="city"
-                        control={control}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            fullWidth
-                            label="Provincia / Ciudad"
-                            placeholder="Ej: Quito, Guayaquil, Cuenca"
-                            error={!!errors.city}
-                            helperText={errors.city?.message}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <LocationOnIcon sx={{ color: selectedRoleData.color }} />
-                                </InputAdornment>
-                              ),
-                            }}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&.Mui-focused fieldset': {
-                                  borderColor: selectedRoleData.color,
-                                },
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: selectedRoleData.color,
-                              },
-                            }}
-                          />
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Controller
-                        name="address"
-                        control={control}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            fullWidth
-                            label="Dirección completa"
-                            placeholder="Ej: Av. 6 de Diciembre N24-253 y Wilson"
-                            error={!!errors.address}
-                            helperText={errors.address?.message}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <HomeIcon sx={{ color: selectedRoleData.color }} />
-                                </InputAdornment>
-                              ),
-                            }}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&.Mui-focused fieldset': {
-                                  borderColor: selectedRoleData.color,
-                                },
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: selectedRoleData.color,
-                              },
-                            }}
-                          />
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Paper
-                        sx={{
-                          p: 3,
-                          borderRadius: 2,
-                          border: '2px dashed',
-                          borderColor: 'divider',
-                          textAlign: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            borderColor: selectedRoleData.color,
-                            backgroundColor: `${selectedRoleData.color}08`,
-                          },
-                        }}
-                        component="label"
-                      >
-                        <input
-                          type="file"
-                          hidden
-                          accept="image/*"
-                          onChange={(e) => handleFileChange(e, 'logo')}
+                    {watchedRole === 'club' && (
+                      <>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', mt: 2 }}>
+                          Información del Club
+                        </Typography>
+                        {createTextField('club_name', 'Nombre del club', <BusinessIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'Ej: Club Deportivo Los Campeones'
+                        })}
+                        
+                        <Controller
+                          name="league_id"
+                          control={control}
+                          render={({ field }) => (
+                            <FormControl fullWidth error={!!errors.league_id}>
+                              <InputLabel>Liga a la que pertenece</InputLabel>
+                              <Select
+                                {...field}
+                                label="Liga a la que pertenece"
+                                sx={{
+                                  borderRadius: 2,
+                                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: selectedRoleData.color,
+                                    borderWidth: 2,
+                                  },
+                                }}
+                              >
+                                {leagues.map((league) => (
+                                  <MenuItem key={league.id} value={league.id}>
+                                    {league.name}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                              {errors.league_id && (
+                                <FormHelperText>{errors.league_id.message}</FormHelperText>
+                              )}
+                            </FormControl>
+                          )}
                         />
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+
+                        {createTextField('city', 'Provincia / Ciudad', <LocationOnIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'Ej: Quito, Guayaquil, Cuenca'
+                        })}
+                        {createTextField('address', 'Dirección completa', <HomeIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'Ej: Av. 6 de Diciembre N24-253 y Wilson',
+                          multiline: true,
+                          rows: 2
+                        })}
+
+                        {/* Logo Upload */}
+                        <Box
+                          component="label"
+                          sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 2,
+                            p: 3,
+                            border: '2px dashed',
+                            borderColor: 'divider',
+                            borderRadius: 2,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              borderColor: selectedRoleData.color,
+                              backgroundColor: `${selectedRoleData.color}08`,
+                            },
+                          }}
+                        >
+                          <input
+                            type="file"
+                            hidden
+                            accept="image/*"
+                            onChange={(e) => handleFileChange(e, 'logo')}
+                          />
                           {logoPreview ? (
                             <Avatar src={logoPreview} sx={{ width: 64, height: 64 }} />
                           ) : (
@@ -950,258 +709,182 @@ const SignUpForm: React.FC = () => {
                               <CloudUploadIcon sx={{ fontSize: 32 }} />
                             </Avatar>
                           )}
-                          <Box>
-                            <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
-                              Logo del club (opcional)
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                              Haz clic para subir una imagen
-                            </Typography>
-                          </Box>
+                          <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
+                            Logo del club (opcional)
+                            <br />
+                            Haz clic para subir una imagen
+                          </Typography>
                         </Box>
-                      </Paper>
-                    </Grid>
-                  </Grid>
-                </FormSection>
-              )}
+                      </>
+                    )}
 
-              {watchedRole === 'miembro' && (
-                <FormSection>
-                  <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary', display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <PersonIcon sx={{ color: selectedRoleData.color }} />
-                    Información Personal
-                  </Typography>
-                  
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                      <Controller
-                        name="full_name"
-                        control={control}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            fullWidth
-                            label="Nombre completo"
-                            placeholder="Ej: Juan Carlos Pérez González"
-                            error={!!errors.full_name}
-                            helperText={errors.full_name?.message}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <PersonIcon sx={{ color: selectedRoleData.color }} />
-                                </InputAdornment>
-                              ),
-                            }}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&.Mui-focused fieldset': {
-                                  borderColor: selectedRoleData.color,
-                                },
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: selectedRoleData.color,
-                              },
-                            }}
-                          />
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Controller
-                        name="club_id"
-                        control={control}
-                        render={({ field }) => (
-                          <FormControl 
-                            fullWidth 
-                            error={!!errors.club_id}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&.Mui-focused fieldset': {
-                                  borderColor: selectedRoleData.color,
-                                },
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: selectedRoleData.color,
-                              },
-                            }}
-                          >
-                            <InputLabel>Club de pertenencia</InputLabel>
-                            <Select
-                              {...field}
-                              label="Club de pertenencia"
-                              startAdornment={
-                                <InputAdornment position="start">
-                                  <BusinessIcon sx={{ color: selectedRoleData.color, ml: 1 }} />
-                                </InputAdornment>
-                              }
-                            >
-                              {clubs.map((club) => (
-                                <MenuItem key={club.id} value={club.id}>
-                                  {club.name}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                            {errors.club_id && (
-                              <FormHelperText>{errors.club_id.message}</FormHelperText>
-                            )}
-                          </FormControl>
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Controller
-                        name="birth_date"
-                        control={control}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            fullWidth
-                            label="Fecha de nacimiento"
-                            type="date"
-                            error={!!errors.birth_date}
-                            helperText={errors.birth_date?.message}
-                            InputLabelProps={{ shrink: true }}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <CakeIcon sx={{ color: selectedRoleData.color }} />
-                                </InputAdornment>
-                              ),
-                            }}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&.Mui-focused fieldset': {
-                                  borderColor: selectedRoleData.color,
-                                },
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: selectedRoleData.color,
-                              },
-                            }}
-                          />
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Controller
-                        name="ranking"
-                        control={control}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            fullWidth
-                            label="Ranking inicial (opcional)"
-                            placeholder='Ej: 1500 puntos o "Sin ranking"'
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <EmojiEventsIcon sx={{ color: selectedRoleData.color }} />
-                                </InputAdornment>
-                              ),
-                            }}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&.Mui-focused fieldset': {
-                                  borderColor: selectedRoleData.color,
-                                },
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: selectedRoleData.color,
-                              },
-                            }}
-                          />
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Controller
-                        name="gender"
-                        control={control}
-                        render={({ field }) => (
-                          <FormControl error={!!errors.gender} fullWidth>
-                            <FormLabel sx={{ mb: 1, fontWeight: 500, color: selectedRoleData.color }}>
-                              Sexo
-                            </FormLabel>
-                            <RadioGroup {...field} row sx={{ gap: 2 }}>
-                              <FormControlLabel 
-                                value="masculino" 
-                                control={<Radio sx={{ '&.Mui-checked': { color: selectedRoleData.color } }} />} 
-                                label="Masculino"
-                              />
-                              <FormControlLabel 
-                                value="femenino" 
-                                control={<Radio sx={{ '&.Mui-checked': { color: selectedRoleData.color } }} />} 
-                                label="Femenino"
-                              />
-                            </RadioGroup>
-                            {errors.gender && (
-                              <FormHelperText>{errors.gender.message}</FormHelperText>
-                            )}
-                          </FormControl>
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Controller
-                        name="rubber_type"
-                        control={control}
-                        render={({ field }) => (
-                          <FormControl error={!!errors.rubber_type} fullWidth>
-                            <FormLabel sx={{ mb: 1, fontWeight: 500, color: selectedRoleData.color }}>
-                              Tipo de caucho
-                            </FormLabel>
-                            <RadioGroup {...field} row sx={{ gap: 2 }}>
-                              <FormControlLabel 
-                                value="liso" 
-                                control={<Radio sx={{ '&.Mui-checked': { color: selectedRoleData.color } }} />} 
-                                label="Liso"
-                              />
-                              <FormControlLabel 
-                                value="pupo" 
-                                control={<Radio sx={{ '&.Mui-checked': { color: selectedRoleData.color } }} />} 
-                                label="Pupo"
-                              />
-                              <FormControlLabel 
-                                value="ambos" 
-                                control={<Radio sx={{ '&.Mui-checked': { color: selectedRoleData.color } }} />} 
-                                label="Ambos"
-                              />
-                            </RadioGroup>
-                            {errors.rubber_type && (
-                              <FormHelperText>{errors.rubber_type.message}</FormHelperText>
-                            )}
-                          </FormControl>
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Paper
-                        sx={{
-                          p: 3,
-                          borderRadius: 2,
-                          border: '2px dashed',
-                          borderColor: 'divider',
-                          textAlign: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            borderColor: selectedRoleData.color,
-                            backgroundColor: `${selectedRoleData.color}08`,
-                          },
-                        }}
-                        component="label"
-                      >
-                        <input
-                          type="file"
-                          hidden
-                          accept="image/*"
-                          onChange={(e) => handleFileChange(e, 'photo')}
+                    {watchedRole === 'miembro' && (
+                      <>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', mt: 2 }}>
+                          Información Personal
+                        </Typography>
+                        {createTextField('full_name', 'Nombre completo', <PersonIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'Ej: Juan Carlos Pérez González'
+                        })}
+                        
+                        <Controller
+                          name="club_id"
+                          control={control}
+                          render={({ field }) => (
+                            <FormControl fullWidth error={!!errors.club_id}>
+                              <InputLabel>Club de pertenencia</InputLabel>
+                              <Select
+                                {...field}
+                                label="Club de pertenencia"
+                                sx={{
+                                  borderRadius: 2,
+                                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: selectedRoleData.color,
+                                    borderWidth: 2,
+                                  },
+                                }}
+                              >
+                                {clubs.map((club) => (
+                                  <MenuItem key={club.id} value={club.id}>
+                                    {club.name}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                              {errors.club_id && (
+                                <FormHelperText>{errors.club_id.message}</FormHelperText>
+                              )}
+                            </FormControl>
+                          )}
                         />
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+
+                        <Controller
+                          name="birth_date"
+                          control={control}
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
+                              fullWidth
+                              label="Fecha de nacimiento"
+                              type="date"
+                              error={!!errors.birth_date}
+                              helperText={errors.birth_date?.message}
+                              InputLabelProps={{ shrink: true }}
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment position="start">
+                                    <CakeIcon sx={{ color: selectedRoleData.color }} />
+                                  </InputAdornment>
+                                ),
+                              }}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: 2,
+                                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: selectedRoleData.color,
+                                    borderWidth: 2,
+                                  },
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                  color: selectedRoleData.color,
+                                },
+                              }}
+                            />
+                          )}
+                        />
+
+                        {createTextField('ranking', 'Ranking inicial (opcional)', <EmojiEventsIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'Ej: 1500 puntos o "Sin ranking"'
+                        })}
+
+                        <Box sx={{ display: 'flex', gap: 4 }}>
+                          <Controller
+                            name="gender"
+                            control={control}
+                            render={({ field }) => (
+                              <FormControl error={!!errors.gender} sx={{ flex: 1 }}>
+                                <FormLabel sx={{ mb: 1, fontWeight: 500, color: selectedRoleData.color }}>
+                                  Sexo
+                                </FormLabel>
+                                <RadioGroup {...field} row>
+                                  <FormControlLabel 
+                                    value="masculino" 
+                                    control={<Radio sx={{ '&.Mui-checked': { color: selectedRoleData.color } }} />} 
+                                    label="Masculino"
+                                  />
+                                  <FormControlLabel 
+                                    value="femenino" 
+                                    control={<Radio sx={{ '&.Mui-checked': { color: selectedRoleData.color } }} />} 
+                                    label="Femenino"
+                                  />
+                                </RadioGroup>
+                                {errors.gender && (
+                                  <FormHelperText>{errors.gender.message}</FormHelperText>
+                                )}
+                              </FormControl>
+                            )}
+                          />
+                        </Box>
+
+                        <Controller
+                          name="rubber_type"
+                          control={control}
+                          render={({ field }) => (
+                            <FormControl error={!!errors.rubber_type}>
+                              <FormLabel sx={{ mb: 1, fontWeight: 500, color: selectedRoleData.color }}>
+                                Tipo de caucho
+                              </FormLabel>
+                              <RadioGroup {...field} row>
+                                <FormControlLabel 
+                                  value="liso" 
+                                  control={<Radio sx={{ '&.Mui-checked': { color: selectedRoleData.color } }} />} 
+                                  label="Liso"
+                                />
+                                <FormControlLabel 
+                                  value="pupo" 
+                                  control={<Radio sx={{ '&.Mui-checked': { color: selectedRoleData.color } }} />} 
+                                  label="Pupo"
+                                />
+                                <FormControlLabel 
+                                  value="ambos" 
+                                  control={<Radio sx={{ '&.Mui-checked': { color: selectedRoleData.color } }} />} 
+                                  label="Ambos"
+                                />
+                              </RadioGroup>
+                              {errors.rubber_type && (
+                                <FormHelperText>{errors.rubber_type.message}</FormHelperText>
+                              )}
+                            </FormControl>
+                          )}
+                        />
+
+                        {/* Photo Upload */}
+                        <Box
+                          component="label"
+                          sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 2,
+                            p: 3,
+                            border: '2px dashed',
+                            borderColor: 'divider',
+                            borderRadius: 2,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              borderColor: selectedRoleData.color,
+                              backgroundColor: `${selectedRoleData.color}08`,
+                            },
+                          }}
+                        >
+                          <input
+                            type="file"
+                            hidden
+                            accept="image/*"
+                            onChange={(e) => handleFileChange(e, 'photo')}
+                          />
                           {photoPreview ? (
                             <Avatar src={photoPreview} sx={{ width: 64, height: 64 }} />
                           ) : (
@@ -1209,143 +892,35 @@ const SignUpForm: React.FC = () => {
                               <PersonIcon sx={{ fontSize: 32 }} />
                             </Avatar>
                           )}
-                          <Box>
-                            <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
-                              Foto de perfil (opcional)
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                              Haz clic para subir una imagen
-                            </Typography>
-                          </Box>
+                          <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
+                            Foto de perfil (opcional)
+                            <br />
+                            Haz clic para subir una imagen
+                          </Typography>
                         </Box>
-                      </Paper>
-                    </Grid>
-                  </Grid>
-                </FormSection>
-              )}
+                      </>
+                    )}
 
-              {/* Common Fields */}
-              <FormSection>
-                <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary', display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <EmailIcon sx={{ color: selectedRoleData.color }} />
-                  Información de Contacto
-                </Typography>
-                
-                <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
-                    <Controller
-                      name="country"
-                      control={control}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          label="País"
-                          error={!!errors.country}
-                          helperText={errors.country?.message}
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <PublicIcon sx={{ color: selectedRoleData.color }} />
-                              </InputAdornment>
-                            ),
-                          }}
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: 2,
-                              '&.Mui-focused fieldset': {
-                                borderColor: selectedRoleData.color,
-                              },
-                            },
-                            '& .MuiInputLabel-root.Mui-focused': {
-                              color: selectedRoleData.color,
-                            },
-                          }}
-                        />
-                      )}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Controller
-                      name="phone"
-                      control={control}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          label="Teléfono de contacto"
-                          placeholder="+593 99 123 4567"
-                          error={!!errors.phone}
-                          helperText={errors.phone?.message}
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <PhoneIcon sx={{ color: selectedRoleData.color }} />
-                              </InputAdornment>
-                            ),
-                          }}
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: 2,
-                              '&.Mui-focused fieldset': {
-                                borderColor: selectedRoleData.color,
-                              },
-                            },
-                            '& .MuiInputLabel-root.Mui-focused': {
-                              color: selectedRoleData.color,
-                            },
-                          }}
-                        />
-                      )}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Controller
-                      name="email"
-                      control={control}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          label="Correo electrónico"
-                          type="email"
-                          placeholder="tu@email.com"
-                          error={!!errors.email}
-                          helperText={errors.email?.message}
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <EmailIcon sx={{ color: selectedRoleData.color }} />
-                              </InputAdornment>
-                            ),
-                          }}
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: 2,
-                              '&.Mui-focused fieldset': {
-                                borderColor: selectedRoleData.color,
-                              },
-                            },
-                            '& .MuiInputLabel-root.Mui-focused': {
-                              color: selectedRoleData.color,
-                            },
-                          }}
-                        />
-                      )}
-                    />
-                  </Grid>
-                </Grid>
-              </FormSection>
+                    {/* Common Fields */}
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                      Información de Contacto
+                    </Typography>
 
-              {/* Password Fields */}
-              <FormSection>
-                <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary', display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <LockIcon sx={{ color: selectedRoleData.color }} />
-                  Seguridad
-                </Typography>
-                
-                <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
+                    {createTextField('country', 'País', <PublicIcon sx={{ color: selectedRoleData.color }} />)}
+                    {createTextField('phone', 'Teléfono de contacto', <PhoneIcon sx={{ color: selectedRoleData.color }} />, {
+                      placeholder: '+593 99 123 4567'
+                    })}
+                    {createTextField('email', 'Correo electrónico', <EmailIcon sx={{ color: selectedRoleData.color }} />, {
+                      type: 'email',
+                      placeholder: 'tu@email.com'
+                    })}
+
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                      Seguridad
+                    </Typography>
+
                     <Controller
                       name="password"
                       control={control}
@@ -1379,8 +954,10 @@ const SignUpForm: React.FC = () => {
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               borderRadius: 2,
+                              backgroundColor: 'rgba(255, 255, 255, 0.8)',
                               '&.Mui-focused fieldset': {
                                 borderColor: selectedRoleData.color,
+                                borderWidth: 2,
                               },
                             },
                             '& .MuiInputLabel-root.Mui-focused': {
@@ -1390,8 +967,7 @@ const SignUpForm: React.FC = () => {
                         />
                       )}
                     />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
+
                     <Controller
                       name="password_confirmation"
                       control={control}
@@ -1425,8 +1001,10 @@ const SignUpForm: React.FC = () => {
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               borderRadius: 2,
+                              backgroundColor: 'rgba(255, 255, 255, 0.8)',
                               '&.Mui-focused fieldset': {
                                 borderColor: selectedRoleData.color,
+                                borderWidth: 2,
                               },
                             },
                             '& .MuiInputLabel-root.Mui-focused': {
@@ -1436,108 +1014,80 @@ const SignUpForm: React.FC = () => {
                         />
                       )}
                     />
-                  </Grid>
-                </Grid>
-              </FormSection>
+                  </Stack>
 
-              {/* Action Buttons */}
-              <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-                <Button
-                  onClick={handleBack}
-                  variant="outlined"
-                  startIcon={<ArrowBackIcon />}
-                  disabled={isLoading}
-                  sx={{
-                    height: 56,
-                    px: 4,
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    borderRadius: 3,
-                    textTransform: 'none',
-                    minWidth: 140,
-                    borderColor: selectedRoleData.color,
-                    color: selectedRoleData.color,
-                    '&:hover': {
-                      borderColor: selectedRoleData.color,
-                      backgroundColor: `${selectedRoleData.color}08`,
-                    },
-                    '&:disabled': {
-                      borderColor: 'action.disabled',
-                      color: 'action.disabled',
-                    },
-                  }}
-                >
-                  Atrás
-                </Button>
-                
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={isLoading}
-                  sx={{
-                    height: 56,
-                    flex: 1,
-                    fontSize: '1.125rem',
-                    fontWeight: 600,
-                    borderRadius: 3,
-                    textTransform: 'none',
-                    background: `linear-gradient(135deg, ${selectedRoleData.color} 0%, ${selectedRoleData.color}CC 100%)`,
-                    boxShadow: `0 8px 24px ${selectedRoleData.color}40`,
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: `0 12px 32px ${selectedRoleData.color}50`,
-                    },
-                    '&:disabled': {
-                      background: 'action.disabledBackground',
-                      color: 'action.disabled',
-                      boxShadow: 'none',
-                      transform: 'none',
-                    },
-                  }}
-                >
-                  {isLoading ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <CircularProgress size={20} color="inherit" />
-                      <Typography variant="button" sx={{ fontWeight: 600 }}>
-                        Creando cuenta...
-                      </Typography>
-                    </Box>
-                  ) : (
-                    <>
-                      <StarIcon sx={{ mr: 1 }} />
-                      Crear mi cuenta de {selectedRoleData.name}
-                    </>
-                  )}
-                </Button>
-              </Box>
+                  {/* Action Buttons */}
+                  <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+                    <Button
+                      onClick={handleBack}
+                      variant="outlined"
+                      startIcon={<ArrowBackIcon />}
+                      disabled={isLoading}
+                      sx={{
+                        height: 48,
+                        px: 3,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        borderColor: selectedRoleData.color,
+                        color: selectedRoleData.color,
+                        '&:hover': {
+                          borderColor: selectedRoleData.color,
+                          backgroundColor: `${selectedRoleData.color}08`,
+                        },
+                      }}
+                    >
+                      Atrás
+                    </Button>
+                    
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      disabled={isLoading}
+                      sx={{
+                        height: 48,
+                        flex: 1,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        backgroundColor: selectedRoleData.color,
+                        '&:hover': {
+                          backgroundColor: selectedRoleData.color,
+                          filter: 'brightness(0.9)',
+                        },
+                      }}
+                    >
+                      {isLoading ? (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <CircularProgress size={20} color="inherit" />
+                          Creando cuenta...
+                        </Box>
+                      ) : (
+                        'Crear cuenta'
+                      )}
+                    </Button>
+                  </Box>
+                </CardContent>
+              </StyledCard>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Sign In Link */}
         <Box sx={{ textAlign: 'center', mt: 4 }}>
-          <Divider sx={{ mb: 3 }}>
-            <Chip label="¿Ya tienes cuenta?" sx={{ backgroundColor: 'background.paper', fontWeight: 500 }} />
-          </Divider>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+            ¿Ya tienes cuenta?
+          </Typography>
           <Link
             component={NextLink}
             href="/auth/sign-in"
             sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 1,
-              px: 3,
-              py: 1.5,
-              borderRadius: 3,
-              textDecoration: 'none',
               color: selectedRoleData?.color || 'primary.main',
-              backgroundColor: selectedRoleData ? `${selectedRoleData.color}08` : 'primary.light',
+              textDecoration: 'none',
               fontWeight: 600,
-              fontSize: '0.9375rem',
-              transition: 'all 0.3s ease',
               '&:hover': {
-                backgroundColor: selectedRoleData ? `${selectedRoleData.color}15` : 'primary.light',
-                transform: 'translateY(-1px)',
+                textDecoration: 'underline',
               },
             }}
           >
