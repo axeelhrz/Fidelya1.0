@@ -396,6 +396,109 @@ class InvitationController extends Controller
     }
 
     /**
+     * Get available leagues to invite (for clubs)
+     */
+    public function getAvailableLeagues(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            if ($user->role !== 'club' && $user->role !== 'super_admin') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
+            $search = $request->get('search', '');
+            
+            // Get all leagues
+            $query = League::query();
+            
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('province', 'like', "%{$search}%");
+                });
+            }
+
+            $leagues = $query->with('user')->orderBy('name')->paginate(20);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $leagues
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error fetching available leagues: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available entities to invite based on user role
+     */
+    public function getAvailableEntities(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $search = $request->get('search', '');
+            
+            if ($user->role === 'liga' || $user->role === 'super_admin') {
+                // Liga can invite clubs
+                $query = Club::where('league_id', null);
+                
+                if ($search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                          ->orWhere('city', 'like', "%{$search}%");
+                    });
+                }
+
+                $entities = $query->with('user')->orderBy('name')->paginate(20);
+                
+                return response()->json([
+                    'status' => 'success',
+                    'data' => $entities,
+                    'entity_type' => 'clubs'
+                ]);
+                
+            } elseif ($user->role === 'club') {
+                // Club can request to join leagues
+                $query = League::query();
+                
+                if ($search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                          ->orWhere('province', 'like', "%{$search}%");
+                    });
+                }
+
+                $entities = $query->with('user')->orderBy('name')->paginate(20);
+                
+                return response()->json([
+                    'status' => 'success',
+                    'data' => $entities,
+                    'entity_type' => 'leagues'
+                ]);
+            }
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized or unsupported role'
+            ], 403);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error fetching available entities: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get user's entity (League, Club, etc.)
      */
     private function getUserEntity($user)
