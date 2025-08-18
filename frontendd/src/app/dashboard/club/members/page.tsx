@@ -74,8 +74,13 @@ export default function ClubMembersPage() {
         const clubsResponse = await axios.get<ApiResponse<Club[]>>('/api/clubs');
         console.log('Clubs response:', clubsResponse.data);
         
-        const allClubs = clubsResponse.data.data || [];
-        console.log('All clubs:', allClubs);
+        // Handle paginated response
+        const clubsData = clubsResponse.data.data;
+        console.log('Clubs data structure:', clubsData);
+        
+        // Check if it's paginated (has a 'data' property with array inside)
+        const allClubs = Array.isArray(clubsData) ? clubsData : (clubsData?.data || []);
+        console.log('All clubs (processed):', allClubs);
         
         // Find the club that belongs to this user
         clubData = allClubs.find(club => club.user_id === user.id);
