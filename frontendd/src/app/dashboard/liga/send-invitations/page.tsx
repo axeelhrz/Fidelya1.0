@@ -11,17 +11,19 @@ import {
   UserGroupIcon,
   PlusIcon,
   CheckCircleIcon,
-  XMarkIcon
+  XMarkIcon,
+  TrophyIcon
 } from '@heroicons/react/24/outline';
 import axios from '@/lib/axios';
-import type { Club, InvitationForm, SendInvitationForm, PaginatedResponse, ApiResponse } from '@/types';
+import type { Club, League, InvitationForm, SendInvitationForm, PaginatedResponse, ApiResponse, AvailableEntitiesResponse } from '@/types';
 
 export default function SendInvitationsPage() {
   const { user, loading } = useAuth();
-  const [availableClubs, setAvailableClubs] = useState<Club[]>([]);
-  const [loadingClubs, setLoadingClubs] = useState(true);
+  const [availableEntities, setAvailableEntities] = useState<(Club | League)[]>([]);
+  const [entityType, setEntityType] = useState<'clubs' | 'leagues'>('clubs');
+  const [loadingEntities, setLoadingEntities] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClub, setSelectedClub] = useState<Club | null>(null);
+  const [selectedEntity, setSelectedEntity] = useState<Club | League | null>(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [invitationForm, setInvitationForm] = useState<SendInvitationForm>({
     message: '',
@@ -35,75 +37,106 @@ export default function SendInvitationsPage() {
   });
 
   useEffect(() => {
-    if (user && (user.role === 'liga' || user.role === 'super_admin')) {
-      fetchAvailableClubs();
+    if (user && (user.role === 'liga' || user.role === 'club' || user.role === 'super_admin')) {
+      fetchAvailableEntities();
     }
   }, [user, searchTerm]);
 
-  const fetchAvailableClubs = async (page = 1) => {
+  const fetchAvailableEntities = async (page = 1) => {
     try {
-      setLoadingClubs(true);
+      setLoadingEntities(true);
       const params = new URLSearchParams({
         page: page.toString(),
         ...(searchTerm && { search: searchTerm })
       });
 
-      const response = await axios.get<ApiResponse<PaginatedResponse<Club>>>(`/api/invitations/available-clubs?${params}`);
+      const response = await axios.get<ApiResponse<AvailableEntitiesResponse>>(`/api/invitations/available-entities?${params}`);
       
       if (response.data.status === 'success') {
-        const paginatedData = response.data.data;
-        setAvailableClubs(paginatedData.data);
+        const entitiesResponse = response.data.data;
+        setAvailableEntities(entitiesResponse.data.data);
+        setEntityType(entitiesResponse.entity_type);
         setPagination({
-          current_page: paginatedData.current_page,
-          last_page: paginatedData.last_page,
-          total: paginatedData.total
+          current_page: entitiesResponse.data.current_page,
+          last_page: entitiesResponse.data.last_page,
+          total: entitiesResponse.data.total
         });
       }
     } catch (error) {
-      console.error('Error fetching available clubs:', error);
+      console.error('Error fetching available entities:', error);
     } finally {
-      setLoadingClubs(false);
+      setLoadingEntities(false);
     }
   };
 
-  const openInviteModal = (club: Club) => {
-    setSelectedClub(club);
+  const openInviteModal = (entity: Club | League) => {
+    setSelectedEntity(entity);
+    
+    const isClub = 'city' in entity;
+    const isLeague = 'province' in entity;
+    
+    let defaultMessage = '';
+    if (user?.role === 'liga' && isClub) {
+      defaultMessage = `¡Hola! Te invitamos a unirte a nuestra liga. Creemos que sería una excelente oportunidad para ${entity.name} formar parte de nuestra comunidad deportiva.`;
+    } else if (user?.role === 'club' && isLeague) {
+      defaultMessage = `¡Hola! Nos gustaría solicitar la afiliación de nuestro club a ${entity.name}. Creemos que podemos contribuir positivamente a su liga.`;
+    }
+    
     setInvitationForm({
-      club_id: club.id,
-      club_name: club.name,
-      message: `¡Hola! Te invitamos a unirte a nuestra liga. Creemos que sería una excelente oportunidad para ${club.name} formar parte de nuestra comunidad deportiva.`,
+      ...(isClub && { club_id: entity.id, club_name: entity.name }),
+      ...(isLeague && { league_id: entity.id, league_name: entity.name }),
+      message: defaultMessage,
       expires_at: ''
     });
     setIsInviteModalOpen(true);
   };
 
   const handleSendInvitation = async () => {
-    if (!selectedClub) return;
+    if (!selectedEntity) return;
 
     try {
       setSendingInvitation(true);
       
-      const invitationData: InvitationForm = {
-        receiver_id: selectedClub.id,
-        receiver_type: 'App\\Models\\Club',
-        message: invitationForm.message,
-        type: 'league_to_club',
-        ...(invitationForm.expires_at && { expires_at: invitationForm.expires_at })
-      };
+      const isClub = 'city' in selectedEntity;
+      const isLeague = 'province' in selectedEntity;
+      
+      let invitationData: InvitationForm;
+      
+      if (user?.role === 'liga' && isClub) {
+        // Liga inviting club
+        invitationData = {
+          receiver_id: selectedEntity.id,
+          receiver_type: 'App\\Models\\Club',
+          message: invitationForm.message,
+          type: 'league_to_club',
+          ...(invitationForm.expires_at && { expires_at: invitationForm.expires_at })
+        };
+      } else if (user?.role === 'club' && isLeague) {
+        // Club requesting to join league
+        invitationData = {
+          receiver_id: selectedEntity.id,
+          receiver_type: 'App\\Models\\League',
+          message: invitationForm.message,
+          type: 'club_to_league',
+          ...(invitationForm.expires_at && { expires_at: invitationForm.expires_at })
+        };
+      } else {
+        throw new Error('Invalid combination of user role and entity type');
+      }
 
       const response = await axios.post('/api/invitations', invitationData);
       
       if (response.data.status === 'success') {
         alert('Invitación enviada exitosamente');
         setIsInviteModalOpen(false);
-        // Remove the club from available clubs list
-        setAvailableClubs(prev => prev.filter(club => club.id !== selectedClub.id));
+        // Remove the entity from available entities list
+        setAvailableEntities(prev => prev.filter(entity => entity.id !== selectedEntity.id));
         // Reset form
         setInvitationForm({
           message: '',
           expires_at: ''
         });
-        setSelectedClub(null);
+        setSelectedEntity(null);
       }
     } catch (error: any) {
       console.error('Error sending invitation:', error);
@@ -116,14 +149,26 @@ export default function SendInvitationsPage() {
 
   const closeInviteModal = () => {
     setIsInviteModalOpen(false);
-    setSelectedClub(null);
+    setSelectedEntity(null);
     setInvitationForm({
       message: '',
       expires_at: ''
     });
   };
 
-  if (loading || loadingClubs) {
+  const getEntityIcon = (entity: Club | League) => {
+    return 'city' in entity ? BuildingOfficeIcon : TrophyIcon;
+  };
+
+  const getEntityLocation = (entity: Club | League) => {
+    return 'city' in entity ? entity.city : entity.province;
+  };
+
+  const getEntityType = (entity: Club | League) => {
+    return 'city' in entity ? 'Club' : 'Liga';
+  };
+
+  if (loading || loadingEntities) {
     return (
       <LeagueLayout>
         <div className="flex items-center justify-center h-64">
@@ -133,7 +178,7 @@ export default function SendInvitationsPage() {
     );
   }
 
-  if (!user || (user.role !== 'liga' && user.role !== 'super_admin')) {
+  if (!user || (user.role !== 'liga' && user.role !== 'club' && user.role !== 'super_admin')) {
     return (
       <LeagueLayout>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
@@ -144,6 +189,11 @@ export default function SendInvitationsPage() {
     );
   }
 
+  const pageTitle = user.role === 'liga' ? 'Invitar Clubes' : 'Solicitar Unirse a Liga';
+  const pageDescription = user.role === 'liga' 
+    ? 'Invita clubes para que se unan a tu liga deportiva'
+    : 'Solicita la afiliación de tu club a una liga deportiva';
+
   return (
     <LeagueLayout>
       <div className="space-y-6">
@@ -151,9 +201,9 @@ export default function SendInvitationsPage() {
         <div className="bg-white shadow-sm rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Enviar Invitaciones</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
               <p className="text-gray-600 mt-1">
-                Invita clubes para que se unan a tu liga deportiva
+                {pageDescription}
               </p>
             </div>
             <div className="flex items-center space-x-4">
@@ -172,7 +222,7 @@ export default function SendInvitationsPage() {
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Buscar clubes por nombre o ciudad..."
+                  placeholder={`Buscar ${entityType === 'clubs' ? 'clubes por nombre o ciudad' : 'ligas por nombre o provincia'}...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
@@ -182,86 +232,109 @@ export default function SendInvitationsPage() {
           </div>
         </div>
 
-        {/* Available Clubs */}
+        {/* Available Entities */}
         <div className="bg-white shadow-sm rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">
-              Clubes Disponibles ({pagination.total})
+              {entityType === 'clubs' ? 'Clubes Disponibles' : 'Ligas Disponibles'} ({pagination.total})
             </h2>
             <p className="text-sm text-gray-600 mt-1">
-              Clubes que no están afiliados a ninguna liga y pueden recibir invitaciones
+              {entityType === 'clubs' 
+                ? 'Clubes que no están afiliados a ninguna liga y pueden recibir invitaciones'
+                : 'Ligas deportivas disponibles para solicitar afiliación'
+              }
             </p>
           </div>
 
-          {availableClubs.length > 0 ? (
+          {availableEntities.length > 0 ? (
             <div className="divide-y divide-gray-200">
-              {availableClubs.map((club) => (
-                <div key={club.id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-start space-x-4">
-                      {/* Icon */}
-                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <BuildingOfficeIcon className="h-6 w-6 text-blue-600" />
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                          {club.name}
-                        </h3>
-                        
-                        <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
-                          <div className="flex items-center">
-                            <MapPinIcon className="h-4 w-4 mr-1" />
-                            <span>{club.city}</span>
-                          </div>
-                          {club.address && (
-                            <div className="flex items-center">
-                              <span>{club.address}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center">
-                            <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                              club.status === 'active' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {club.status === 'active' ? 'Activo' : 'Inactivo'}
-                            </span>
-                          </div>
+              {availableEntities.map((entity) => {
+                const IconComponent = getEntityIcon(entity);
+                const isClub = 'city' in entity;
+                
+                return (
+                  <div key={entity.id} className="p-6 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-start space-x-4">
+                        {/* Icon */}
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                          isClub ? 'bg-blue-100' : 'bg-yellow-100'
+                        }`}>
+                          <IconComponent className={`h-6 w-6 ${
+                            isClub ? 'text-blue-600' : 'text-yellow-600'
+                          }`} />
                         </div>
 
-                        {(club.phone || club.email) && (
-                          <div className="flex items-center space-x-4 text-sm text-gray-600">
-                            {club.phone && <span>📞 {club.phone}</span>}
-                            {club.email && <span>✉️ {club.email}</span>}
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                            {entity.name}
+                          </h3>
+                          
+                          <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
+                            <div className="flex items-center">
+                              <MapPinIcon className="h-4 w-4 mr-1" />
+                              <span>{getEntityLocation(entity)}</span>
+                            </div>
+                            {isClub && entity.address && (
+                              <div className="flex items-center">
+                                <span>{entity.address}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center">
+                              <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                                isClub 
+                                  ? (entity.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}>
+                                {isClub 
+                                  ? (entity.status === 'active' ? 'Activo' : 'Inactivo')
+                                  : getEntityType(entity)
+                                }
+                              </span>
+                            </div>
                           </div>
-                        )}
+
+                          {isClub && (entity.phone || entity.email) && (
+                            <div className="flex items-center space-x-4 text-sm text-gray-600">
+                              {entity.phone && <span>📞 {entity.phone}</span>}
+                              {entity.email && <span>✉️ {entity.email}</span>}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => openInviteModal(entity)}
+                          className="inline-flex items-center px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors"
+                        >
+                          <PaperAirplaneIcon className="h-4 w-4 mr-2" />
+                          {user.role === 'liga' ? 'Enviar Invitación' : 'Solicitar Unirse'}
+                        </button>
                       </div>
                     </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => openInviteModal(club)}
-                        className="inline-flex items-center px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors"
-                      >
-                        <PaperAirplaneIcon className="h-4 w-4 mr-2" />
-                        Enviar Invitación
-                      </button>
-                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12">
-              <BuildingOfficeIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No hay clubes disponibles</h3>
+              {entityType === 'clubs' ? (
+                <BuildingOfficeIcon className="mx-auto h-12 w-12 text-gray-400" />
+              ) : (
+                <TrophyIcon className="mx-auto h-12 w-12 text-gray-400" />
+              )}
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                No hay {entityType === 'clubs' ? 'clubes' : 'ligas'} disponibles
+              </h3>
               <p className="mt-1 text-sm text-gray-500">
                 {searchTerm 
-                  ? 'No se encontraron clubes que coincidan con tu búsqueda.'
-                  : 'Todos los clubes ya están afiliados a una liga o no hay clubes registrados.'
+                  ? `No se encontraron ${entityType === 'clubs' ? 'clubes' : 'ligas'} que coincidan con tu búsqueda.`
+                  : entityType === 'clubs'
+                  ? 'Todos los clubes ya están afiliados a una liga o no hay clubes registrados.'
+                  : 'No hay ligas disponibles en este momento.'
                 }
               </p>
             </div>
@@ -273,14 +346,14 @@ export default function SendInvitationsPage() {
           <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow-sm">
             <div className="flex-1 flex justify-between sm:hidden">
               <button
-                onClick={() => fetchAvailableClubs(pagination.current_page - 1)}
+                onClick={() => fetchAvailableEntities(pagination.current_page - 1)}
                 disabled={pagination.current_page === 1}
                 className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
               >
                 Anterior
               </button>
               <button
-                onClick={() => fetchAvailableClubs(pagination.current_page + 1)}
+                onClick={() => fetchAvailableEntities(pagination.current_page + 1)}
                 disabled={pagination.current_page === pagination.last_page}
                 className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
               >
@@ -297,14 +370,14 @@ export default function SendInvitationsPage() {
               <div>
                 <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                   <button
-                    onClick={() => fetchAvailableClubs(pagination.current_page - 1)}
+                    onClick={() => fetchAvailableEntities(pagination.current_page - 1)}
                     disabled={pagination.current_page === 1}
                     className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
                   >
                     Anterior
                   </button>
                   <button
-                    onClick={() => fetchAvailableClubs(pagination.current_page + 1)}
+                    onClick={() => fetchAvailableEntities(pagination.current_page + 1)}
                     disabled={pagination.current_page === pagination.last_page}
                     className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
                   >
@@ -318,13 +391,16 @@ export default function SendInvitationsPage() {
       </div>
 
       {/* Invitation Modal */}
-      {isInviteModalOpen && selectedClub && (
+      {isInviteModalOpen && selectedEntity && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-medium text-gray-900">
-                  Enviar Invitación a {selectedClub.name}
+                  {user.role === 'liga' 
+                    ? `Enviar Invitación a ${selectedEntity.name}`
+                    : `Solicitar Unirse a ${selectedEntity.name}`
+                  }
                 </h3>
                 <button
                   onClick={closeInviteModal}
@@ -335,17 +411,21 @@ export default function SendInvitationsPage() {
               </div>
 
               <div className="space-y-6">
-                {/* Club Info */}
+                {/* Entity Info */}
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <BuildingOfficeIcon className="h-5 w-5 text-blue-600" />
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      'city' in selectedEntity ? 'bg-blue-100' : 'bg-yellow-100'
+                    }`}>
+                      {React.createElement(getEntityIcon(selectedEntity), {
+                        className: `h-5 w-5 ${'city' in selectedEntity ? 'text-blue-600' : 'text-yellow-600'}`
+                      })}
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">{selectedClub.name}</h4>
-                      <p className="text-sm text-gray-600">{selectedClub.city}</p>
-                      {selectedClub.address && (
-                        <p className="text-sm text-gray-500">{selectedClub.address}</p>
+                      <h4 className="font-semibold text-gray-900">{selectedEntity.name}</h4>
+                      <p className="text-sm text-gray-600">{getEntityLocation(selectedEntity)}</p>
+                      {'address' in selectedEntity && selectedEntity.address && (
+                        <p className="text-sm text-gray-500">{selectedEntity.address}</p>
                       )}
                     </div>
                   </div>
@@ -354,18 +434,24 @@ export default function SendInvitationsPage() {
                 {/* Message */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mensaje de Invitación *
+                    {user.role === 'liga' ? 'Mensaje de Invitación *' : 'Mensaje de Solicitud *'}
                   </label>
                   <textarea
                     value={invitationForm.message}
                     onChange={(e) => setInvitationForm(prev => ({ ...prev, message: e.target.value }))}
                     rows={4}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                    placeholder="Escribe un mensaje personalizado para la invitación..."
+                    placeholder={user.role === 'liga' 
+                      ? "Escribe un mensaje personalizado para la invitación..."
+                      : "Escribe un mensaje explicando por qué quieres unirte a esta liga..."
+                    }
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Este mensaje será visible para el club cuando reciba la invitación.
+                    {user.role === 'liga' 
+                      ? 'Este mensaje será visible para el club cuando reciba la invitación.'
+                      : 'Este mensaje será visible para la liga cuando reciba tu solicitud.'
+                    }
                   </p>
                 </div>
 
@@ -382,7 +468,7 @@ export default function SendInvitationsPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Si no se especifica, la invitación no tendrá fecha de expiración.
+                    Si no se especifica, la {user.role === 'liga' ? 'invitación' : 'solicitud'} no tendrá fecha de expiración.
                   </p>
                 </div>
 
@@ -407,7 +493,7 @@ export default function SendInvitationsPage() {
                     ) : (
                       <div className="flex items-center justify-center">
                         <PaperAirplaneIcon className="h-4 w-4 mr-2" />
-                        Enviar Invitación
+                        {user.role === 'liga' ? 'Enviar Invitación' : 'Enviar Solicitud'}
                       </div>
                     )}
                   </button>
