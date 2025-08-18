@@ -85,6 +85,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{invitation}/reject', [InvitationController::class, 'reject']);
         Route::post('/{invitation}/cancel', [InvitationController::class, 'cancel']);
         Route::get('/available-clubs', [InvitationController::class, 'getAvailableClubs']);
+        Route::get('/available-leagues', [InvitationController::class, 'getAvailableLeagues']);
+        Route::get('/available-entities', [InvitationController::class, 'getAvailableEntities']);
     });
 });
 
