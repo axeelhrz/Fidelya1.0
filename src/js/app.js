@@ -49,7 +49,7 @@ const CONFIG = {
             },
             stations: {
                 en: { webp: './assets/phones/Stations.webp' },
-                es: { webp: './assets/phones/Stations.webp' } // Fallback a inglés hasta que exista Stations_es.webp
+                es: { webp: './assets/phones/Stations_es.webp' } // Fallback a inglés hasta que exista Stations_es.webp
             },
             calendar: {
                 en: { webp: './assets/phones/Calendar.webp' },
@@ -61,7 +61,7 @@ const CONFIG = {
             },
             notifications: {
                 en: { webp: './assets/phones/Notifications.webp' },
-                es: { webp: './assets/phones/Notifications.webp' } // Fallback a inglés hasta que exista Notifications_es.webp
+                es: { webp: './assets/phones/Notifications_es.webp' } // Fallback a inglés hasta que exista Notifications_es.webp
             },
             referrals: {
                 en: { webp: './assets/phones/Referrals.webp' },
