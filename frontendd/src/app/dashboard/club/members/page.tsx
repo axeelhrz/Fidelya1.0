@@ -112,18 +112,34 @@ export default function ClubMembersPage() {
     try {
       setIsSubmitting(true);
       
+      console.log('Creating member with data:', data);
+      console.log('Current club:', currentClub);
+      
       // Ensure the member is created for the current club
       const memberData = {
         ...data,
         club_id: currentClub?.id || data.club_id
       };
 
-      await axios.post('/api/members', memberData);
+      console.log('Final member data to send:', memberData);
+
+      const response = await axios.post('/api/members', memberData);
+      console.log('Member created successfully:', response.data);
+      
       await fetchData();
       setIsModalOpen(false);
       setSelectedMember(null);
     } catch (error) {
       console.error('Error creating member:', error);
+      
+      // Log more detailed error information
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+      }
+      
+      // Show user-friendly error message
+      alert('Error al crear el miembro. Por favor, revisa los datos e intenta nuevamente.');
     } finally {
       setIsSubmitting(false);
     }
