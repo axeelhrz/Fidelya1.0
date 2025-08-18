@@ -16,7 +16,7 @@ import {
   CalendarIcon
 } from '@heroicons/react/24/outline';
 import axios from '@/lib/axios';
-import type { Member, League, ApiResponse } from '@/types';
+import type { Member, League, Club } from '@/types';
 import Link from 'next/link';
 
 interface ClubStats {
@@ -31,6 +31,7 @@ export default function ClubDashboardPage() {
   const [stats, setStats] = useState<ClubStats | null>(null);
   const [recentMembers, setRecentMembers] = useState<Member[]>([]);
   const [leagues, setLeagues] = useState<League[]>([]);
+  const [currentClub, setCurrentClub] = useState<Club | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
@@ -42,29 +43,86 @@ export default function ClubDashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoadingData(true);
+      console.log('Dashboard - User:', user);
+      console.log('Dashboard - User role:', user?.role);
+      console.log('Dashboard - User ID:', user?.id);
+
+      if (!user) return;
+
+      if (user.role === 'club') {
+        // Fetch clubs to find the current user's club
+        const clubsResponse = await axios.get('/api/clubs');
+        console.log('Dashboard - Clubs response:', clubsResponse.data);
+        
+        const allClubs = clubsResponse.data.data; // Estructura paginada
+        console.log('Dashboard - All clubs:', allClubs);
+        
+        // Find the club that belongs to this user
+        const userClub = allClubs.data.find((club: Club) => club.user_id === user.id);
+        console.log('Dashboard - User club found:', userClub);
+        
+        if (userClub) {
+          setCurrentClub(userClub);
+          
+          // Fetch members for this specific club
+          console.log('Dashboard - Fetching members for club:', userClub.id);
+          const membersResponse = await axios.get(`/api/members?club_id=${userClub.id}`);
+          console.log('Dashboard - Members response:', membersResponse.data);
+          
+          let members: Member[] = [];
+          if (membersResponse.data.data) {
+            // Handle both paginated and non-paginated responses
+            members = Array.isArray(membersResponse.data.data.data) 
+              ? membersResponse.data.data.data 
+              : Array.isArray(membersResponse.data.data)
+              ? membersResponse.data.data
+              : [];
+          }
+          
+          console.log('Dashboard - Club members:', members);
+
+          // Calculate stats for this specific club
+          const clubStats: ClubStats = {
+            total_members: members.length,
+            active_members: members.filter(member => member.status === 'active').length,
+            male_members: members.filter(member => member.gender === 'male').length,
+            female_members: members.filter(member => member.gender === 'female').length,
+          };
+
+          setStats(clubStats);
+          setRecentMembers(members.slice(0, 6)); // Last 6 members
+        }
+      } else if (user.role === 'super_admin') {
+        // Super admin can see all data
+        const [membersResponse, clubsResponse] = await Promise.all([
+          axios.get('/api/members'),
+          axios.get('/api/clubs')
+        ]);
+        
+        const allMembers = membersResponse.data.data;
+        const members = Array.isArray(allMembers.data) ? allMembers.data : allMembers;
+        
+        const clubStats: ClubStats = {
+          total_members: members.length,
+          active_members: members.filter((member: Member) => member.status === 'active').length,
+          male_members: members.filter((member: Member) => member.gender === 'male').length,
+          female_members: members.filter((member: Member) => member.gender === 'female').length,
+        };
+
+        setStats(clubStats);
+        setRecentMembers(members.slice(0, 6));
+      }
+
+      // Fetch leagues (available for all roles)
+      const leaguesResponse = await axios.get('/api/leagues');
+      console.log('Dashboard - Leagues response:', leaguesResponse.data);
       
-      // Obtener miembros del club
-      const membersResponse = await axios.get<ApiResponse<Member[]>>('/members');
-      const members = membersResponse.data.data || [];
-
-      // Obtener ligas
-      const leaguesResponse = await axios.get<ApiResponse<League[]>>('/leagues');
-      const allLeagues = leaguesResponse.data.data || [];
-
-      // Calcular estadísticas
-      const clubStats: ClubStats = {
-        total_members: members.length,
-        active_members: members.filter(member => member.status === 'active').length,
-        male_members: members.filter(member => member.gender === 'male').length,
-        female_members: members.filter(member => member.gender === 'female').length,
-      };
-
-      setStats(clubStats);
-      setRecentMembers(members.slice(0, 6)); // Últimos 6 miembros
-      setLeagues(allLeagues.slice(0, 3)); // Primeras 3 ligas
+      const allLeagues = leaguesResponse.data.data;
+      const leaguesData = Array.isArray(allLeagues.data) ? allLeagues.data : allLeagues;
+      setLeagues(leaguesData.slice(0, 3)); // First 3 leagues
 
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      console.error('Dashboard - Error fetching data:', error);
     } finally {
       setLoadingData(false);
     }
@@ -91,9 +149,9 @@ export default function ClubDashboardPage() {
     );
   }
 
-  const roleInfo = user.role_info;
   const isSuperAdmin = user.role === 'super_admin';
-  const clubName = user?.club_name || roleInfo?.name || 'Mi Club';
+  const clubName = currentClub?.name || user?.name || 'Mi Club';
+  const clubCity = currentClub?.city || user?.city;
 
   return (
     <ClubLayout>
@@ -104,19 +162,19 @@ export default function ClubDashboardPage() {
             <div>
               <h1 className="text-3xl font-bold mb-2">¡Bienvenido al Dashboard!</h1>
               <p className="text-green-100 text-lg">
-                Gestiona tu club de manera eficiente desde aquí
+                {currentClub ? `Gestiona ${currentClub.name} de manera eficiente` : 'Gestiona tu club de manera eficiente desde aquí'}
               </p>
               <div className="flex items-center mt-4 space-x-6 text-green-200">
-                {user?.city && (
+                {clubCity && (
                   <div className="flex items-center">
                     <MapPinIcon className="h-5 w-5 mr-2" />
-                    <span>{user.city}</span>
+                    <span>{clubCity}</span>
                   </div>
                 )}
-                {user?.parent_league && (
+                {currentClub?.league && (
                   <div className="flex items-center">
                     <TrophyIcon className="h-5 w-5 mr-2" />
-                    <span>Liga: {user.parent_league.name}</span>
+                    <span>Liga: {currentClub.league.name}</span>
                   </div>
                 )}
               </div>
@@ -216,7 +274,7 @@ export default function ClubDashboardPage() {
             </Link>
 
             <Link 
-              href="/dashboard/club/leagues"
+              href="/leagues"
               className="flex items-center p-6 border-2 border-gray-200 rounded-xl hover:border-yellow-300 hover:bg-yellow-50 transition-all duration-200 group"
             >
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
@@ -229,15 +287,15 @@ export default function ClubDashboardPage() {
             </Link>
 
             <Link 
-              href="/dashboard/club/stats"
+              href="/sports"
               className="flex items-center p-6 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
             >
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
                 <ChartBarIcon className="h-6 w-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="font-semibold text-gray-900">Estadísticas</p>
-                <p className="text-sm text-gray-500">Reportes y análisis del club</p>
+                <p className="font-semibold text-gray-900">Deportes</p>
+                <p className="text-sm text-gray-500">Gestionar deportes del club</p>
               </div>
             </Link>
           </div>
@@ -267,8 +325,10 @@ export default function ClubDashboardPage() {
                           <UsersIcon className="h-5 w-5 text-green-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{member.full_name}</p>
-                          <p className="text-sm text-gray-500">{member.email}</p>
+                          <p className="font-medium text-gray-900">
+                            {member.first_name} {member.last_name}
+                          </p>
+                          <p className="text-sm text-gray-500">{member.email || 'Sin email'}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -310,7 +370,7 @@ export default function ClubDashboardPage() {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-gray-900">Ligas Disponibles</h3>
                 <Link 
-                  href="/dashboard/club/leagues"
+                  href="/leagues"
                   className="text-green-600 hover:text-green-800 text-sm font-medium"
                 >
                   Ver todas
