@@ -107,7 +107,8 @@ export const useSignUp = () => {
             router.push('/dashboard/club');
             break;
           case 'miembro':
-            router.push('/dashboard/miembro');
+            // Redirigir miembros a la sala de espera
+            router.push('/waiting-room');
             break;
           default:
             router.push('/dashboard');

@@ -38,6 +38,8 @@ interface User {
   clubEntity?: any;
   memberEntity?: any;
   role_info?: any;
+  // Member status for waiting room
+  member_status?: 'pending' | 'active' | 'inactive';
 }
 
 interface AuthResponse {
@@ -68,12 +70,15 @@ function normalizeUserData(userData: any): User {
     leagueEntity: userData.league_entity,
     clubEntity: userData.club_entity,
     memberEntity: userData.member_entity,
+    // Set default member status for new members
+    member_status: userData.member_status || (userData.role === 'miembro' ? 'pending' : undefined),
   };
   
   console.log('🔄 Normalized user data:', {
     id: normalized.id,
     name: normalized.name,
     role: normalized.role,
+    member_status: normalized.member_status,
     hasLeagueEntity: !!normalized.leagueEntity,
     leagueEntityId: normalized.leagueEntity?.id,
     leagueEntityName: normalized.leagueEntity?.name,
