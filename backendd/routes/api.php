@@ -9,6 +9,7 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\SportController;
 use App\Http\Controllers\SportParameterController;
 use App\Http\Controllers\TournamentController;
+use App\Http\Controllers\InvitationController;
 
 // Test endpoint for debugging
 Route::get('/test', function () {
@@ -73,6 +74,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('tournaments')->group(function () {
         Route::get('/league/{league}', [TournamentController::class, 'getByLeague']);
         Route::get('/league/{league}/stats', [TournamentController::class, 'getLeagueStats']);
+    });
+    
+    // Invitations
+    Route::apiResource('invitations', InvitationController::class)->except(['update', 'destroy']);
+    
+    // Invitation-specific routes
+    Route::prefix('invitations')->group(function () {
+        Route::post('/{invitation}/accept', [InvitationController::class, 'accept']);
+        Route::post('/{invitation}/reject', [InvitationController::class, 'reject']);
+        Route::post('/{invitation}/cancel', [InvitationController::class, 'cancel']);
+        Route::get('/available-clubs', [InvitationController::class, 'getAvailableClubs']);
     });
 });
 
