@@ -94,7 +94,7 @@ const StepIndicator = styled(Box)<{ active?: boolean }>(({ theme, active }) => (
   transition: 'all 0.3s ease',
 }));
 
-// Validation Schema
+// Validation Schema - Updated to handle role-specific required fields
 const signUpSchema = z.object({
   role: z.enum(['liga', 'miembro', 'club'], {
     errorMap: () => ({ message: 'Selecciona un tipo de cuenta' }),
@@ -104,7 +104,7 @@ const signUpSchema = z.object({
   password_confirmation: z.string().trim().min(1, 'Confirma tu contraseña'),
   phone: z.string().trim().min(1, 'El teléfono es requerido'),
   country: z.string().trim().min(1, 'El país es requerido'),
-  // Campos opcionales
+  // Campos opcionales que se harán requeridos según el rol
   league_name: z.string().optional(),
   province: z.string().optional(),
   club_name: z.string().optional(),
@@ -120,6 +120,105 @@ const signUpSchema = z.object({
 }).refine((data) => data.password === data.password_confirmation, {
   message: 'Las contraseñas no coinciden',
   path: ['password_confirmation'],
+}).refine((data) => {
+  // Validación específica para Liga
+  if (data.role === 'liga') {
+    return data.league_name && data.league_name.trim().length > 0;
+  }
+  return true;
+}, {
+  message: 'El nombre de la liga es requerido',
+  path: ['league_name'],
+}).refine((data) => {
+  // Validación específica para Liga - provincia
+  if (data.role === 'liga') {
+    return data.province && data.province.trim().length > 0;
+  }
+  return true;
+}, {
+  message: 'La provincia es requerida',
+  path: ['province'],
+}).refine((data) => {
+  // Validación específica para Club - nombre
+  if (data.role === 'club') {
+    return data.club_name && data.club_name.trim().length > 0;
+  }
+  return true;
+}, {
+  message: 'El nombre del club es requerido',
+  path: ['club_name'],
+}).refine((data) => {
+  // Validación específica para Club - liga padre
+  if (data.role === 'club') {
+    return data.parent_league_id && data.parent_league_id.trim().length > 0;
+  }
+  return true;
+}, {
+  message: 'Selecciona la liga a la que pertenece',
+  path: ['parent_league_id'],
+}).refine((data) => {
+  // Validación específica para Club - ciudad
+  if (data.role === 'club') {
+    return data.city && data.city.trim().length > 0;
+  }
+  return true;
+}, {
+  message: 'La ciudad es requerida',
+  path: ['city'],
+}).refine((data) => {
+  // Validación específica para Club - dirección
+  if (data.role === 'club') {
+    return data.address && data.address.trim().length > 0;
+  }
+  return true;
+}, {
+  message: 'La dirección es requerida',
+  path: ['address'],
+}).refine((data) => {
+  // Validación específica para Miembro - nombre completo
+  if (data.role === 'miembro') {
+    return data.full_name && data.full_name.trim().length > 0;
+  }
+  return true;
+}, {
+  message: 'El nombre completo es requerido',
+  path: ['full_name'],
+}).refine((data) => {
+  // Validación específica para Miembro - club padre
+  if (data.role === 'miembro') {
+    return data.parent_club_id && data.parent_club_id.trim().length > 0;
+  }
+  return true;
+}, {
+  message: 'Selecciona tu club de pertenencia',
+  path: ['parent_club_id'],
+}).refine((data) => {
+  // Validación específica para Miembro - fecha de nacimiento
+  if (data.role === 'miembro') {
+    return data.birth_date && data.birth_date.trim().length > 0;
+  }
+  return true;
+}, {
+  message: 'La fecha de nacimiento es requerida',
+  path: ['birth_date'],
+}).refine((data) => {
+  // Validación específica para Miembro - género
+  if (data.role === 'miembro') {
+    return data.gender && (data.gender === 'masculino' || data.gender === 'femenino');
+  }
+  return true;
+}, {
+  message: 'Selecciona tu género',
+  path: ['gender'],
+}).refine((data) => {
+  // Validación específica para Miembro - tipo de caucho
+  if (data.role === 'miembro') {
+    return data.rubber_type && ['liso', 'pupo', 'ambos'].includes(data.rubber_type);
+  }
+  return true;
+}, {
+  message: 'Selecciona tu tipo de caucho',
+  path: ['rubber_type'],
 });
 
 type SignUpFormData = z.infer<typeof signUpSchema>;
@@ -268,27 +367,9 @@ const SignUpForm: React.FC = () => {
       return;
     }
 
-    // Validar campos específicos según el rol
-    let isValid = true;
+    // Ahora la validación se maneja completamente por Zod
+    console.log('📝 Submitting form data:', { ...data, password: '[HIDDEN]', password_confirmation: '[HIDDEN]' });
     
-    if (watchedRole === 'liga') {
-      if (!data.league_name?.trim()) isValid = false;
-      if (!data.province?.trim()) isValid = false;
-    } else if (watchedRole === 'club') {
-      if (!data.club_name?.trim()) isValid = false;
-      if (!data.parent_league_id) isValid = false;
-      if (!data.city?.trim()) isValid = false;
-      if (!data.address?.trim()) isValid = false;
-    } else if (watchedRole === 'miembro') {
-      if (!data.full_name?.trim()) isValid = false;
-      if (!data.parent_club_id) isValid = false;
-      if (!data.birth_date) isValid = false;
-      if (!data.gender) isValid = false;
-      if (!data.rubber_type) isValid = false;
-    }
-
-    if (!isValid) return;
-
     clearError();
     await signUp(data);
   };
