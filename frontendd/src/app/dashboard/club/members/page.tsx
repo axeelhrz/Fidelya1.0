@@ -59,18 +59,30 @@ export default function ClubMembersPage() {
     try {
       setLoadingData(true);
       
+      console.log('fetchData - User:', user);
+      console.log('fetchData - User role:', user?.role);
+      console.log('fetchData - User ID:', user?.id);
+      
       // Get current club information first
       let clubId = null;
       let clubData = null;
 
       if (user?.role === 'club') {
+        console.log('User is a club, fetching clubs...');
+        
         // For club users, get their club information
         const clubsResponse = await axios.get<ApiResponse<Club[]>>('/api/clubs');
+        console.log('Clubs response:', clubsResponse.data);
+        
         const allClubs = clubsResponse.data.data || [];
+        console.log('All clubs:', allClubs);
         
         // Find the club that belongs to this user
         clubData = allClubs.find(club => club.user_id === user.id);
+        console.log('Found club for user:', clubData);
+        
         clubId = clubData?.id;
+        console.log('Club ID:', clubId);
       }
 
       if (!clubId && user?.role !== 'super_admin') {
@@ -79,14 +91,18 @@ export default function ClubMembersPage() {
       }
 
       setCurrentClub(clubData);
+      console.log('Set current club:', clubData);
 
       // Fetch members - filter by club if not super admin
       const membersResponse = await axios.get<ApiResponse<Member[]>>('/api/members');
       let membersData = membersResponse.data.data || [];
 
+      console.log('Members data before filtering:', membersData);
+
       // Filter members by current club if user is not super admin
       if (user?.role === 'club' && clubId) {
         membersData = membersData.filter(member => member.club_id === clubId);
+        console.log('Members data after filtering:', membersData);
       }
 
       setMembers(membersData);
