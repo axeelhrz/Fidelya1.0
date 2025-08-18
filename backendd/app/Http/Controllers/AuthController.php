@@ -264,9 +264,13 @@ class AuthController extends Controller
         $user = Auth::user();
         $user->load(['parentLeague', 'parentClub', 'leagueEntity', 'clubEntity', 'memberEntity']);
 
+        // Create a new token for the user
+        $token = $user->createToken('auth-token')->plainTextToken;
+
         return response()->json([
             'data' => [
                 'user' => $user,
+                'token' => $token,
                 'role_info' => $user->role_info,
             ],
             'message' => 'Inicio de sesión exitoso',
@@ -278,6 +282,9 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
+        // Delete all tokens for the user
+        $request->user()->tokens()->delete();
+        
         Auth::logout();
 
         $request->session()->invalidate();
