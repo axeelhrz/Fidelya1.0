@@ -14,178 +14,58 @@ export interface User {
   roleable_id?: number;
   roleable_type?: string;
   
-  // Liga-specific fields
-  league_name?: string;
-  province?: string;
-  logo_path?: string;
-  
-  // Club-specific fields
-  club_name?: string;
-  parent_league_id?: number;
-  city?: string;
-  address?: string;
-  
-  // Member-specific fields
-  full_name?: string;
-  parent_club_id?: number;
-  birth_date?: string;
-  gender?: 'masculino' | 'femenino';
-  rubber_type?: 'liso' | 'pupo' | 'ambos';
-  ranking?: string;
-  photo_path?: string;
-  
-  // Relations
-  parent_league?: League;
-  parent_club?: Club;
-  league_entity?: League;
-  club_entity?: Club;
-  member_entity?: Member;
-  
-  // Computed attributes
-  role_info?: RoleInfo;
-}
-
-// Role-specific information
-export interface RoleInfo {
-  type: 'liga' | 'club' | 'miembro' | 'super_admin';
-  name?: string;
-  description?: string;
-  province?: string;
-  city?: string;
-  address?: string;
-  full_name?: string;
-  birth_date?: string;
-  gender?: string;
-  rubber_type?: string;
-  ranking?: string;
-  logo_path?: string;
-  photo_path?: string;
-  parent_league?: League;
-  parent_club?: Club;
-  entity?: League | Club | Member;
+  // Related entities
+  leagueEntity?: League;
+  clubEntity?: Club;
+  memberEntity?: Member;
 }
 
 // League types
 export interface League {
   id: number;
-  user_id?: number;
   name: string;
-  region?: string;
-  province?: string;
-  logo_path?: string;
-  status: 'active' | 'inactive';
-  clubs_count?: number;
-  members_count?: number;
+  province: string;
+  user_id: number;
   created_at: string;
   updated_at: string;
-  
-  // Relations
   user?: User;
   clubs?: Club[];
-  club_users?: User[];
-  
-  // Computed attributes
-  admin_info?: AdminInfo;
+  tournaments?: Tournament[];
 }
 
 // Club types
 export interface Club {
   id: number;
-  user_id?: number;
-  league_id: number;
   name: string;
-  city?: string;
+  city: string;
   address?: string;
-  logo_path?: string;
+  phone?: string;
+  email?: string;
   status: 'active' | 'inactive';
-  members_count?: number;
+  user_id: number;
+  league_id?: number;
   created_at: string;
   updated_at: string;
-  
-  // Relations
   user?: User;
   league?: League;
   members?: Member[];
-  member_users?: User[];
-  
-  // Computed attributes
-  admin_info?: AdminInfo;
-  full_address?: string;
 }
 
 // Member types
 export interface Member {
   id: number;
-  user_id?: number;
-  club_id: number;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  doc_id?: string;
-  email?: string;
+  name: string;
+  email: string;
   phone?: string;
-  birthdate?: string;
+  birth_date?: string;
   gender?: 'male' | 'female' | 'other';
-  rubber_type?: string;
-  ranking?: string;
-  photo_path?: string;
   status: 'active' | 'inactive';
+  user_id: number;
+  club_id: number;
   created_at: string;
   updated_at: string;
-  
-  // Relations
   user?: User;
   club?: Club;
-  
-  // Computed attributes
-  age?: number;
-  user_info?: UserInfo;
-  hierarchy?: MemberHierarchy;
-}
-
-// Admin information for entities
-export interface AdminInfo {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string;
-  country?: string;
-  city?: string;
-  address?: string;
-}
-
-// User information for members
-export interface UserInfo {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string;
-  country?: string;
-  full_name?: string;
-  birth_date?: string;
-  gender?: string;
-  rubber_type?: string;
-  ranking?: string;
-  photo_path?: string;
-}
-
-// Member hierarchy information
-export interface MemberHierarchy {
-  member: {
-    id: number;
-    name: string;
-    user?: UserInfo;
-  };
-  club: {
-    id: number;
-    name: string;
-    user?: AdminInfo;
-  };
-  league: {
-    id: number;
-    name: string;
-    user?: AdminInfo;
-  };
 }
 
 // Sport types
@@ -193,21 +73,19 @@ export interface Sport {
   id: number;
   name: string;
   code: string;
-  icon?: string;
-  parameters_count?: number;
   created_at: string;
   updated_at: string;
   parameters?: SportParameter[];
+  tournaments?: Tournament[];
 }
 
-// Sport Parameter types
 export interface SportParameter {
   id: number;
   sport_id: number;
-  param_key: string;
-  param_type: 'number' | 'string' | 'boolean';
-  param_value: string;
-  typed_value: number | string | boolean;
+  parameter_name: string;
+  parameter_value: string;
+  parameter_type: 'string' | 'number' | 'boolean' | 'select';
+  options?: string;
   created_at: string;
   updated_at: string;
   sport?: Sport;
@@ -216,107 +94,57 @@ export interface SportParameter {
 // Tournament types
 export interface Tournament {
   id: number;
-  league_id?: number;
   name: string;
   description?: string;
-  sport: string;
-  sport_id?: number;
+  league_id: number;
+  sport_id: number;
   start_date: string;
   end_date: string;
-  registration_deadline?: string;
-  max_participants?: number;
-  participants: number;
-  status: 'upcoming' | 'active' | 'completed' | 'cancelled';
-  format?: 'single_elimination' | 'double_elimination' | 'round_robin' | 'swiss';
-  entry_fee?: number;
-  prize_pool?: number;
+  registration_deadline: string;
+  max_participants: number;
+  current_participants: number;
+  entry_fee: number;
+  prize_pool: number;
+  tournament_format: 'single_elimination' | 'double_elimination' | 'round_robin' | 'swiss_system';
   location?: string;
   rules?: string;
+  status: 'upcoming' | 'active' | 'completed' | 'cancelled';
+  matches_played: number;
+  matches_total: number;
   created_at: string;
   updated_at: string;
-  
-  // Relations
   league?: League;
-  sport_entity?: Sport;
-  participants_list?: TournamentParticipant[];
+  sport?: Sport;
+  participants?: TournamentParticipant[];
 }
 
-// Tournament Participant types
 export interface TournamentParticipant {
   id: number;
   tournament_id: number;
-  member_id: number;
-  club_id: number;
+  participant_type: 'member' | 'club';
+  participant_id: number;
   registration_date: string;
   status: 'registered' | 'confirmed' | 'withdrawn';
-  seed?: number;
-  
-  // Relations
-  tournament?: Tournament;
-  member?: Member;
-  club?: Club;
-}
-
-// Invitation types
-export interface Invitation {
-  id: number;
-  league_id?: number;
-  club_id?: number;
-  sender_id: number;
-  receiver_id?: number;
-  receiver_email?: string;
-  type: 'league_to_club' | 'club_to_league' | 'club_to_member';
-  status: 'pending' | 'accepted' | 'rejected' | 'expired';
-  message?: string;
-  expires_at?: string;
-  responded_at?: string;
   created_at: string;
   updated_at: string;
-  
-  // Relations
-  league?: League;
-  club?: Club;
-  sender?: User;
-  receiver?: User;
-  
-  // Computed attributes
-  sender_name?: string;
-  receiver_name?: string;
-  entity_name?: string;
-}
-
-// Role types for UI
-export interface Role {
-  id: 'liga' | 'miembro' | 'club' | 'super_admin';
-  name: string;
-  description: string;
-  icon: string;
-  color: string;
-  bgColor: string;
+  tournament?: Tournament;
 }
 
 // API Response types
-export interface ApiResponse<T = unknown> {
+export interface ApiResponse<T> {
   data: T;
-  message: string;
+  message?: string;
+  status: 'success' | 'error';
 }
 
-export interface PaginatedResponse<T = unknown> {
-  data: {
-    data: T[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    from: number;
-    to: number;
-  };
-  message: string;
-}
-
-export interface ApiError {
-  message: string;
-  errors?: Record<string, string[]>;
+export interface PaginatedResponse<T> {
+  data: T[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+  from: number;
+  to: number;
 }
 
 // Form types
@@ -325,175 +153,153 @@ export interface LoginForm {
   password: string;
 }
 
-// Updated register form with role-specific fields
 export interface RegisterForm {
-  // Common fields
-  role: 'liga' | 'miembro' | 'club';
+  name: string;
   email: string;
   password: string;
   password_confirmation: string;
-  phone: string;
-  country: string;
+  role: 'liga' | 'club' | 'miembro';
+  phone?: string;
+  country?: string;
   
-  // Liga-specific fields
-  league_name?: string;
-  province?: string;
-  logo_path?: string;
-  
-  // Club-specific fields
-  club_name?: string;
-  parent_league_id?: number;
-  city?: string;
-  address?: string;
-  
-  // Member-specific fields
-  full_name?: string;
-  parent_club_id?: number;
-  birth_date?: string;
-  gender?: 'masculino' | 'femenino';
-  rubber_type?: 'liso' | 'pupo' | 'ambos';
-  ranking?: string;
-  photo_path?: string;
+  // Role-specific fields
+  province?: string; // For liga
+  city?: string; // For club
+  address?: string; // For club
+  birth_date?: string; // For miembro
+  gender?: 'male' | 'female' | 'other'; // For miembro
 }
 
-// Entity form types
 export interface LeagueForm {
   name: string;
-  region?: string;
-  province?: string;
-  logo_path?: string;
-  status?: 'active' | 'inactive';
+  province: string;
 }
 
 export interface ClubForm {
-  league_id: number;
   name: string;
-  city?: string;
+  city: string;
   address?: string;
-  logo_path?: string;
-  status?: 'active' | 'inactive';
+  phone?: string;
+  email?: string;
+  status: 'active' | 'inactive';
+  league_id?: number;
 }
 
 export interface MemberForm {
-  club_id: number;
-  first_name: string;
-  last_name: string;
-  doc_id?: string;
-  email?: string;
+  name: string;
+  email: string;
   phone?: string;
-  birthdate?: string;
+  birth_date?: string;
   gender?: 'male' | 'female' | 'other';
-  rubber_type?: string;
-  ranking?: string;
-  photo_path?: string;
-  status?: 'active' | 'inactive';
+  status: 'active' | 'inactive';
+  club_id: number;
 }
 
 export interface SportForm {
   name: string;
   code: string;
-  icon?: string;
 }
 
 export interface SportParameterForm {
-  param_key: string;
-  param_type: 'number' | 'string' | 'boolean';
-  param_value: string | number | boolean;
+  sport_id: number;
+  parameter_name: string;
+  parameter_value: string;
+  parameter_type: 'string' | 'number' | 'boolean' | 'select';
+  options?: string;
 }
 
 export interface TournamentForm {
   name: string;
   description?: string;
+  league_id: number;
   sport_id: number;
   start_date: string;
   end_date: string;
-  registration_deadline?: string;
-  max_participants?: number;
-  format?: 'single_elimination' | 'double_elimination' | 'round_robin' | 'swiss';
-  entry_fee?: number;
-  prize_pool?: number;
+  registration_deadline: string;
+  max_participants: number;
+  entry_fee: number;
+  prize_pool: number;
+  tournament_format: 'single_elimination' | 'double_elimination' | 'round_robin' | 'swiss_system';
   location?: string;
   rules?: string;
-}
-
-export interface InvitationForm {
-  type: 'league_to_club' | 'club_to_league' | 'club_to_member';
-  receiver_email?: string;
-  club_id?: number;
-  message?: string;
-  expires_at?: string;
-}
-
-// Available options for registration
-export interface AvailableLeague {
-  id: number;
-  name: string;
-  region?: string;
-  province?: string;
-}
-
-export interface AvailableClub {
-  id: number;
-  name: string;
-  city?: string;
-  league_id: number;
-  league?: {
-    id: number;
-    name: string;
-  };
+  status: 'upcoming' | 'active' | 'completed' | 'cancelled';
 }
 
 // Statistics types
 export interface LeagueStats {
-  total_clubs: number;
-  total_members: number;
-  active_clubs: number;
-  active_members: number;
-  pending_invitations: number;
-  sent_invitations: number;
-  total_tournaments: number;
-  active_tournaments: number;
-  total_sports: number;
-  growth_this_month: number;
-  average_members_per_club: number;
+  totalClubs: number;
+  activeClubs: number;
+  inactiveClubs: number;
+  totalMembers: number;
+  averageMembersPerClub: number;
+  totalTournaments: number;
+  upcomingTournaments: number;
+  activeTournaments: number;
+  completedTournaments: number;
+  totalParticipants: number;
+  totalPrizePool: number;
 }
 
 export interface ClubStats {
-  total_members: number;
-  active_members: number;
-  tournaments_participated: number;
-  tournaments_won: number;
-  monthly_growth: number;
-  average_member_age: number;
-  sports_played: number;
+  totalMembers: number;
+  activeMembers: number;
+  inactiveMembers: number;
+  maleMembers: number;
+  femaleMembers: number;
+  averageAge: number;
+  tournamentsParticipated: number;
+  wins: number;
+  losses: number;
 }
 
-export interface MemberStats {
-  tournaments_played: number;
-  tournaments_won: number;
-  win_rate: number;
-  current_ranking: string;
-  matches_played: number;
-  matches_won: number;
-  favorite_sport: string;
+// Filter and search types
+export interface FilterOptions {
+  search?: string;
+  status?: string;
+  sport?: string;
+  city?: string;
+  league?: string;
+  club?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
-// Sport configuration types
-export interface SportConfig {
-  sport_code: string;
-  parameters: Record<string, SportParameterConfig>;
+// Modal and UI types
+export interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
 }
 
-export interface SportParameterConfig {
-  key: string;
-  type: 'number' | 'string' | 'boolean' | 'select';
-  label: string;
-  default_value: any;
-  options?: string[];
-  validation?: {
-    required?: boolean;
-    min?: number;
-    max?: number;
-    pattern?: string;
-  };
+export interface ConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  type?: 'danger' | 'warning' | 'info';
+}
+
+// Navigation types
+export interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<any>;
+  current?: boolean;
+  count?: number;
+}
+
+// Error types
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export interface ApiError {
+  message: string;
+  errors?: ValidationError[];
+  status?: number;
 }
