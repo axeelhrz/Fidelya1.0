@@ -8,6 +8,7 @@ use App\Http\Controllers\ClubController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\SportController;
 use App\Http\Controllers\SportParameterController;
+use App\Http\Controllers\TournamentController;
 
 // Test endpoint for debugging
 Route::get('/test', function () {
@@ -63,6 +64,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/parameters', [SportParameterController::class, 'store']);
         Route::put('/parameters/{parameter}', [SportParameterController::class, 'update']);
         Route::delete('/parameters/{parameter}', [SportParameterController::class, 'destroy']);
+    });
+    
+    // Tournaments
+    Route::apiResource('tournaments', TournamentController::class);
+    
+    // Tournament-specific routes
+    Route::prefix('tournaments')->group(function () {
+        Route::get('/league/{league}', [TournamentController::class, 'getByLeague']);
+        Route::get('/league/{league}/stats', [TournamentController::class, 'getLeagueStats']);
     });
 });
 
