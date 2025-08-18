@@ -192,6 +192,9 @@ export default function ClubMembersPage() {
   };
 
   const openCreateModal = () => {
+    console.log('Opening create modal...');
+    console.log('Current club:', currentClub);
+    console.log('Clubs available:', currentClub ? [currentClub] : []);
     setSelectedMember(null);
     setIsModalOpen(true);
   };
