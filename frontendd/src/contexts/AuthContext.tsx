@@ -27,9 +27,13 @@ interface User {
   ranking?: string;
   logo_path?: string;
   photo_path?: string;
-  // Relations
+  // Relations - these come from the backend
   parentLeague?: any;
   parentClub?: any;
+  league_entity?: any;  // Note: backend uses snake_case
+  club_entity?: any;
+  member_entity?: any;
+  // Camel case versions for frontend compatibility
   leagueEntity?: any;
   clubEntity?: any;
   memberEntity?: any;
@@ -55,6 +59,28 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper function to normalize user data from backend
+function normalizeUserData(userData: any): User {
+  // Convert snake_case to camelCase for frontend compatibility
+  const normalized = {
+    ...userData,
+    leagueEntity: userData.league_entity,
+    clubEntity: userData.club_entity,
+    memberEntity: userData.member_entity,
+  };
+  
+  console.log('🔄 Normalized user data:', {
+    id: normalized.id,
+    name: normalized.name,
+    role: normalized.role,
+    hasLeagueEntity: !!normalized.leagueEntity,
+    leagueEntityId: normalized.leagueEntity?.id,
+    leagueEntityName: normalized.leagueEntity?.name,
+  });
+  
+  return normalized;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('🔐 Logging in user...');
       const response = await api.post<AuthResponse>('/api/auth/login', { email, password });
-      const userData = response.data.data.user;
+      const userData = normalizeUserData(response.data.data.user);
       setUser(userData);
       console.log('✅ Login successful:', userData);
       return userData;
@@ -90,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('🔍 Checking authentication...');
       const response = await api.get<AuthResponse>('/api/auth/me');
-      const userData = response.data.data.user;
+      const userData = normalizeUserData(response.data.data.user);
       setUser(userData);
       console.log('✅ Auth check successful:', userData);
       return userData;
@@ -121,7 +147,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     checkAuth,
-    setUser,
+    setUser: (userData: User | null) => {
+      setUser(userData ? normalizeUserData(userData) : null);
+    },
   };
 
   return (
