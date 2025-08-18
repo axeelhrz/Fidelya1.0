@@ -130,6 +130,46 @@ export interface TournamentParticipant {
   tournament?: Tournament;
 }
 
+// Invitation types
+export interface Invitation {
+  id: number;
+  sender_id: number;
+  sender_type: string;
+  receiver_id: number;
+  receiver_type: string;
+  message?: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'cancelled';
+  type: 'league_to_club' | 'club_to_league' | 'club_to_member' | 'member_to_club';
+  metadata?: any;
+  expires_at?: string;
+  responded_at?: string;
+  created_at: string;
+  updated_at: string;
+  
+  // Populated relations
+  sender?: League | Club | Member;
+  receiver?: League | Club | Member;
+  
+  // Additional computed fields
+  is_sender?: boolean;
+  sender_name?: string;
+  receiver_name?: string;
+  sender_details?: {
+    id: number;
+    name: string;
+    type: string;
+    province?: string;
+    city?: string;
+  };
+  receiver_details?: {
+    id: number;
+    name: string;
+    type: string;
+    province?: string;
+    city?: string;
+  };
+}
+
 // API Response types
 export interface ApiResponse<T> {
   data: T;
@@ -225,6 +265,22 @@ export interface TournamentForm {
   status: 'upcoming' | 'active' | 'completed' | 'cancelled';
 }
 
+// Invitation form types
+export interface InvitationForm {
+  receiver_id: number;
+  receiver_type: 'App\\Models\\Club' | 'App\\Models\\League';
+  message?: string;
+  type: 'league_to_club' | 'club_to_league';
+  expires_at?: string;
+}
+
+export interface SendInvitationForm {
+  club_id?: number;
+  club_name?: string;
+  message: string;
+  expires_at?: string;
+}
+
 // Statistics types
 export interface LeagueStats {
   totalClubs: number;
@@ -262,6 +318,12 @@ export interface FilterOptions {
   club?: string;
   dateFrom?: string;
   dateTo?: string;
+}
+
+export interface InvitationFilters {
+  type?: 'sent' | 'received' | 'all';
+  status?: 'pending' | 'accepted' | 'rejected' | 'cancelled' | 'all';
+  search?: string;
 }
 
 // Modal and UI types
