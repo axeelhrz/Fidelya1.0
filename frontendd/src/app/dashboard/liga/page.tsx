@@ -21,7 +21,7 @@ import {
   StarIcon
 } from '@heroicons/react/24/outline';
 import axios from '@/lib/axios';
-import type { Club, Member, League, Sport } from '@/types';
+import type { Club, Member, League, Sport, Invitation } from '@/types';
 import Link from 'next/link';
 
 interface LeagueStats {
@@ -36,15 +36,6 @@ interface LeagueStats {
   total_sports: number;
   growth_this_month: number;
   average_members_per_club: number;
-}
-
-interface Invitation {
-  id: number;
-  club_name: string;
-  club_city: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  created_at: string;
-  type: 'received' | 'sent';
 }
 
 interface Tournament {
@@ -146,6 +137,20 @@ export default function LigaDashboardPage() {
         setSports([]);
       }
 
+      // Fetch real invitations data
+      let realInvitations: Invitation[] = [];
+      try {
+        const invitationsResponse = await axios.get('/api/invitations');
+        console.log('Liga Dashboard - Invitations response:', invitationsResponse.data);
+        if (invitationsResponse.data.status === 'success') {
+          const invitationsData = invitationsResponse.data.data;
+          realInvitations = Array.isArray(invitationsData.data) ? invitationsData.data : Array.isArray(invitationsData) ? invitationsData : [];
+        }
+      } catch (error) {
+        console.error('Liga Dashboard - Error fetching invitations:', error);
+        realInvitations = [];
+      }
+
       // Calculate statistics
       const now = new Date();
       const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -155,26 +160,7 @@ export default function LigaDashboardPage() {
         return createdDate >= thisMonth;
       }).length;
 
-      // Mock data for invitations and tournaments (replace with real API calls when available)
-      const mockInvitations: Invitation[] = [
-        {
-          id: 1,
-          club_name: 'Club Deportivo Quito',
-          club_city: 'Quito',
-          status: 'pending',
-          created_at: new Date().toISOString(),
-          type: 'received'
-        },
-        {
-          id: 2,
-          club_name: 'Club Raqueta Elite',
-          club_city: 'Guayaquil',
-          status: 'pending',
-          created_at: new Date(Date.now() - 86400000).toISOString(),
-          type: 'sent'
-        }
-      ];
-
+      // Mock data for tournaments (replace with real API calls when available)
       const mockTournaments: Tournament[] = [
         {
           id: 1,
@@ -201,8 +187,8 @@ export default function LigaDashboardPage() {
         total_members: members.length,
         active_clubs: clubs.filter(club => club.status === 'active').length,
         active_members: members.filter(member => member.status === 'active').length,
-        pending_invitations: mockInvitations.filter(inv => inv.type === 'received' && inv.status === 'pending').length,
-        sent_invitations: mockInvitations.filter(inv => inv.type === 'sent' && inv.status === 'pending').length,
+        pending_invitations: realInvitations.filter(inv => !inv.is_sender && inv.status === 'pending').length,
+        sent_invitations: realInvitations.filter(inv => inv.is_sender && inv.status === 'pending').length,
         total_tournaments: mockTournaments.length,
         active_tournaments: mockTournaments.filter(t => t.status === 'active').length,
         total_sports: sports.length || 7, // Default to 7 if no sports in DB
@@ -213,7 +199,7 @@ export default function LigaDashboardPage() {
       setStats(leagueStats);
       setRecentClubs(clubs.slice(0, 6)); // Last 6 clubs
       setRecentMembers(members.slice(0, 6)); // Last 6 members
-      setInvitations(mockInvitations);
+      setInvitations(realInvitations.slice(0, 6)); // Last 6 invitations
       setTournaments(mockTournaments);
 
     } catch (error) {
@@ -451,7 +437,7 @@ export default function LigaDashboardPage() {
                         <div>
                           <p className="font-medium text-gray-900">{club.name}</p>
                           <p className="text-sm text-gray-500">
-                            {club.city} • {club.members_count || 0} miembros
+                            {club.city} • {club.members?.length || 0} miembros
                           </p>
                         </div>
                       </div>
@@ -504,22 +490,30 @@ export default function LigaDashboardPage() {
             <div className="p-6">
               {invitations.length > 0 ? (
                 <div className="space-y-4">
-                  {invitations.slice(0, 6).map((invitation) => (
+                  {invitations.map((invitation) => (
                     <div key={invitation.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                       <div className="flex items-center space-x-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          invitation.type === 'received' ? 'bg-blue-100' : 'bg-green-100'
+                          invitation.is_sender ? 'bg-green-100' : 'bg-blue-100'
                         }`}>
-                          {invitation.type === 'received' ? (
-                            <BellIcon className="h-5 w-5 text-blue-600" />
-                          ) : (
+                          {invitation.is_sender ? (
                             <PaperAirplaneIcon className="h-5 w-5 text-green-600" />
+                          ) : (
+                            <BellIcon className="h-5 w-5 text-blue-600" />
                           )}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{invitation.club_name}</p>
+                          <p className="font-medium text-gray-900">
+                            {invitation.is_sender 
+                              ? invitation.receiver_name 
+                              : invitation.sender_name
+                            }
+                          </p>
                           <p className="text-sm text-gray-500">
-                            {invitation.club_city} • {invitation.type === 'received' ? 'Solicita unirse' : 'Invitado'}
+                            {invitation.is_sender 
+                              ? `Invitado • ${invitation.receiver_details?.city || ''}`
+                              : `Solicita unirse • ${invitation.sender_details?.city || ''}`
+                            }
                           </p>
                         </div>
                       </div>
