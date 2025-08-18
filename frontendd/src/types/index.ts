@@ -277,8 +277,16 @@ export interface InvitationForm {
 export interface SendInvitationForm {
   club_id?: number;
   club_name?: string;
+  league_id?: number;
+  league_name?: string;
   message: string;
   expires_at?: string;
+}
+
+// Available entities response
+export interface AvailableEntitiesResponse {
+  data: PaginatedResponse<Club | League>;
+  entity_type: 'clubs' | 'leagues';
 }
 
 // Statistics types
