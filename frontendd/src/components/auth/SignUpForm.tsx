@@ -352,8 +352,8 @@ const SignUpForm: React.FC = () => {
       full_name: '',
       parent_club_id: '',
       birth_date: '',
-      gender: undefined,
-      rubber_type: undefined,
+      gender: '' as any, // Inicializar como string vacío en lugar de undefined
+      rubber_type: '' as any, // Inicializar como string vacío en lugar de undefined
       ranking: '',
     },
   });
@@ -367,11 +367,17 @@ const SignUpForm: React.FC = () => {
       return;
     }
 
-    // Ahora la validación se maneja completamente por Zod
-    console.log('📝 Submitting form data:', { ...data, password: '[HIDDEN]', password_confirmation: '[HIDDEN]' });
+    // Limpiar campos vacíos antes de enviar
+    const cleanedData = { ...data };
+    
+    // Convertir strings vacíos a undefined para campos opcionales
+    if (cleanedData.gender === '') cleanedData.gender = undefined;
+    if (cleanedData.rubber_type === '') cleanedData.rubber_type = undefined;
+    
+    console.log('📝 Submitting form data:', { ...cleanedData, password: '[HIDDEN]', password_confirmation: '[HIDDEN]' });
     
     clearError();
-    await signUp(data);
+    await signUp(cleanedData);
   };
 
   const handleRoleSelect = (roleId: string) => {
@@ -948,7 +954,11 @@ const SignUpForm: React.FC = () => {
                                 <FormLabel sx={{ mb: 1, fontWeight: 500, color: selectedRoleData.color }}>
                                   Sexo
                                 </FormLabel>
-                                <RadioGroup {...field} row>
+                                <RadioGroup 
+                                  {...field} 
+                                  row
+                                  value={field.value || ''} // Asegurar que siempre tenga un valor
+                                >
                                   <FormControlLabel 
                                     value="masculino" 
                                     control={<Radio sx={{ '&.Mui-checked': { color: selectedRoleData.color } }} />} 
@@ -976,7 +986,11 @@ const SignUpForm: React.FC = () => {
                               <FormLabel sx={{ mb: 1, fontWeight: 500, color: selectedRoleData.color }}>
                                 Tipo de caucho
                               </FormLabel>
-                              <RadioGroup {...field} row>
+                              <RadioGroup 
+                                {...field} 
+                                row
+                                value={field.value || ''} // Asegurar que siempre tenga un valor
+                              >
                                 <FormControlLabel 
                                   value="liso" 
                                   control={<Radio sx={{ '&.Mui-checked': { color: selectedRoleData.color } }} />} 
