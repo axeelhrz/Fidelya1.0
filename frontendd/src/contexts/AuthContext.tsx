@@ -43,6 +43,7 @@ interface User {
 interface AuthResponse {
   data: {
     user: User;
+    token?: string;
     role_info?: any;
   };
   message: string;
@@ -81,6 +82,26 @@ function normalizeUserData(userData: any): User {
   return normalized;
 }
 
+// Helper functions for token management
+const getStoredToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('auth_token');
+};
+
+const setStoredToken = (token: string): void => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('auth_token', token);
+  // Set the token in axios headers
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+};
+
+const removeStoredToken = (): void => {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('auth_token');
+  // Remove the token from axios headers
+  delete api.defaults.headers.common['Authorization'];
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -90,6 +111,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🔐 Logging in user...');
       const response = await api.post<AuthResponse>('/api/auth/login', { email, password });
       const userData = normalizeUserData(response.data.data.user);
+      
+      // If we get a token, store it
+      if (response.data.data.token) {
+        setStoredToken(response.data.data.token);
+      }
+      
       setUser(userData);
       console.log('✅ Login successful:', userData);
       return userData;
@@ -103,12 +130,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('🚪 Logging out user...');
       await api.post('/api/auth/logout');
-      setUser(null);
-      console.log('✅ Logout successful');
     } catch (error) {
       console.error('❌ Logout failed:', error);
-      // Even if logout fails on server, clear local state
+      // Continue with logout even if server request fails
+    } finally {
+      // Always clear local state and token
+      removeStoredToken();
       setUser(null);
+      console.log('✅ Logout successful');
     }
   };
 
@@ -122,6 +151,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return userData;
     } catch (error) {
       console.log('ℹ️ User not authenticated');
+      // Clear invalid token
+      removeStoredToken();
       setUser(null);
       return null;
     }
@@ -130,9 +161,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        await checkAuth();
+        // Check if we have a stored token
+        const token = getStoredToken();
+        if (token) {
+          console.log('🔑 Found stored token, setting in axios headers');
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          // Try to get user info with the stored token
+          await checkAuth();
+        } else {
+          console.log('ℹ️ No stored token found');
+        }
       } catch (error) {
         console.log('ℹ️ Initial auth check failed');
+        removeStoredToken();
       } finally {
         setLoading(false);
       }
