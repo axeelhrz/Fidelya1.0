@@ -369,9 +369,18 @@ class InvitationController extends Controller
             }
 
             $search = $request->get('search', '');
+            $userEntity = $this->getUserEntity($user);
             
-            // Get clubs that are not affiliated to any league or have no pending invitations
-            $query = Club::where('league_id', null);
+            // Get ALL clubs, but exclude clubs that already belong to the current league
+            $query = Club::query();
+            
+            // If user is a league, exclude clubs that already belong to this league
+            if ($user->role === 'liga' && $userEntity) {
+                $query->where(function ($q) use ($userEntity) {
+                    $q->where('league_id', '!=', $userEntity->id)
+                      ->orWhereNull('league_id');
+                });
+            }
             
             if ($search) {
                 $query->where(function ($q) use ($search) {
@@ -380,7 +389,7 @@ class InvitationController extends Controller
                 });
             }
 
-            $clubs = $query->with('user')->orderBy('name')->paginate(20);
+            $clubs = $query->with(['user', 'league'])->orderBy('name')->paginate(20);
 
             return response()->json([
                 'status' => 'success',
@@ -447,8 +456,17 @@ class InvitationController extends Controller
             $search = $request->get('search', '');
             
             if ($user->role === 'liga' || $user->role === 'super_admin') {
-                // Liga can invite clubs
-                $query = Club::where('league_id', null);
+                // Liga can invite ALL clubs (except those already in their league)
+                $userEntity = $this->getUserEntity($user);
+                $query = Club::query();
+                
+                // If user is a league, exclude clubs that already belong to this league
+                if ($user->role === 'liga' && $userEntity) {
+                    $query->where(function ($q) use ($userEntity) {
+                        $q->where('league_id', '!=', $userEntity->id)
+                          ->orWhereNull('league_id');
+                    });
+                }
                 
                 if ($search) {
                     $query->where(function ($q) use ($search) {
@@ -457,7 +475,7 @@ class InvitationController extends Controller
                     });
                 }
 
-                $entities = $query->with('user')->orderBy('name')->paginate(20);
+                $entities = $query->with(['user', 'league'])->orderBy('name')->paginate(20);
                 
                 return response()->json([
                     'status' => 'success',
