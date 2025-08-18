@@ -3298,24 +3298,3 @@ img,video{image-rendering:-webkit-optimize-contrast;image-rendering:optimize-con
 }
 /* Cambiar estos valores de scale(1) a scale(1.05) */
 
-/* IMÁGENES ESPECÍFICAS PARA ESPAÑOL */
-.feature[data-feature="calendar"] .phone__app-image.lang-es{
-    transform: scale(1.05)!important;
-}
-.feature[data-feature="log"] .phone__app-image.lang-es{
-    transform: scale(1.05)!important;
-}
-.feature[data-feature="referrals"] .phone__app-image.lang-es{
-    transform: scale(1.05)!important;
-}
-
-/* Imágenes específicas para español en desktop */
-.feature[data-feature="calendar"] .phone__app-image.lang-es{
-    transform:scale(1.12)!important;
-}
-.feature[data-feature="log"] .phone__app-image.lang-es{
-    transform:scale(1.05)!important;
-}
-.feature[data-feature="referrals"] .phone__app-image.lang-es{
-    transform:scale(1.05)!important;
-}
