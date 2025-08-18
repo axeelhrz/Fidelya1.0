@@ -80,9 +80,14 @@ export default function ClubMembersPage() {
 
       setCurrentClub(clubData);
 
-      // Fetch members - filter by club if not super admin
-      const membersResponse = await axios.get<ApiResponse<Member[]>>('/members');
+      // Fetch members and clubs in parallel
+      const [membersResponse, clubsResponse] = await Promise.all([
+        axios.get<ApiResponse<Member[]>>('/api/members'),
+        axios.get<ApiResponse<Club[]>>('/api/clubs')
+      ]);
+
       let membersData = membersResponse.data.data || [];
+      let clubsData = clubsResponse.data.data || [];
 
       // Filter members by current club if user is not super admin
       if (user?.role === 'club' && clubId) {
