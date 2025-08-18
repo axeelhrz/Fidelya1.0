@@ -1438,6 +1438,78 @@ class UltraOptimizedImageLoader {
     }
 }
 
+// ===== FUNCIÓN PARA ACTUALIZAR IMÁGENES CON TRANSICIÓN SUAVE =====
+function updateFeatureImagesWithTransition(language = currentLanguage) {
+    console.log(`🎨 Actualizando imágenes de características con transición para idioma: ${language}`);
+    
+    const featureImageMap = {
+        'schedule': 'phones.schedule',
+        'stations': 'phones.stations', 
+        'calendar': 'phones.calendar',
+        'log': 'phones.log',
+        'notifications': 'phones.notifications',
+        'referrals': 'phones.referrals'
+    };
+    
+    const features = document.querySelectorAll('.feature[data-feature]');
+    features.forEach((feature, index) => {
+        const featureType = feature.getAttribute('data-feature');
+        const phoneImage = feature.querySelector('.phone__app-image');
+        
+        if (phoneImage && featureImageMap[featureType]) {
+            const imageKey = featureImageMap[featureType];
+            const localizedImagePath = getLocalizedImagePath(imageKey, language);
+            
+            if (localizedImagePath) {
+                console.log(`🎨 Actualizando imagen de ${featureType} con transición a: ${localizedImagePath}`);
+                
+                // Aplicar transición suave
+                if (!performanceMode) {
+                    phoneImage.style.transition = 'opacity 0.3s ease-in-out';
+                    phoneImage.style.opacity = '0.7';
+                    
+                    setTimeout(() => {
+                        // Actualizar la imagen de fondo
+                        phoneImage.style.backgroundImage = `url('${localizedImagePath}')`;
+                        phoneImage.style.backgroundSize = 'cover';
+                        phoneImage.style.backgroundPosition = 'center';
+                        phoneImage.style.backgroundRepeat = 'no-repeat';
+                        
+                        // Agregar clase de idioma para CSS específico si es necesario
+                        phoneImage.classList.remove('lang-en', 'lang-es');
+                        phoneImage.classList.add(`lang-${language}`);
+                        
+                        // Restaurar opacidad
+                        phoneImage.style.opacity = '1';
+                        
+                        // Limpiar transición después de un tiempo
+                        setTimeout(() => {
+                            phoneImage.style.transition = '';
+                        }, 300);
+                        
+                        console.log(`✅ Imagen con transición actualizada para ${featureType} en ${language}`);
+                    }, 150);
+                } else {
+                    // Sin transición en modo rendimiento
+                    phoneImage.style.backgroundImage = `url('${localizedImagePath}')`;
+                    phoneImage.style.backgroundSize = 'cover';
+                    phoneImage.style.backgroundPosition = 'center';
+                    phoneImage.style.backgroundRepeat = 'no-repeat';
+                    
+                    phoneImage.classList.remove('lang-en', 'lang-es');
+                    phoneImage.classList.add(`lang-${language}`);
+                    
+                    console.log(`✅ Imagen actualizada (sin transición) para ${featureType} en ${language}`);
+                }
+            } else {
+                console.warn(`❌ No se pudo obtener imagen localizada para ${featureType}`);
+            }
+        }
+    });
+    
+    console.log(`✅ Actualización con transición de imágenes de características completada para ${language}`);
+}
+
 // ===== INICIALIZACIÓN GLOBAL OPTIMIZADA =====
 let imageOptimizer;
 
