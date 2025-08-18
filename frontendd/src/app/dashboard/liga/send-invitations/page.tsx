@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import LeagueLayout from '@/components/leagues/LeagueLayout';
 import { useEffect, useState } from 'react';
-import { 
+import {
   PaperAirplaneIcon,
   MagnifyingGlassIcon,
   BuildingOfficeIcon,
@@ -12,512 +12,353 @@ import {
   PlusIcon,
   CheckCircleIcon,
   XMarkIcon,
-  TrophyIcon
+  TrophyIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import axios from '@/lib/axios';
-import type { Club, League, InvitationForm, SendInvitationForm, PaginatedResponse, ApiResponse, AvailableEntitiesResponse } from '@/types';
+import { Club, League, SendInvitationForm } from '@/types';
+
+interface AvailableEntity {
+  id: number;
+  name: string;
+  city?: string;
+  province?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  status?: string;
+  league_id?: number;
+  league_name?: string;
+  type: 'club' | 'league';
+}
 
 export default function SendInvitationsPage() {
-  const { user, loading } = useAuth();
-  const [availableEntities, setAvailableEntities] = useState<(Club | League)[]>([]);
-  const [entityType, setEntityType] = useState<'clubs' | 'leagues'>('clubs');
-  const [loadingEntities, setLoadingEntities] = useState(true);
+  const { user } = useAuth();
+  const [entities, setEntities] = useState<AvailableEntity[]>([]);
+  const [filteredEntities, setFilteredEntities] = useState<AvailableEntity[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedEntity, setSelectedEntity] = useState<Club | League | null>(null);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedEntity, setSelectedEntity] = useState<AvailableEntity | null>(null);
   const [invitationForm, setInvitationForm] = useState<SendInvitationForm>({
+    receiver_id: 0,
+    receiver_type: '',
     message: '',
     expires_at: ''
   });
-  const [sendingInvitation, setSendingInvitation] = useState(false);
-  const [pagination, setPagination] = useState({
-    current_page: 1,
-    last_page: 1,
-    total: 0
-  });
+  const [sending, setSending] = useState(false);
+
+  const isLeague = user?.role === 'liga';
+  const entityType = isLeague ? 'club' : 'league';
+  const entityTypePlural = isLeague ? 'clubes' : 'ligas';
 
   useEffect(() => {
-    if (user && (user.role === 'liga' || user.role === 'club' || user.role === 'super_admin')) {
-      fetchAvailableEntities();
-    }
-  }, [user, searchTerm]);
+    fetchAvailableEntities();
+  }, []);
 
-  const fetchAvailableEntities = async (page = 1) => {
+  useEffect(() => {
+    const filtered = entities.filter(entity =>
+      entity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (entity.city && entity.city.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (entity.province && entity.province.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    setFilteredEntities(filtered);
+  }, [entities, searchTerm]);
+
+  const fetchAvailableEntities = async () => {
     try {
-      setLoadingEntities(true);
-      const params = new URLSearchParams({
-        page: page.toString(),
-        ...(searchTerm && { search: searchTerm })
-      });
-
-      const response = await axios.get<ApiResponse<AvailableEntitiesResponse>>(`/api/invitations/available-entities?${params}`);
-      
-      if (response.data.status === 'success') {
-        const entitiesResponse = response.data.data;
-        setAvailableEntities(entitiesResponse.data.data);
-        setEntityType(entitiesResponse.entity_type);
-        setPagination({
-          current_page: entitiesResponse.data.current_page,
-          last_page: entitiesResponse.data.last_page,
-          total: entitiesResponse.data.total
-        });
-      }
+      setLoading(true);
+      const response = await axios.get('/api/invitations/available-entities');
+      setEntities(response.data.data || []);
     } catch (error) {
       console.error('Error fetching available entities:', error);
     } finally {
-      setLoadingEntities(false);
+      setLoading(false);
     }
   };
 
-  const openInviteModal = (entity: Club | League) => {
+  const handleSendInvitation = (entity: AvailableEntity) => {
     setSelectedEntity(entity);
-    
-    const isClub = 'city' in entity;
-    const isLeague = 'province' in entity;
-    
-    let defaultMessage = '';
-    if (user?.role === 'liga' && isClub) {
-      defaultMessage = `¡Hola! Te invitamos a unirte a nuestra liga. Creemos que sería una excelente oportunidad para ${entity.name} formar parte de nuestra comunidad deportiva.`;
-    } else if (user?.role === 'club' && isLeague) {
-      defaultMessage = `¡Hola! Nos gustaría solicitar la afiliación de nuestro club a ${entity.name}. Creemos que podemos contribuir positivamente a su liga.`;
-    }
-    
     setInvitationForm({
-      ...(isClub && { club_id: entity.id, club_name: entity.name }),
-      ...(isLeague && { league_id: entity.id, league_name: entity.name }),
-      message: defaultMessage,
+      receiver_id: entity.id,
+      receiver_type: entity.type === 'club' ? 'App\\Models\\Club' : 'App\\Models\\League',
+      message: isLeague 
+        ? `¡Hola ${entity.name}! Te invitamos a unirte a nuestra liga. Creemos que sería una excelente oportunidad para tu club formar parte de nuestra comunidad deportiva.`
+        : `¡Hola ${entity.name}! Nos gustaría solicitar la afiliación de nuestro club a su liga. Creemos que podemos contribuir positivamente a su organización.`,
       expires_at: ''
     });
-    setIsInviteModalOpen(true);
+    setShowModal(true);
   };
 
-  const handleSendInvitation = async () => {
-    if (!selectedEntity) return;
+  const submitInvitation = async () => {
+    if (!invitationForm.message.trim()) {
+      alert('Por favor, escribe un mensaje para la invitación.');
+      return;
+    }
 
     try {
-      setSendingInvitation(true);
+      setSending(true);
+      await axios.post('/api/invitations', invitationForm);
       
-      const isClub = 'city' in selectedEntity;
-      const isLeague = 'province' in selectedEntity;
+      alert(isLeague ? 'Invitación enviada exitosamente!' : 'Solicitud enviada exitosamente!');
+      setShowModal(false);
+      setSelectedEntity(null);
+      setInvitationForm({
+        receiver_id: 0,
+        receiver_type: '',
+        message: '',
+        expires_at: ''
+      });
       
-      let invitationData: InvitationForm;
-      
-      if (user?.role === 'liga' && isClub) {
-        // Liga inviting club
-        invitationData = {
-          receiver_id: selectedEntity.id,
-          receiver_type: 'App\\Models\\Club',
-          message: invitationForm.message,
-          type: 'league_to_club',
-          ...(invitationForm.expires_at && { expires_at: invitationForm.expires_at })
-        };
-      } else if (user?.role === 'club' && isLeague) {
-        // Club requesting to join league
-        invitationData = {
-          receiver_id: selectedEntity.id,
-          receiver_type: 'App\\Models\\League',
-          message: invitationForm.message,
-          type: 'club_to_league',
-          ...(invitationForm.expires_at && { expires_at: invitationForm.expires_at })
-        };
-      } else {
-        throw new Error('Invalid combination of user role and entity type');
-      }
-
-      const response = await axios.post('/api/invitations', invitationData);
-      
-      if (response.data.status === 'success') {
-        alert('Invitación enviada exitosamente');
-        setIsInviteModalOpen(false);
-        // Remove the entity from available entities list
-        setAvailableEntities(prev => prev.filter(entity => entity.id !== selectedEntity.id));
-        // Reset form
-        setInvitationForm({
-          message: '',
-          expires_at: ''
-        });
-        setSelectedEntity(null);
-      }
+      // Refresh the list
+      fetchAvailableEntities();
     } catch (error: any) {
       console.error('Error sending invitation:', error);
-      const errorMessage = error.response?.data?.message || 'Error al enviar la invitación';
-      alert(errorMessage);
+      alert(error.response?.data?.message || 'Error al enviar la invitación');
     } finally {
-      setSendingInvitation(false);
+      setSending(false);
     }
   };
 
-  const closeInviteModal = () => {
-    setIsInviteModalOpen(false);
-    setSelectedEntity(null);
-    setInvitationForm({
-      message: '',
-      expires_at: ''
-    });
+  const getEntityIcon = (entity: AvailableEntity) => {
+    return entity.type === 'club' ? BuildingOfficeIcon : TrophyIcon;
   };
 
-  const getEntityIcon = (entity: Club | League) => {
-    return 'city' in entity ? BuildingOfficeIcon : TrophyIcon;
+  const getEntityColor = (entity: AvailableEntity) => {
+    return entity.type === 'club' ? 'text-blue-600' : 'text-yellow-600';
   };
 
-  const getEntityLocation = (entity: Club | League) => {
-    return 'city' in entity ? entity.city : entity.province;
+  const getEntityBgColor = (entity: AvailableEntity) => {
+    return entity.type === 'club' ? 'bg-blue-50' : 'bg-yellow-50';
   };
 
-  const getEntityType = (entity: Club | League) => {
-    return 'city' in entity ? 'Club' : 'Liga';
+  const getEntityBorderColor = (entity: AvailableEntity) => {
+    return entity.type === 'club' ? 'border-blue-200' : 'border-yellow-200';
   };
 
-  if (loading || loadingEntities) {
+  const getStatusBadge = (entity: AvailableEntity) => {
+    if (entity.type === 'club' && entity.league_id) {
+      return (
+        <div className="flex items-center space-x-1 px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">
+          <ExclamationTriangleIcon className="h-3 w-3" />
+          <span>Ya en liga: {entity.league_name}</span>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  if (loading) {
     return (
       <LeagueLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-yellow-600"></div>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600"></div>
         </div>
       </LeagueLayout>
     );
   }
-
-  if (!user || (user.role !== 'liga' && user.role !== 'club' && user.role !== 'super_admin')) {
-    return (
-      <LeagueLayout>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <h1 className="text-xl font-semibold text-red-800">Acceso Denegado</h1>
-          <p className="text-red-600 mt-2">No tienes permisos para acceder a esta página.</p>
-        </div>
-      </LeagueLayout>
-    );
-  }
-
-  const pageTitle = user.role === 'liga' ? 'Invitar Clubes' : 'Solicitar Unirse a Liga';
-  const pageDescription = user.role === 'liga' 
-    ? 'Invita clubes para que se unan a tu liga deportiva'
-    : 'Solicita la afiliación de tu club a una liga deportiva';
 
   return (
     <LeagueLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="bg-white shadow-sm rounded-lg p-6">
+        <div className="bg-white shadow rounded-lg p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
-              <p className="text-gray-600 mt-1">
-                {pageDescription}
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="bg-yellow-50 rounded-lg p-3">
-                <PaperAirplaneIcon className="h-8 w-8 text-yellow-600" />
+            <div className="flex items-center space-x-3">
+              <PaperAirplaneIcon className="h-8 w-8 text-yellow-600" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {isLeague ? 'Invitar Clubes' : 'Solicitar Unirse a Liga'}
+                </h1>
+                <p className="text-gray-600">
+                  {isLeague 
+                    ? 'Invita clubes para que se unan a tu liga'
+                    : 'Solicita la afiliación de tu club a una liga'
+                  }
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Search */}
-        <div className="bg-white shadow-sm rounded-lg p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder={`Buscar ${entityType === 'clubs' ? 'clubes por nombre o ciudad' : 'ligas por nombre o provincia'}...`}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                />
-              </div>
-            </div>
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder={`Buscar ${entityTypePlural}...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
           </div>
         </div>
 
-        {/* Available Entities */}
-        <div className="bg-white shadow-sm rounded-lg">
+        {/* Entities List */}
+        <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {entityType === 'clubs' ? 'Clubes Disponibles' : 'Ligas Disponibles'} ({pagination.total})
+            <h2 className="text-lg font-medium text-gray-900">
+              {entityTypePlural.charAt(0).toUpperCase() + entityTypePlural.slice(1)} Disponibles ({filteredEntities.length})
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              {entityType === 'clubs' 
-                ? 'Clubes que no están afiliados a ninguna liga y pueden recibir invitaciones'
-                : 'Ligas deportivas disponibles para solicitar afiliación'
-              }
-            </p>
           </div>
-
-          {availableEntities.length > 0 ? (
+          
+          {filteredEntities.length === 0 ? (
+            <div className="p-6 text-center text-gray-500">
+              <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                No hay {entityTypePlural} disponibles
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {searchTerm 
+                  ? `No se encontraron ${entityTypePlural} que coincidan con "${searchTerm}"`
+                  : `No hay ${entityTypePlural} disponibles en este momento.`
+                }
+              </p>
+            </div>
+          ) : (
             <div className="divide-y divide-gray-200">
-              {availableEntities.map((entity) => {
+              {filteredEntities.map((entity) => {
                 const IconComponent = getEntityIcon(entity);
-                const isClub = 'city' in entity;
-                
                 return (
-                  <div key={entity.id} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div key={entity.id} className="p-6 hover:bg-gray-50">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-start space-x-4">
-                        {/* Icon */}
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                          isClub ? 'bg-blue-100' : 'bg-yellow-100'
-                        }`}>
-                          <IconComponent className={`h-6 w-6 ${
-                            isClub ? 'text-blue-600' : 'text-yellow-600'
-                          }`} />
+                      <div className="flex items-center space-x-4">
+                        <div className={`p-3 rounded-lg ${getEntityBgColor(entity)} ${getEntityBorderColor(entity)} border`}>
+                          <IconComponent className={`h-6 w-6 ${getEntityColor(entity)}`} />
                         </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            {entity.name}
-                          </h3>
-                          
-                          <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
-                            <div className="flex items-center">
-                              <MapPinIcon className="h-4 w-4 mr-1" />
-                              <span>{getEntityLocation(entity)}</span>
-                            </div>
-                            {isClub && entity.address && (
-                              <div className="flex items-center">
-                                <span>{entity.address}</span>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-medium text-gray-900">{entity.name}</h3>
+                          <div className="flex items-center space-x-4 mt-1">
+                            {entity.city && (
+                              <div className="flex items-center text-sm text-gray-500">
+                                <MapPinIcon className="h-4 w-4 mr-1" />
+                                {entity.city}
+                                {entity.province && entity.province !== entity.city && `, ${entity.province}`}
                               </div>
                             )}
-                            <div className="flex items-center">
-                              <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                                isClub 
-                                  ? (entity.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')
-                                  : 'bg-blue-100 text-blue-800'
-                              }`}>
-                                {isClub 
-                                  ? (entity.status === 'active' ? 'Activo' : 'Inactivo')
-                                  : getEntityType(entity)
-                                }
-                              </span>
-                            </div>
-                            {/* Show league affiliation for clubs */}
-                            {isClub && entity.league && (
-                              <div className="flex items-center">
-                                <span className="px-2 py-1 text-xs rounded-full font-medium bg-orange-100 text-orange-800">
-                                  En: {entity.league.name}
-                                </span>
-                              </div>
-                            )}
-                            {isClub && !entity.league && (
-                              <div className="flex items-center">
-                                <span className="px-2 py-1 text-xs rounded-full font-medium bg-gray-100 text-gray-800">
-                                  Sin Liga
-                                </span>
-                              </div>
+                            {entity.phone && (
+                              <span className="text-sm text-gray-500">{entity.phone}</span>
                             )}
                           </div>
-
-                          {isClub && (entity.phone || entity.email) && (
-                            <div className="flex items-center space-x-4 text-sm text-gray-600">
-                              {entity.phone && <span>📞 {entity.phone}</span>}
-                              {entity.email && <span>✉️ {entity.email}</span>}
-                            </div>
+                          {entity.address && (
+                            <p className="text-sm text-gray-500 mt-1">{entity.address}</p>
                           )}
+                          <div className="flex items-center space-x-2 mt-2">
+                            {getStatusBadge(entity)}
+                          </div>
                         </div>
                       </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => openInviteModal(entity)}
-                          className="inline-flex items-center px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors"
-                        >
-                          <PaperAirplaneIcon className="h-4 w-4 mr-2" />
-                          {user.role === 'liga' ? 'Enviar Invitación' : 'Solicitar Unirse'}
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleSendInvitation(entity)}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                      >
+                        <PaperAirplaneIcon className="h-4 w-4 mr-2" />
+                        {isLeague ? 'Enviar Invitación' : 'Solicitar Unirse'}
+                      </button>
                     </div>
                   </div>
                 );
               })}
             </div>
-          ) : (
-            <div className="text-center py-12">
-              {entityType === 'clubs' ? (
-                <BuildingOfficeIcon className="mx-auto h-12 w-12 text-gray-400" />
-              ) : (
-                <TrophyIcon className="mx-auto h-12 w-12 text-gray-400" />
-              )}
-              <h3 className="mt-2 text-sm font-medium text-gray-900">
-                No hay {entityType === 'clubs' ? 'clubes' : 'ligas'} disponibles
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {searchTerm 
-                  ? `No se encontraron ${entityType === 'clubs' ? 'clubes' : 'ligas'} que coincidan con tu búsqueda.`
-                  : entityType === 'clubs'
-                  ? 'Todos los clubes ya están afiliados a una liga o no hay clubes registrados.'
-                  : 'No hay ligas disponibles en este momento.'
-                }
-              </p>
-            </div>
           )}
         </div>
 
-        {/* Pagination */}
-        {pagination.last_page > 1 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow-sm">
-            <div className="flex-1 flex justify-between sm:hidden">
-              <button
-                onClick={() => fetchAvailableEntities(pagination.current_page - 1)}
-                disabled={pagination.current_page === 1}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-              >
-                Anterior
-              </button>
-              <button
-                onClick={() => fetchAvailableEntities(pagination.current_page + 1)}
-                disabled={pagination.current_page === pagination.last_page}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-              >
-                Siguiente
-              </button>
-            </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Mostrando página <span className="font-medium">{pagination.current_page}</span> de{' '}
-                  <span className="font-medium">{pagination.last_page}</span>
-                </p>
-              </div>
-              <div>
-                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                  <button
-                    onClick={() => fetchAvailableEntities(pagination.current_page - 1)}
-                    disabled={pagination.current_page === 1}
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    Anterior
-                  </button>
-                  <button
-                    onClick={() => fetchAvailableEntities(pagination.current_page + 1)}
-                    disabled={pagination.current_page === pagination.last_page}
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    Siguiente
-                  </button>
-                </nav>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Invitation Modal */}
-      {isInviteModalOpen && selectedEntity && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <div className="flex items-center justify-between mb-6">
+        {/* Modal */}
+        {showModal && selectedEntity && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+              <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">
-                  {user.role === 'liga' 
-                    ? `Enviar Invitación a ${selectedEntity.name}`
-                    : `Solicitar Unirse a ${selectedEntity.name}`
-                  }
+                  {isLeague ? 'Enviar Invitación' : 'Solicitar Unirse'}
                 </h3>
                 <button
-                  onClick={closeInviteModal}
+                  onClick={() => setShowModal(false)}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
 
-              <div className="space-y-6">
-                {/* Entity Info */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      'city' in selectedEntity ? 'bg-blue-100' : 'bg-yellow-100'
-                    }`}>
-                      {React.createElement(getEntityIcon(selectedEntity), {
-                        className: `h-5 w-5 ${'city' in selectedEntity ? 'text-blue-600' : 'text-yellow-600'}`
-                      })}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">{selectedEntity.name}</h4>
-                      <p className="text-sm text-gray-600">{getEntityLocation(selectedEntity)}</p>
-                      {'address' in selectedEntity && selectedEntity.address && (
-                        <p className="text-sm text-gray-500">{selectedEntity.address}</p>
-                      )}
-                    </div>
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className={`p-2 rounded-lg ${getEntityBgColor(selectedEntity)} ${getEntityBorderColor(selectedEntity)} border`}>
+                    {selectedEntity.type === 'club' ? (
+                      <BuildingOfficeIcon className={`h-5 w-5 ${getEntityColor(selectedEntity)}`} />
+                    ) : (
+                      <TrophyIcon className={`h-5 w-5 ${getEntityColor(selectedEntity)}`} />
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">{selectedEntity.name}</h4>
+                    {selectedEntity.city && (
+                      <p className="text-sm text-gray-500">{selectedEntity.city}</p>
+                    )}
+                    {getStatusBadge(selectedEntity)}
                   </div>
                 </div>
+              </div>
 
-                {/* Message */}
+              <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {user.role === 'liga' ? 'Mensaje de Invitación *' : 'Mensaje de Solicitud *'}
+                    Mensaje *
                   </label>
                   <textarea
                     value={invitationForm.message}
-                    onChange={(e) => setInvitationForm(prev => ({ ...prev, message: e.target.value }))}
+                    onChange={(e) => setInvitationForm({ ...invitationForm, message: e.target.value })}
                     rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                    placeholder={user.role === 'liga' 
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    placeholder={isLeague 
                       ? "Escribe un mensaje personalizado para la invitación..."
-                      : "Escribe un mensaje explicando por qué quieres unirte a esta liga..."
+                      : "Explica por qué tu club quiere unirse a esta liga..."
                     }
-                    required
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {user.role === 'liga' 
-                      ? 'Este mensaje será visible para el club cuando reciba la invitación.'
-                      : 'Este mensaje será visible para la liga cuando reciba tu solicitud.'
-                    }
-                  </p>
                 </div>
 
-                {/* Expiration Date */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Fecha de Expiración (Opcional)
                   </label>
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={invitationForm.expires_at}
-                    onChange={(e) => setInvitationForm(prev => ({ ...prev, expires_at: e.target.value }))}
-                    min={new Date().toISOString().slice(0, 16)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    onChange={(e) => setInvitationForm({ ...invitationForm, expires_at: e.target.value })}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Si no se especifica, la {user.role === 'liga' ? 'invitación' : 'solicitud'} no tendrá fecha de expiración.
-                  </p>
                 </div>
+              </div>
 
-                {/* Actions */}
-                <div className="flex space-x-3 pt-4 border-t">
-                  <button
-                    onClick={closeInviteModal}
-                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleSendInvitation}
-                    disabled={sendingInvitation || !invitationForm.message.trim()}
-                    className="flex-1 bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {sendingInvitation ? (
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Enviando...
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center">
-                        <PaperAirplaneIcon className="h-4 w-4 mr-2" />
-                        {user.role === 'liga' ? 'Enviar Invitación' : 'Enviar Solicitud'}
-                      </div>
-                    )}
-                  </button>
-                </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={submitInvitation}
+                  disabled={sending || !invitationForm.message.trim()}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircleIcon className="h-4 w-4 mr-2" />
+                      {isLeague ? 'Enviar Invitación' : 'Enviar Solicitud'}
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </LeagueLayout>
   );
 }
