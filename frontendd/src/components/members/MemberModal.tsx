@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Member, MemberForm, Club } from '@/types';
 import Modal from '@/components/ui/Modal';
+import { useEffect } from 'react';
 
 const memberSchema = z.object({
   club_id: z.number().min(1, 'Por favor selecciona un club'),
@@ -39,11 +40,12 @@ export default function MemberModal({
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<MemberForm>({
     resolver: zodResolver(memberSchema),
     defaultValues: {
-      club_id: member?.club_id || 0,
+      club_id: member?.club_id || (clubs.length === 1 ? clubs[0].id : 0),
       first_name: member?.first_name || '',
       last_name: member?.last_name || '',
       doc_id: member?.doc_id || '',
@@ -54,6 +56,13 @@ export default function MemberModal({
       status: member?.status || 'active',
     },
   });
+
+  // Auto-select club if only one is available
+  useEffect(() => {
+    if (clubs.length === 1 && !member) {
+      setValue('club_id', clubs[0].id);
+    }
+  }, [clubs, member, setValue]);
 
   const handleFormSubmit = async (data: MemberForm) => {
     // Clean up empty strings
@@ -75,6 +84,8 @@ export default function MemberModal({
     onClose();
   };
 
+  const currentClub = clubs.length === 1 ? clubs[0] : null;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -83,38 +94,60 @@ export default function MemberModal({
       size="lg"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-        {/* Club Field */}
-        <div className="space-y-2">
-          <label htmlFor="club_id" className="block text-sm font-medium text-gray-700">
-            Club
-            <span className="text-red-500 ml-1">*</span>
-          </label>
-          <select
-            {...register('club_id', { valueAsNumber: true })}
-            id="club_id"
-            className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-gray-900 ${
-              errors.club_id 
-                ? 'border-red-300 bg-red-50' 
-                : 'border-gray-200 bg-white hover:border-gray-300'
-            }`}
-            style={{ color: '#111827' }}
-          >
-            <option value={0} style={{ color: '#111827' }}>Selecciona un club</option>
-            {clubs.map((club) => (
-              <option key={club.id} value={club.id} style={{ color: '#111827' }}>
-                {club.name} - {club.league?.name}
-              </option>
-            ))}
-          </select>
-          {errors.club_id && (
-            <p className="text-sm text-red-600 flex items-center gap-1">
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              {errors.club_id.message}
-            </p>
-          )}
-        </div>
+        {/* Club Field - Hidden if only one club */}
+        {clubs.length > 1 ? (
+          <div className="space-y-2">
+            <label htmlFor="club_id" className="block text-sm font-medium text-gray-700">
+              Club
+              <span className="text-red-500 ml-1">*</span>
+            </label>
+            <select
+              {...register('club_id', { valueAsNumber: true })}
+              id="club_id"
+              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-900 ${
+                errors.club_id 
+                  ? 'border-red-300 bg-red-50' 
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+              style={{ color: '#111827' }}
+            >
+              <option value={0} style={{ color: '#111827' }}>Selecciona un club</option>
+              {clubs.map((club) => (
+                <option key={club.id} value={club.id} style={{ color: '#111827' }}>
+                  {club.name} {club.league?.name && `- ${club.league.name}`}
+                </option>
+              ))}
+            </select>
+            {errors.club_id && (
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {errors.club_id.message}
+              </p>
+            )}
+          </div>
+        ) : currentClub ? (
+          // Show club info when only one club is available
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-green-900">Agregando miembro a:</p>
+                <p className="text-lg font-semibold text-green-800">{currentClub.name}</p>
+                {currentClub.league?.name && (
+                  <p className="text-sm text-green-600">Liga: {currentClub.league.name}</p>
+                )}
+              </div>
+            </div>
+            {/* Hidden input for club_id */}
+            <input type="hidden" {...register('club_id', { valueAsNumber: true })} />
+          </div>
+        ) : null}
 
         {/* Name Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -128,7 +161,7 @@ export default function MemberModal({
               type="text"
               id="first_name"
               placeholder="Ingresa el nombre"
-              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-gray-900 placeholder-gray-500 ${
+              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-900 placeholder-gray-500 ${
                 errors.first_name 
                   ? 'border-red-300 bg-red-50' 
                   : 'border-gray-200 bg-white hover:border-gray-300'
@@ -155,7 +188,7 @@ export default function MemberModal({
               type="text"
               id="last_name"
               placeholder="Ingresa el apellido"
-              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-gray-900 placeholder-gray-500 ${
+              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-900 placeholder-gray-500 ${
                 errors.last_name 
                   ? 'border-red-300 bg-red-50' 
                   : 'border-gray-200 bg-white hover:border-gray-300'
@@ -184,7 +217,7 @@ export default function MemberModal({
               type="email"
               id="email"
               placeholder="correo@ejemplo.com (opcional)"
-              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-gray-900 placeholder-gray-500 ${
+              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-900 placeholder-gray-500 ${
                 errors.email 
                   ? 'border-red-300 bg-red-50' 
                   : 'border-gray-200 bg-white hover:border-gray-300'
@@ -210,7 +243,7 @@ export default function MemberModal({
               type="tel"
               id="phone"
               placeholder="Número de teléfono (opcional)"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 hover:border-gray-300 text-gray-900 placeholder-gray-500"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900 placeholder-gray-500"
               style={{ color: '#111827' }}
             />
           </div>
@@ -227,7 +260,7 @@ export default function MemberModal({
               type="text"
               id="doc_id"
               placeholder="ID del documento (opcional)"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 hover:border-gray-300 text-gray-900 placeholder-gray-500"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900 placeholder-gray-500"
               style={{ color: '#111827' }}
             />
           </div>
@@ -240,7 +273,7 @@ export default function MemberModal({
               {...register('birthdate')}
               type="date"
               id="birthdate"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 hover:border-gray-300 text-gray-900"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900"
               style={{ color: '#111827' }}
             />
           </div>
@@ -252,7 +285,7 @@ export default function MemberModal({
             <select
               {...register('gender')}
               id="gender"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 hover:border-gray-300 text-gray-900"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900"
               style={{ color: '#111827' }}
             >
               <option value="" style={{ color: '#111827' }}>Seleccionar género</option>
@@ -271,7 +304,7 @@ export default function MemberModal({
           <select
             {...register('status')}
             id="status"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 hover:border-gray-300 text-gray-900"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900"
             style={{ color: '#111827' }}
           >
             <option value="active" style={{ color: '#111827' }}>Activo</option>
@@ -291,7 +324,7 @@ export default function MemberModal({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 px-4 py-3 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 text-sm font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>
