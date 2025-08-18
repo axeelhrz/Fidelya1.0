@@ -20,7 +20,6 @@ import {
   StarIcon
 } from '@heroicons/react/24/outline';
 import { Club, League, Member } from '@/types';
-import ClubModal from '@/components/clubs/ClubModal';
 import DeleteConfirmationModal from '@/components/ui/DeleteConfirmationModal';
 import axios from '@/lib/axios';
 
@@ -40,13 +39,13 @@ interface InvitationModalData {
 function LigaClubsPage() {
   const { user } = useAuth();
   const [clubs, setClubs] = useState<ClubWithStats[]>([]);
+  const [availableClubs, setAvailableClubs] = useState<Club[]>([]);
   const [currentLeague, setCurrentLeague] = useState<League | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [cityFilter, setCityFilter] = useState('all');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddClubModalOpen, setIsAddClubModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [selectedClub, setSelectedClub] = useState<ClubWithStats | null>(null);
@@ -55,6 +54,7 @@ function LigaClubsPage() {
     club_name: '',
     message: ''
   });
+  const [searchAvailableClubs, setSearchAvailableClubs] = useState('');
 
   const fetchData = async () => {
     try {
@@ -106,6 +106,19 @@ function LigaClubsPage() {
           );
           
           setClubs(clubsWithStats);
+
+          // Fetch all clubs to show available ones (clubs not in this league)
+          const allClubsResponse = await axios.get('/api/clubs');
+          const allClubsData = allClubsResponse.data.data;
+          const allClubsList = Array.isArray(allClubsData.data) ? allClubsData.data : Array.isArray(allClubsData) ? allClubsData : [];
+          
+          // Filter out clubs that are already in this league
+          const leagueClubIds = leagueClubs.map((club: Club) => club.id);
+          const availableClubsList = allClubsList.filter((club: Club) => 
+            !leagueClubIds.includes(club.id) && (!club.league_id || club.league_id !== userLeague.id)
+          );
+          
+          setAvailableClubs(availableClubsList);
         }
       } else if (user.role === 'super_admin') {
         // Super admin can see all clubs
@@ -168,6 +181,11 @@ function LigaClubsPage() {
     return matchesSearch && matchesStatus && matchesCity;
   });
 
+  const filteredAvailableClubs = availableClubs.filter(club => 
+    club.name.toLowerCase().includes(searchAvailableClubs.toLowerCase()) ||
+    club.city?.toLowerCase().includes(searchAvailableClubs.toLowerCase())
+  );
+
   // Get unique cities for filter
   const cities = Array.from(new Set(clubs.map(club => club.city).filter(Boolean)));
 
@@ -179,14 +197,8 @@ function LigaClubsPage() {
     avg_members: clubs.length > 0 ? Math.round(clubs.reduce((sum, club) => sum + club.members_count, 0) / clubs.length) : 0,
   };
 
-  const openCreateModal = () => {
-    setSelectedClub(null);
-    setIsCreateModalOpen(true);
-  };
-
-  const openEditModal = (club: ClubWithStats) => {
-    setSelectedClub(club);
-    setIsEditModalOpen(true);
+  const openAddClubModal = () => {
+    setIsAddClubModalOpen(true);
   };
 
   const openDeleteModal = (club: ClubWithStats) => {
@@ -203,45 +215,38 @@ function LigaClubsPage() {
     setIsInviteModalOpen(true);
   };
 
-  const handleCreateClub = async (clubData: any) => {
+  const handleAddClubToLeague = async (clubId: number) => {
     try {
-      const clubDataWithLeague = {
-        ...clubData,
+      console.log('Adding club to league:', clubId, currentLeague?.id);
+      
+      // Update the club to assign it to this league
+      const response = await axios.put(`/api/clubs/${clubId}`, {
         league_id: currentLeague?.id
-      };
-      const response = await axios.post('/api/clubs', clubDataWithLeague);
-      console.log('Club created successfully:', response.data);
-      await fetchData();
-      setIsCreateModalOpen(false);
+      });
+      
+      console.log('Club added to league successfully:', response.data);
+      await fetchData(); // Refresh the data
+      setIsAddClubModalOpen(false);
     } catch (error) {
-      console.error('Error creating club:', error);
-      throw error;
+      console.error('Error adding club to league:', error);
+      alert('Error al agregar el club a la liga');
     }
   };
 
-  const handleUpdateClub = async (clubData: any) => {
+  const handleRemoveClubFromLeague = async () => {
     try {
       if (!selectedClub) return;
       
-      const response = await axios.put(`/api/clubs/${selectedClub.id}`, clubData);
-      console.log('Club updated successfully:', response.data);
-      await fetchData();
-      setIsEditModalOpen(false);
-    } catch (error) {
-      console.error('Error updating club:', error);
-      throw error;
-    }
-  };
-
-  const handleDeleteClub = async () => {
-    try {
-      if (!selectedClub) return;
+      // Update the club to remove it from this league (set league_id to null)
+      const response = await axios.put(`/api/clubs/${selectedClub.id}`, {
+        league_id: null
+      });
       
-      await axios.delete(`/api/clubs/${selectedClub.id}`);
+      console.log('Club removed from league successfully:', response.data);
       await fetchData();
       setIsDeleteModalOpen(false);
     } catch (error) {
-      console.error('Error deleting club:', error);
+      console.error('Error removing club from league:', error);
     }
   };
 
@@ -299,11 +304,11 @@ function LigaClubsPage() {
                 <span>Invitar Club</span>
               </button>
               <button
-                onClick={openCreateModal}
+                onClick={openAddClubModal}
                 className="bg-white text-yellow-600 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-50 transition-colors duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
               >
                 <PlusIcon className="h-5 w-5" />
-                <span>Nuevo Club</span>
+                <span>Agregar Club</span>
               </button>
             </div>
           </div>
@@ -397,9 +402,9 @@ function LigaClubsPage() {
                 <StarIcon className="h-6 w-6 text-orange-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Promedio</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.avg_members}</p>
-                <p className="text-xs text-gray-500">miembros/club</p>
+                <p className="text-sm font-medium text-gray-600">Disponibles</p>
+                <p className="text-2xl font-bold text-gray-900">{availableClubs.length}</p>
+                <p className="text-xs text-gray-500">para agregar</p>
               </div>
             </div>
           </div>
@@ -457,17 +462,17 @@ function LigaClubsPage() {
               <h3 className="mt-2 text-sm font-medium text-gray-900">
                 {searchTerm || statusFilter !== 'all' || cityFilter !== 'all' 
                   ? 'No se encontraron clubes' 
-                  : 'No hay clubes registrados'}
+                  : 'No hay clubes afiliados'}
               </h3>
               <p className="mt-1 text-sm text-gray-500">
                 {searchTerm || statusFilter !== 'all' || cityFilter !== 'all'
                   ? 'Intenta ajustar los filtros de búsqueda.'
-                  : 'Comienza agregando el primer club a tu liga.'}
+                  : 'Comienza agregando clubes existentes a tu liga.'}
               </p>
               {(!searchTerm && statusFilter === 'all' && cityFilter === 'all') && (
                 <div className="mt-6 space-x-3">
                   <button
-                    onClick={openCreateModal}
+                    onClick={openAddClubModal}
                     className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
                   >
                     <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
@@ -528,16 +533,9 @@ function LigaClubsPage() {
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => openEditModal(club)}
-                          className="text-yellow-600 hover:text-yellow-900 p-1 rounded-full hover:bg-yellow-100 transition-colors duration-150"
-                          title="Editar club"
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </button>
-                        <button
                           onClick={() => openDeleteModal(club)}
                           className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100 transition-colors duration-150"
-                          title="Eliminar club"
+                          title="Remover de la liga"
                         >
                           <TrashIcon className="h-4 w-4" />
                         </button>
@@ -559,32 +557,97 @@ function LigaClubsPage() {
         </div>
       </div>
 
-      {/* Modals */}
-      <ClubModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateClub}
-        leagues={currentLeague ? [currentLeague] : []}
-        title="Crear Nuevo Club"
-        submitText="Crear Club"
-      />
+      {/* Add Club Modal */}
+      {isAddClubModalOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Agregar Club a la Liga
+                </h3>
+                <button
+                  onClick={() => setIsAddClubModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircleIcon className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar clubes disponibles..."
+                    value={searchAvailableClubs}
+                    onChange={(e) => setSearchAvailableClubs(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
 
-      <ClubModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        onSubmit={handleUpdateClub}
-        leagues={currentLeague ? [currentLeague] : []}
-        club={selectedClub}
-        title="Editar Club"
-        submitText="Actualizar Club"
-      />
+              <div className="max-h-96 overflow-y-auto">
+                {filteredAvailableClubs.length === 0 ? (
+                  <div className="text-center py-8">
+                    <BuildingOfficeIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">
+                      {searchAvailableClubs ? 'No se encontraron clubes' : 'No hay clubes disponibles'}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {searchAvailableClubs 
+                        ? 'Intenta con otro término de búsqueda.' 
+                        : 'Todos los clubes ya están asignados a ligas.'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredAvailableClubs.map((club) => (
+                      <div key={club.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-blue-100 p-2 rounded-full">
+                            <BuildingOfficeIcon className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-900">{club.name}</h4>
+                            <p className="text-sm text-gray-500">
+                              {club.city && `${club.city} • `}
+                              {club.status === 'active' ? 'Activo' : 'Inactivo'}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleAddClubToLeague(club.id)}
+                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                        >
+                          <PlusIcon className="h-4 w-4 mr-1" />
+                          Agregar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setIsAddClubModalOpen(false)}
+                  className="bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDeleteClub}
-        title="Eliminar Club"
-        message={`¿Estás seguro de que deseas eliminar el club ${selectedClub?.name}? Esta acción no se puede deshacer y eliminará todos los miembros asociados.`}
+        onConfirm={handleRemoveClubFromLeague}
+        title="Remover Club de la Liga"
+        message={`¿Estás seguro de que deseas remover el club ${selectedClub?.name} de la liga? El club seguirá existiendo pero ya no estará afiliado a esta liga.`}
       />
 
       {/* Invitation Modal */}
