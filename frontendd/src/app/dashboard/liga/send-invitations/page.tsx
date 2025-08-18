@@ -293,6 +293,21 @@ export default function SendInvitationsPage() {
                                 }
                               </span>
                             </div>
+                            {/* Show league affiliation for clubs */}
+                            {isClub && entity.league && (
+                              <div className="flex items-center">
+                                <span className="px-2 py-1 text-xs rounded-full font-medium bg-yellow-100 text-yellow-800">
+                                  Liga: {entity.league.name}
+                                </span>
+                              </div>
+                            )}
+                            {isClub && !entity.league && (
+                              <div className="flex items-center">
+                                <span className="px-2 py-1 text-xs rounded-full font-medium bg-gray-100 text-gray-800">
+                                  Sin Liga
+                                </span>
+                              </div>
+                            )}
                           </div>
 
                           {isClub && (entity.phone || entity.email) && (
