@@ -193,6 +193,7 @@ export interface Sport {
   id: number;
   name: string;
   code: string;
+  icon?: string;
   parameters_count?: number;
   created_at: string;
   updated_at: string;
@@ -210,6 +211,78 @@ export interface SportParameter {
   created_at: string;
   updated_at: string;
   sport?: Sport;
+}
+
+// Tournament types
+export interface Tournament {
+  id: number;
+  league_id?: number;
+  name: string;
+  description?: string;
+  sport: string;
+  sport_id?: number;
+  start_date: string;
+  end_date: string;
+  registration_deadline?: string;
+  max_participants?: number;
+  participants: number;
+  status: 'upcoming' | 'active' | 'completed' | 'cancelled';
+  format?: 'single_elimination' | 'double_elimination' | 'round_robin' | 'swiss';
+  entry_fee?: number;
+  prize_pool?: number;
+  location?: string;
+  rules?: string;
+  created_at: string;
+  updated_at: string;
+  
+  // Relations
+  league?: League;
+  sport_entity?: Sport;
+  participants_list?: TournamentParticipant[];
+}
+
+// Tournament Participant types
+export interface TournamentParticipant {
+  id: number;
+  tournament_id: number;
+  member_id: number;
+  club_id: number;
+  registration_date: string;
+  status: 'registered' | 'confirmed' | 'withdrawn';
+  seed?: number;
+  
+  // Relations
+  tournament?: Tournament;
+  member?: Member;
+  club?: Club;
+}
+
+// Invitation types
+export interface Invitation {
+  id: number;
+  league_id?: number;
+  club_id?: number;
+  sender_id: number;
+  receiver_id?: number;
+  receiver_email?: string;
+  type: 'league_to_club' | 'club_to_league' | 'club_to_member';
+  status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  message?: string;
+  expires_at?: string;
+  responded_at?: string;
+  created_at: string;
+  updated_at: string;
+  
+  // Relations
+  league?: League;
+  club?: Club;
+  sender?: User;
+  receiver?: User;
+  
+  // Computed attributes
+  sender_name?: string;
+  receiver_name?: string;
+  entity_name?: string;
 }
 
 // Role types for UI
@@ -319,12 +392,36 @@ export interface MemberForm {
 export interface SportForm {
   name: string;
   code: string;
+  icon?: string;
 }
 
 export interface SportParameterForm {
   param_key: string;
   param_type: 'number' | 'string' | 'boolean';
   param_value: string | number | boolean;
+}
+
+export interface TournamentForm {
+  name: string;
+  description?: string;
+  sport_id: number;
+  start_date: string;
+  end_date: string;
+  registration_deadline?: string;
+  max_participants?: number;
+  format?: 'single_elimination' | 'double_elimination' | 'round_robin' | 'swiss';
+  entry_fee?: number;
+  prize_pool?: number;
+  location?: string;
+  rules?: string;
+}
+
+export interface InvitationForm {
+  type: 'league_to_club' | 'club_to_league' | 'club_to_member';
+  receiver_email?: string;
+  club_id?: number;
+  message?: string;
+  expires_at?: string;
 }
 
 // Available options for registration
@@ -343,5 +440,60 @@ export interface AvailableClub {
   league?: {
     id: number;
     name: string;
+  };
+}
+
+// Statistics types
+export interface LeagueStats {
+  total_clubs: number;
+  total_members: number;
+  active_clubs: number;
+  active_members: number;
+  pending_invitations: number;
+  sent_invitations: number;
+  total_tournaments: number;
+  active_tournaments: number;
+  total_sports: number;
+  growth_this_month: number;
+  average_members_per_club: number;
+}
+
+export interface ClubStats {
+  total_members: number;
+  active_members: number;
+  tournaments_participated: number;
+  tournaments_won: number;
+  monthly_growth: number;
+  average_member_age: number;
+  sports_played: number;
+}
+
+export interface MemberStats {
+  tournaments_played: number;
+  tournaments_won: number;
+  win_rate: number;
+  current_ranking: string;
+  matches_played: number;
+  matches_won: number;
+  favorite_sport: string;
+}
+
+// Sport configuration types
+export interface SportConfig {
+  sport_code: string;
+  parameters: Record<string, SportParameterConfig>;
+}
+
+export interface SportParameterConfig {
+  key: string;
+  type: 'number' | 'string' | 'boolean' | 'select';
+  label: string;
+  default_value: any;
+  options?: string[];
+  validation?: {
+    required?: boolean;
+    min?: number;
+    max?: number;
+    pattern?: string;
   };
 }
