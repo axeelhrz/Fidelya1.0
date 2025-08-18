@@ -35,7 +35,7 @@ interface MemberStats {
 export default function ClubMembersPage() {
   const { user, loading } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
-  const [clubs, setClubs] = useState<Club[]>([]);
+  const [currentClub, setCurrentClub] = useState<Club | null>(null);
   const [stats, setStats] = useState<MemberStats>({ total: 0, active: 0, inactive: 0, male: 0, female: 0 });
   const [loadingData, setLoadingData] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -59,17 +59,37 @@ export default function ClubMembersPage() {
     try {
       setLoadingData(true);
       
-      // Fetch members and clubs in parallel
-      const [membersResponse, clubsResponse] = await Promise.all([
-        axios.get<ApiResponse<Member[]>>('/members'),
-        axios.get<ApiResponse<Club[]>>('/clubs')
-      ]);
+      // Get current club information first
+      let clubId = null;
+      let clubData = null;
 
-      const membersData = membersResponse.data.data || [];
-      const clubsData = clubsResponse.data.data || [];
+      if (user?.role === 'club') {
+        // For club users, get their club information
+        const clubsResponse = await axios.get<ApiResponse<Club[]>>('/clubs');
+        const allClubs = clubsResponse.data.data || [];
+        
+        // Find the club that belongs to this user
+        clubData = allClubs.find(club => club.user_id === user.id);
+        clubId = clubData?.id;
+      }
+
+      if (!clubId && user?.role !== 'super_admin') {
+        console.error('No club found for user');
+        return;
+      }
+
+      setCurrentClub(clubData);
+
+      // Fetch members - filter by club if not super admin
+      const membersResponse = await axios.get<ApiResponse<Member[]>>('/members');
+      let membersData = membersResponse.data.data || [];
+
+      // Filter members by current club if user is not super admin
+      if (user?.role === 'club' && clubId) {
+        membersData = membersData.filter(member => member.club_id === clubId);
+      }
 
       setMembers(membersData);
-      setClubs(clubsData);
 
       // Calculate stats
       const memberStats: MemberStats = {
@@ -91,7 +111,14 @@ export default function ClubMembersPage() {
   const handleCreateMember = async (data: MemberForm) => {
     try {
       setIsSubmitting(true);
-      await axios.post('/members', data);
+      
+      // Ensure the member is created for the current club
+      const memberData = {
+        ...data,
+        club_id: currentClub?.id || data.club_id
+      };
+
+      await axios.post('/members', memberData);
       await fetchData();
       setIsModalOpen(false);
       setSelectedMember(null);
@@ -107,7 +134,14 @@ export default function ClubMembersPage() {
     
     try {
       setIsSubmitting(true);
-      await axios.put(`/members/${selectedMember.id}`, data);
+      
+      // Ensure the member stays in the current club
+      const memberData = {
+        ...data,
+        club_id: currentClub?.id || data.club_id
+      };
+
+      await axios.put(`/members/${selectedMember.id}`, memberData);
       await fetchData();
       setIsModalOpen(false);
       setSelectedMember(null);
@@ -179,14 +213,20 @@ export default function ClubMembersPage() {
     );
   }
 
+  const clubName = user?.club_name || currentClub?.name || user?.role_info?.name || 'Mi Club';
+
   return (
     <ClubLayout>
       <div className="space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gestión de Miembros</h1>
-            <p className="mt-2 text-gray-600">Administra los miembros de tu club deportivo</p>
+            <h1 className="text-3xl font-bold text-gray-900">Miembros de {clubName}</h1>
+            <p className="mt-2 text-gray-600">
+              Administra los miembros de tu club deportivo
+              {currentClub?.city && ` • ${currentClub.city}`}
+              {currentClub?.league?.name && ` • Liga: ${currentClub.league.name}`}
+            </p>
           </div>
           <button
             onClick={openCreateModal}
@@ -197,20 +237,31 @@ export default function ClubMembersPage() {
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        {/* Club Info Banner */}
+        {currentClub && (
+          <div className="bg-gradient-to-r from-green-100 to-green-50 border border-green-200 rounded-xl p-6">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <UsersIcon className="h-6 w-6 text-blue-600" />
+              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
+                <UsersIcon className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                <h3 className="text-lg font-semibold text-green-900">{currentClub.name}</h3>
+                <p className="text-green-700">
+                  {currentClub.city && `${currentClub.city}`}
+                  {currentClub.address && ` • ${currentClub.address}`}
+                  {currentClub.league?.name && ` • Liga: ${currentClub.league.name}`}
+                </p>
+              </div>
+              <div className="ml-auto text-right">
+                <p className="text-sm text-green-600">Total de miembros</p>
+                <p className="text-2xl font-bold text-green-900">{stats.total}</p>
               </div>
             </div>
           </div>
+        )}
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -433,7 +484,7 @@ export default function ClubMembersPage() {
               <p className="mt-2 text-gray-500">
                 {searchTerm || statusFilter !== 'all' || genderFilter !== 'all'
                   ? 'Intenta ajustar los filtros de búsqueda'
-                  : 'Comienza agregando el primer miembro de tu club'
+                  : `Comienza agregando el primer miembro de ${clubName}`
                 }
               </p>
               {!searchTerm && statusFilter === 'all' && genderFilter === 'all' && (
@@ -461,7 +512,7 @@ export default function ClubMembersPage() {
         }}
         onSubmit={selectedMember ? handleUpdateMember : handleCreateMember}
         member={selectedMember}
-        clubs={clubs}
+        clubs={currentClub ? [currentClub] : []} // Only pass current club
         isSubmitting={isSubmitting}
       />
 
