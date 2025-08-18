@@ -8,18 +8,14 @@ import {
   PlusIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  EyeIcon,
   PencilIcon,
   TrashIcon,
-  PhoneIcon,
-  EnvelopeIcon,
   MapPinIcon,
   CheckCircleIcon,
   XCircleIcon,
   UsersIcon,
   TrophyIcon,
   PaperAirplaneIcon,
-  BellIcon,
   CalendarIcon,
   StarIcon
 } from '@heroicons/react/24/outline';
@@ -41,7 +37,7 @@ interface InvitationModalData {
   message: string;
 }
 
-export default function LigaClubsPage() {
+function LigaClubsPage() {
   const { user } = useAuth();
   const [clubs, setClubs] = useState<ClubWithStats[]>([]);
   const [currentLeague, setCurrentLeague] = useState<League | null>(null);
@@ -63,34 +59,23 @@ export default function LigaClubsPage() {
   const fetchData = async () => {
     try {
       console.log('Liga Clubs - fetchData - User:', user);
-      console.log('Liga Clubs - fetchData - User role:', user?.role);
-      console.log('Liga Clubs - fetchData - User ID:', user?.id);
 
       if (!user) return;
 
       if (user.role === 'liga') {
-        console.log('User is a liga, fetching leagues...');
-        
         // Find the league that belongs to this user
         const leaguesResponse = await axios.get('/api/leagues');
-        console.log('Liga Clubs - Leagues response:', leaguesResponse.data);
-        
         const allLeagues = leaguesResponse.data.data;
         const leaguesData = Array.isArray(allLeagues.data) ? allLeagues.data : allLeagues;
         const userLeague = leaguesData.find((league: League) => league.user_id === user.id);
-        console.log('Liga Clubs - User league found:', userLeague);
         
         if (userLeague) {
           setCurrentLeague(userLeague);
           
           // Fetch clubs for this league
-          console.log('Liga Clubs - Fetching clubs for league:', userLeague.id);
           const clubsResponse = await axios.get(`/api/clubs?league_id=${userLeague.id}`);
-          console.log('Liga Clubs - Clubs response:', clubsResponse.data);
-          
           const allClubs = clubsResponse.data.data;
           const leagueClubs = Array.isArray(allClubs.data) ? allClubs.data : Array.isArray(allClubs) ? allClubs : [];
-          console.log('Liga Clubs - League clubs:', leagueClubs);
           
           // Fetch members for each club to get stats
           const clubsWithStats = await Promise.all(
@@ -104,7 +89,7 @@ export default function LigaClubsPage() {
                   ...club,
                   members_count: members.length,
                   active_members: members.filter((m: Member) => m.status === 'active').length,
-                  tournaments_count: 0, // Mock data - replace with real tournaments when available
+                  tournaments_count: 0,
                   last_activity: new Date().toISOString()
                 };
               } catch (error) {
@@ -121,8 +106,6 @@ export default function LigaClubsPage() {
           );
           
           setClubs(clubsWithStats);
-        } else {
-          console.log('No league found for user');
         }
       } else if (user.role === 'super_admin') {
         // Super admin can see all clubs
@@ -222,8 +205,6 @@ export default function LigaClubsPage() {
 
   const handleCreateClub = async (clubData: any) => {
     try {
-      console.log('Creating club with data:', clubData);
-      // Add league_id to the club data
       const clubDataWithLeague = {
         ...clubData,
         league_id: currentLeague?.id
@@ -240,7 +221,6 @@ export default function LigaClubsPage() {
 
   const handleUpdateClub = async (clubData: any) => {
     try {
-      console.log('Updating club with data:', clubData);
       if (!selectedClub) return;
       
       const response = await axios.put(`/api/clubs/${selectedClub.id}`, clubData);
@@ -268,12 +248,7 @@ export default function LigaClubsPage() {
   const handleSendInvitation = async () => {
     try {
       console.log('Sending invitation:', invitationData);
-      // Mock API call - replace with actual implementation
-      // await axios.post('/api/invitations', invitationData);
-      
-      // For now, just close the modal and show success
       setIsInviteModalOpen(false);
-      // You could add a toast notification here
       alert('Invitación enviada exitosamente');
     } catch (error) {
       console.error('Error sending invitation:', error);
@@ -680,3 +655,5 @@ export default function LigaClubsPage() {
     </LeagueLayout>
   );
 }
+
+export default LigaClubsPage;
