@@ -3,8 +3,8 @@
 import { useAuth } from '@/contexts/AuthContext';
 import ClubLayout from '@/components/clubs/ClubLayout';
 import { useEffect, useState } from 'react';
-import { 
-  UsersIcon, 
+import {
+  UsersIcon,
   PlusIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -12,231 +12,186 @@ import {
   PencilIcon,
   TrashIcon,
   UserCircleIcon,
-  EnvelopeIcon,
   PhoneIcon,
+  EnvelopeIcon,
   CalendarIcon,
   IdentificationIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
+  UserIcon,
+  MapPinIcon,
+  TrophyIcon
 } from '@heroicons/react/24/outline';
-import axios from '@/lib/axios';
-import type { Member, Club, ApiResponse, MemberForm } from '@/types';
+import { Member, Club } from '@/types';
 import MemberModal from '@/components/members/MemberModal';
 import DeleteConfirmationModal from '@/components/ui/DeleteConfirmationModal';
-
-interface MemberStats {
-  total: number;
-  active: number;
-  inactive: number;
-  male: number;
-  female: number;
-}
+import axios from '@/lib/axios';
 
 export default function ClubMembersPage() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
+  const [clubs, setClubs] = useState<Club[]>([]);
   const [currentClub, setCurrentClub] = useState<Club | null>(null);
-  const [stats, setStats] = useState<MemberStats>({ total: 0, active: 0, inactive: 0, male: 0, female: 0 });
-  const [loadingData, setLoadingData] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female'>('all');
-  
-  // Modal states
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [genderFilter, setGenderFilter] = useState('all');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
-
-  useEffect(() => {
-    if (user && (user.role === 'club' || user.role === 'super_admin')) {
-      fetchData();
-    }
-  }, [user]);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
   const fetchData = async () => {
     try {
-      setLoadingData(true);
-      
       console.log('fetchData - User:', user);
       console.log('fetchData - User role:', user?.role);
       console.log('fetchData - User ID:', user?.id);
-      
-      // Get current club information first
-      let clubId = null;
-      let clubData = null;
 
-      if (user?.role === 'club') {
+      if (!user) return;
+
+      if (user.role === 'club') {
         console.log('User is a club, fetching clubs...');
         
-        // For club users, get their club information
-        const clubsResponse = await axios.get<ApiResponse<Club[]>>('/api/clubs');
+        // Fetch clubs
+        const clubsResponse = await axios.get('/api/clubs');
         console.log('Clubs response:', clubsResponse.data);
         
-        // Handle paginated response
-        const clubsData = clubsResponse.data.data;
-        console.log('Clubs data structure:', clubsData);
-        
-        // Check if it's paginated (has a 'data' property with array inside)
-        const allClubs = Array.isArray(clubsData) ? clubsData : (clubsData?.data || []);
-        console.log('All clubs (processed):', allClubs);
+        const allClubs = clubsResponse.data.data; // Aquí está el fix - acceder a data.data
+        console.log('All clubs:', allClubs);
         
         // Find the club that belongs to this user
-        clubData = allClubs.find(club => club.user_id === user.id);
-        console.log('Found club for user:', clubData);
+        const userClub = allClubs.data.find((club: Club) => club.user_id === user.id); // Y aquí también - allClubs.data
+        console.log('User club found:', userClub);
         
-        clubId = clubData?.id;
-        console.log('Club ID:', clubId);
+        if (userClub) {
+          setCurrentClub(userClub);
+          setClubs([userClub]);
+          
+          // Fetch members for this club
+          console.log('Fetching members for club:', userClub.id);
+          const membersResponse = await axios.get(`/api/members?club_id=${userClub.id}`);
+          console.log('Members response:', membersResponse.data);
+          
+          if (membersResponse.data.data) {
+            const clubMembers = Array.isArray(membersResponse.data.data.data) 
+              ? membersResponse.data.data.data 
+              : membersResponse.data.data;
+            setMembers(clubMembers);
+          }
+        } else {
+          console.log('No club found for user');
+        }
+      } else if (user.role === 'super_admin') {
+        // Super admin can see all clubs and members
+        const [clubsResponse, membersResponse] = await Promise.all([
+          axios.get('/api/clubs'),
+          axios.get('/api/members')
+        ]);
+        
+        const allClubs = clubsResponse.data.data;
+        setClubs(Array.isArray(allClubs.data) ? allClubs.data : []);
+        
+        const allMembers = membersResponse.data.data;
+        setMembers(Array.isArray(allMembers.data) ? allMembers.data : allMembers);
       }
-
-      if (!clubId && user?.role !== 'super_admin') {
-        console.error('No club found for user');
-        return;
-      }
-
-      setCurrentClub(clubData);
-      console.log('Set current club:', clubData);
-
-      // Fetch members - filter by club if not super admin
-      const membersResponse = await axios.get<ApiResponse<Member[]>>('/api/members');
-      let membersData = membersResponse.data.data || [];
-
-      console.log('Members data before filtering:', membersData);
-
-      // Filter members by current club if user is not super admin
-      if (user?.role === 'club' && clubId) {
-        membersData = membersData.filter(member => member.club_id === clubId);
-        console.log('Members data after filtering:', membersData);
-      }
-
-      setMembers(membersData);
-
-      // Calculate stats
-      const memberStats: MemberStats = {
-        total: membersData.length,
-        active: membersData.filter(m => m.status === 'active').length,
-        inactive: membersData.filter(m => m.status === 'inactive').length,
-        male: membersData.filter(m => m.gender === 'male').length,
-        female: membersData.filter(m => m.gender === 'female').length,
-      };
-      setStats(memberStats);
-
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
-      setLoadingData(false);
+      setLoading(false);
     }
   };
 
-  const handleCreateMember = async (data: MemberForm) => {
-    try {
-      setIsSubmitting(true);
-      
-      console.log('Creating member with data:', data);
-      console.log('Current club:', currentClub);
-      
-      // Ensure the member is created for the current club
-      const memberData = {
-        ...data,
-        club_id: currentClub?.id || data.club_id
-      };
+  useEffect(() => {
+    fetchData();
+  }, [user]);
 
-      console.log('Final member data to send:', memberData);
-
-      const response = await axios.post('/api/members', memberData);
-      console.log('Member created successfully:', response.data);
-      
-      await fetchData();
-      setIsModalOpen(false);
-      setSelectedMember(null);
-    } catch (error) {
-      console.error('Error creating member:', error);
-      
-      // Log more detailed error information
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
-      }
-      
-      // Show user-friendly error message
-      alert('Error al crear el miembro. Por favor, revisa los datos e intenta nuevamente.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleUpdateMember = async (data: MemberForm) => {
-    if (!selectedMember) return;
+  const filteredMembers = members.filter(member => {
+    const matchesSearch = 
+      member.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.doc_id?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    try {
-      setIsSubmitting(true);
-      
-      // Ensure the member stays in the current club
-      const memberData = {
-        ...data,
-        club_id: currentClub?.id || data.club_id
-      };
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'active' && member.status === 'active') ||
+      (statusFilter === 'inactive' && member.status === 'inactive');
+    
+    const matchesGender = genderFilter === 'all' || member.gender === genderFilter;
+    
+    return matchesSearch && matchesStatus && matchesGender;
+  });
 
-      await axios.put(`/api/members/${selectedMember.id}`, memberData);
-      await fetchData();
-      setIsModalOpen(false);
-      setSelectedMember(null);
-    } catch (error) {
-      console.error('Error updating member:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDeleteMember = async () => {
-    if (!memberToDelete) return;
-
-    try {
-      await axios.delete(`/api/members/${memberToDelete.id}`);
-      await fetchData();
-      setIsDeleteModalOpen(false);
-      setMemberToDelete(null);
-    } catch (error) {
-      console.error('Error deleting member:', error);
-    }
-  };
-
-  const openEditModal = (member: Member) => {
-    setSelectedMember(member);
-    setIsModalOpen(true);
-  };
-
-  const openDeleteModal = (member: Member) => {
-    setMemberToDelete(member);
-    setIsDeleteModalOpen(true);
+  const stats = {
+    total: members.length,
+    active: members.filter(m => m.status === 'active').length,
+    inactive: members.filter(m => m.status === 'inactive').length,
+    male: members.filter(m => m.gender === 'male').length,
+    female: members.filter(m => m.gender === 'female').length,
   };
 
   const openCreateModal = () => {
     console.log('Opening create modal...');
     console.log('Current club:', currentClub);
-    console.log('Clubs available:', currentClub ? [currentClub] : []);
+    console.log('Clubs available:', clubs);
     setSelectedMember(null);
-    setIsModalOpen(true);
+    setIsCreateModalOpen(true);
   };
 
-  // Filter members based on search and filters
-  const filteredMembers = members.filter(member => {
-    const matchesSearch = member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.doc_id?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || member.status === statusFilter;
-    const matchesGender = genderFilter === 'all' || member.gender === genderFilter;
+  const openEditModal = (member: Member) => {
+    setSelectedMember(member);
+    setIsEditModalOpen(true);
+  };
 
-    return matchesSearch && matchesStatus && matchesGender;
-  });
+  const openDeleteModal = (member: Member) => {
+    setSelectedMember(member);
+    setIsDeleteModalOpen(true);
+  };
 
-  if (loading || loadingData) {
+  const handleCreateMember = async (memberData: any) => {
+    try {
+      console.log('Creating member with data:', memberData);
+      const response = await axios.post('/api/members', memberData);
+      console.log('Member created successfully:', response.data);
+      await fetchData();
+      setIsCreateModalOpen(false);
+    } catch (error) {
+      console.error('Error creating member:', error);
+      throw error;
+    }
+  };
+
+  const handleUpdateMember = async (memberData: any) => {
+    try {
+      console.log('Updating member with data:', memberData);
+      if (!selectedMember) return;
+      
+      const response = await axios.put(`/api/members/${selectedMember.id}`, memberData);
+      console.log('Member updated successfully:', response.data);
+      await fetchData();
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('Error updating member:', error);
+      throw error;
+    }
+  };
+
+  const handleDeleteMember = async () => {
+    try {
+      if (!selectedMember) return;
+      
+      await axios.delete(`/api/members/${selectedMember.id}`);
+      await fetchData();
+      setIsDeleteModalOpen(false);
+    } catch (error) {
+      console.error('Error deleting member:', error);
+    }
+  };
+
+  if (loading) {
     return (
       <ClubLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500"></div>
         </div>
       </ClubLayout>
     );
@@ -245,148 +200,151 @@ export default function ClubMembersPage() {
   if (!user || (user.role !== 'club' && user.role !== 'super_admin')) {
     return (
       <ClubLayout>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <h1 className="text-xl font-semibold text-red-800">Acceso Denegado</h1>
-          <p className="text-red-600 mt-2">No tienes permisos para acceder a esta página.</p>
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-gray-900">Acceso Denegado</h2>
+          <p className="text-gray-600 mt-2">No tienes permisos para acceder a esta página.</p>
         </div>
       </ClubLayout>
     );
   }
 
-  const clubName = user?.club_name || currentClub?.name || user?.role_info?.name || 'Mi Club';
-
   return (
     <ClubLayout>
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Miembros de {clubName}</h1>
-            <p className="mt-2 text-gray-600">
-              Administra los miembros de tu club deportivo
-              {currentClub?.city && ` • ${currentClub.city}`}
-              {currentClub?.league?.name && ` • Liga: ${currentClub.league.name}`}
-            </p>
+        <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-lg shadow-lg p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">
+                {currentClub ? `Miembros de ${currentClub.name}` : 'Gestión de Miembros'}
+              </h1>
+              <p className="text-green-100 mt-2">
+                {currentClub ? `${currentClub.city} • ${currentClub.league?.name || 'Liga no asignada'}` : 'Administra los miembros del sistema'}
+              </p>
+            </div>
+            <button
+              onClick={openCreateModal}
+              className="bg-white text-green-600 px-6 py-3 rounded-lg font-semibold hover:bg-green-50 transition-colors duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+            >
+              <PlusIcon className="h-5 w-5" />
+              <span>Nuevo Miembro</span>
+            </button>
           </div>
-          <button
-            onClick={openCreateModal}
-            className="mt-4 sm:mt-0 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Nuevo Miembro
-          </button>
         </div>
 
         {/* Club Info Banner */}
         {currentClub && (
-          <div className="bg-gradient-to-r from-green-100 to-green-50 border border-green-200 rounded-xl p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
-                <UsersIcon className="h-6 w-6 text-white" />
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center space-x-4">
+              <div className="bg-green-100 p-3 rounded-full">
+                <TrophyIcon className="h-6 w-6 text-green-600" />
               </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-semibold text-green-900">{currentClub.name}</h3>
-                <p className="text-green-700">
-                  {currentClub.city && `${currentClub.city}`}
-                  {currentClub.address && ` • ${currentClub.address}`}
-                  {currentClub.league?.name && ` • Liga: ${currentClub.league.name}`}
-                </p>
-              </div>
-              <div className="ml-auto text-right">
-                <p className="text-sm text-green-600">Total de miembros</p>
-                <p className="text-2xl font-bold text-green-900">{stats.total}</p>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900">{currentClub.name}</h3>
+                <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                  <div className="flex items-center space-x-1">
+                    <MapPinIcon className="h-4 w-4" />
+                    <span>{currentClub.city}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <TrophyIcon className="h-4 w-4" />
+                    <span>{currentClub.league?.name || 'Liga no asignada'}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <UsersIcon className="h-4 w-4" />
+                    <span>{stats.total} miembros</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <div className="bg-blue-100 p-3 rounded-full">
+                <UsersIcon className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Miembros</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="bg-green-100 p-3 rounded-full">
                 <CheckCircleIcon className="h-6 w-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Activos</p>
+                <p className="text-sm font-medium text-gray-600">Activos</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+              <div className="bg-red-100 p-3 rounded-full">
                 <XCircleIcon className="h-6 w-6 text-red-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Inactivos</p>
+                <p className="text-sm font-medium text-gray-600">Inactivos</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.inactive}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <UsersIcon className="h-6 w-6 text-purple-600" />
+              <div className="bg-purple-100 p-3 rounded-full">
+                <UserIcon className="h-6 w-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Hombres</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.male}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
-                <UsersIcon className="h-6 w-6 text-pink-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Mujeres</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.female}</p>
+                <p className="text-sm font-medium text-gray-600">Hombres / Mujeres</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.male} / {stats.female}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
-            {/* Search */}
             <div className="flex-1 max-w-md">
               <div className="relative">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Buscar miembros..."
+                  placeholder="Buscar por nombre, email o documento..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
             </div>
-
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+            
+            <div className="flex space-x-4">
               <div className="flex items-center space-x-2">
                 <FunnelIcon className="h-5 w-5 text-gray-400" />
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
-                  className="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200"
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 >
                   <option value="all">Todos los estados</option>
                   <option value="active">Activos</option>
                   <option value="inactive">Inactivos</option>
                 </select>
               </div>
-
+              
               <select
                 value={genderFilter}
-                onChange={(e) => setGenderFilter(e.target.value as 'all' | 'male' | 'female')}
-                className="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200"
+                onChange={(e) => setGenderFilter(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
                 <option value="all">Todos los géneros</option>
                 <option value="male">Masculino</option>
@@ -396,40 +354,69 @@ export default function ClubMembersPage() {
           </div>
         </div>
 
-        {/* Members List */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          {filteredMembers.length > 0 ? (
+        {/* Members Table */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          {filteredMembers.length === 0 ? (
+            <div className="text-center py-12">
+              <UserCircleIcon className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                {searchTerm || statusFilter !== 'all' || genderFilter !== 'all' 
+                  ? 'No se encontraron miembros' 
+                  : 'No hay miembros registrados'}
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {searchTerm || statusFilter !== 'all' || genderFilter !== 'all'
+                  ? 'Intenta ajustar los filtros de búsqueda.'
+                  : 'Comienza agregando el primer miembro del club.'}
+              </p>
+              {(!searchTerm && statusFilter === 'all' && genderFilter === 'all') && (
+                <div className="mt-6">
+                  <button
+                    onClick={openCreateModal}
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
+                    Agregar Miembro
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Miembro
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Contacto
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Información
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Estado
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Acciones
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredMembers.map((member) => (
-                    <tr key={member.id} className="hover:bg-gray-50 transition-colors duration-200">
+                    <tr key={member.id} className="hover:bg-gray-50 transition-colors duration-150">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                            <UserCircleIcon className="h-8 w-8 text-green-600" />
+                          <div className="flex-shrink-0 h-10 w-10">
+                            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                              <UserCircleIcon className="h-6 w-6 text-green-600" />
+                            </div>
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{member.full_name}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {member.first_name} {member.last_name}
+                            </div>
                             {member.doc_id && (
                               <div className="text-sm text-gray-500 flex items-center">
                                 <IdentificationIcon className="h-4 w-4 mr-1" />
@@ -457,50 +444,48 @@ export default function ClubMembersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="space-y-1">
-                          {member.gender && (
-                            <div className="text-sm text-gray-900">
-                              {member.gender === 'male' ? 'Masculino' : member.gender === 'female' ? 'Femenino' : 'Otro'}
-                            </div>
-                          )}
-                          {member.birthdate && (
+                          <div className="text-sm text-gray-900">
+                            {member.gender === 'male' ? 'Masculino' : member.gender === 'female' ? 'Femenino' : 'No especificado'}
+                          </div>
+                          {member.birth_date && (
                             <div className="text-sm text-gray-500 flex items-center">
                               <CalendarIcon className="h-4 w-4 mr-1" />
-                              {new Date(member.birthdate).toLocaleDateString()}
+                              {new Date(member.birth_date).toLocaleDateString()}
                             </div>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           member.status === 'active'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
                         }`}>
                           {member.status === 'active' ? (
                             <>
-                              <CheckCircleIcon className="h-4 w-4 mr-1" />
+                              <CheckCircleIcon className="h-3 w-3 mr-1" />
                               Activo
                             </>
                           ) : (
                             <>
-                              <XCircleIcon className="h-4 w-4 mr-1" />
+                              <XCircleIcon className="h-3 w-3 mr-1" />
                               Inactivo
                             </>
                           )}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center space-x-2">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
                           <button
                             onClick={() => openEditModal(member)}
-                            className="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50 transition-all duration-200"
+                            className="text-green-600 hover:text-green-900 p-1 rounded-full hover:bg-green-100 transition-colors duration-150"
                             title="Editar miembro"
                           >
                             <PencilIcon className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => openDeleteModal(member)}
-                            className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition-all duration-200"
+                            className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100 transition-colors duration-150"
                             title="Eliminar miembro"
                           >
                             <TrashIcon className="h-4 w-4" />
@@ -512,60 +497,36 @@ export default function ClubMembersPage() {
                 </tbody>
               </table>
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <UsersIcon className="mx-auto h-16 w-16 text-gray-400" />
-              <h3 className="mt-4 text-lg font-medium text-gray-900">
-                {searchTerm || statusFilter !== 'all' || genderFilter !== 'all' 
-                  ? 'No se encontraron miembros' 
-                  : 'No hay miembros registrados'
-                }
-              </h3>
-              <p className="mt-2 text-gray-500">
-                {searchTerm || statusFilter !== 'all' || genderFilter !== 'all'
-                  ? 'Intenta ajustar los filtros de búsqueda'
-                  : `Comienza agregando el primer miembro de ${clubName}`
-                }
-              </p>
-              {!searchTerm && statusFilter === 'all' && genderFilter === 'all' && (
-                <div className="mt-6">
-                  <button
-                    onClick={openCreateModal}
-                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
-                  >
-                    <PlusIcon className="h-5 w-5 mr-2" />
-                    Agregar Primer Miembro
-                  </button>
-                </div>
-              )}
-            </div>
           )}
         </div>
       </div>
 
-      {/* Member Modal */}
+      {/* Modals */}
       <MemberModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedMember(null);
-        }}
-        onSubmit={selectedMember ? handleUpdateMember : handleCreateMember}
-        member={selectedMember}
-        clubs={currentClub ? [currentClub] : []} // Only pass current club
-        isSubmitting={isSubmitting}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateMember}
+        clubs={clubs}
+        title="Crear Nuevo Miembro"
+        submitText="Crear Miembro"
       />
 
-      {/* Delete Confirmation Modal */}
+      <MemberModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSubmit={handleUpdateMember}
+        clubs={clubs}
+        member={selectedMember}
+        title="Editar Miembro"
+        submitText="Actualizar Miembro"
+      />
+
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setMemberToDelete(null);
-        }}
+        onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteMember}
         title="Eliminar Miembro"
-        message={`¿Estás seguro de que deseas eliminar a ${memberToDelete?.full_name}? Esta acción no se puede deshacer.`}
+        message={`¿Estás seguro de que deseas eliminar a ${selectedMember?.first_name} ${selectedMember?.last_name}? Esta acción no se puede deshacer.`}
       />
     </ClubLayout>
   );
