@@ -47,6 +47,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Clubs
     Route::apiResource('clubs', ClubController::class);
     
+    // Club-League management routes
+    Route::post('/clubs/{club}/add-to-league', [ClubController::class, 'addToLeague']);
+    Route::post('/clubs/{club}/remove-from-league', [ClubController::class, 'removeFromLeague']);
+    
     // Members
     Route::apiResource('members', MemberController::class);
     

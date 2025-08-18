@@ -54,10 +54,13 @@ class ClubController extends Controller
             'league_id' => 'required|exists:leagues,id',
             'name' => 'required|string|max:255',
             'city' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
             'status' => 'nullable|in:active,inactive',
         ]);
 
-        $club = Club::create($request->all());
+        $club = Club::create(array_merge($request->all(), [
+            'status' => $request->get('status', 'active')
+        ]));
         $club->load('league');
 
         return response()->json([
@@ -86,14 +89,36 @@ class ClubController extends Controller
      */
     public function update(Request $request, Club $club): JsonResponse
     {
-        $request->validate([
-            'league_id' => 'required|exists:leagues,id',
-            'name' => 'required|string|max:255',
+        // Validate based on the operation type
+        $rules = [
+            'name' => 'sometimes|required|string|max:255',
             'city' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
             'status' => 'nullable|in:active,inactive',
-        ]);
+        ];
 
-        $club->update($request->all());
+        // If league_id is provided, validate it
+        if ($request->has('league_id')) {
+            if ($request->league_id === null) {
+                // Allow null to remove club from league
+                $rules['league_id'] = 'nullable';
+            } else {
+                // Validate that league exists
+                $rules['league_id'] = 'exists:leagues,id';
+            }
+        }
+
+        $request->validate($rules);
+
+        // Update only the fields that are provided
+        $updateData = $request->only(['league_id', 'name', 'city', 'address', 'status']);
+        
+        // Remove null values except for league_id (which we want to allow as null)
+        $updateData = array_filter($updateData, function($value, $key) {
+            return $value !== null || $key === 'league_id';
+        }, ARRAY_FILTER_USE_BOTH);
+
+        $club->update($updateData);
         $club->load('league');
 
         return response()->json([
@@ -119,6 +144,38 @@ class ClubController extends Controller
 
         return response()->json([
             'message' => 'Club deleted successfully',
+        ]);
+    }
+
+    /**
+     * Add a club to a league
+     */
+    public function addToLeague(Request $request, Club $club): JsonResponse
+    {
+        $request->validate([
+            'league_id' => 'required|exists:leagues,id',
+        ]);
+
+        $club->update(['league_id' => $request->league_id]);
+        $club->load('league');
+
+        return response()->json([
+            'data' => $club,
+            'message' => 'Club added to league successfully',
+        ]);
+    }
+
+    /**
+     * Remove a club from its current league
+     */
+    public function removeFromLeague(Club $club): JsonResponse
+    {
+        $club->update(['league_id' => null]);
+        $club->load('league');
+
+        return response()->json([
+            'data' => $club,
+            'message' => 'Club removed from league successfully',
         ]);
     }
 }

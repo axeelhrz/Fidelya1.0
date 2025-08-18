@@ -55,6 +55,7 @@ function LigaClubsPage() {
     message: ''
   });
   const [searchAvailableClubs, setSearchAvailableClubs] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -216,37 +217,67 @@ function LigaClubsPage() {
   };
 
   const handleAddClubToLeague = async (clubId: number) => {
+    if (isProcessing) return;
+    
     try {
+      setIsProcessing(true);
       console.log('Adding club to league:', clubId, currentLeague?.id);
       
-      // Update the club to assign it to this league
-      const response = await axios.put(`/api/clubs/${clubId}`, {
+      // Use the new endpoint to add club to league
+      const response = await axios.post(`/api/clubs/${clubId}/add-to-league`, {
         league_id: currentLeague?.id
       });
       
       console.log('Club added to league successfully:', response.data);
       await fetchData(); // Refresh the data
       setIsAddClubModalOpen(false);
-    } catch (error) {
+      
+      // Show success message
+      alert('Club agregado exitosamente a la liga');
+    } catch (error: any) {
       console.error('Error adding club to league:', error);
-      alert('Error al agregar el club a la liga');
+      
+      // Show detailed error message
+      if (error.response?.data?.message) {
+        alert(`Error: ${error.response.data.message}`);
+      } else if (error.response?.data?.errors) {
+        const errorMessages = Object.values(error.response.data.errors).flat();
+        alert(`Error: ${errorMessages.join(', ')}`);
+      } else {
+        alert('Error al agregar el club a la liga. Por favor intenta de nuevo.');
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleRemoveClubFromLeague = async () => {
+    if (!selectedClub || isProcessing) return;
+    
     try {
-      if (!selectedClub) return;
+      setIsProcessing(true);
+      console.log('Removing club from league:', selectedClub.id);
       
-      // Update the club to remove it from this league (set league_id to null)
-      const response = await axios.put(`/api/clubs/${selectedClub.id}`, {
-        league_id: null
-      });
+      // Use the new endpoint to remove club from league
+      const response = await axios.post(`/api/clubs/${selectedClub.id}/remove-from-league`);
       
       console.log('Club removed from league successfully:', response.data);
       await fetchData();
       setIsDeleteModalOpen(false);
-    } catch (error) {
+      
+      // Show success message
+      alert('Club removido exitosamente de la liga');
+    } catch (error: any) {
       console.error('Error removing club from league:', error);
+      
+      // Show detailed error message
+      if (error.response?.data?.message) {
+        alert(`Error: ${error.response.data.message}`);
+      } else {
+        alert('Error al remover el club de la liga. Por favor intenta de nuevo.');
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -305,10 +336,11 @@ function LigaClubsPage() {
               </button>
               <button
                 onClick={openAddClubModal}
-                className="bg-white text-yellow-600 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-50 transition-colors duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+                disabled={isProcessing}
+                className="bg-white text-yellow-600 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-50 transition-colors duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <PlusIcon className="h-5 w-5" />
-                <span>Agregar Club</span>
+                <span>{isProcessing ? 'Procesando...' : 'Agregar Club'}</span>
               </button>
             </div>
           </div>
@@ -473,10 +505,11 @@ function LigaClubsPage() {
                 <div className="mt-6 space-x-3">
                   <button
                     onClick={openAddClubModal}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                    disabled={isProcessing}
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-                    Agregar Club
+                    {isProcessing ? 'Procesando...' : 'Agregar Club'}
                   </button>
                   <button
                     onClick={() => setIsInviteModalOpen(true)}
@@ -534,7 +567,8 @@ function LigaClubsPage() {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => openDeleteModal(club)}
-                          className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100 transition-colors duration-150"
+                          disabled={isProcessing}
+                          className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Remover de la liga"
                         >
                           <TrashIcon className="h-4 w-4" />
@@ -568,7 +602,8 @@ function LigaClubsPage() {
                 </h3>
                 <button
                   onClick={() => setIsAddClubModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  disabled={isProcessing}
+                  className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
                 >
                   <XCircleIcon className="h-6 w-6" />
                 </button>
@@ -618,10 +653,11 @@ function LigaClubsPage() {
                         </div>
                         <button
                           onClick={() => handleAddClubToLeague(club.id)}
-                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                          disabled={isProcessing}
+                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <PlusIcon className="h-4 w-4 mr-1" />
-                          Agregar
+                          {isProcessing ? 'Agregando...' : 'Agregar'}
                         </button>
                       </div>
                     ))}
@@ -632,7 +668,8 @@ function LigaClubsPage() {
               <div className="flex justify-end mt-6">
                 <button
                   onClick={() => setIsAddClubModalOpen(false)}
-                  className="bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+                  disabled={isProcessing}
+                  className="bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cerrar
                 </button>
