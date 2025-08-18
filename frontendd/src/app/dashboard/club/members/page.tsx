@@ -65,7 +65,7 @@ export default function ClubMembersPage() {
 
       if (user?.role === 'club') {
         // For club users, get their club information
-        const clubsResponse = await axios.get<ApiResponse<Club[]>>('/clubs');
+        const clubsResponse = await axios.get<ApiResponse<Club[]>>('/api/clubs');
         const allClubs = clubsResponse.data.data || [];
         
         // Find the club that belongs to this user
@@ -80,14 +80,9 @@ export default function ClubMembersPage() {
 
       setCurrentClub(clubData);
 
-      // Fetch members and clubs in parallel
-      const [membersResponse, clubsResponse] = await Promise.all([
-        axios.get<ApiResponse<Member[]>>('/api/members'),
-        axios.get<ApiResponse<Club[]>>('/api/clubs')
-      ]);
-
+      // Fetch members - filter by club if not super admin
+      const membersResponse = await axios.get<ApiResponse<Member[]>>('/api/members');
       let membersData = membersResponse.data.data || [];
-      let clubsData = clubsResponse.data.data || [];
 
       // Filter members by current club if user is not super admin
       if (user?.role === 'club' && clubId) {
@@ -123,7 +118,7 @@ export default function ClubMembersPage() {
         club_id: currentClub?.id || data.club_id
       };
 
-      await axios.post('/members', memberData);
+      await axios.post('/api/members', memberData);
       await fetchData();
       setIsModalOpen(false);
       setSelectedMember(null);
@@ -146,7 +141,7 @@ export default function ClubMembersPage() {
         club_id: currentClub?.id || data.club_id
       };
 
-      await axios.put(`/members/${selectedMember.id}`, memberData);
+      await axios.put(`/api/members/${selectedMember.id}`, memberData);
       await fetchData();
       setIsModalOpen(false);
       setSelectedMember(null);
@@ -161,7 +156,7 @@ export default function ClubMembersPage() {
     if (!memberToDelete) return;
 
     try {
-      await axios.delete(`/members/${memberToDelete.id}`);
+      await axios.delete(`/api/members/${memberToDelete.id}`);
       await fetchData();
       setIsDeleteModalOpen(false);
       setMemberToDelete(null);
