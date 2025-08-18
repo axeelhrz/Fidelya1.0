@@ -65,6 +65,9 @@ export default function MemberModal({
   }, [clubs, member, setValue]);
 
   const handleFormSubmit = async (data: MemberForm) => {
+    console.log('Form submitted with data:', data);
+    console.log('Clubs available:', clubs);
+    
     // Clean up empty strings
     const cleanData = {
       ...data,
@@ -75,8 +78,14 @@ export default function MemberModal({
       gender: data.gender || undefined,
     };
     
-    await onSubmit(cleanData);
-    reset();
+    console.log('Clean data to submit:', cleanData);
+    
+    try {
+      await onSubmit(cleanData);
+      reset();
+    } catch (error) {
+      console.error('Error in handleFormSubmit:', error);
+    }
   };
 
   const handleClose = () => {
