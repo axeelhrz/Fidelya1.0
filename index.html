@@ -444,41 +444,176 @@
         </div>
     </section>
 
-    <!-- Formulario de Contacto -->
-    <section class="section contact-form" id="contacto">
+    <!-- Formulario de Contacto Mejorado -->
+    <section class="section contact-section" id="contacto">
         <div class="container">
-            <div class="form-container" data-animate>
-                <div class="form-header">
-                    <h2>Contáctanos</h2>
-                    <p>Te contactaremos en menos de 24 horas</p>
+            <!-- Header de la sección -->
+            <div class="section-header" data-animate>
+                <div class="section-subtitle">¿Listo para transformar tu logística?</div>
+                <h2 class="section-title">Hablemos de tu proyecto</h2>
+                <p class="section-description">
+                    Nuestro equipo de expertos está listo para ayudarte a implementar la solución perfecta para tu negocio
+                </p>
+            </div>
+
+            <div class="contact-wrapper">
+                <!-- Información de contacto -->
+                <div class="contact-info" data-animate>
+                    <div class="contact-info-header">
+                        <h3>Conecta con nosotros</h3>
+                        <p>Te respondemos en menos de 24 horas</p>
+                    </div>
+
+                    <div class="contact-methods">
+                        <div class="contact-method">
+                            <div class="contact-icon">
+                                <i class="ph ph-envelope"></i>
+                            </div>
+                            <div class="contact-details">
+                                <h4>Email</h4>
+                                <p>contacto@nodolocker.mx</p>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <div class="contact-icon">
+                                <i class="ph ph-phone"></i>
+                            </div>
+                            <div class="contact-details">
+                                <h4>Teléfono</h4>
+                                <p>+52 55 1234 5678</p>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <div class="contact-icon">
+                                <i class="ph ph-map-pin"></i>
+                            </div>
+                            <div class="contact-details">
+                                <h4>Oficina</h4>
+                                <p>Ciudad de México, México</p>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <div class="contact-icon">
+                                <i class="ph ph-clock"></i>
+                            </div>
+                            <div class="contact-details">
+                                <h4>Horario</h4>
+                                <p>Lun - Vie: 9:00 - 18:00</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Beneficios de contactar -->
+                    <div class="contact-benefits">
+                        <h4>¿Por qué elegirnos?</h4>
+                        <ul class="benefits-list">
+                            <li>
+                                <i class="ph ph-check-circle"></i>
+                                <span>Consultoría gratuita personalizada</span>
+                            </li>
+                            <li>
+                                <i class="ph ph-check-circle"></i>
+                                <span>Implementación rápida y eficiente</span>
+                            </li>
+                            <li>
+                                <i class="ph ph-check-circle"></i>
+                                <span>Soporte técnico 24/7</span>
+                            </li>
+                            <li>
+                                <i class="ph ph-check-circle"></i>
+                                <span>ROI garantizado en 6 meses</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-                
-                <form class="contact-form" id="contactForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="name">Nombre completo</label>
-                            <input type="text" id="name" name="name" required>
+
+                <!-- Formulario mejorado -->
+                <div class="form-container" data-animate>
+                    <div class="form-header">
+                        <h3>Envíanos un mensaje</h3>
+                        <p>Cuéntanos sobre tu proyecto y te ayudaremos a encontrar la mejor solución</p>
+                    </div>
+                    
+                    <form class="contact-form-improved" id="contactForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">
+                                    <i class="ph ph-user"></i>
+                                    Nombre completo
+                                </label>
+                                <input type="text" id="name" name="name" placeholder="Tu nombre completo" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="company">
+                                    <i class="ph ph-buildings"></i>
+                                    Empresa
+                                </label>
+                                <input type="text" id="company" name="company" placeholder="Nombre de tu empresa" required>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="company">Empresa</label>
-                            <input type="text" id="company" name="company" required>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">
+                                    <i class="ph ph-envelope"></i>
+                                    Correo electrónico
+                                </label>
+                                <input type="email" id="email" name="email" placeholder="tu@email.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">
+                                    <i class="ph ph-phone"></i>
+                                    Teléfono
+                                </label>
+                                <input type="tel" id="phone" name="phone" placeholder="+52 55 1234 5678">
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="email">Correo electrónico</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="message">Mensaje</label>
-                        <textarea id="message" name="message" rows="4" placeholder="Describe cómo Nodo Locker puede ayudar a tu negocio..."></textarea>
-                    </div>
-                    
-                    <button type="submit" class="btn-primary large full-width">
-                        Enviar mensaje
-                    </button>
-                </form>
+
+                        <div class="form-group">
+                            <label for="interest">
+                                <i class="ph ph-target"></i>
+                                ¿Qué te interesa más?
+                            </label>
+                            <select id="interest" name="interest" required>
+                                <option value="">Selecciona una opción</option>
+                                <option value="courier">Soy empresa de paquetería</option>
+                                <option value="retailer">Tengo un negocio retail</option>
+                                <option value="investor">Soy inversionista</option>
+                                <option value="partner">Quiero ser socio</option>
+                                <option value="other">Otro</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message">
+                                <i class="ph ph-chat-text"></i>
+                                Mensaje
+                            </label>
+                            <textarea id="message" name="message" rows="4" placeholder="Cuéntanos sobre tu proyecto, necesidades específicas o cualquier pregunta que tengas..."></textarea>
+                        </div>
+
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="newsletter" name="newsletter">
+                                <span class="checkmark"></span>
+                                Quiero recibir actualizaciones sobre Nodo Locker
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary large full-width">
+                            <i class="ph ph-paper-plane-right btn-icon-left"></i>
+                            <span class="btn-text">Enviar mensaje</span>
+                        </button>
+
+                        <p class="form-privacy">
+                            Al enviar este formulario, aceptas nuestros 
+                            <a href="#" class="privacy-link">términos de privacidad</a>
+                        </p>
+                    </form>
+                </div>
             </div>
         </div>
     </section>
