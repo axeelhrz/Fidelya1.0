@@ -133,8 +133,8 @@ export const useSignUp = () => {
             router.push('/dashboard/club');
             break;
           case 'miembro':
-            // Redirect members to waiting room (adjust path as needed)
-            router.push('/dashboard/miembro');
+            // Redirect members to waiting room after successful registration
+            router.push('/waiting-room');
             break;
           default:
             router.push('/dashboard');
