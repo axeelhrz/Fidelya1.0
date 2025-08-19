@@ -16,7 +16,13 @@ const elements = {
   navMenu: null,
   navToggle: null,
   contactForm: null,
-  buttons: {}
+  floatingCta: null,
+  buttons: {},
+  tabs: {
+    nav: null,
+    panels: null,
+    buttons: null
+  }
 };
 
 // Utilidades
@@ -73,6 +79,8 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeButtons();
   initializeScrollEffects();
   initializeAnimations();
+  initializeTabs();
+  initializeFloatingCta();
 });
 
 // Cache de elementos DOM
@@ -81,13 +89,23 @@ function cacheElements() {
   elements.navMenu = document.getElementById('navMenu');
   elements.navToggle = document.getElementById('navToggle');
   elements.contactForm = document.getElementById('contactForm');
+  elements.floatingCta = document.getElementById('floatingCta');
   
   // Botones
   elements.buttons = {
     joinWaitlist: document.getElementById('joinWaitlistBtn'),
     download: document.getElementById('downloadBtn'),
     learnMore: document.getElementById('learnMoreBtn'),
-    ctaJoin: document.getElementById('ctaJoinBtn')
+    ctaJoin: document.getElementById('ctaJoinBtn'),
+    floatingCta: document.getElementById('floatingCtaBtn'),
+    schedule: document.getElementById('scheduleBtn'),
+    integrate: document.getElementById('integrateBtn')
+  };
+
+  // Tabs
+  elements.tabs = {
+    buttons: document.querySelectorAll('.tab-btn'),
+    panels: document.querySelectorAll('.tab-panel')
   };
 }
 
@@ -100,6 +118,7 @@ function initializeNavigation() {
     const scrollY = window.pageYOffset;
     elements.navbar.classList.toggle('scrolled', scrollY > 50);
     updateActiveNavLink();
+    updateFloatingCta();
   }, 16);
 
   window.addEventListener('scroll', handleScroll, { passive: true });
@@ -191,6 +210,68 @@ function updateActiveNavLink() {
       link.classList.add('active');
     }
   });
+}
+
+// Floating CTA
+function initializeFloatingCta() {
+  if (!elements.floatingCta) return;
+
+  // Manejar click del floating CTA
+  if (elements.buttons.floatingCta) {
+    elements.buttons.floatingCta.addEventListener('click', () => {
+      const contactSection = document.getElementById('contacto');
+      if (contactSection) {
+        utils.smoothScrollTo(contactSection);
+      }
+    });
+  }
+}
+
+function updateFloatingCta() {
+  if (!elements.floatingCta) return;
+
+  const scrollY = window.pageYOffset;
+  const heroSection = document.getElementById('inicio');
+  const contactSection = document.getElementById('contacto');
+  
+  if (!heroSection || !contactSection) return;
+
+  const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
+  const contactTop = contactSection.offsetTop;
+  
+  // Mostrar el floating CTA después del hero y antes del contacto
+  if (scrollY > heroBottom && scrollY < contactTop - 200) {
+    elements.floatingCta.classList.add('visible');
+  } else {
+    elements.floatingCta.classList.remove('visible');
+  }
+}
+
+// Sistema de tabs
+function initializeTabs() {
+  if (!elements.tabs.buttons.length) return;
+
+  elements.tabs.buttons.forEach(button => {
+    button.addEventListener('click', () => {
+      const targetTab = button.getAttribute('data-tab');
+      switchTab(targetTab);
+    });
+  });
+}
+
+function switchTab(targetTab) {
+  // Remover clase active de todos los botones y panels
+  elements.tabs.buttons.forEach(btn => btn.classList.remove('active'));
+  elements.tabs.panels.forEach(panel => panel.classList.remove('active'));
+
+  // Agregar clase active al botón y panel correspondiente
+  const activeButton = document.querySelector(`[data-tab="${targetTab}"]`);
+  const activePanel = document.getElementById(targetTab);
+
+  if (activeButton && activePanel) {
+    activeButton.classList.add('active');
+    activePanel.classList.add('active');
+  }
 }
 
 // Formularios
@@ -329,6 +410,34 @@ function initializeButtons() {
       }
     });
   }
+
+  // Botón de agendar reunión
+  if (elements.buttons.schedule) {
+    elements.buttons.schedule.addEventListener('click', () => {
+      showNotification('info', 'Redirigiendo a calendario de reuniones...');
+      // Aquí iría la integración con Calendly u otro sistema de citas
+      setTimeout(() => {
+        showNotification('success', 'Calendario abierto. Selecciona tu horario preferido.');
+      }, 1500);
+    });
+  }
+
+  // Botón de integrar operación
+  if (elements.buttons.integrate) {
+    elements.buttons.integrate.addEventListener('click', () => {
+      const contactSection = document.getElementById('contacto');
+      if (contactSection) {
+        utils.smoothScrollTo(contactSection);
+        // Pre-llenar el formulario con información específica
+        setTimeout(() => {
+          const messageField = document.getElementById('message');
+          if (messageField) {
+            messageField.value = 'Estoy interesado en integrar Nodo Locker a mi operación. Me gustaría agendar una reunión técnica para discutir las posibilidades.';
+          }
+        }, 500);
+      }
+    });
+  }
 }
 
 // Manejo de descarga
@@ -423,7 +532,7 @@ function initializeScrollEffects() {
 
   // Observar elementos para animación
   const elementsToAnimate = document.querySelectorAll(
-    '.feature-card, .benefit-card, .step, .timeline-item'
+    '.feature-card, .step, .timeline-item, .next-step-item, .logo-item'
   );
 
   elementsToAnimate.forEach(el => {
@@ -434,7 +543,7 @@ function initializeScrollEffects() {
 // Animaciones adicionales
 function initializeAnimations() {
   // Efecto hover en tarjetas
-  const cards = document.querySelectorAll('.feature-card, .benefit-card');
+  const cards = document.querySelectorAll('.feature-card, .next-step-item, .logo-item');
   
   cards.forEach(card => {
     card.addEventListener('mouseenter', () => {
@@ -447,10 +556,22 @@ function initializeAnimations() {
   });
 
   // Efecto ripple en botones
-  const buttons = document.querySelectorAll('.btn-primary, .btn-secondary');
+  const buttons = document.querySelectorAll('.btn-primary, .btn-secondary, .tab-btn');
   
   buttons.forEach(button => {
     button.addEventListener('click', createRippleEffect);
+  });
+
+  // Animación de tabs
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // Agregar efecto de pulso al cambiar tab
+      button.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        button.style.transform = 'scale(1)';
+      }, 150);
+    });
   });
 }
 
@@ -496,6 +617,9 @@ const handleResize = utils.debounce(() => {
   if (window.innerWidth > CONFIG.breakpoints.mobile) {
     closeMobileMenu();
   }
+  
+  // Actualizar floating CTA
+  updateFloatingCta();
 }, 250);
 
 window.addEventListener('resize', handleResize);
@@ -528,6 +652,29 @@ document.addEventListener('keydown', (e) => {
   // Navegación con Tab más fluida
   if (e.key === 'Tab') {
     document.body.classList.add('keyboard-navigation');
+  }
+
+  // Navegación de tabs con flechas
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    const activeTab = document.querySelector('.tab-btn.active');
+    if (activeTab) {
+      const tabs = Array.from(elements.tabs.buttons);
+      const currentIndex = tabs.indexOf(activeTab);
+      let nextIndex;
+
+      if (e.key === 'ArrowLeft') {
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
+      } else {
+        nextIndex = currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
+      }
+
+      const nextTab = tabs[nextIndex];
+      if (nextTab) {
+        const targetTab = nextTab.getAttribute('data-tab');
+        switchTab(targetTab);
+        nextTab.focus();
+      }
+    }
   }
 });
 
@@ -578,10 +725,18 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
 // Inicialización adicional para elementos que requieren JavaScript
 document.addEventListener('DOMContentLoaded', () => {
   // Agregar clases para animaciones CSS
-  const animatedElements = document.querySelectorAll('.feature-card, .benefit-card, .timeline-content');
+  const animatedElements = document.querySelectorAll('.feature-card, .timeline-content, .next-step-item');
   animatedElements.forEach((el, index) => {
     el.style.animationDelay = `${index * 0.1}s`;
   });
+
+  // Inicializar el primer tab como activo si no hay ninguno
+  const activeTab = document.querySelector('.tab-btn.active');
+  if (!activeTab && elements.tabs.buttons.length > 0) {
+    const firstTab = elements.tabs.buttons[0];
+    const targetTab = firstTab.getAttribute('data-tab');
+    switchTab(targetTab);
+  }
 });
 
 // Manejo de estados de conexión
@@ -608,3 +763,36 @@ document.addEventListener('touchend', (e) => {
   }
   lastTouchEnd = now;
 }, false);
+
+// Funciones adicionales para mejorar la experiencia
+
+// Smooth scroll para todos los enlaces internos
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('a[href^="#"]');
+  if (link) {
+    e.preventDefault();
+    const targetId = link.getAttribute('href');
+    const targetElement = document.querySelector(targetId);
+    if (targetElement) {
+      utils.smoothScrollTo(targetElement);
+    }
+  }
+});
+
+// Auto-hide floating CTA en mobile cuando se hace scroll hacia abajo
+let lastScrollY = window.pageYOffset;
+window.addEventListener('scroll', utils.throttle(() => {
+  if (window.innerWidth <= CONFIG.breakpoints.mobile) {
+    const currentScrollY = window.pageYOffset;
+    if (elements.floatingCta) {
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down
+        elements.floatingCta.style.transform = 'translateY(100px)';
+      } else {
+        // Scrolling up
+        elements.floatingCta.style.transform = 'translateY(0)';
+      }
+    }
+    lastScrollY = currentScrollY;
+  }
+}, 100), { passive: true });
