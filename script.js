@@ -148,7 +148,7 @@ function initializeActiveNavigation() {
   
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
+      if (entry.isIntersecting) {
         const id = entry.target.getAttribute('id');
         const navLink = document.querySelector(`.nav-link[href="#${id}"]`);
         
@@ -159,13 +159,48 @@ function initializeActiveNavigation() {
       }
     });
   }, {
-    threshold: [0.3],
-    rootMargin: `-${CONFIG.ui.scrollOffset}px 0px -50% 0px`
+    threshold: [0.2, 0.5, 0.8],
+    rootMargin: `-${CONFIG.ui.scrollOffset}px 0px -40% 0px`
   });
   
   sections.forEach(section => {
     observer.observe(section);
   });
+
+  // Detectar scroll manual para mejorar la precisión
+  let scrollTimeout;
+  window.addEventListener('scroll', () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      detectCurrentSection();
+    }, 100);
+  }, { passive: true });
+}
+
+function detectCurrentSection() {
+  const sections = document.querySelectorAll('section[id]');
+  const scrollPosition = window.scrollY + CONFIG.ui.scrollOffset + 100;
+  
+  let currentSection = 'inicio'; // default
+  
+  sections.forEach(section => {
+    const sectionTop = section.offsetTop;
+    const sectionHeight = section.offsetHeight;
+    const sectionBottom = sectionTop + sectionHeight;
+    
+    if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+      currentSection = section.getAttribute('id');
+    }
+  });
+  
+  // Actualizar navegación si cambió la sección
+  if (state.currentSection !== currentSection) {
+    const navLink = document.querySelector(`.nav-link[href="#${currentSection}"]`);
+    if (navLink) {
+      updateActiveNavLink(navLink);
+      state.currentSection = currentSection;
+    }
+  }
 }
 
 // Sistema de animaciones suaves y limpias
@@ -464,7 +499,7 @@ async function handleJoinWaitlist(button) {
   }
 }
 
-// Manejo de formularios
+// Manejo de formularios mejorado
 function initializeFormHandling() {
   if (elements.contactForm) {
     elements.contactForm.addEventListener('submit', handleFormSubmit);
@@ -477,8 +512,8 @@ async function handleFormSubmit(e) {
   const formData = new FormData(e.target);
   const data = Object.fromEntries(formData);
   
-  // Validación básica
-  if (!data.name || !data.email || !data.company) {
+  // Validación mejorada
+  if (!data.name || !data.email || !data.company || !data.interest) {
     showNotification('Por favor completa todos los campos requeridos', 'error');
     return;
   }
