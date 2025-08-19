@@ -131,7 +131,7 @@ body {
 /* Navegación futurista FLOTANTE */
 .navbar {
   position: fixed;
-  top: var(--space-4); /* Más arriba */
+  top: var(--space-1); /* Cambiado de var(--space-4) a var(--space-2) para subirlo más */
   left: 0;
   right: 0;
   background: transparent; /* Completamente transparente */
@@ -143,7 +143,7 @@ body {
 }
 
 .navbar.scrolled {
-  top: var(--space-2); /* Se acerca más al top al hacer scroll */
+  top: 0; /* Cambiado de var(--space-2) a 0 para que quede pegado al top al hacer scroll */
   background: transparent; /* Mantiene transparencia */
 }
 
