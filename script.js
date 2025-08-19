@@ -81,6 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeAnimations();
   initializeTabs();
   initializeFloatingCta();
+  initializeParticleEffects();
 });
 
 // Cache de elementos DOM
@@ -271,6 +272,15 @@ function switchTab(targetTab) {
   if (activeButton && activePanel) {
     activeButton.classList.add('active');
     activePanel.classList.add('active');
+    
+    // Efecto de animación
+    activePanel.style.transform = 'translateY(20px)';
+    activePanel.style.opacity = '0';
+    
+    setTimeout(() => {
+      activePanel.style.transform = 'translateY(0)';
+      activePanel.style.opacity = '1';
+    }, 50);
   }
 }
 
@@ -328,6 +338,7 @@ function validateField(field) {
         font-size: var(--text-xs);
         margin-top: var(--space-1);
         display: block;
+        font-weight: 500;
       `;
       field.parentElement.appendChild(errorElement);
     }
@@ -453,7 +464,7 @@ function handleDownload() {
   }, 1500);
 }
 
-// Sistema de notificaciones
+// Sistema de notificaciones futurista
 function showNotification(type, message) {
   const notification = document.createElement('div');
   const icons = {
@@ -478,16 +489,19 @@ function showNotification(type, message) {
       background: ${colors[type]};
       color: white;
       padding: 1rem 1.5rem;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-lg);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl), 0 0 20px ${colors[type]}40;
       z-index: 10000;
       display: flex;
       align-items: center;
       gap: 0.75rem;
       max-width: 400px;
       transform: translateX(100%);
-      transition: transform 0.3s ease;
+      transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
       font-size: var(--text-sm);
+      font-weight: 500;
+      backdrop-filter: blur(10px);
+      border: 1px solid ${colors[type]}60;
     ">
       <i class="ph ${icons[type]}" style="font-size: 1.25rem; flex-shrink: 0;"></i>
       <span>${message}</span>
@@ -525,6 +539,14 @@ function initializeScrollEffects() {
       if (entry.isIntersecting) {
         entry.target.style.opacity = '1';
         entry.target.style.transform = 'translateY(0)';
+        
+        // Efecto especial para elementos con glow
+        if (entry.target.classList.contains('feature-card') || 
+            entry.target.classList.contains('next-step-item') ||
+            entry.target.classList.contains('logo-item')) {
+          entry.target.style.boxShadow = 'var(--shadow-xl), var(--glow-orange)';
+        }
+        
         observer.unobserve(entry.target);
       }
     });
@@ -542,27 +564,29 @@ function initializeScrollEffects() {
 
 // Animaciones adicionales
 function initializeAnimations() {
-  // Efecto hover en tarjetas
+  // Efecto hover mejorado en tarjetas
   const cards = document.querySelectorAll('.feature-card, .next-step-item, .logo-item');
   
   cards.forEach(card => {
     card.addEventListener('mouseenter', () => {
-      card.style.transform = 'translateY(-4px)';
+      card.style.transform = 'translateY(-8px)';
+      card.style.boxShadow = 'var(--shadow-xl), var(--glow-orange)';
     });
     
     card.addEventListener('mouseleave', () => {
       card.style.transform = 'translateY(0)';
+      card.style.boxShadow = 'var(--shadow-lg)';
     });
   });
 
-  // Efecto ripple en botones
+  // Efecto ripple mejorado en botones
   const buttons = document.querySelectorAll('.btn-primary, .btn-secondary, .tab-btn');
   
   buttons.forEach(button => {
     button.addEventListener('click', createRippleEffect);
   });
 
-  // Animación de tabs
+  // Animación de tabs mejorada
   const tabButtons = document.querySelectorAll('.tab-btn');
   tabButtons.forEach(button => {
     button.addEventListener('click', () => {
@@ -573,9 +597,18 @@ function initializeAnimations() {
       }, 150);
     });
   });
+
+  // Efecto parallax sutil en el hero
+  window.addEventListener('scroll', utils.throttle(() => {
+    const scrolled = window.pageYOffset;
+    const hero = document.querySelector('.hero');
+    if (hero) {
+      hero.style.transform = `translateY(${scrolled * 0.1}px)`;
+    }
+  }, 16), { passive: true });
 }
 
-// Efecto ripple
+// Efecto ripple mejorado
 function createRippleEffect(e) {
   const button = e.currentTarget;
   const ripple = document.createElement('span');
@@ -590,7 +623,7 @@ function createRippleEffect(e) {
     height: ${size}px;
     left: ${x}px;
     top: ${y}px;
-    background: rgba(255, 255, 255, 0.3);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
     transform: scale(0);
@@ -609,6 +642,41 @@ function createRippleEffect(e) {
   setTimeout(() => {
     ripple.remove();
   }, 600);
+}
+
+// Efectos de partículas
+function initializeParticleEffects() {
+  // Crear partículas flotantes en el hero
+  const hero = document.querySelector('.hero');
+  if (hero) {
+    createFloatingParticles(hero, 15);
+  }
+
+  // Crear partículas en secciones oscuras
+  const darkSections = document.querySelectorAll('.validation-section, .next-steps-section');
+  darkSections.forEach(section => {
+    createFloatingParticles(section, 8);
+  });
+}
+
+function createFloatingParticles(container, count) {
+  for (let i = 0; i < count; i++) {
+    const particle = document.createElement('div');
+    particle.style.cssText = `
+      position: absolute;
+      width: ${Math.random() * 4 + 2}px;
+      height: ${Math.random() * 4 + 2}px;
+      background: rgba(255, 107, 53, ${Math.random() * 0.5 + 0.2});
+      border-radius: 50%;
+      pointer-events: none;
+      left: ${Math.random() * 100}%;
+      top: ${Math.random() * 100}%;
+      animation: float ${Math.random() * 10 + 10}s linear infinite;
+      z-index: 1;
+    `;
+    
+    container.appendChild(particle);
+  }
 }
 
 // Manejo de resize
@@ -764,8 +832,6 @@ document.addEventListener('touchend', (e) => {
   lastTouchEnd = now;
 }, false);
 
-// Funciones adicionales para mejorar la experiencia
-
 // Smooth scroll para todos los enlaces internos
 document.addEventListener('click', (e) => {
   const link = e.target.closest('a[href^="#"]');
@@ -796,3 +862,25 @@ window.addEventListener('scroll', utils.throttle(() => {
     lastScrollY = currentScrollY;
   }
 }, 100), { passive: true });
+
+// Agregar animación de float para partículas
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes float {
+    0% {
+      transform: translateY(100vh) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-100px) rotate(360deg);
+      opacity: 0;
+    }
+  }
+`;
+document.head.appendChild(style);
