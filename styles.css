@@ -294,7 +294,7 @@ body {
   transform: rotate(-45deg) translate(7px, -6px);
 }
 
-/* Hero Section Premium - Bajado más */
+/* Hero Section Premium - Bajado Más */
 .hero {
   position: relative;
   min-height: 100vh;
@@ -302,7 +302,7 @@ body {
   align-items: center;
   background: linear-gradient(135deg, rgba(255, 107, 53, 0.02) 0%, var(--white) 100%);
   overflow: hidden;
-  padding-top: var(--space-24);
+  padding-top: 140px;
 }
 
 .hero-container {
@@ -1191,7 +1191,7 @@ body {
   
   .hero {
     min-height: 90vh;
-    padding-top: var(--space-32);
+    padding-top: 160px;
   }
   
   .hero-container {
