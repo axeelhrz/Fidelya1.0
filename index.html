@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nodo Locker - Red Inteligente de Lockers</title>
+    <meta name="description" content="La primera red inteligente de lockers en México. Tecnología confiable para la logística urbana del futuro.">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style">
+    <link rel="preload" href="Assets/NODO-LOCKER_ICONO.gif" as="image">
+    <link rel="preload" href="Assets/NODO LOCKER.jpg" as="image">
+    
+    <!-- Google Fonts optimized -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Modern Navigation -->
+    <nav class="navbar" id="navbar" role="navigation" aria-label="Navegación principal">
+        <div class="nav-container">
+            <!-- Logo Section -->
+            <div class="nav-logo">
+                <div class="logo-wrapper">
+                    <img src="Assets/NODO-LOCKER_ICONO.gif" alt="Nodo Locker" class="logo-image" loading="eager">
+                    <div class="logo-glow"></div>
+                </div>
+                <span class="logo-text">
+                    <span class="logo-primary">Nodo</span>
+                    <span class="logo-secondary">Locker</span>
+                </span>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <div class="nav-menu" id="navMenu" role="menubar">
+                <a href="#inicio" class="nav-link active" role="menuitem">
+                    <span class="nav-link-text">Inicio</span>
+                    <div class="nav-link-indicator"></div>
+                </a>
+                <a href="#tecnologia" class="nav-link" role="menuitem">
+                    <span class="nav-link-text">Tecnología</span>
+                    <div class="nav-link-indicator"></div>
+                </a>
+                <a href="#beneficios" class="nav-link" role="menuitem">
+                    <span class="nav-link-text">Beneficios</span>
+                    <div class="nav-link-indicator"></div>
+                </a>
+                <a href="#proceso" class="nav-link" role="menuitem">
+                    <span class="nav-link-text">Proceso</span>
+                    <div class="nav-link-indicator"></div>
+                </a>
+                <a href="#roadmap" class="nav-link" role="menuitem">
+                    <span class="nav-link-text">Roadmap</span>
+                    <div class="nav-link-indicator"></div>
+                </a>
+                <a href="#contacto" class="nav-link" role="menuitem">
+                    <span class="nav-link-text">Contacto</span>
+                    <div class="nav-link-indicator"></div>
+                </a>
+            </div>
+            
+            <!-- CTA Section -->
+            <div class="nav-cta">
+                <button class="btn-primary modern" id="joinWaitlistBtn">
+                    <span class="btn-text">Únete al MVP</span>
+                    <div class="btn-ripple"></div>
+                    <i class="ph ph-arrow-right btn-icon"></i>
+                </button>
+            </div>
+            
+            <!-- Mobile Toggle -->
+            <button class="nav-toggle" id="navToggle" aria-label="Abrir menú de navegación" aria-expanded="false">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+        
+        <!-- Navigation Background Blur -->
+        <div class="nav-backdrop"></div>
+    </nav>
+
+    <!-- Modern Hero Section -->
+    <section class="hero modern" id="inicio">
+        <!-- Hero Background Elements -->
+        <div class="hero-bg">
+            <div class="hero-gradient"></div>
+            <div class="hero-pattern"></div>
+            <div class="hero-particles">
+                <div class="particle" style="--delay: 0s; --duration: 20s;"></div>
+                <div class="particle" style="--delay: 5s; --duration: 25s;"></div>
+                <div class="particle" style="--delay: 10s; --duration: 30s;"></div>
+                <div class="particle" style="--delay: 15s; --duration: 22s;"></div>
+            </div>
+        </div>
+        
+        <div class="hero-container">
+            <!-- Hero Content -->
+            <div class="hero-content">
+                <!-- Badge with animation -->
+                <div class="hero-badge modern">
+                    <div class="badge-icon">
+                        <i class="ph ph-lightning"></i>
+                    </div>
+                    <span class="badge-text">Revolucionando la última milla en México</span>
+                    <div class="badge-glow"></div>
+                </div>
+                
+                <!-- Main Title with gradient -->
+                <h1 class="hero-title modern">
+                    <span class="title-line">Tecnología</span>
+                    <span class="title-line gradient-text">confiable</span>
+                    <span class="title-line">desde el primer día</span>
+                </h1>
+                
+                <!-- Description -->
+                <p class="hero-description modern">
+                    La primera red inteligente de lockers en México que transforma 
+                    la logística urbana con <strong>tecnología de vanguardia</strong> y 
+                    <strong>confiabilidad garantizada</strong>.
+                </p>
+                
+                <!-- Action Buttons -->
+                <div class="hero-actions modern">
+                    <button class="btn-primary large modern" id="downloadBtn">
+                        <div class="btn-content">
+                            <i class="ph ph-download-simple btn-icon-left"></i>
+                            <span class="btn-text">Descargar presentación</span>
+                        </div>
+                        <div class="btn-ripple"></div>
+                        <div class="btn-glow"></div>
+                    </button>
+                    
+                    <button class="btn-secondary large modern" id="scheduleBtn">
+                        <div class="btn-content">
+                            <i class="ph ph-calendar btn-icon-left"></i>
+                            <span class="btn-text">Agendar reunión</span>
+                        </div>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+                
+                <!-- Enhanced Stats -->
+                <div class="hero-stats modern">
+                    <div class="stat modern" data-value="40">
+                        <div class="stat-icon">
+                            <i class="ph ph-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">40%</div>
+                            <div class="stat-label">Menos tiempo en entregas</div>
+                        </div>
+                        <div class="stat-progress">
+                            <div class="stat-progress-bar" style="--progress: 40%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat modern" data-value="24">
+                        <div class="stat-icon">
+                            <i class="ph ph-clock-clockwise"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">24/7</div>
+                            <div class="stat-label">Disponibilidad</div>
+                        </div>
+                        <div class="stat-progress">
+                            <div class="stat-progress-bar" style="--progress: 100%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat modern" data-value="60">
+                        <div class="stat-icon">
+                            <i class="ph ph-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">60%</div>
+                            <div class="stat-label">Más entregas exitosas</div>
+                        </div>
+                        <div class="stat-progress">
+                            <div class="stat-progress-bar" style="--progress: 60%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hero Visual -->
+            <div class="hero-visual modern">
+                <div class="hero-image-container modern">
+                    <!-- Image with loading optimization -->
+                    <img src="Assets/NODO LOCKER.jpg" 
+                         alt="Sistema Nodo Locker - Red inteligente de lockers" 
+                         class="hero-image modern"
+                         loading="eager"
+                         decoding="async">
+                    
+                    <!-- Image overlays and effects -->
+                    <div class="image-overlay"></div>
+                    <div class="image-glow"></div>
+                    
+                    <!-- Floating elements -->
+                    <div class="floating-elements">
+                        <div class="floating-card" style="--delay: 0s;">
+                            <i class="ph ph-shield-check"></i>
+                            <span>Seguro</span>
+                        </div>
+                        <div class="floating-card" style="--delay: 1s;">
+                            <i class="ph ph-lightning"></i>
+                            <span>Rápido</span>
+                        </div>
+                        <div class="floating-card" style="--delay: 2s;">
+                            <i class="ph ph-gear"></i>
+                            <span>Inteligente</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Trust indicators -->
+                <div class="trust-indicators">
+                    <div class="trust-item">
+                        <i class="ph ph-certificate"></i>
+                        <span>Certificado</span>
+                    </div>
+                    <div class="trust-item">
+                        <i class="ph ph-users-three"></i>
+                        <span>+1000 usuarios</span>
+                    </div>
+                    <div class="trust-item">
+                        <i class="ph ph-star"></i>
+                        <span>5.0 rating</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scroll indicator -->
+        <div class="scroll-indicator">
+            <div class="scroll-text">Descubre más</div>
+            <div class="scroll-arrow">
+                <i class="ph ph-arrow-down"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Section -->
+    <section class="section technology" id="tecnologia">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Tecnología de vanguardia</h2>
+                <p class="section-description">
+                    Cada componente está diseñado para ofrecer máxima confiabilidad y eficiencia.
+                </p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="ph ph-monitor"></i>
+                    </div>
+                    <h3>Pantalla táctil</h3>
+                    <p>Interfaz intuitiva para una experiencia de usuario fluida.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="ph ph-qr-code"></i>
+                    </div>
+                    <h3>Lector QR</h3>
+                    <p>Retiros rápidos y seguros con tecnología de escaneo avanzada.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="ph ph-lightbulb"></i>
+                    </div>
+                    <h3>Iluminación LED</h3>
+                    <p>Visibilidad 24/7 con sistema de iluminación eficiente.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="ph ph-lock"></i>
+                    </div>
+                    <h3>Cerradura electrónica</h3>
+                    <p>Seguridad garantizada con acceso mediante código único.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="ph ph-cube"></i>
+                    </div>
+                    <h3>Módulos adaptables</h3>
+                    <p>Diferentes tamaños para maximizar la eficiencia del espacio.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="ph ph-code"></i>
+                    </div>
+                    <h3>API de integración</h3>
+                    <p>Compatible con plataformas de paquetería existentes.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Validation Section -->
+    <section class="section validation-section">
+        <div class="container">
+            <div class="validation-content">
+                <h3>Modelo probado en +30 países</h3>
+                <p>Ahora adaptado a las necesidades del mercado mexicano</p>
+                <div class="validation-logos">
+                    <div class="logo-item">
+                        <img src="Assets/amazon-logo.svg" alt="Amazon Locker" class="company-logo">
+                    </div>
+                    <div class="logo-item">
+                        <img src="Assets/InPost_logo.svg.png" alt="InPost" class="company-logo">
+                    </div>
+                    <div class="logo-item">
+                        <img src="Assets/dhl-1.svg" alt="DHL Packstation" class="company-logo">
+                    </div>
+                    <div class="logo-item">
+                        <img src="Assets/hive.svg" alt="HiveBox" class="company-logo">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="section benefits" id="beneficios">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Beneficios para cada aliado</h2>
+                <p class="section-description">
+                    Cada actor del ecosistema obtiene beneficios únicos y medibles
+                </p>
+            </div>
+            
+            <div class="benefits-tabs">
+                <div class="tabs-nav">
+                    <button class="tab-btn active" data-tab="couriers">
+                        Para Couriers
+                    </button>
+                    <button class="tab-btn" data-tab="retailers">
+                        Para Retailers
+                    </button>
+                    <button class="tab-btn" data-tab="users">
+                        Para Usuarios
+                    </button>
+                </div>
+
+                <div class="tabs-content">
+                    <div class="tab-panel active" id="couriers">
+                        <div class="benefit-content">
+                            <div class="benefit-text">
+                                <h3>Para Couriers</h3>
+                                <p class="benefit-subtitle">Optimización total de operaciones</p>
+                                <ul class="benefit-list">
+                                    <li>Menos entregas fallidas</li>
+                                    <li>Menor costo operativo</li>
+                                    <li>Entrega 24/7 sin segundo intento</li>
+                                </ul>
+                            </div>
+                            <div class="benefit-visual">
+                                <div class="benefit-icon-large">
+                                    <i class="ph ph-truck"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-panel" id="retailers">
+                        <div class="benefit-content">
+                            <div class="benefit-text">
+                                <h3>Para Retailers</h3>
+                                <p class="benefit-subtitle">Crecimiento inteligente del negocio</p>
+                                <ul class="benefit-list">
+                                    <li>Más tráfico en tienda</li>
+                                    <li>Monetización de espacio</li>
+                                    <li>Estrategias omnicanal</li>
+                                </ul>
+                            </div>
+                            <div class="benefit-visual">
+                                <div class="benefit-icon-large">
+                                    <i class="ph ph-storefront"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-panel" id="users">
+                        <div class="benefit-content">
+                            <div class="benefit-text">
+                                <h3>Para Usuarios</h3>
+                                <p class="benefit-subtitle">Conveniencia total garantizada</p>
+                                <ul class="benefit-list">
+                                    <li>Retiro rápido sin filas</li>
+                                    <li>Seguridad y conveniencia</li>
+                                    <li>Disponibilidad extendida</li>
+                                </ul>
+                            </div>
+                            <div class="benefit-visual">
+                                <div class="benefit-icon-large">
+                                    <i class="ph ph-package"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section class="section process" id="proceso">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Proceso simple</h2>
+                <p class="section-description">
+                    Tres pasos para revolucionar tus entregas
+                </p>
+            </div>
+            
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">01</div>
+                    <div class="step-content">
+                        <h3>Regístrate</h3>
+                        <p>Accede a nuestra red de lockers distribuidos estratégicamente por la ciudad.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">02</div>
+                    <div class="step-content">
+                        <h3>Envía o recibe</h3>
+                        <p>Selecciona el locker más conveniente y recibe un código único de acceso.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">03</div>
+                    <div class="step-content">
+                        <h3>Retira cuando quieras</h3>
+                        <p>Usa tu código para abrir el locker. Disponible 24/7 con máxima seguridad.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Roadmap -->
+    <section class="section roadmap" id="roadmap">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Roadmap</h2>
+                <p class="section-description">
+                    El camino hacia la transformación de la logística urbana
+                </p>
+            </div>
+            
+            <div class="timeline">
+                <div class="timeline-item completed">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Q1 2024</div>
+                        <h3>Investigación y Desarrollo</h3>
+                        <p>Análisis de mercado y desarrollo de tecnología core.</p>
+                        <span class="status completed">Completado</span>
+                    </div>
+                </div>
+
+                <div class="timeline-item completed">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Q2 2024</div>
+                        <h3>Prototipo Funcional</h3>
+                        <p>Primer prototipo de locker inteligente y aplicación móvil.</p>
+                        <span class="status completed">Completado</span>
+                    </div>
+                </div>
+
+                <div class="timeline-item current">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Q3 2024</div>
+                        <h3>MVP y Alianzas</h3>
+                        <p>Lanzamiento del MVP con primeros aliados estratégicos.</p>
+                        <span class="status current">En progreso</span>
+                    </div>
+                </div>
+
+                <div class="timeline-item future">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Q4 2024</div>
+                        <h3>Fase piloto</h3>
+                        <p>Primeras unidades en ubicaciones clave de CDMX.</p>
+                        <span class="status future">Próximamente</span>
+                    </div>
+                </div>
+
+                <div class="timeline-item future">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Q1 2025</div>
+                        <h3>Escalamiento</h3>
+                        <p>+50 unidades en principales ciudades del país.</p>
+                        <span class="status future">Planificado</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Form -->
+    <section class="section contact-form" id="contacto">
+        <div class="container">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Contáctanos</h2>
+                    <p>Te contactaremos en menos de 24 horas</p>
+                </div>
+                
+                <form class="contact-form" id="contactForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">Nombre completo</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="company">Empresa</label>
+                            <input type="text" id="company" name="company" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Correo electrónico</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">Mensaje</label>
+                        <textarea id="message" name="message" rows="4" placeholder="Describe cómo Nodo Locker puede ayudar a tu negocio..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary large full-width">
+                        Enviar mensaje
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <img src="Assets/NODO-LOCKER_TEXTO.gif" alt="Nodo Locker" class="footer-logo-image">
+                    </div>
+                    <p class="footer-description">
+                        Revolucionando la última milla en México con tecnología inteligente.
+                    </p>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Producto</h4>
+                        <ul>
+                            <li><a href="#tecnologia">Tecnología</a></li>
+                            <li><a href="#beneficios">Beneficios</a></li>
+                            <li><a href="#proceso">Proceso</a></li>
+                            <li><a href="#roadmap">Roadmap</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4>Empresa</h4>
+                        <ul>
+                            <li><a href="#">Sobre nosotros</a></li>
+                            <li><a href="#">Equipo</a></li>
+                            <li><a href="#">Carreras</a></li>
+                            <li><a href="#">Prensa</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4>Soporte</h4>
+                        <ul>
+                            <li><a href="#">Centro de ayuda</a></li>
+                            <li><a href="#contacto">Contacto</a></li>
+                            <li><a href="#">Términos</a></li>
+                            <li><a href="#">Privacidad</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 Nodo Locker. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
