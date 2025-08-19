@@ -2,13 +2,12 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import LeagueLayout from '@/components/leagues/LeagueLayout';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   BuildingOfficeIcon,
   PlusIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  PencilIcon,
   TrashIcon,
   MapPinIcon,
   CheckCircleIcon,
@@ -36,6 +35,17 @@ interface InvitationModalData {
   message: string;
 }
 
+interface ErrorResponseData {
+  message?: string;
+  errors?: Record<string, string[]>;
+}
+
+interface AxiosErrorLike {
+  response?: {
+    data?: ErrorResponseData;
+  };
+}
+
 function LigaClubsPage() {
   const { user } = useAuth();
   const [clubs, setClubs] = useState<ClubWithStats[]>([]);
@@ -57,7 +67,7 @@ function LigaClubsPage() {
   const [searchAvailableClubs, setSearchAvailableClubs] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       console.log('Liga Clubs - fetchData - User:', user);
 
@@ -142,7 +152,7 @@ function LigaClubsPage() {
                 tournaments_count: 0,
                 last_activity: new Date().toISOString()
               };
-            } catch (error) {
+            } catch {
               return {
                 ...club,
                 members_count: 0,
@@ -161,11 +171,11 @@ function LigaClubsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchData();
-  }, [user]);
+  }, [fetchData]);
 
   const filteredClubs = clubs.filter(club => {
     const matchesSearch = 
@@ -227,25 +237,25 @@ function LigaClubsPage() {
       const response = await axios.post(`/api/clubs/${clubId}/add-to-league`, {
         league_id: currentLeague?.id
       });
-      
+
       console.log('Club added to league successfully:', response.data);
-      await fetchData(); // Refresh the data
-      setIsAddClubModalOpen(false);
-      
-      // Show success message
-      alert('Club agregado exitosamente a la liga');
-    } catch (error: any) {
+      await fetchData();
+      alert('Club agregado correctamente a la liga');
+    } catch (error) {
       console.error('Error adding club to league:', error);
-      
-      // Show detailed error message
-      if (error.response?.data?.message) {
-        alert(`Error: ${error.response.data.message}`);
-      } else if (error.response?.data?.errors) {
-        const errorMessages = Object.values(error.response.data.errors).flat();
-        alert(`Error: ${errorMessages.join(', ')}`);
-      } else {
-        alert('Error al agregar el club a la liga. Por favor intenta de nuevo.');
+
+      if (typeof error === 'object' && error !== null && 'response' in error) {
+        const resp = (error as AxiosErrorLike).response;
+        if (resp?.data?.message) {
+          alert(`Error: ${resp.data.message}`);
+          return;
+        } else if (resp?.data?.errors) {
+          const errorMessages = Object.values(resp.data.errors).flat();
+          alert(`Error: ${errorMessages.join(', ')}`);
+          return;
+        }
       }
+      alert('Error al agregar el club a la liga. Por favor intenta de nuevo.');
     } finally {
       setIsProcessing(false);
     }
@@ -253,29 +263,31 @@ function LigaClubsPage() {
 
   const handleRemoveClubFromLeague = async () => {
     if (!selectedClub || isProcessing) return;
-    
+
+    setIsProcessing(true);
     try {
-      setIsProcessing(true);
       console.log('Removing club from league:', selectedClub.id);
-      
+
       // Use the new endpoint to remove club from league
       const response = await axios.post(`/api/clubs/${selectedClub.id}/remove-from-league`);
-      
+
       console.log('Club removed from league successfully:', response.data);
       await fetchData();
       setIsDeleteModalOpen(false);
-      
-      // Show success message
-      alert('Club removido exitosamente de la liga');
-    } catch (error: any) {
-      console.error('Error removing club from league:', error);
-      
-      // Show detailed error message
-      if (error.response?.data?.message) {
-        alert(`Error: ${error.response.data.message}`);
-      } else {
-        alert('Error al remover el club de la liga. Por favor intenta de nuevo.');
+      setSelectedClub(null);
+      alert('Club removido correctamente de la liga');
+    } catch (err) {
+      console.error('Error removing club from league:', err);
+
+      // Show detailed error message with safe narrowing
+      if (typeof err === 'object' && err !== null && 'response' in err) {
+        const response = (err as AxiosErrorLike).response;
+        if (response?.data?.message) {
+          alert(`Error: ${response.data.message}`);
+          return;
+        }
       }
+      alert('Error al remover el club de la liga. Por favor intenta de nuevo.');
     } finally {
       setIsProcessing(false);
     }

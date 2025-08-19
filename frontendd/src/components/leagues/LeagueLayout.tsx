@@ -104,7 +104,7 @@ export default function LeagueLayout({ children }: LeagueLayoutProps) {
   }
 
   const roleInfo = user?.role_info;
-  const leagueName = user?.league_name || roleInfo?.name || 'Mi Liga';
+  const leagueName: string = String(user?.league_name || roleInfo?.name || 'Mi Liga');
 
   return (
     <div className="min-h-screen bg-gray-50">

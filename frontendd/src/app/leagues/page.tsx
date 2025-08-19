@@ -33,7 +33,7 @@ export default function LeaguesPage() {
       const response = await makeRequest(() => 
         api.get<PaginatedResponse<League>>(`/api/leagues?${params}`)
       );
-      setLeagues(response.data.data.data);
+      setLeagues(response.data.data);
     } catch (error) {
       console.error('Error fetching leagues:', error);
     } finally {
@@ -45,15 +45,20 @@ export default function LeaguesPage() {
     fetchLeagues();
   }, [fetchLeagues]);
 
-  const handleSubmit = async (data: LeagueForm) => {
+  const handleSubmit = async (data: { name: string; region?: string; status?: 'active' | 'inactive'; province?: string }) => {
     try {
       setIsSubmitting(true);
+      // Adapt incoming (optional province) to required LeagueForm structure
+      const payload: LeagueForm = {
+        name: data.name,
+        province: data.province ?? ''
+      };
       
       await makeRequest(async () => {
         if (editingLeague) {
-          return api.put(`/api/leagues/${editingLeague.id}`, data);
+          return api.put(`/api/leagues/${editingLeague.id}`, { ...payload, status: data.status });
         } else {
-          return api.post('/api/leagues', data);
+          return api.post('/api/leagues', { ...payload, status: data.status });
         }
       });
       

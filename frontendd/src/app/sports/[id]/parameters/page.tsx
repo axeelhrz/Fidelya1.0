@@ -8,8 +8,14 @@ import SportParameterModal from '@/components/sports/SportParameterModal';
 import DeleteConfirmationModal from '@/components/ui/DeleteConfirmationModal';
 import { useAuthenticatedRequest } from '@/hooks/useAuthenticatedRequest';
 import api from '@/lib/axios';
-import { Sport, SportParameter, SportParameterForm, ApiResponse } from '@/types';
+import { Sport, SportParameter, ApiResponse } from '@/types';
 import { AxiosError } from 'axios';
+
+type SportParameterFormValues = {
+  param_key: string;
+  param_type: 'string' | 'number' | 'boolean';
+  param_value: string | number | boolean;
+};
 
 export default function SportParametersPage() {
   const params = useParams();
@@ -73,16 +79,13 @@ export default function SportParametersPage() {
 
   useEffect(() => {
     fetchSport();
-  }, [fetchSport]);
-
-  useEffect(() => {
     fetchParameters();
-  }, [fetchParameters]);
+  }, [fetchSport, fetchParameters]);
 
-  const handleSubmit = async (data: SportParameterForm) => {
+  const handleSubmit = async (data: SportParameterFormValues) => {
     try {
       setIsSubmitting(true);
-      
+
       await makeRequest(async () => {
         if (editingParameter) {
           return api.put(`/api/sports/${sportId}/parameters/${editingParameter.id}`, data);
@@ -90,7 +93,7 @@ export default function SportParametersPage() {
           return api.post(`/api/sports/${sportId}/parameters`, data);
         }
       });
-      
+
       setShowForm(false);
       setEditingParameter(null);
       fetchParameters();

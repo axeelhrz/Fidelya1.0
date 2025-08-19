@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import LeagueLayout from '@/components/leagues/LeagueLayout';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { 
   UsersIcon, 
   BuildingOfficeIcon, 
@@ -11,10 +11,7 @@ import {
   BellIcon,
   PaperAirplaneIcon,
   CogIcon,
-  ChartBarIcon,
   CheckCircleIcon,
-  XCircleIcon,
-  ClockIcon,
   MapPinIcon,
   CalendarIcon,
   UserGroupIcon,
@@ -52,20 +49,14 @@ export default function LigaDashboardPage() {
   const { user, loading } = useAuth();
   const [stats, setStats] = useState<LeagueStats | null>(null);
   const [recentClubs, setRecentClubs] = useState<Club[]>([]);
-  const [recentMembers, setRecentMembers] = useState<Member[]>([]);
+  const [, setRecentMembers] = useState<Member[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [, setTournaments] = useState<Tournament[]>([]);
   const [sports, setSports] = useState<Sport[]>([]);
   const [currentLeague, setCurrentLeague] = useState<League | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
-  useEffect(() => {
-    if (user && (user.role === 'liga' || user.role === 'super_admin')) {
-      fetchDashboardData();
-    }
-  }, [user]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoadingData(true);
       console.log('Liga Dashboard - User:', user);
@@ -76,6 +67,7 @@ export default function LigaDashboardPage() {
 
       let clubs: Club[] = [];
       let members: Member[] = [];
+      let sportsCount = 0;
 
       if (user.role === 'liga') {
         // Find the league that belongs to this user
@@ -100,7 +92,7 @@ export default function LigaDashboardPage() {
           console.log('Liga Dashboard - League clubs:', clubs);
           
           // Get members from clubs in this league
-          if (clubs.length > 0) {
+            if (clubs.length > 0) {
             const clubIds = clubs.map(club => club.id).join(',');
             console.log('Liga Dashboard - Fetching members for clubs:', clubIds);
             const membersResponse = await axios.get(`/api/members?club_ids=${clubIds}`);
@@ -130,11 +122,13 @@ export default function LigaDashboardPage() {
         const sportsResponse = await axios.get('/api/sports');
         console.log('Liga Dashboard - Sports response:', sportsResponse.data);
         const allSports = sportsResponse.data.data;
-        const sportsData = Array.isArray(allSports.data) ? allSports.data : Array.isArray(allSports) ? allSports : [];
+        const sportsData = Array.isArray(allSports?.data) ? allSports.data : Array.isArray(allSports) ? allSports : [];
         setSports(sportsData);
+        sportsCount = sportsData.length;
       } catch (error) {
         console.error('Liga Dashboard - Error fetching sports:', error);
         setSports([]);
+        sportsCount = 0;
       }
 
       // Fetch real invitations data
@@ -186,12 +180,12 @@ export default function LigaDashboardPage() {
         total_clubs: clubs.length,
         total_members: members.length,
         active_clubs: clubs.filter(club => club.status === 'active').length,
-        active_members: members.filter(member => member.status === 'active').length,
-        pending_invitations: realInvitations.filter(inv => !inv.is_sender && inv.status === 'pending').length,
-        sent_invitations: realInvitations.filter(inv => inv.is_sender && inv.status === 'pending').length,
+        active_members: members.length, // Update if member status data becomes available
+        pending_invitations: realInvitations.filter(inv => inv.status === 'pending').length,
+        sent_invitations: realInvitations.filter(inv => inv.is_sender).length,
         total_tournaments: mockTournaments.length,
         active_tournaments: mockTournaments.filter(t => t.status === 'active').length,
-        total_sports: sports.length || 7, // Default to 7 if no sports in DB
+        total_sports: sportsCount || 7, // Default to 7 if no sports in DB
         growth_this_month: newClubsThisMonth,
         average_members_per_club: clubs.length > 0 ? Math.round(members.length / clubs.length) : 0,
       };
@@ -207,7 +201,13 @@ export default function LigaDashboardPage() {
     } finally {
       setLoadingData(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user && (user.role === 'liga' || user.role === 'super_admin')) {
+      fetchDashboardData();
+    }
+  }, [user, fetchDashboardData]);
 
   if (loading || loadingData) {
     return (
@@ -230,7 +230,6 @@ export default function LigaDashboardPage() {
     );
   }
 
-  const isSuperAdmin = user.role === 'super_admin';
   const leagueName = currentLeague?.name || user?.league_name || user?.name || 'Mi Liga';
   const leagueProvince = currentLeague?.province || user?.province;
 

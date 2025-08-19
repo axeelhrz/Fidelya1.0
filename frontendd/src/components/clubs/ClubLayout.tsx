@@ -83,7 +83,16 @@ export default function ClubLayout({ children }: ClubLayoutProps) {
   }
 
   const roleInfo = user?.role_info;
-  const clubName = user?.club_name || roleInfo?.name || 'Mi Club';
+  // Normalize clubName to always be a string (handles object shapes with a 'name' field) without using 'any'
+  type ClubNameValue = string | { name?: string };
+  const resolveClubName = (value: ClubNameValue | null | undefined): string => {
+    if (!value) return '';
+    return typeof value === 'string' ? value : value.name || '';
+  };
+  const clubName: string =
+    resolveClubName(user?.club_name as ClubNameValue | undefined) ||
+    (typeof roleInfo?.name === 'string' ? roleInfo.name : '') ||
+    'Mi Club';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -157,7 +166,7 @@ export default function ClubLayout({ children }: ClubLayoutProps) {
                 <p className="text-sm font-medium text-green-800">{clubName}</p>
                 <p className="text-xs text-green-600">
                   {user?.city && `${user.city}`}
-                  {user?.parent_league && ` • Liga: ${user.parent_league.name}`}
+                  {user?.parent_league_id && ` • Liga: ${user.parent_league_id}`}
                 </p>
               </div>
             </div>

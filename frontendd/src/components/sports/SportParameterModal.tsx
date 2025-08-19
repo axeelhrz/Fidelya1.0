@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { SportParameter, SportParameterForm } from '@/types';
+import { SportParameter } from '@/types';
 import Modal from '@/components/ui/Modal';
 
 const sportParameterSchema = z.object({
@@ -14,10 +14,12 @@ const sportParameterSchema = z.object({
   param_value: z.union([z.string(), z.number(), z.boolean()]),
 });
 
+type SportParameterFormValues = z.infer<typeof sportParameterSchema>;
+
 interface SportParameterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: SportParameterForm) => Promise<void>;
+  onSubmit: (data: SportParameterFormValues) => Promise<void>;
   parameter?: SportParameter | null;
   isSubmitting?: boolean;
 }
@@ -36,21 +38,21 @@ export default function SportParameterModal({
     watch,
     setValue,
     formState: { errors },
-  } = useForm<SportParameterForm>({
+  } = useForm<SportParameterFormValues>({
     resolver: zodResolver(sportParameterSchema),
     defaultValues: {
       param_key: parameter?.param_key || '',
-      param_type: parameter?.param_type || 'string',
-      param_value: parameter?.typed_value || '',
+      param_type: (parameter?.param_type as 'string' | 'number' | 'boolean') || 'string',
+      param_value: (parameter?.param_value ?? parameter?.typed_value ?? '') as string | number | boolean,
     },
   });
 
   const paramType = watch('param_type');
 
-  const handleFormSubmit = async (data: SportParameterForm) => {
+  const handleFormSubmit = async (data: SportParameterFormValues) => {
     // Convert value based on type
     let processedValue: string | number | boolean = data.param_value;
-    
+
     if (data.param_type === 'number') {
       processedValue = Number(data.param_value);
     } else if (data.param_type === 'boolean') {
@@ -63,7 +65,7 @@ export default function SportParameterModal({
       ...data,
       param_value: processedValue,
     };
-    
+
     await onSubmit(formattedData);
     reset();
   };

@@ -32,7 +32,7 @@ export default function SportsPage() {
       const response = await makeRequest(() => 
         api.get<PaginatedResponse<Sport>>(`/api/sports?${params}`)
       );
-      setSports(response.data.data.data);
+      setSports(response.data.data);
     } catch (error) {
       console.error('Error fetching sports:', error);
     } finally {

@@ -18,6 +18,9 @@ export interface User {
   leagueEntity?: League;
   clubEntity?: Club;
   memberEntity?: Member;
+  parentClub?: Club;
+  rubber_type?: string;
+  parent_club?: Club;
 }
 
 // League types
@@ -31,6 +34,9 @@ export interface League {
   user?: User;
   clubs?: Club[];
   tournaments?: Tournament[];
+  clubs_count?: number;
+  status?: 'active' | 'inactive';
+  region?: string;
 }
 
 // Club types
@@ -49,6 +55,7 @@ export interface Club {
   user?: User;
   league?: League;
   members?: Member[];
+  members_count?: number;
 }
 
 // Member types
@@ -66,6 +73,10 @@ export interface Member {
   updated_at: string;
   user?: User;
   club?: Club;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
+  doc_id?: string;
 }
 
 // Sport types
@@ -77,6 +88,7 @@ export interface Sport {
   updated_at: string;
   parameters?: SportParameter[];
   tournaments?: Tournament[];
+  parameters_count?: number;
 }
 
 export interface SportParameter {
@@ -89,6 +101,13 @@ export interface SportParameter {
   created_at: string;
   updated_at: string;
   sport?: Sport;
+  param_key: string;
+  param_value: string;
+  param_type: 'text' | 'number' | 'boolean' | 'select';
+  description: string;
+  unit: string;
+  category: string;
+  typed_value: string;
 }
 
 // Tournament types
@@ -140,7 +159,7 @@ export interface Invitation {
   message?: string;
   status: 'pending' | 'accepted' | 'rejected' | 'cancelled';
   type: 'league_to_club' | 'club_to_league' | 'club_to_member' | 'member_to_club';
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   expires_at?: string;
   responded_at?: string;
   created_at: string;
@@ -357,7 +376,7 @@ export interface ConfirmationModalProps {
 export interface NavItem {
   name: string;
   href: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ className?: string }>;
   current?: boolean;
   count?: number;
 }

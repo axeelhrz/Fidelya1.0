@@ -4,7 +4,7 @@ import React from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { SnackbarProvider } from 'notistack';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import authTheme from '@/theme/authTheme';
 import AuthLayout from '@/components/auth/AuthLayout';
 import AuthHeader from '@/components/auth/AuthHeader';
@@ -22,12 +22,12 @@ const SignInPageClient: React.FC = () => {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { duration: 0.4, ease: 'easeOut' }
+      transition: { duration: 0.4, ease: [0.42, 0, 0.58, 1] } // cubic-bezier (ease-in-out)
     },
   };
 

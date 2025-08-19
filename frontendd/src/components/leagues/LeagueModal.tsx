@@ -3,20 +3,25 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { League, LeagueForm } from '@/types';
+import { League } from '@/types';
 import Modal from '@/components/ui/Modal';
+
+type LeagueWithProvince = League & { province?: string };
 
 const leagueSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   region: z.string().optional(),
   status: z.enum(['active', 'inactive']).optional(),
+  province: z.string().optional(),
 });
+
+type LeagueFormSchema = z.infer<typeof leagueSchema>;
 
 interface LeagueModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: LeagueForm) => Promise<void>;
-  league?: League | null;
+  onSubmit: (data: LeagueFormSchema) => Promise<void>;
+  league?: LeagueWithProvince | null;
   isSubmitting?: boolean;
 }
 
@@ -27,21 +32,22 @@ export default function LeagueModal({
   league, 
   isSubmitting = false 
 }: LeagueModalProps) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<LeagueForm>({
+  const { 
+    register, 
+    handleSubmit, 
+    reset, 
+    formState: { errors } 
+  } = useForm<LeagueFormSchema>({
     resolver: zodResolver(leagueSchema),
     defaultValues: {
       name: league?.name || '',
       region: league?.region || '',
       status: league?.status || 'active',
+      province: league?.province || '',
     },
   });
 
-  const handleFormSubmit = async (data: LeagueForm) => {
+  const handleFormSubmit = async (data: LeagueFormSchema) => {
     await onSubmit(data);
     reset();
   };

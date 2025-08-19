@@ -2,18 +2,15 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import ClubLayout from '@/components/clubs/ClubLayout';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { 
   UsersIcon, 
   TrophyIcon, 
   ChartBarIcon, 
   PlusIcon,
-  EyeIcon,
   MapPinIcon,
   BuildingOfficeIcon,
-  ShieldCheckIcon,
   UserGroupIcon,
-  CalendarIcon
 } from '@heroicons/react/24/outline';
 import axios from '@/lib/axios';
 import type { Member, League, Club } from '@/types';
@@ -34,13 +31,7 @@ export default function ClubDashboardPage() {
   const [currentClub, setCurrentClub] = useState<Club | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
-  useEffect(() => {
-    if (user && (user.role === 'club' || user.role === 'super_admin')) {
-      fetchDashboardData();
-    }
-  }, [user]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoadingData(true);
       console.log('Dashboard - User:', user);
@@ -79,7 +70,7 @@ export default function ClubDashboardPage() {
               : [];
           }
           
-          console.log('Dashboard - Club members:', members);
+            console.log('Dashboard - Club members:', members);
 
           // Calculate stats for this specific club
           const clubStats: ClubStats = {
@@ -94,7 +85,7 @@ export default function ClubDashboardPage() {
         }
       } else if (user.role === 'super_admin') {
         // Super admin can see all data
-        const [membersResponse, clubsResponse] = await Promise.all([
+        const [membersResponse] = await Promise.all([
           axios.get('/api/members'),
           axios.get('/api/clubs')
         ]);
@@ -126,7 +117,13 @@ export default function ClubDashboardPage() {
     } finally {
       setLoadingData(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user && (user.role === 'club' || user.role === 'super_admin')) {
+      fetchDashboardData();
+    }
+  }, [user, fetchDashboardData]);
 
   if (loading || loadingData) {
     return (
@@ -149,7 +146,6 @@ export default function ClubDashboardPage() {
     );
   }
 
-  const isSuperAdmin = user.role === 'super_admin';
   const clubName = currentClub?.name || user?.name || 'Mi Club';
   const clubCity = currentClub?.city || user?.city;
 

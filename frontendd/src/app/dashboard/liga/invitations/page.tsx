@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import LeagueLayout from '@/components/leagues/LeagueLayout';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { 
   BellIcon, 
   PaperAirplaneIcon,
@@ -10,7 +10,6 @@ import {
   XCircleIcon,
   ClockIcon,
   EyeIcon,
-  FunnelIcon,
   MagnifyingGlassIcon,
   BuildingOfficeIcon,
   MapPinIcon,
@@ -38,13 +37,7 @@ export default function InvitationsPage() {
     total: 0
   });
 
-  useEffect(() => {
-    if (user && (user.role === 'liga' || user.role === 'super_admin')) {
-      fetchInvitations();
-    }
-  }, [user, filters]);
-
-  const fetchInvitations = async (page = 1) => {
+  const fetchInvitations = useCallback(async (page = 1) => {
     try {
       setLoadingData(true);
       const params = new URLSearchParams({
@@ -70,7 +63,13 @@ export default function InvitationsPage() {
     } finally {
       setLoadingData(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    if (user && (user.role === 'liga' || user.role === 'super_admin')) {
+      fetchInvitations();
+    }
+  }, [user, fetchInvitations]);
 
   const handleAcceptInvitation = async (invitation: Invitation) => {
     try {
@@ -250,7 +249,7 @@ export default function InvitationsPage() {
             <div className="sm:w-48">
               <select
                 value={filters.type}
-                onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value as any }))}
+                onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value as InvitationFilters['type'] }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               >
                 <option value="all">Todas las invitaciones</option>
@@ -263,7 +262,7 @@ export default function InvitationsPage() {
             <div className="sm:w-48">
               <select
                 value={filters.status}
-                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value as any }))}
+                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value as InvitationFilters['status'] }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               >
                 <option value="all">Todos los estados</option>

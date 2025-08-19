@@ -4,14 +4,14 @@ import React from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { SnackbarProvider } from 'notistack';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import authTheme from '@/theme/authTheme';
 import AuthLayout from '@/components/auth/AuthLayout';
 import AuthHeader from '@/components/auth/AuthHeader';
 import SignUpForm from '@/components/auth/SignUpForm';
 
 const SignUpPageClient: React.FC = () => {
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -22,12 +22,12 @@ const SignUpPageClient: React.FC = () => {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.4, ease: 'easeOut' }
+      transition: { duration: 0.4, ease: [0.42, 0, 0.58, 1] }
     },
   };
 

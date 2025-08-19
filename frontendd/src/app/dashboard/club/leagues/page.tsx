@@ -5,7 +5,6 @@ import ClubLayout from '@/components/clubs/ClubLayout';
 import { useEffect, useState } from 'react';
 import {
   TrophyIcon,
-  PlusIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
   EyeIcon,
@@ -17,60 +16,63 @@ import {
   CalendarIcon,
   GlobeAltIcon,
   InformationCircleIcon,
-  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import { League, Club } from '@/types';
 import axios from '@/lib/axios';
 
+type LeagueWithStatus = League & { status?: 'active' | 'inactive' | string; clubs_count?: number };
+
 export default function ClubLeaguesPage() {
   const { user } = useAuth();
-  const [leagues, setLeagues] = useState<League[]>([]);
+  const [leagues, setLeagues] = useState<LeagueWithStatus[]>([]);
   const [currentClub, setCurrentClub] = useState<Club | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [provinceFilter, setProvinceFilter] = useState('all');
 
-  const fetchData = async () => {
-    try {
-      console.log('Leagues - User:', user);
-      console.log('Leagues - User role:', user?.role);
-      console.log('Leagues - User ID:', user?.id);
-
-      if (!user) return;
-
-      if (user.role === 'club') {
-        // First, get the club information
-        const clubsResponse = await axios.get('/api/clubs');
-        console.log('Leagues - Clubs response:', clubsResponse.data);
-        
-        const allClubs = clubsResponse.data.data;
-        const userClub = allClubs.data.find((club: Club) => club.user_id === user.id);
-        console.log('Leagues - User club found:', userClub);
-        
-        if (userClub) {
-          setCurrentClub(userClub);
-        }
-      }
-
-      // Fetch all leagues
-      const leaguesResponse = await axios.get('/api/leagues');
-      console.log('Leagues - Leagues response:', leaguesResponse.data);
-      
-      const allLeagues = leaguesResponse.data.data;
-      const leaguesData = Array.isArray(allLeagues.data) ? allLeagues.data : allLeagues;
-      console.log('Leagues - Processed leagues:', leaguesData);
-      
-      setLeagues(leaguesData);
-
-    } catch (error) {
-      console.error('Error fetching leagues data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        console.log('Leagues - User:', user);
+        console.log('Leagues - User role:', user?.role);
+        console.log('Leagues - User ID:', user?.id);
+
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+
+        if (user.role === 'club') {
+          // First, get the club information
+          const clubsResponse = await axios.get('/api/clubs');
+            console.log('Leagues - Clubs response:', clubsResponse.data);
+            
+            const allClubs = clubsResponse.data.data;
+            const userClub = allClubs.data.find((club: Club) => club.user_id === user.id);
+            console.log('Leagues - User club found:', userClub);
+            
+            if (userClub) {
+              setCurrentClub(userClub);
+            }
+        }
+
+        // Fetch all leagues
+        const leaguesResponse = await axios.get('/api/leagues');
+        console.log('Leagues - Leagues response:', leaguesResponse.data);
+        
+        const allLeagues = leaguesResponse.data.data;
+        const leaguesData = Array.isArray(allLeagues.data) ? allLeagues.data : allLeagues;
+        console.log('Leagues - Processed leagues:', leaguesData);
+        
+        setLeagues(leaguesData);
+      } catch (error) {
+        console.error('Error fetching leagues data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchData();
   }, [user]);
 

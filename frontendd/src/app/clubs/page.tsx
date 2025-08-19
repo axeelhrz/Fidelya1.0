@@ -36,7 +36,7 @@ export default function ClubsPage() {
       const response = await makeRequest(() => 
         api.get<PaginatedResponse<Club>>(`/api/clubs?${params}`)
       );
-      setClubs(response.data.data.data);
+      setClubs(response.data.data);
     } catch (error) {
       console.error('Error fetching clubs:', error);
     } finally {
@@ -49,7 +49,7 @@ export default function ClubsPage() {
       const response = await makeRequest(() => 
         api.get<PaginatedResponse<League>>('/api/leagues?status=active&per_page=100')
       );
-      setLeagues(response.data.data.data);
+      setLeagues(response.data.data);
     } catch (error) {
       console.error('Error fetching leagues:', error);
     }

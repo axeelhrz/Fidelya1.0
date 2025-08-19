@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import ClubLayout from '@/components/clubs/ClubLayout';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   ChartBarIcon,
   UsersIcon,
@@ -18,7 +18,6 @@ import {
   ClockIcon,
   StarIcon,
   FireIcon,
-  EyeIcon
 } from '@heroicons/react/24/outline';
 import { Member, Club } from '@/types';
 import axios from '@/lib/axios';
@@ -47,11 +46,11 @@ export default function ClubStatsPage() {
   const { user } = useAuth();
   const [stats, setStats] = useState<ClubStats | null>(null);
   const [currentClub, setCurrentClub] = useState<Club | null>(null);
-  const [members, setMembers] = useState<Member[]>([]);
+  const [, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('6months');
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       console.log('Stats - User:', user);
       console.log('Stats - User role:', user?.role);
@@ -72,25 +71,25 @@ export default function ClubStatsPage() {
           setCurrentClub(userClub);
           
           // Fetch members for this specific club
-          console.log('Stats - Fetching members for club:', userClub.id);
-          const membersResponse = await axios.get(`/api/members?club_id=${userClub.id}`);
-          console.log('Stats - Members response:', membersResponse.data);
-          
-          let clubMembers: Member[] = [];
-          if (membersResponse.data.data) {
-            clubMembers = Array.isArray(membersResponse.data.data.data) 
-              ? membersResponse.data.data.data 
-              : Array.isArray(membersResponse.data.data)
-              ? membersResponse.data.data
-              : [];
-          }
-          
-          console.log('Stats - Club members:', clubMembers);
-          setMembers(clubMembers);
-          
-          // Calculate detailed stats
-          const calculatedStats = calculateStats(clubMembers);
-          setStats(calculatedStats);
+            console.log('Stats - Fetching members for club:', userClub.id);
+            const membersResponse = await axios.get(`/api/members?club_id=${userClub.id}`);
+            console.log('Stats - Members response:', membersResponse.data);
+            
+            let clubMembers: Member[] = [];
+            if (membersResponse.data.data) {
+              clubMembers = Array.isArray(membersResponse.data.data.data) 
+                ? membersResponse.data.data.data 
+                : Array.isArray(membersResponse.data.data)
+                ? membersResponse.data.data
+                : [];
+            }
+            
+            console.log('Stats - Club members:', clubMembers);
+            setMembers(clubMembers);
+            
+            // Calculate detailed stats
+            const calculatedStats = calculateStats(clubMembers);
+            setStats(calculatedStats);
         }
       } else if (user.role === 'super_admin') {
         // Super admin can see all data
@@ -108,7 +107,7 @@ export default function ClubStatsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const calculateStats = (members: Member[]): ClubStats => {
     const now = new Date();
@@ -214,7 +213,7 @@ export default function ClubStatsPage() {
 
   useEffect(() => {
     fetchData();
-  }, [user]);
+  }, [fetchData]);
 
   const getGrowthPercentage = () => {
     if (!stats || stats.newMembersLastMonth === 0) return 0;

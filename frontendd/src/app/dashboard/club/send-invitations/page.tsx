@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import ClubLayout from '@/components/clubs/ClubLayout';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { 
   PaperAirplaneIcon,
   MagnifyingGlassIcon,
@@ -11,7 +11,8 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import axios from '@/lib/axios';
-import type { League, InvitationForm, SendInvitationForm, PaginatedResponse, ApiResponse, AvailableEntitiesResponse } from '@/types';
+import type { League, InvitationForm, SendInvitationForm, ApiResponse, AvailableEntitiesResponse } from '@/types';
+import type { AxiosError } from 'axios';
 
 export default function ClubSendInvitationsPage() {
   const { user, loading } = useAuth();
@@ -31,13 +32,7 @@ export default function ClubSendInvitationsPage() {
     total: 0
   });
 
-  useEffect(() => {
-    if (user && (user.role === 'club' || user.role === 'super_admin')) {
-      fetchAvailableLeagues();
-    }
-  }, [user, searchTerm]);
-
-  const fetchAvailableLeagues = async (page = 1) => {
+  const fetchAvailableLeagues = useCallback(async (page = 1) => {
     try {
       setLoadingLeagues(true);
       const params = new URLSearchParams({
@@ -61,7 +56,13 @@ export default function ClubSendInvitationsPage() {
     } finally {
       setLoadingLeagues(false);
     }
-  };
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (user && (user.role === 'club' || user.role === 'super_admin')) {
+      fetchAvailableLeagues();
+    }
+  }, [user, fetchAvailableLeagues]);
 
   const openInviteModal = (league: League) => {
     setSelectedLeague(league);
@@ -105,9 +106,16 @@ export default function ClubSendInvitationsPage() {
         });
         setSelectedLeague(null);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sending invitation:', error);
-      const errorMessage = error.response?.data?.message || 'Error al enviar la solicitud';
+      let errorMessage = 'Error al enviar la solicitud';
+      if (error && typeof error === 'object') {
+        const axiosError = error as AxiosError<{ message?: string }>;
+        const data = axiosError.response?.data;
+        if (data && typeof data === 'object' && 'message' in data && data.message) {
+          errorMessage = String(data.message);
+        }
+      }
       alert(errorMessage);
     } finally {
       setSendingInvitation(false);

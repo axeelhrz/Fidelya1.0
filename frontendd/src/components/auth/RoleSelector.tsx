@@ -3,7 +3,6 @@
 import React from 'react';
 import { Box, Typography, Card, Avatar } from '@mui/material';
 import { motion, Variants } from 'framer-motion';
-import { Role } from '@/types';
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
 import PersonIcon from '@mui/icons-material/Person';
 import BusinessIcon from '@mui/icons-material/Business';
@@ -11,6 +10,15 @@ import BusinessIcon from '@mui/icons-material/Business';
 interface RoleSelectorProps {
   selectedRole: string;
   onRoleSelect: (role: 'liga' | 'miembro' | 'club') => void;
+}
+
+interface Role {
+  id: 'liga' | 'miembro' | 'club';
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  bgColor: string;
 }
 
 const roles: Role[] = [
@@ -113,7 +121,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onRoleSelect 
 
         {/* Role Cards */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {roles.map((role, index) => {
+          {roles.map((role) => {
             const IconComponent = getIconComponent(role.id);
             const isSelected = selectedRole === role.id;
             

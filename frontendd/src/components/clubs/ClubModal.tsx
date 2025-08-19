@@ -9,8 +9,9 @@ import Modal from '@/components/ui/Modal';
 const clubSchema = z.object({
   league_id: z.number().min(1, 'Por favor selecciona una liga'),
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  city: z.string().optional(),
-  status: z.enum(['active', 'inactive']).optional(),
+  // Campos requeridos; los valores iniciales se establecen en defaultValues de useForm
+  city: z.string(),
+  status: z.enum(['active', 'inactive']),
 });
 
 interface ClubModalProps {
@@ -30,22 +31,24 @@ export default function ClubModal({
   leagues,
   isSubmitting = false 
 }: ClubModalProps) {
+  type ClubFormValues = z.infer<typeof clubSchema>;
+
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<ClubForm>({
+  } = useForm<ClubFormValues>({
     resolver: zodResolver(clubSchema),
     defaultValues: {
-      league_id: club?.league_id || 0,
-      name: club?.name || '',
-      city: club?.city || '',
-      status: club?.status || 'active',
+      league_id: club?.league_id ?? 0,
+      name: club?.name ?? '',
+      city: club?.city ?? '',
+      status: club?.status ?? 'active',
     },
   });
 
-  const handleFormSubmit = async (data: ClubForm) => {
+  const handleFormSubmit = async (data: ClubFormValues) => {
     await onSubmit(data);
     reset();
   };

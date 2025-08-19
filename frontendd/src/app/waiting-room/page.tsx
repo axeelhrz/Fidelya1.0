@@ -62,7 +62,7 @@ export default function WaitingRoomPage() {
 
   // Obtener información del miembro
   const memberName = user.full_name || user.name || 'Miembro';
-  const clubName = user.parent_club?.name;
+  const clubName = user.parent_club_id != null ? String(user.parent_club_id) : 'Club';
 
   return (
     <AuthLayout>

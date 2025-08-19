@@ -9,7 +9,6 @@ import {
   BuildingOfficeIcon, 
   UsersIcon, 
   TrophyIcon, 
-  CogIcon,
   ChartBarIcon,
   ShieldCheckIcon
 } from '@heroicons/react/24/outline';

@@ -15,7 +15,7 @@ import {
   CircularProgress,
   Fade,
 } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -52,7 +52,6 @@ const SignInForm: React.FC = () => {
     control,
     handleSubmit,
     formState: { errors, isValid },
-    watch,
   } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
     mode: 'onChange',
@@ -63,9 +62,6 @@ const SignInForm: React.FC = () => {
     },
   });
 
-  const watchedFields = watch();
-  const emailValue = watchedFields.email;
-  const passwordValue = watchedFields.password;
 
   const onSubmit = async (data: SignInFormData) => {
     clearError();
@@ -87,12 +83,12 @@ const SignInForm: React.FC = () => {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.3, ease: 'easeOut' }
+      transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
     },
   };
 
@@ -240,9 +236,6 @@ const SignInForm: React.FC = () => {
                         marginTop: 1,
                       },
                     }}
-                    component={motion.div}
-                    whileFocus={{ scale: 1.005 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
                   />
                 </Box>
               );
@@ -363,9 +356,6 @@ const SignInForm: React.FC = () => {
                         marginTop: 1,
                       },
                     }}
-                    component={motion.div}
-                    whileFocus={{ scale: 1.005 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
                   />
                 </Box>
               );

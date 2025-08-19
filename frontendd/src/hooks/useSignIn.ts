@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import api from '@/lib/axios';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -37,7 +38,7 @@ interface User {
 interface RoleInfo {
   type: string;
   name?: string;
-  [key: string]: any;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 interface SignInResponse {
@@ -46,6 +47,12 @@ interface SignInResponse {
     role_info: RoleInfo;
   };
   message: string;
+}
+
+interface ErrorResponse {
+  message?: string;
+  errors?: Record<string, string[] | string>;
+  [key: string]: unknown;
 }
 
 export const useSignIn = () => {
@@ -88,19 +95,22 @@ export const useSignIn = () => {
             break;
           default:
             router.push('/dashboard');
+            break;
         }
       }
-    } catch (err: any) {
-      console.error('❌ Sign in error:', err);
-      
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.response?.data?.errors) {
-        // Handle validation errors
-        const errors = err.response.data.errors;
-        const errorMessages = Object.values(errors).flat();
-        setError(errorMessages.join(', '));
-      } else if (err.message) {
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const data: ErrorResponse | undefined = err.response?.data;
+        if (data?.message) {
+          setError(data.message);
+        } else if (data?.errors) {
+          const errors = data.errors;
+            const errorMessages = Object.values(errors).flatMap(e => Array.isArray(e) ? e : [e]);
+          setError(errorMessages.join(', '));
+        } else {
+          setError(err.message || 'Login failed. Please try again.');
+        }
+      } else if (err instanceof Error) {
         setError(err.message);
       } else {
         setError('Login failed. Please try again.');

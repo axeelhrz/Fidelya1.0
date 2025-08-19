@@ -7,7 +7,6 @@ import {
   TrophyIcon,
   PlusIcon,
   MagnifyingGlassIcon,
-  FunnelIcon,
   PencilIcon,
   TrashIcon,
   EyeIcon,
@@ -22,7 +21,11 @@ import {
 } from '@heroicons/react/24/outline';
 import { Tournament, Sport, TournamentForm } from '@/types';
 import axios from '@/lib/axios';
+import { isAxiosError } from 'axios';
 import DeleteConfirmationModal from '@/components/ui/DeleteConfirmationModal';
+
+type TournamentFormat = TournamentForm['tournament_format'];
+type TournamentStatus = TournamentForm['status'];
 
 export default function LigaTournamentsPage() {
   const { user } = useAuth();
@@ -43,14 +46,14 @@ export default function LigaTournamentsPage() {
   // Get league ID from user data
   const getLeagueId = () => {
     if (user?.leagueEntity?.id) return user.leagueEntity.id;
-    if (user?.league_entity?.id) return user.league_entity.id;
-    if (user?.role_info?.entity?.id) return user.role_info.entity.id;
+    const roleEntity = user?.role_info?.entity as { id?: number } | undefined;
+    if (roleEntity?.id) return roleEntity.id;
     return null;
   };
 
   const leagueId = getLeagueId();
-  const leagueName = user?.leagueEntity?.name || user?.league_entity?.name || user?.role_info?.name || 'Liga';
-  const leagueProvince = user?.leagueEntity?.province || user?.league_entity?.province || user?.role_info?.province || 'Provincia';
+  const leagueName: string = (user?.leagueEntity?.name as string) || (user?.role_info?.name as string) || 'Liga';
+  const leagueProvince: string = (user?.leagueEntity?.province as string) || (user?.role_info?.province as string) || 'Provincia';
 
   const [newTournament, setNewTournament] = useState<TournamentForm>({
     name: '',
@@ -105,10 +108,16 @@ export default function LigaTournamentsPage() {
         // Fetch sports
         const sportsResponse = await axios.get('/api/sports');
         setSports(Array.isArray(sportsResponse.data) ? sportsResponse.data : []);
-
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error fetching data:', error);
-        setError(error.response?.data?.message || error.message || 'Error al cargar los datos');
+        let message = 'Error al cargar los datos';
+        if (isAxiosError(error)) {
+          const data = error.response?.data as { message?: string } | undefined;
+          if (data?.message) message = data.message;
+        } else if (error instanceof Error) {
+          message = error.message;
+        }
+        setError(message);
         setTournaments([]);
         setSports([]);
       } finally {
@@ -142,50 +151,55 @@ export default function LigaTournamentsPage() {
     completed: tournaments.filter(t => t.status === 'completed').length,
     participants: tournaments.reduce((sum, t) => sum + t.current_participants, 0)
   };
-
   // Handle create tournament
-  const handleCreateTournament = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-
-    try {
-      const response = await axios.post('/api/tournaments', newTournament);
-      console.log('Tournament created:', response.data);
-      
-      setTournaments(prev => [...prev, response.data]);
-      setIsCreateModalOpen(false);
-      resetForm();
-    } catch (error: any) {
-      console.error('Error creating tournament:', error);
-      alert(error.response?.data?.message || 'Error al crear el torneo');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
+    const handleCreateTournament = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsProcessing(true);
+      try {
+        const response = await axios.post('/api/tournaments', newTournament);
+        setTournaments(prev => [...prev, response.data]);
+        setIsCreateModalOpen(false);
+        resetForm();
+      } catch (error: unknown) {
+        console.error('Error creating tournament:', error);
+        let message = 'Error al crear el torneo';
+        if (isAxiosError(error)) {
+          const data = error.response?.data as { message?: string } | undefined;
+          if (data?.message) message = data.message;
+        } else if (error instanceof Error) {
+          message = error.message;
+        }
+        alert(message);
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+  
   // Handle edit tournament
-  const handleEditTournament = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedTournament) return;
-
-    setIsProcessing(true);
-
-    try {
-      const response = await axios.put(`/api/tournaments/${selectedTournament.id}`, newTournament);
-      console.log('Tournament updated:', response.data);
-      
-      setTournaments(prev => prev.map(t => t.id === selectedTournament.id ? response.data : t));
-      setIsEditModalOpen(false);
-      setSelectedTournament(null);
-      resetForm();
-    } catch (error: any) {
-      console.error('Error updating tournament:', error);
-      alert(error.response?.data?.message || 'Error al actualizar el torneo');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
+      const handleEditTournament = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedTournament) return;
+        setIsProcessing(true);
+        try {
+          const response = await axios.put(`/api/tournaments/${selectedTournament.id}`, newTournament);
+          setTournaments(prev => prev.map(t => t.id === selectedTournament.id ? response.data : t));
+          setIsEditModalOpen(false);
+          setSelectedTournament(null);
+          resetForm();
+        } catch (error: unknown) {
+          console.error('Error updating tournament:', error);
+          let message = 'Error al actualizar el torneo';
+          if (isAxiosError(error)) {
+            const data = error.response?.data as { message?: string } | undefined;
+            if (data?.message) message = data.message;
+          } else if (error instanceof Error) {
+            message = error.message;
+          }
+          alert(message);
+        } finally {
+          setIsProcessing(false);
+        }
+      };
   // Handle delete tournament
   const handleDeleteTournament = async () => {
     if (!selectedTournament) return;
@@ -199,9 +213,16 @@ export default function LigaTournamentsPage() {
       setTournaments(prev => prev.filter(t => t.id !== selectedTournament.id));
       setIsDeleteModalOpen(false);
       setSelectedTournament(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting tournament:', error);
-      alert(error.response?.data?.message || 'Error al eliminar el torneo');
+      let message = 'Error al eliminar el torneo';
+      if (isAxiosError(error)) {
+        const data = error.response?.data as { message?: string } | undefined;
+        if (data?.message) message = data.message;
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+      alert(message);
     } finally {
       setIsProcessing(false);
     }
@@ -669,12 +690,12 @@ export default function LigaTournamentsPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Formato del Torneo *
+                        Formato *
                       </label>
                       <select
                         required
                         value={newTournament.tournament_format}
-                        onChange={(e) => setNewTournament(prev => ({ ...prev, tournament_format: e.target.value as any }))}
+                        onChange={(e) => setNewTournament(prev => ({ ...prev, tournament_format: e.target.value as TournamentFormat }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                       >
                         <option value="single_elimination">Eliminación Simple</option>
@@ -791,7 +812,7 @@ export default function LigaTournamentsPage() {
                       </label>
                       <select
                         value={newTournament.status}
-                        onChange={(e) => setNewTournament(prev => ({ ...prev, status: e.target.value as any }))}
+                        onChange={(e) => setNewTournament(prev => ({ ...prev, status: e.target.value as TournamentStatus }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                       >
                         <option value="upcoming">Próximo</option>
@@ -974,7 +995,6 @@ export default function LigaTournamentsPage() {
           onConfirm={handleDeleteTournament}
           title="Eliminar Torneo"
           message={`¿Estás seguro de que deseas eliminar el torneo "${selectedTournament?.name}"? Esta acción no se puede deshacer.`}
-          isProcessing={isProcessing}
         />
       </div>
     </LeagueLayout>

@@ -2,13 +2,12 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import ClubLayout from '@/components/clubs/ClubLayout';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   UsersIcon,
   PlusIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  EyeIcon,
   PencilIcon,
   TrashIcon,
   UserCircleIcon,
@@ -41,7 +40,7 @@ export default function ClubMembersPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       console.log('fetchData - User:', user);
       console.log('fetchData - User role:', user?.role);
@@ -68,7 +67,7 @@ export default function ClubMembersPage() {
           setClubs([userClub]);
           
           // Fetch members for this club
-          console.log('Fetching members for club:', userClub.id);
+            console.log('Fetching members for club:', userClub.id);
           const membersResponse = await axios.get(`/api/members?club_id=${userClub.id}`);
           console.log('Members response:', membersResponse.data);
           
@@ -99,25 +98,53 @@ export default function ClubMembersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchData();
-  }, [user]);
+  }, [fetchData]);
+
+  interface NormalizedMember extends Member {
+    first_name?: string;
+    firstName?: string;
+    last_name?: string;
+    lastName?: string;
+    doc_id?: string;
+    docId?: string;
+    birth_date?: string;
+    birthDate?: string;
+  }
+
+  const getNormalized = (m: NormalizedMember) => ({
+    firstName: m.first_name ?? m.firstName ?? '',
+    lastName: m.last_name ?? m.lastName ?? '',
+    docId: m.doc_id ?? m.docId ?? '',
+    birthDate: m.birth_date ?? m.birthDate ?? ''
+  });
+
+  const getMemberDisplayName = (m?: NormalizedMember) => {
+    if (!m) return '';
+    const { firstName, lastName } = getNormalized(m);
+    return `${firstName} ${lastName}`.trim();
+  };
 
   const filteredMembers = members.filter(member => {
-    const matchesSearch = 
-      member.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.doc_id?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || 
+    const { firstName, lastName, docId } = getNormalized(member as NormalizedMember);
+    const email = (member.email || '').toLowerCase();
+
+    const search = searchTerm.toLowerCase();
+    const matchesSearch =
+      firstName.toLowerCase().includes(search) ||
+      lastName.toLowerCase().includes(search) ||
+      email.includes(search) ||
+      docId.toLowerCase().includes(search);
+
+    const matchesStatus = statusFilter === 'all' ||
       (statusFilter === 'active' && member.status === 'active') ||
       (statusFilter === 'inactive' && member.status === 'inactive');
-    
+
     const matchesGender = genderFilter === 'all' || member.gender === genderFilter;
-    
+
     return matchesSearch && matchesStatus && matchesGender;
   });
 
@@ -147,7 +174,8 @@ export default function ClubMembersPage() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleCreateMember = async (memberData: any) => {
+  // Use Partial<Member> to allow creating with a subset of fields while avoiding 'any'
+  const handleCreateMember = async (memberData: Partial<Member>) => {
     try {
       console.log('Creating member with data:', memberData);
       const response = await axios.post('/api/members', memberData);
@@ -159,8 +187,8 @@ export default function ClubMembersPage() {
       throw error;
     }
   };
-
-  const handleUpdateMember = async (memberData: any) => {
+  // Use Partial<Member> for updates (not all fields must be present)
+  const handleUpdateMember = async (memberData: Partial<Member>) => {
     try {
       console.log('Updating member with data:', memberData);
       if (!selectedMember) return;
@@ -360,8 +388,8 @@ export default function ClubMembersPage() {
             <div className="text-center py-12">
               <UserCircleIcon className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">
-                {searchTerm || statusFilter !== 'all' || genderFilter !== 'all' 
-                  ? 'No se encontraron miembros' 
+                {searchTerm || statusFilter !== 'all' || genderFilter !== 'all'
+                  ? 'No se encontraron miembros'
                   : 'No hay miembros registrados'}
               </h3>
               <p className="mt-1 text-sm text-gray-500">
@@ -404,129 +432,127 @@ export default function ClubMembersPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredMembers.map((member) => (
-                    <tr key={member.id} className="hover:bg-gray-50 transition-colors duration-150">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
-                            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                              <UserCircleIcon className="h-6 w-6 text-green-600" />
+                  {filteredMembers.map((member) => {
+                    const { firstName, lastName, docId, birthDate } = getNormalized(member);
+                    return (
+                      <tr key={member.id} className="hover:bg-gray-50 transition-colors duration-150">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center text-xs text-gray-700 font-semibold">
+                                {firstName.charAt(0)}{lastName.charAt(0)}
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {`${firstName} ${lastName}`.trim()}
+                              </div>
+                              {docId && (
+                                <div className="text-sm text-gray-500 flex items-center">
+                                  <IdentificationIcon className="h-4 w-4 mr-1" />
+                                  {docId}
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {member.first_name} {member.last_name}
-                            </div>
-                            {member.doc_id && (
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="space-y-1">
+                            {member.email && (
+                              <div className="text-sm text-gray-900 flex items-center">
+                                <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
+                                {member.email}
+                              </div>
+                            )}
+                            {member.phone && (
                               <div className="text-sm text-gray-500 flex items-center">
-                                <IdentificationIcon className="h-4 w-4 mr-1" />
-                                {member.doc_id}
+                                <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
+                                {member.phone}
                               </div>
                             )}
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="space-y-1">
-                          {member.email && (
-                            <div className="text-sm text-gray-900 flex items-center">
-                              <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
-                              {member.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="space-y-1">
+                            <div className="text-sm text-gray-900">
+                              {birthDate ? new Date(birthDate).toLocaleDateString() : ''}
                             </div>
-                          )}
-                          {member.phone && (
-                            <div className="text-sm text-gray-500 flex items-center">
-                              <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
-                              {member.phone}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="space-y-1">
-                          <div className="text-sm text-gray-900">
-                            {member.gender === 'male' ? 'Masculino' : member.gender === 'female' ? 'Femenino' : 'No especificado'}
+                            {birthDate && (
+                              <div className="text-sm text-gray-500 flex items-center">
+                                <CalendarIcon className="h-4 w-4 mr-1" />
+                                {new Date(birthDate).toLocaleDateString()}
+                              </div>
+                            )}
                           </div>
-                          {member.birth_date && (
-                            <div className="text-sm text-gray-500 flex items-center">
-                              <CalendarIcon className="h-4 w-4 mr-1" />
-                              {new Date(member.birth_date).toLocaleDateString()}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          member.status === 'active'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {member.status === 'active' ? (
-                            <>
-                              <CheckCircleIcon className="h-3 w-3 mr-1" />
-                              Activo
-                            </>
-                          ) : (
-                            <>
-                              <XCircleIcon className="h-3 w-3 mr-1" />
-                              Inactivo
-                            </>
-                          )}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button
-                            onClick={() => openEditModal(member)}
-                            className="text-green-600 hover:text-green-900 p-1 rounded-full hover:bg-green-100 transition-colors duration-150"
-                            title="Editar miembro"
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              member.status === 'active'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
                           >
-                            <PencilIcon className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => openDeleteModal(member)}
-                            className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100 transition-colors duration-150"
-                            title="Eliminar miembro"
-                          >
-                            <TrashIcon className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {member.status === 'active' ? (
+                              <>
+                                <CheckCircleIcon className="h-3 w-3 mr-1" />
+                                Activo
+                              </>
+                            ) : (
+                              <>
+                                <XCircleIcon className="h-3 w-3 mr-1" />
+                                Inactivo
+                              </>
+                            )}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              onClick={() => openEditModal(member)}
+                              className="text-green-600 hover:text-green-900 p-1 rounded-full hover:bg-green-100 transition-colors duration-150"
+                              title="Editar miembro"
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => openDeleteModal(member)}
+                              className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100 transition-colors duration-150"
+                              title="Eliminar miembro"
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           )}
         </div>
       </div>
-
-      {/* Modals */}
       <MemberModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateMember}
         clubs={clubs}
-        title="Crear Nuevo Miembro"
-        submitText="Crear Miembro"
+        member={null}
       />
-
       <MemberModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onSubmit={handleUpdateMember}
         clubs={clubs}
         member={selectedMember}
-        title="Editar Miembro"
-        submitText="Actualizar Miembro"
       />
-
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteMember}
         title="Eliminar Miembro"
-        message={`¿Estás seguro de que deseas eliminar a ${selectedMember?.first_name} ${selectedMember?.last_name}? Esta acción no se puede deshacer.`}
+        message={`¿Estás seguro de que deseas eliminar a ${getMemberDisplayName(selectedMember as NormalizedMember)}? Esta acción no se puede deshacer.`}
       />
     </ClubLayout>
   );

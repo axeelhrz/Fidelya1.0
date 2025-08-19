@@ -6,7 +6,7 @@ import MemberModal from '@/components/members/MemberModal';
 import DeleteConfirmationModal from '@/components/ui/DeleteConfirmationModal';
 import { useAuthenticatedRequest } from '@/hooks/useAuthenticatedRequest';
 import api from '@/lib/axios';
-import { Member, MemberForm, Club, PaginatedResponse } from '@/types';
+import { Member, Club, PaginatedResponse } from '@/types';
 import { AxiosError } from 'axios';
 
 export default function MembersPage() {
@@ -38,7 +38,7 @@ export default function MembersPage() {
       const response = await makeRequest(() => 
         api.get<PaginatedResponse<Member>>(`/api/members?${params}`)
       );
-      setMembers(response.data.data.data);
+      setMembers(response.data.data);
     } catch (error) {
       console.error('Error fetching members:', error);
     } finally {
@@ -51,7 +51,7 @@ export default function MembersPage() {
       const response = await makeRequest(() => 
         api.get<PaginatedResponse<Club>>('/api/clubs?status=active&per_page=100')
       );
-      setClubs(response.data.data.data);
+      setClubs(response.data.data);
     } catch (error) {
       console.error('Error fetching clubs:', error);
     }
@@ -65,7 +65,17 @@ export default function MembersPage() {
     fetchMembers();
   }, [fetchMembers]);
 
-  const handleSubmit = async (data: MemberForm) => {
+  const handleSubmit = async (data: {
+    club_id: number;
+    first_name: string;
+    last_name: string;
+    doc_id?: string;
+    email?: string;
+    phone?: string;
+    birth_date?: string;
+    gender?: 'male' | 'female' | 'other';
+    status?: 'active' | 'inactive';
+  }) => {
     try {
       setIsSubmitting(true);
       
@@ -346,12 +356,12 @@ export default function MembersPage() {
                             ID: {member.doc_id}
                           </div>
                         )}
-                        {member.birthdate && (
+                        {member.birth_date && (
                           <div className="flex items-center gap-1">
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            {formatDate(member.birthdate)}
+                            {formatDate(member.birth_date)}
                           </div>
                         )}
                       </div>

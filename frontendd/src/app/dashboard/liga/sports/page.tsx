@@ -1,24 +1,19 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
 import LeagueLayout from '@/components/leagues/LeagueLayout';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   CogIcon,
   PlusIcon,
   MagnifyingGlassIcon,
   PencilIcon,
   TrashIcon,
-  XMarkIcon,
   SparklesIcon,
-  LightBulbIcon,
-  TagIcon,
-  ClockIcon,
-  ArrowsPointingOutIcon,
-  CubeIcon
+
 } from '@heroicons/react/24/outline';
 import { Sport, SportParameter } from '@/types';
 import axios from '@/lib/axios';
+import type { AxiosError } from 'axios';
 
 interface SportParameterForm {
   param_key: string;
@@ -30,21 +25,8 @@ interface SportParameterForm {
   category?: string;
 }
 
-interface ParameterSuggestion {
-  key: string;
-  name: string;
-  description: string;
-  type: 'text' | 'number' | 'boolean' | 'select';
-  defaultValue: string;
-  options?: string;
-  unit?: string;
-  category: 'dimensions' | 'equipment' | 'rules' | 'timing' | 'scoring';
-  icon: string;
-  validationRange?: { min: number; max: number };
-}
 
 export default function LigaSportsPage() {
-  const { user } = useAuth();
   const [sports, setSports] = useState<Sport[]>([]);
   const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
   const [parameters, setParameters] = useState<SportParameter[]>([]);
@@ -54,18 +36,18 @@ export default function LigaSportsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   
   // Modal states
-  const [isParameterModalOpen, setIsParameterModalOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editingParameter, setEditingParameter] = useState<SportParameter | null>(null);
+  const [, setIsParameterModalOpen] = useState(false);
+  const [, setIsEditMode] = useState(false);
+  const [, setEditingParameter] = useState<SportParameter | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [parameterToDelete, setParameterToDelete] = useState<SportParameter | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'suggestions' | 'custom'>('suggestions');
-  const [suggestionSearch, setSuggestionSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [, setActiveTab] = useState<'suggestions' | 'custom'>('suggestions');
+  const [, setSuggestionSearch] = useState('');
+  const [, setSelectedCategory] = useState<string>('all');
 
   // Form state
-  const [parameterForm, setParameterForm] = useState<SportParameterForm>({
+  const [, setParameterForm] = useState<SportParameterForm>({
     param_key: '',
     param_value: '',
     param_type: 'text',
@@ -76,187 +58,11 @@ export default function LigaSportsPage() {
   });
 
   // Sugerencias inteligentes por deporte
-  const getSportSuggestions = (sportCode: string): ParameterSuggestion[] => {
-    const suggestions: Record<string, ParameterSuggestion[]> = {
-      tennis: [
-        // Dimensiones
-        { key: 'court_length', name: 'Longitud de Cancha', description: 'Longitud total de la cancha de tenis', type: 'number', defaultValue: '23.77', unit: 'metros', category: 'dimensions', icon: '📏', validationRange: { min: 20, max: 30 } },
-        { key: 'court_width_singles', name: 'Ancho Individual', description: 'Ancho de cancha para individuales', type: 'number', defaultValue: '8.23', unit: 'metros', category: 'dimensions', icon: '📏' },
-        { key: 'court_width_doubles', name: 'Ancho Dobles', description: 'Ancho de cancha para dobles', type: 'number', defaultValue: '10.97', unit: 'metros', category: 'dimensions', icon: '📏' },
-        { key: 'net_height', name: 'Altura de Red', description: 'Altura de la red en el centro', type: 'number', defaultValue: '91.4', unit: 'cm', category: 'dimensions', icon: '📏' },
-        
-        // Superficie y Equipamiento
-        { key: 'surface_type', name: 'Tipo de Superficie', description: 'Material de la superficie de juego', type: 'select', defaultValue: 'clay', options: 'clay,grass,hard,synthetic', category: 'equipment', icon: '🏟️' },
-        { key: 'ball_type', name: 'Tipo de Pelota', description: 'Tipo de pelota utilizada', type: 'select', defaultValue: 'pressurized', options: 'pressurized,pressureless,low_pressure', category: 'equipment', icon: '🎾' },
-        { key: 'ball_color', name: 'Color de Pelota', description: 'Color oficial de las pelotas', type: 'select', defaultValue: 'yellow', options: 'yellow,white,orange', category: 'equipment', icon: '🎾' },
-        
-        // Reglas y Puntuación
-        { key: 'set_format', name: 'Formato de Sets', description: 'Número de sets para ganar el partido', type: 'select', defaultValue: 'best_of_3', options: 'best_of_3,best_of_5', category: 'scoring', icon: '🏆' },
-        { key: 'tiebreak_enabled', name: 'Tiebreak Activado', description: 'Si se usa tiebreak en sets empatados', type: 'boolean', defaultValue: 'true', category: 'rules', icon: '⚖️' },
-        { key: 'tiebreak_points', name: 'Puntos de Tiebreak', description: 'Puntos necesarios para ganar tiebreak', type: 'number', defaultValue: '7', category: 'scoring', icon: '🎯' },
-        
-        // Tiempo
-        { key: 'serve_clock', name: 'Tiempo de Saque', description: 'Tiempo máximo entre puntos', type: 'number', defaultValue: '25', unit: 'segundos', category: 'timing', icon: '⏱️' },
-        { key: 'changeover_time', name: 'Tiempo de Cambio', description: 'Tiempo de descanso en cambios de lado', type: 'number', defaultValue: '90', unit: 'segundos', category: 'timing', icon: '⏱️' }
-      ],
-
-      table_tennis: [
-        // Dimensiones
-        { key: 'table_length', name: 'Longitud de Mesa', description: 'Longitud oficial de la mesa', type: 'number', defaultValue: '274', unit: 'cm', category: 'dimensions', icon: '📏' },
-        { key: 'table_width', name: 'Ancho de Mesa', description: 'Ancho oficial de la mesa', type: 'number', defaultValue: '152.5', unit: 'cm', category: 'dimensions', icon: '📏' },
-        { key: 'table_height', name: 'Altura de Mesa', description: 'Altura desde el suelo', type: 'number', defaultValue: '76', unit: 'cm', category: 'dimensions', icon: '📏' },
-        { key: 'net_height', name: 'Altura de Red', description: 'Altura de la red', type: 'number', defaultValue: '15.25', unit: 'cm', category: 'dimensions', icon: '📏' },
-        { key: 'net_length', name: 'Longitud de Red', description: 'Longitud total de la red', type: 'number', defaultValue: '183', unit: 'cm', category: 'dimensions', icon: '📏' },
-        
-        // Equipamiento
-        { key: 'ball_diameter', name: 'Diámetro de Pelota', description: 'Diámetro oficial de la pelota', type: 'number', defaultValue: '40', unit: 'mm', category: 'equipment', icon: '🏓' },
-        { key: 'ball_weight', name: 'Peso de Pelota', description: 'Peso oficial de la pelota', type: 'number', defaultValue: '2.7', unit: 'gramos', category: 'equipment', icon: '🏓' },
-        { key: 'ball_color', name: 'Color de Pelota', description: 'Color oficial de las pelotas', type: 'select', defaultValue: 'white', options: 'white,orange', category: 'equipment', icon: '🏓' },
-        { key: 'ball_material', name: 'Material de Pelota', description: 'Material de fabricación', type: 'select', defaultValue: 'celluloid', options: 'celluloid,plastic', category: 'equipment', icon: '🏓' },
-        
-        // Puntuación y Reglas
-        { key: 'points_per_game', name: 'Puntos por Juego', description: 'Puntos necesarios para ganar un juego', type: 'number', defaultValue: '11', category: 'scoring', icon: '🎯' },
-        { key: 'games_per_match', name: 'Juegos por Partido', description: 'Formato del partido', type: 'select', defaultValue: 'best_of_7', options: 'best_of_3,best_of_5,best_of_7', category: 'scoring', icon: '🏆' },
-        { key: 'deuce_rule', name: 'Regla de Deuce', description: 'Diferencia mínima para ganar en empate', type: 'number', defaultValue: '2', category: 'rules', icon: '⚖️' },
-        
-        // Tiempo
-        { key: 'timeout_duration', name: 'Duración de Timeout', description: 'Tiempo de timeout por jugador', type: 'number', defaultValue: '60', unit: 'segundos', category: 'timing', icon: '⏱️' },
-        { key: 'interval_between_games', name: 'Intervalo entre Juegos', description: 'Descanso entre juegos', type: 'number', defaultValue: '60', unit: 'segundos', category: 'timing', icon: '⏱️' }
-      ],
-
-      padel: [
-        // Dimensiones
-        { key: 'court_length', name: 'Longitud de Cancha', description: 'Longitud total de la cancha', type: 'number', defaultValue: '20', unit: 'metros', category: 'dimensions', icon: '📏' },
-        { key: 'court_width', name: 'Ancho de Cancha', description: 'Ancho total de la cancha', type: 'number', defaultValue: '10', unit: 'metros', category: 'dimensions', icon: '📏' },
-        { key: 'back_wall_height', name: 'Altura Pared Fondo', description: 'Altura de las paredes de fondo', type: 'number', defaultValue: '4', unit: 'metros', category: 'dimensions', icon: '🧱' },
-        { key: 'side_wall_height', name: 'Altura Pared Lateral', description: 'Altura de las paredes laterales', type: 'number', defaultValue: '3', unit: 'metros', category: 'dimensions', icon: '🧱' },
-        { key: 'net_height_center', name: 'Altura Red Centro', description: 'Altura de la red en el centro', type: 'number', defaultValue: '88', unit: 'cm', category: 'dimensions', icon: '📏' },
-        { key: 'net_height_posts', name: 'Altura Red Postes', description: 'Altura de la red en los postes', type: 'number', defaultValue: '92', unit: 'cm', category: 'dimensions', icon: '📏' },
-        
-        // Superficie y Equipamiento
-        { key: 'surface_type', name: 'Tipo de Superficie', description: 'Material de la superficie', type: 'select', defaultValue: 'artificial_grass', options: 'artificial_grass,concrete,synthetic', category: 'equipment', icon: '🏟️' },
-        { key: 'ball_pressure', name: 'Presión de Pelota', description: 'Nivel de presión de las pelotas', type: 'select', defaultValue: 'low_pressure', options: 'low_pressure,medium_pressure,depressurized', category: 'equipment', icon: '🎾' },
-        { key: 'wall_material', name: 'Material de Paredes', description: 'Material de construcción de paredes', type: 'select', defaultValue: 'glass', options: 'glass,concrete,mesh', category: 'equipment', icon: '🧱' },
-        
-        // Reglas
-        { key: 'scoring_system', name: 'Sistema de Puntuación', description: 'Sistema de puntuación utilizado', type: 'select', defaultValue: 'tennis_scoring', options: 'tennis_scoring,point_scoring', category: 'scoring', icon: '🎯' },
-        { key: 'sets_per_match', name: 'Sets por Partido', description: 'Número de sets para ganar', type: 'select', defaultValue: 'best_of_3', options: 'best_of_3,best_of_5', category: 'scoring', icon: '🏆' },
-        { key: 'golden_point', name: 'Punto de Oro', description: 'Uso del punto de oro en deuce', type: 'boolean', defaultValue: 'true', category: 'rules', icon: '🥇' }
-      ],
-
-      pickleball: [
-        // Dimensiones
-        { key: 'court_length', name: 'Longitud de Cancha', description: 'Longitud total en pies', type: 'number', defaultValue: '44', unit: 'pies', category: 'dimensions', icon: '📏' },
-        { key: 'court_width', name: 'Ancho de Cancha', description: 'Ancho total en pies', type: 'number', defaultValue: '20', unit: 'pies', category: 'dimensions', icon: '📏' },
-        { key: 'net_height_center', name: 'Altura Red Centro', description: 'Altura en el centro', type: 'number', defaultValue: '34', unit: 'pulgadas', category: 'dimensions', icon: '📏' },
-        { key: 'net_height_posts', name: 'Altura Red Postes', description: 'Altura en los postes', type: 'number', defaultValue: '36', unit: 'pulgadas', category: 'dimensions', icon: '📏' },
-        { key: 'non_volley_zone', name: 'Zona de No-Volea', description: 'Distancia desde la red', type: 'number', defaultValue: '7', unit: 'pies', category: 'dimensions', icon: '📏' },
-        
-        // Equipamiento
-        { key: 'ball_type', name: 'Tipo de Pelota', description: 'Material de la pelota', type: 'select', defaultValue: 'plastic', options: 'plastic,composite', category: 'equipment', icon: '🏓' },
-        { key: 'ball_holes', name: 'Agujeros en Pelota', description: 'Número de agujeros', type: 'select', defaultValue: '26', options: '26,32,40', category: 'equipment', icon: '🏓' },
-        { key: 'ball_diameter', name: 'Diámetro de Pelota', description: 'Diámetro en pulgadas', type: 'number', defaultValue: '2.87', unit: 'pulgadas', category: 'equipment', icon: '🏓' },
-        { key: 'paddle_material', name: 'Material de Pala', description: 'Material permitido para palas', type: 'select', defaultValue: 'composite', options: 'wood,composite,graphite', category: 'equipment', icon: '🏓' },
-        
-        // Reglas y Puntuación
-        { key: 'points_to_win', name: 'Puntos para Ganar', description: 'Puntos necesarios para ganar', type: 'select', defaultValue: '11', options: '11,15,21', category: 'scoring', icon: '🎯' },
-        { key: 'win_by_margin', name: 'Margen de Victoria', description: 'Diferencia mínima para ganar', type: 'number', defaultValue: '2', category: 'scoring', icon: '🎯' },
-        { key: 'serve_style', name: 'Estilo de Saque', description: 'Tipo de saque permitido', type: 'select', defaultValue: 'underhand', options: 'underhand,overhand', category: 'rules', icon: '🏓' },
-        { key: 'double_bounce_rule', name: 'Regla Doble Rebote', description: 'Aplicar regla de doble rebote', type: 'boolean', defaultValue: 'true', category: 'rules', icon: '⚖️' }
-      ],
-
-      badminton: [
-        // Dimensiones
-        { key: 'court_length', name: 'Longitud de Cancha', description: 'Longitud total', type: 'number', defaultValue: '13.4', unit: 'metros', category: 'dimensions', icon: '📏' },
-        { key: 'court_width_singles', name: 'Ancho Individual', description: 'Ancho para individuales', type: 'number', defaultValue: '5.18', unit: 'metros', category: 'dimensions', icon: '📏' },
-        { key: 'court_width_doubles', name: 'Ancho Dobles', description: 'Ancho para dobles', type: 'number', defaultValue: '6.1', unit: 'metros', category: 'dimensions', icon: '📏' },
-        { key: 'net_height', name: 'Altura de Red', description: 'Altura en el centro', type: 'number', defaultValue: '1.524', unit: 'metros', category: 'dimensions', icon: '📏' },
-        { key: 'service_court_length', name: 'Longitud Área Saque', description: 'Longitud del área de saque', type: 'number', defaultValue: '3.96', unit: 'metros', category: 'dimensions', icon: '📏' },
-        
-        // Equipamiento
-        { key: 'shuttlecock_type', name: 'Tipo de Volante', description: 'Material del volante', type: 'select', defaultValue: 'feather', options: 'feather,synthetic,plastic', category: 'equipment', icon: '🏸' },
-        { key: 'shuttlecock_speed', name: 'Velocidad de Volante', description: 'Clasificación de velocidad', type: 'select', defaultValue: 'medium', options: 'slow,medium,fast', category: 'equipment', icon: '🏸' },
-        { key: 'shuttlecock_weight', name: 'Peso de Volante', description: 'Peso en gramos', type: 'number', defaultValue: '5.1', unit: 'gramos', category: 'equipment', icon: '🏸' },
-        
-        // Puntuación y Reglas
-        { key: 'points_per_game', name: 'Puntos por Juego', description: 'Puntos para ganar un juego', type: 'number', defaultValue: '21', category: 'scoring', icon: '🎯' },
-        { key: 'games_per_match', name: 'Juegos por Partido', description: 'Formato del partido', type: 'select', defaultValue: 'best_of_3', options: 'best_of_3,best_of_5', category: 'scoring', icon: '🏆' },
-        { key: 'scoring_system', name: 'Sistema de Puntuación', description: 'Tipo de sistema de puntos', type: 'select', defaultValue: 'rally_point', options: 'rally_point,traditional', category: 'scoring', icon: '🎯' },
-        { key: 'deuce_points', name: 'Puntos de Deuce', description: 'Puntos donde aplica deuce', type: 'number', defaultValue: '20', category: 'rules', icon: '⚖️' }
-      ],
-
-      handball: [
-        // Dimensiones
-        { key: 'court_length', name: 'Longitud de Cancha', description: 'Longitud total de la cancha', type: 'number', defaultValue: '40', unit: 'metros', category: 'dimensions', icon: '📏' },
-        { key: 'court_width', name: 'Ancho de Cancha', description: 'Ancho total de la cancha', type: 'number', defaultValue: '20', unit: 'metros', category: 'dimensions', icon: '📏' },
-        { key: 'goal_width', name: 'Ancho de Portería', description: 'Ancho interno de la portería', type: 'number', defaultValue: '3', unit: 'metros', category: 'dimensions', icon: '🥅' },
-        { key: 'goal_height', name: 'Altura de Portería', description: 'Altura interna de la portería', type: 'number', defaultValue: '2', unit: 'metros', category: 'dimensions', icon: '🥅' },
-        { key: 'goal_area_radius', name: 'Radio Área Portería', description: 'Radio del área de portería', type: 'number', defaultValue: '6', unit: 'metros', category: 'dimensions', icon: '📏' },
-        { key: 'free_throw_line', name: 'Línea Tiro Libre', description: 'Distancia línea de tiro libre', type: 'number', defaultValue: '9', unit: 'metros', category: 'dimensions', icon: '📏' },
-        { key: 'penalty_line', name: 'Línea de Penalti', description: 'Distancia línea de 7 metros', type: 'number', defaultValue: '7', unit: 'metros', category: 'dimensions', icon: '📏' },
-        
-        // Equipamiento
-        { key: 'ball_size', name: 'Tamaño de Pelota', description: 'Categoría de tamaño', type: 'select', defaultValue: '3', options: '0,1,2,3', category: 'equipment', icon: '🤾' },
-        { key: 'ball_circumference', name: 'Circunferencia Pelota', description: 'Circunferencia en cm', type: 'number', defaultValue: '58', unit: 'cm', category: 'equipment', icon: '🤾' },
-        { key: 'ball_weight', name: 'Peso de Pelota', description: 'Peso en gramos', type: 'number', defaultValue: '425', unit: 'gramos', category: 'equipment', icon: '🤾' },
-        
-        // Reglas y Tiempo
-        { key: 'players_per_team', name: 'Jugadores por Equipo', description: 'Número de jugadores en cancha', type: 'number', defaultValue: '7', category: 'rules', icon: '👥' },
-        { key: 'match_duration', name: 'Duración del Partido', description: 'Tiempo total en minutos', type: 'number', defaultValue: '60', unit: 'minutos', category: 'timing', icon: '⏱️' },
-        { key: 'half_time_duration', name: 'Duración Medio Tiempo', description: 'Tiempo de cada mitad', type: 'number', defaultValue: '30', unit: 'minutos', category: 'timing', icon: '⏱️' },
-        { key: 'timeout_per_team', name: 'Timeouts por Equipo', description: 'Número de timeouts permitidos', type: 'number', defaultValue: '3', category: 'rules', icon: '⏸️' },
-        { key: 'timeout_duration', name: 'Duración Timeout', description: 'Duración de cada timeout', type: 'number', defaultValue: '60', unit: 'segundos', category: 'timing', icon: '⏱️' }
-      ],
-
-      racquetball: [
-        // Dimensiones
-        { key: 'court_length', name: 'Longitud de Cancha', description: 'Longitud total', type: 'number', defaultValue: '40', unit: 'pies', category: 'dimensions', icon: '📏' },
-        { key: 'court_width', name: 'Ancho de Cancha', description: 'Ancho total', type: 'number', defaultValue: '20', unit: 'pies', category: 'dimensions', icon: '📏' },
-        { key: 'court_height', name: 'Altura de Cancha', description: 'Altura del techo', type: 'number', defaultValue: '20', unit: 'pies', category: 'dimensions', icon: '📏' },
-        { key: 'service_line', name: 'Línea de Saque', description: 'Distancia línea de saque', type: 'number', defaultValue: '15', unit: 'pies', category: 'dimensions', icon: '📏' },
-        { key: 'short_line', name: 'Línea Corta', description: 'Línea corta de saque', type: 'number', defaultValue: '20', unit: 'pies', category: 'dimensions', icon: '📏' },
-        { key: 'safety_zone', name: 'Zona de Seguridad', description: 'Zona de seguridad tras saque', type: 'number', defaultValue: '5', unit: 'pies', category: 'dimensions', icon: '📏' },
-        
-        // Equipamiento
-        { key: 'ball_type', name: 'Tipo de Pelota', description: 'Clasificación de velocidad', type: 'select', defaultValue: 'blue', options: 'blue,red,green,black', category: 'equipment', icon: '🎾' },
-        { key: 'ball_diameter', name: 'Diámetro de Pelota', description: 'Diámetro en pulgadas', type: 'number', defaultValue: '2.25', unit: 'pulgadas', category: 'equipment', icon: '🎾' },
-        { key: 'ball_bounce_height', name: 'Altura de Rebote', description: 'Altura de rebote desde 100 pulgadas', type: 'number', defaultValue: '68', unit: 'pulgadas', category: 'equipment', icon: '🎾' },
-        { key: 'racquet_length_max', name: 'Longitud Máx. Raqueta', description: 'Longitud máxima permitida', type: 'number', defaultValue: '22', unit: 'pulgadas', category: 'equipment', icon: '🎾' },
-        
-        // Puntuación y Reglas
-        { key: 'points_to_win', name: 'Puntos para Ganar', description: 'Puntos necesarios para ganar', type: 'select', defaultValue: '15', options: '11,15,21', category: 'scoring', icon: '🎯' },
-        { key: 'games_per_match', name: 'Juegos por Partido', description: 'Formato del partido', type: 'select', defaultValue: 'best_of_3', options: 'best_of_3,best_of_5', category: 'scoring', icon: '🏆' },
-        { key: 'serve_style', name: 'Estilo de Saque', description: 'Tipo de saque permitido', type: 'select', defaultValue: 'drive', options: 'drive,lob,z_serve,jam', category: 'rules', icon: '🎾' },
-        { key: 'timeout_per_game', name: 'Timeouts por Juego', description: 'Número de timeouts permitidos', type: 'number', defaultValue: '3', category: 'rules', icon: '⏸️' }
-      ]
-    };
-
-    return suggestions[sportCode] || [];
-  };
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'dimensions': return <ArrowsPointingOutIcon className="h-4 w-4" />;
-      case 'equipment': return <CubeIcon className="h-4 w-4" />;
-      case 'rules': return <TagIcon className="h-4 w-4" />;
-      case 'timing': return <ClockIcon className="h-4 w-4" />;
-      case 'scoring': return <span className="text-sm">🎯</span>;
-      default: return <CogIcon className="h-4 w-4" />;
-    }
-  };
-
-  const getCategoryName = (category: string) => {
-    switch (category) {
-      case 'dimensions': return 'Dimensiones';
-      case 'equipment': return 'Equipamiento';
-      case 'rules': return 'Reglas';
-      case 'timing': return 'Tiempo';
-      case 'scoring': return 'Puntuación';
-      default: return 'General';
-    }
-  };
-
-  // ... (resto de las funciones existentes como fetchSports, fetchParameters, etc.)
+    // (Función getSportSuggestions eliminada por no usarse para evitar error de compilación noUnusedLocals)
+  
+  
+  
+    // ... (resto de las funciones existentes como fetchSports, fetchParameters, etc.)
 
   const openCreateModal = () => {
     resetForm();
@@ -267,32 +73,10 @@ export default function LigaSportsPage() {
     setIsParameterModalOpen(true);
   };
 
-  const selectSuggestion = (suggestion: ParameterSuggestion) => {
-    setParameterForm({
-      param_key: suggestion.key,
-      param_value: suggestion.defaultValue,
-      param_type: suggestion.type,
-      options: suggestion.options || '',
-      description: suggestion.description,
-      unit: suggestion.unit || '',
-      category: suggestion.category
-    });
-    setActiveTab('custom');
-  };
 
-  const filteredSuggestions = selectedSport ? getSportSuggestions(selectedSport.code).filter(suggestion => {
-    const matchesSearch = suggestion.name.toLowerCase().includes(suggestionSearch.toLowerCase()) ||
-                         suggestion.description.toLowerCase().includes(suggestionSearch.toLowerCase()) ||
-                         suggestion.key.toLowerCase().includes(suggestionSearch.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || suggestion.category === selectedCategory;
-    
-    // Filtrar sugerencias que ya están configuradas
-    const alreadyConfigured = parameters.some(param => param.param_key === suggestion.key);
-    
-    return matchesSearch && matchesCategory && !alreadyConfigured;
-  }) : [];
 
-  const categories = ['all', 'dimensions', 'equipment', 'rules', 'timing', 'scoring'];
+
+
 
   // ... (resto del JSX con las mejoras del modal)
 
@@ -300,9 +84,33 @@ export default function LigaSportsPage() {
 
 // ... (continuación del código anterior)
 
+  const fetchSports = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await axios.get('/api/sports');
+
+      if (response.data && response.data.data) {
+        const sportsData = response.data.data.data || response.data.data;
+        setSports(sportsData);
+
+        if (sportsData.length > 0) {
+          setSelectedSport(prev => prev || sportsData[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching sports:', error);
+      const axiosError = error as AxiosError<{ message?: string }>;
+      setError(axiosError.response?.data?.message || 'Error al cargar deportes');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchSports();
-  }, []);
+  }, [fetchSports]);
 
   useEffect(() => {
     if (selectedSport) {
@@ -310,39 +118,18 @@ export default function LigaSportsPage() {
     }
   }, [selectedSport]);
 
-  const fetchSports = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await axios.get('/api/sports');
-      
-      if (response.data && response.data.data) {
-        const sportsData = response.data.data.data || response.data.data;
-        setSports(sportsData);
-        
-        // Auto-select first sport if none selected
-        if (sportsData.length > 0 && !selectedSport) {
-          setSelectedSport(sportsData[0]);
-        }
-      }
-    } catch (error: any) {
-      console.error('Error fetching sports:', error);
-      setError(error.response?.data?.message || 'Error al cargar deportes');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchParameters = async (sportId: number) => {
     try {
       setParametersLoading(true);
       const response = await axios.get(`/api/sports/${sportId}/parameters`);
-      
+
       if (response.data && response.data.data) {
-        setParameters(response.data.data);
+        const paramsData = response.data.data.data || response.data.data;
+        setParameters(paramsData);
+      } else {
+        setParameters([]);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching parameters:', error);
       setParameters([]);
     } finally {
@@ -350,67 +137,22 @@ export default function LigaSportsPage() {
     }
   };
 
-  const handleCreateParameter = async () => {
-    if (!selectedSport) return;
-    
-    try {
-      setIsProcessing(true);
-      
-      const response = await axios.post(`/api/sports/${selectedSport.id}/parameters`, parameterForm);
-      
-      if (response.data) {
-        await fetchParameters(selectedSport.id);
-        setIsParameterModalOpen(false);
-        resetForm();
-        alert('Parámetro creado exitosamente');
-      }
-    } catch (error: any) {
-      console.error('Error creating parameter:', error);
-      alert(error.response?.data?.message || 'Error al crear parámetro');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleUpdateParameter = async () => {
-    if (!selectedSport || !editingParameter) return;
-    
-    try {
-      setIsProcessing(true);
-      
-      const response = await axios.put(`/api/sports/${selectedSport.id}/parameters/${editingParameter.id}`, parameterForm);
-      
-      if (response.data) {
-        await fetchParameters(selectedSport.id);
-        setIsParameterModalOpen(false);
-        setIsEditMode(false);
-        setEditingParameter(null);
-        resetForm();
-        alert('Parámetro actualizado exitosamente');
-      }
-    } catch (error: any) {
-      console.error('Error updating parameter:', error);
-      alert(error.response?.data?.message || 'Error al actualizar parámetro');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   const handleDeleteParameter = async () => {
     if (!selectedSport || !parameterToDelete) return;
-    
+
     try {
       setIsProcessing(true);
-      
-      await axios.delete(`/api/sports/${selectedSport.id}/parameters/${parameterToDelete.id}`);
-      
+      await axios.delete(
+        `/api/sports/${selectedSport.id}/parameters/${parameterToDelete.id}`
+      );
       await fetchParameters(selectedSport.id);
       setIsDeleteModalOpen(false);
       setParameterToDelete(null);
-      alert('Parámetro eliminado exitosamente');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting parameter:', error);
-      alert(error.response?.data?.message || 'Error al eliminar parámetro');
+      const axiosError = error as AxiosError<{ message?: string }>;
+      alert(axiosError.response?.data?.message || 'Error al eliminar parámetro');
     } finally {
       setIsProcessing(false);
     }
@@ -418,39 +160,28 @@ export default function LigaSportsPage() {
 
   const handleAutoConfigureSport = async () => {
     if (!selectedSport) return;
-    
+
     const autoConfigs = getAutoConfiguration(selectedSport.code);
-    
+
     if (autoConfigs.length === 0) {
       alert('No hay configuración automática disponible para este deporte');
       return;
     }
-    
+
     try {
       setIsProcessing(true);
-      
-      let successCount = 0;
-      let errorCount = 0;
-      
+
       // Create all parameters for this sport
       for (const config of autoConfigs) {
         try {
           await axios.post(`/api/sports/${selectedSport.id}/parameters`, config);
-          successCount++;
         } catch (error) {
-          errorCount++;
           console.error('Error creating parameter:', config.param_key, error);
         }
       }
-      
+
       await fetchParameters(selectedSport.id);
-      
-      if (errorCount === 0) {
-        alert(`Configuración automática aplicada exitosamente para ${selectedSport.name}. ${successCount} parámetros configurados.`);
-      } else {
-        alert(`Configuración parcialmente aplicada: ${successCount} parámetros configurados, ${errorCount} errores.`);
-      }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error auto-configuring sport:', error);
       alert('Error en la configuración automática');
     } finally {
@@ -516,11 +247,15 @@ export default function LigaSportsPage() {
     return configs[sportCode] || [];
   };
 
+  // Type guard to ensure only allowed param types are used
+  const isValidParamType = (type: string): type is SportParameterForm['param_type'] =>
+    ['text', 'number', 'boolean', 'select'].includes(type);
+
   const openEditModal = (parameter: SportParameter) => {
     setParameterForm({
       param_key: parameter.param_key,
       param_value: parameter.param_value,
-      param_type: parameter.param_type as any,
+      param_type: isValidParamType(parameter.param_type) ? parameter.param_type : 'text',
       options: parameter.options || '',
       description: parameter.description || '',
       unit: parameter.unit || '',
@@ -797,7 +532,7 @@ export default function LigaSportsPage() {
                   Eliminar Parámetro
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  ¿Estás seguro de que deseas eliminar el parámetro "{parameterToDelete.param_key}"? 
+                  ¿Estás seguro de que deseas eliminar el parámetro &quot;{parameterToDelete.param_key}&quot;?
                   Esta acción no se puede deshacer.
                 </p>
                 <div className="flex justify-center space-x-3">

@@ -3,6 +3,25 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '@/lib/axios';
 
+// Related entity interfaces
+interface LeagueEntity {
+  id: number;
+  name: string;
+  [key: string]: unknown;
+}
+
+interface ClubEntity {
+  id: number;
+  name: string;
+  [key: string]: unknown;
+}
+
+interface MemberEntity {
+  id: number;
+  name: string;
+  [key: string]: unknown;
+}
+
 interface User {
   id: number;
   email: string;
@@ -23,21 +42,14 @@ interface User {
   parent_club_id?: number;
   birth_date?: string;
   gender?: string;
-  rubber_type?: string;
-  ranking?: string;
-  logo_path?: string;
-  photo_path?: string;
-  // Relations - these come from the backend
-  parentLeague?: any;
-  parentClub?: any;
-  league_entity?: any;  // Note: backend uses snake_case
-  club_entity?: any;
-  member_entity?: any;
+  // Backend entity (snake_case) references
+  club_entity?: ClubEntity | null;
+  member_entity?: MemberEntity | null;
   // Camel case versions for frontend compatibility
-  leagueEntity?: any;
-  clubEntity?: any;
-  memberEntity?: any;
-  role_info?: any;
+  leagueEntity?: LeagueEntity | null;
+  clubEntity?: ClubEntity | null;
+  memberEntity?: MemberEntity | null;
+  role_info?: Record<string, unknown>;
   // Member status for waiting room
   member_status?: 'pending' | 'active' | 'inactive';
 }
@@ -46,7 +58,7 @@ interface AuthResponse {
   data: {
     user: User;
     token?: string;
-    role_info?: any;
+    role_info?: Record<string, unknown>;
   };
   message: string;
 }
@@ -63,7 +75,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Helper function to normalize user data from backend
-function normalizeUserData(userData: any): User {
+// Define type that also allows optional backend snake_case properties
+function normalizeUserData(userData: User & { league_entity?: LeagueEntity | null }): User {
   // Convert snake_case to camelCase for frontend compatibility
   const normalized = {
     ...userData,
@@ -154,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(userData);
       console.log('✅ Auth check successful:', userData);
       return userData;
-    } catch (error) {
+    } catch {
       console.log('ℹ️ User not authenticated');
       // Clear invalid token
       removeStoredToken();
@@ -176,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           console.log('ℹ️ No stored token found');
         }
-      } catch (error) {
+      } catch {
         console.log('ℹ️ Initial auth check failed');
         removeStoredToken();
       } finally {

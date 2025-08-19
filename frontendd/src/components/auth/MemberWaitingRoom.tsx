@@ -10,7 +10,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import NextLink from 'next/link';
 
-const StyledCard = styled(Card)(({ theme }) => ({
+const StyledCard = styled(Card)(({  }) => ({
   background: 'rgba(255, 255, 255, 0.95)',
   backdropFilter: 'blur(10px)',
   border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -20,7 +20,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   position: 'relative',
 }));
 
-const PulseIcon = styled(Box)(({ theme }) => ({
+const PulseIcon = styled(Box)(({  }) => ({
   position: 'relative',
   '&::before': {
     content: '""',

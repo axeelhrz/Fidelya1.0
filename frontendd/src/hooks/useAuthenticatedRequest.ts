@@ -1,8 +1,6 @@
 import { useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 
 export function useAuthenticatedRequest() {
-  const { user } = useAuth();
 
   const makeRequest = useCallback(async <T>(
     requestFn: () => Promise<T>
@@ -14,7 +12,7 @@ export function useAuthenticatedRequest() {
       // Just re-throw the error to be handled by the calling component
       throw error;
     }
-  }, [user]);
+  }, []);
 
   return { makeRequest };
 }

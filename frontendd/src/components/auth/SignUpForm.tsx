@@ -13,7 +13,6 @@ import {
   CircularProgress,
   Card,
   CardContent,
-  Fade,
   FormControl,
   InputLabel,
   Select,
@@ -53,7 +52,7 @@ import api from '@/lib/axios';
 import NextLink from 'next/link';
 
 // Styled Components
-const StyledCard = styled(Card)(({ theme }) => ({
+const StyledCard = styled(Card)(({  }) => ({
   background: 'rgba(255, 255, 255, 0.95)',
   backdropFilter: 'blur(10px)',
   border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -97,7 +96,7 @@ const StepIndicator = styled(Box)<{ active?: boolean }>(({ theme, active }) => (
 // Validation Schema - Updated to handle both string and number IDs
 const signUpSchema = z.object({
   role: z.enum(['liga', 'miembro', 'club'], {
-    errorMap: () => ({ message: 'Selecciona un tipo de cuenta' }),
+    error: 'Selecciona un tipo de cuenta',
   }),
   email: z.string().trim().min(1, 'El correo electrónico es requerido').email('Ingresa un correo electrónico válido'),
   password: z.string().trim().min(8, 'La contraseña debe tener al menos 8 caracteres'),
@@ -108,11 +107,11 @@ const signUpSchema = z.object({
   league_name: z.string().optional(),
   province: z.string().optional(),
   club_name: z.string().optional(),
-  parent_league_id: z.union([z.string(), z.number()]).optional().transform((val) => val ? String(val) : undefined),
+  parent_league_id: z.string().or(z.undefined()).transform((val) => (val && val.trim() !== '' ? val : undefined)),
   city: z.string().optional(),
   address: z.string().optional(),
   full_name: z.string().optional(),
-  parent_club_id: z.union([z.string(), z.number()]).optional().transform((val) => val ? String(val) : undefined),
+  parent_club_id: z.string().or(z.undefined()).transform((val) => (val && val.trim() !== '' ? val : undefined)),
   birth_date: z.string().optional(),
   gender: z.enum(['masculino', 'femenino']).optional(),
   rubber_type: z.enum(['liso', 'pupo', 'ambos']).optional(),
@@ -346,14 +345,14 @@ const SignUpForm: React.FC = () => {
       league_name: '',
       province: '',
       club_name: '',
-      parent_league_id: '',
+      parent_league_id: undefined,
       city: '',
       address: '',
       full_name: '',
-      parent_club_id: '',
+      parent_club_id: undefined,
       birth_date: '',
-      gender: '' as any,
-      rubber_type: '' as any,
+      gender: undefined,
+      rubber_type: undefined,
       ranking: '',
     },
   });
@@ -370,9 +369,9 @@ const SignUpForm: React.FC = () => {
     // Limpiar campos vacíos antes de enviar
     const cleanedData = { ...data };
     
-    // Convertir strings vacíos a undefined para campos opcionales
-    if (cleanedData.gender === '') cleanedData.gender = undefined;
-    if (cleanedData.rubber_type === '') cleanedData.rubber_type = undefined;
+    // Limpiar campos opcionales sin valor (evitar comparación con '' que no es parte del tipo)
+    if (cleanedData.gender === undefined) delete cleanedData.gender;
+    if (cleanedData.rubber_type === undefined) delete cleanedData.rubber_type;
     
     console.log('📝 Submitting form data:', { ...cleanedData, password: '[HIDDEN]', password_confirmation: '[HIDDEN]' });
     

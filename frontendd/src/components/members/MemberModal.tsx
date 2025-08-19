@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Member, MemberForm, Club } from '@/types';
+import { Member, Club } from '@/types';
 import Modal from '@/components/ui/Modal';
 import { useEffect } from 'react';
 
@@ -14,15 +14,17 @@ const memberSchema = z.object({
   doc_id: z.string().optional(),
   email: z.string().email('Por favor ingresa un email válido').optional().or(z.literal('')),
   phone: z.string().optional(),
-  birthdate: z.string().optional(),
+  birth_date: z.string().optional(),
   gender: z.enum(['male', 'female', 'other']).optional(),
   status: z.enum(['active', 'inactive']).optional(),
 });
 
+type MemberFormValues = z.infer<typeof memberSchema>;
+
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: MemberForm) => Promise<void>;
+  onSubmit: (data: MemberFormValues) => Promise<void>;
   member?: Member | null;
   clubs: Club[];
   isSubmitting?: boolean;
@@ -42,7 +44,7 @@ export default function MemberModal({
     reset,
     setValue,
     formState: { errors },
-  } = useForm<MemberForm>({
+  } = useForm<MemberFormValues>({
     resolver: zodResolver(memberSchema),
     defaultValues: {
       club_id: member?.club_id || (clubs.length === 1 ? clubs[0].id : 0),
@@ -51,7 +53,7 @@ export default function MemberModal({
       doc_id: member?.doc_id || '',
       email: member?.email || '',
       phone: member?.phone || '',
-      birthdate: member?.birthdate || '',
+      birth_date: member?.birth_date || '',
       gender: member?.gender || undefined,
       status: member?.status || 'active',
     },
@@ -64,21 +66,16 @@ export default function MemberModal({
     }
   }, [clubs, member, setValue]);
 
-  const handleFormSubmit = async (data: MemberForm) => {
-    console.log('Form submitted with data:', data);
-    console.log('Clubs available:', clubs);
-    
+  const handleFormSubmit = async (data: MemberFormValues) => {
     // Clean up empty strings
     const cleanData = {
       ...data,
       email: data.email || undefined,
       doc_id: data.doc_id || undefined,
       phone: data.phone || undefined,
-      birthdate: data.birthdate || undefined,
+      birth_date: data.birth_date || undefined,
       gender: data.gender || undefined,
     };
-    
-    console.log('Clean data to submit:', cleanData);
     
     try {
       await onSubmit(cleanData);
@@ -275,13 +272,13 @@ export default function MemberModal({
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="birthdate" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="birth_date" className="block text-sm font-medium text-gray-700">
               Fecha de Nacimiento
             </label>
             <input
-              {...register('birthdate')}
+              {...register('birth_date')}
               type="date"
-              id="birthdate"
+              id="birth_date"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900"
               style={{ color: '#111827' }}
             />

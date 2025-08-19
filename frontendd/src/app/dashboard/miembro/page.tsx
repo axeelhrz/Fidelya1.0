@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/Layout';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { 
   UserIcon, 
   TrophyIcon, 
@@ -16,8 +16,6 @@ import {
   StarIcon,
   ShieldCheckIcon
 } from '@heroicons/react/24/outline';
-import axios from '@/lib/axios';
-import type { ApiResponse } from '@/types';
 
 interface MemberProfile {
   tournaments_participated: number;
@@ -26,18 +24,31 @@ interface MemberProfile {
   last_activity: string;
 }
 
+interface ParentClub {
+  name: string;
+  league?: { name: string; province?: string };
+  city?: string;
+  address?: string;
+}
+
+interface ExtendedUser {
+  parentClub?: ParentClub;
+  rubber_type?: string;
+  birth_date?: string;
+  gender?: string;
+  phone?: string;
+  full_name: string;
+  email: string;
+  role: string;
+}
+
 export default function MiembroDashboardPage() {
   const { user, loading } = useAuth();
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
-  useEffect(() => {
-    if (user && (user.role === 'miembro' || user.role === 'super_admin')) {
-      fetchProfileData();
-    }
-  }, [user]);
-
-  const fetchProfileData = async () => {
+  const fetchProfileData = useCallback(async () => {
+    if (!user || (user.role !== 'miembro' && user.role !== 'super_admin')) return;
     try {
       setLoadingData(true);
       
@@ -46,7 +57,7 @@ export default function MiembroDashboardPage() {
       const memberProfile: MemberProfile = {
         tournaments_participated: 12,
         tournaments_won: 3,
-        current_ranking: user?.ranking || 'Sin ranking',
+        current_ranking: 'Sin ranking',
         last_activity: '2024-01-15',
       };
 
@@ -57,16 +68,13 @@ export default function MiembroDashboardPage() {
     } finally {
       setLoadingData(false);
     }
-  };
+  }, [user]);
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'No disponible';
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+  useEffect(() => {
+    fetchProfileData();
+  }, [fetchProfileData]);
+
+
 
   const calculateAge = (birthDate: string) => {
     if (!birthDate) return null;
@@ -88,10 +96,11 @@ export default function MiembroDashboardPage() {
     );
   }
 
-  if (!user || (user.role !== 'miembro' && user.role !== 'super_admin')) {
+  // Guard: if user is null show access denied
+  if (!user) {
     return (
       <Layout>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="min-h-screen flex items-center justify-center flex-col">
           <h1 className="text-xl font-semibold text-red-800">Acceso Denegado</h1>
           <p className="text-red-600 mt-2">No tienes permisos para acceder a esta página.</p>
         </div>
@@ -99,9 +108,11 @@ export default function MiembroDashboardPage() {
     );
   }
 
-  const roleInfo = user.role_info;
-  const age = user.birth_date ? calculateAge(user.birth_date) : null;
   const isSuperAdmin = user.role === 'super_admin';
+  const extendedUser = user as ExtendedUser;
+  const parentClub = extendedUser.parentClub;
+  const rubberType = extendedUser.rubber_type;
+  const age = extendedUser.birth_date ? calculateAge(extendedUser.birth_date) : null;
 
   return (
     <Layout>
@@ -127,34 +138,30 @@ export default function MiembroDashboardPage() {
                   )}
                 </div>
                 <p className={`${isSuperAdmin ? 'text-red-100' : 'text-purple-100'} mt-1 text-xl`}>
-                  {isSuperAdmin ? 'Vista de Super Administrador' : (roleInfo?.full_name || user.full_name)}
+                  {isSuperAdmin ? 'Vista de Super Administrador' : user.full_name}
                 </p>
-                {!isSuperAdmin && (
-                  <>
-                    <div className="flex items-center mt-2 text-purple-200 text-sm">
-                      <EnvelopeIcon className="h-4 w-4 mr-1" />
-                      <span>{user.email}</span>
-                    </div>
-                    {user.phone && (
-                      <div className="flex items-center mt-1 text-purple-200 text-sm">
-                        <PhoneIcon className="h-4 w-4 mr-1" />
-                        <span>{user.phone}</span>
-                      </div>
-                    )}
-                  </>
+                <div className="flex items-center mt-2 text-purple-200 text-sm">
+                  <EnvelopeIcon className="h-4 w-4 mr-1" />
+                  <span>{user.email}</span>
+                </div>
+                {user.phone && (
+                  <div className="flex items-center mt-1 text-purple-200 text-sm">
+                    <PhoneIcon className="h-4 w-4 mr-1" />
+                    <span>{user.phone}</span>
+                  </div>
                 )}
-              </div>
-            </div>
-            <div className="text-right">
-              <p className={`${isSuperAdmin ? 'text-red-100' : 'text-purple-100'} text-sm`}>
-                {isSuperAdmin ? 'Super Administrador' : 'Miembro'}
-              </p>
-              {!isSuperAdmin && user.parent_club && (
-                <p className="text-white font-semibold">{user.parent_club.name}</p>
-              )}
-              {!isSuperAdmin && user.parent_club?.league && (
-                <p className={`${isSuperAdmin ? 'text-red-200' : 'text-purple-200'} text-sm`}>{user.parent_club.league.name}</p>
-              )}
+                <p className={`${isSuperAdmin ? 'text-red-100' : 'text-purple-100'} text-sm`}>
+                  {isSuperAdmin ? 'Super Administrador' : 'Miembro'}
+                </p>
+                {parentClub && (
+                  <p className="text-white font-semibold">{parentClub.name}</p>
+                )}
+                {parentClub?.league && (
+                  <p className={`${isSuperAdmin ? 'text-red-200' : 'text-purple-200'} text-sm`}>
+                    {parentClub.league.name}
+                  </p>
+                )}
+              </div> {/* Close user info container */}
             </div>
           </div>
         </div>
@@ -188,7 +195,6 @@ export default function MiembroDashboardPage() {
               </div>
             </div>
           </div>
-
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -197,69 +203,62 @@ export default function MiembroDashboardPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Tipo de Caucho</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {user.rubber_type ? user.rubber_type.charAt(0).toUpperCase() + user.rubber_type.slice(1) : 'N/A'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <StarIcon className="h-8 w-8 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Ranking</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {profile?.current_ranking || 'Sin ranking'}
+                  {rubberType ? rubberType.charAt(0).toUpperCase() + rubberType.slice(1) : 'N/A'}
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Club and League Info */}
-        {!isSuperAdmin && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Información de Afiliación</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {user.parent_club && (
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center mb-3">
-                    <BuildingOfficeIcon className="h-6 w-6 text-green-600 mr-2" />
-                    <h3 className="font-semibold text-gray-900">Mi Club</h3>
-                  </div>
-                  <p className="text-lg font-medium text-gray-900">{user.parent_club.name}</p>
-                  {user.parent_club.city && (
-                    <div className="flex items-center mt-2 text-gray-600">
-                      <MapPinIcon className="h-4 w-4 mr-1" />
-                      <span>{user.parent_club.city}</span>
-                    </div>
-                  )}
-                  {user.parent_club.address && (
-                    <p className="text-sm text-gray-500 mt-1">{user.parent_club.address}</p>
-                  )}
-                </div>
-              )}
-
-              {user.parent_club?.league && (
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center mb-3">
-                    <TrophyIcon className="h-6 w-6 text-blue-600 mr-2" />
-                    <h3 className="font-semibold text-gray-900">Liga</h3>
-                  </div>
-                  <p className="text-lg font-medium text-gray-900">{user.parent_club.league.name}</p>
-                  {user.parent_club.league.province && (
-                    <div className="flex items-center mt-2 text-gray-600">
-                      <MapPinIcon className="h-4 w-4 mr-1" />
-                      <span>{user.parent_club.league.province}</span>
-                    </div>
-                  )}
-                </div>
-              )}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <StarIcon className="h-8 w-8 text-purple-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Ranking</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {profile?.current_ranking || 'Sin ranking'}
+              </p>
             </div>
           </div>
-        )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {parentClub && (
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <BuildingOfficeIcon className="h-6 w-6 text-green-600 mr-2" />
+                  <h3 className="font-semibold text-gray-900">Mi Club</h3>
+                </div>
+                <p className="text-lg font-medium text-gray-900">{parentClub.name}</p>
+                {parentClub.city && (
+                  <div className="flex items-center mt-2 text-gray-600">
+                    <MapPinIcon className="h-4 w-4 mr-1" />
+                    <span>{parentClub.city}</span>
+                  </div>
+                )}
+                {parentClub.address && (
+                  <p className="text-sm text-gray-500 mt-1">{parentClub.address}</p>
+                )}
+              </div>
+            )}
+
+            {parentClub?.league && (
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <TrophyIcon className="h-6 w-6 text-blue-600 mr-2" />
+                  <h3 className="font-semibold text-gray-900">Liga</h3>
+                </div>
+                <p className="text-lg font-medium text-gray-900">{parentClub.league.name}</p>
+                {parentClub.league.province && (
+                  <div className="flex items-center mt-2 text-gray-600">
+                    <MapPinIcon className="h-4 w-4 mr-1" />
+                    <span>{parentClub.league.province}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow p-6">

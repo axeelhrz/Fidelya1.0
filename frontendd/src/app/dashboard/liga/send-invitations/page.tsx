@@ -9,14 +9,21 @@ import {
   BuildingOfficeIcon,
   MapPinIcon,
   UserGroupIcon,
-  PlusIcon,
   CheckCircleIcon,
   XMarkIcon,
   TrophyIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import axios from '@/lib/axios';
-import { Club, League, SendInvitationForm } from '@/types';
+import type { AxiosError } from 'axios';
+
+// Local form state interface (replaces mismatched imported SendInvitationForm)
+interface InvitationFormState {
+  receiver_id: number;
+  receiver_type: string;
+  message: string;
+  expires_at: string;
+}
 
 interface AvailableEntity {
   id: number;
@@ -32,25 +39,24 @@ interface AvailableEntity {
   type: 'club' | 'league';
 }
 
-export default function SendInvitationsPage() {
-  const { user } = useAuth();
-  const [entities, setEntities] = useState<AvailableEntity[]>([]);
-  const [filteredEntities, setFilteredEntities] = useState<AvailableEntity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [selectedEntity, setSelectedEntity] = useState<AvailableEntity | null>(null);
-  const [invitationForm, setInvitationForm] = useState<SendInvitationForm>({
-    receiver_id: 0,
-    receiver_type: '',
-    message: '',
-    expires_at: ''
-  });
-  const [sending, setSending] = useState(false);
-
-  const isLeague = user?.role === 'liga';
-  const entityType = isLeague ? 'club' : 'league';
-  const entityTypePlural = isLeague ? 'clubes' : 'ligas';
+  export default function SendInvitationsPage() {
+    const { user } = useAuth();
+    const [entities, setEntities] = useState<AvailableEntity[]>([]);
+    const [filteredEntities, setFilteredEntities] = useState<AvailableEntity[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [selectedEntity, setSelectedEntity] = useState<AvailableEntity | null>(null);
+    const [invitationForm, setInvitationForm] = useState<InvitationFormState>({
+      receiver_id: 0,
+      receiver_type: '',
+      message: '',
+      expires_at: ''
+    });
+    const [sending, setSending] = useState(false);
+  
+    const isLeague = user?.role === 'liga';
+    const entityTypePlural = isLeague ? 'clubes' : 'ligas';
 
   useEffect(() => {
     fetchAvailableEntities();
@@ -98,23 +104,30 @@ export default function SendInvitationsPage() {
 
     try {
       setSending(true);
-      await axios.post('/api/invitations', invitationForm);
-      
-      alert(isLeague ? 'Invitación enviada exitosamente!' : 'Solicitud enviada exitosamente!');
-      setShowModal(false);
-      setSelectedEntity(null);
+      const payload = {
+        receiver_id: invitationForm.receiver_id,
+        receiver_type: invitationForm.receiver_type,
+        message: invitationForm.message,
+        expires_at: invitationForm.expires_at || undefined
+      };
+      await axios.post('/api/invitations', payload);
       setInvitationForm({
         receiver_id: 0,
         receiver_type: '',
         message: '',
         expires_at: ''
       });
+      setShowModal(false);
       
       // Refresh the list
-      fetchAvailableEntities();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sending invitation:', error);
-      alert(error.response?.data?.message || 'Error al enviar la invitación');
+      let errorMessage = 'Error al enviar la invitación';
+      if (typeof error === 'object' && error !== null && 'response' in error) {
+        const axiosError = error as AxiosError<{ message?: string }>;
+        errorMessage = axiosError.response?.data?.message || errorMessage;
+      }
+      alert(errorMessage);
     } finally {
       setSending(false);
     }
@@ -294,66 +307,57 @@ export default function SendInvitationsPage() {
                     {selectedEntity.city && (
                       <p className="text-sm text-gray-500">{selectedEntity.city}</p>
                     )}
-                    {getStatusBadge(selectedEntity)}
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mensaje *
-                  </label>
-                  <textarea
-                    value={invitationForm.message}
-                    onChange={(e) => setInvitationForm({ ...invitationForm, message: e.target.value })}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                    placeholder={isLeague 
-                      ? "Escribe un mensaje personalizado para la invitación..."
-                      : "Explica por qué tu club quiere unirse a esta liga..."
-                    }
-                  />
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Mensaje *
+                    </label>
+                    <textarea
+                      value={invitationForm.message}
+                      onChange={(e) => setInvitationForm({ ...invitationForm, message: e.target.value })}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                      placeholder={isLeague 
+                        ? "Escribe un mensaje personalizado para la invitación..."
+                        : "Explica por qué tu club quiere unirse a esta liga..."
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Fecha de expiración (opcional)
+                    </label>
+                    <input
+                      type="date"
+                      value={invitationForm.expires_at}
+                      onChange={(e) => setInvitationForm({ ...invitationForm, expires_at: e.target.value })}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <button
+                    onClick={submitInvitation}
+                    disabled={sending || !invitationForm.message.trim()}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {sending ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircleIcon className="h-4 w-4 mr-2" />
+                        {isLeague ? 'Enviar Invitación' : 'Enviar Solicitud'}
+                      </>
+                    )}
+                  </button>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Fecha de Expiración (Opcional)
-                  </label>
-                  <input
-                    type="date"
-                    value={invitationForm.expires_at}
-                    onChange={(e) => setInvitationForm({ ...invitationForm, expires_at: e.target.value })}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={submitInvitation}
-                  disabled={sending || !invitationForm.message.trim()}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {sending ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircleIcon className="h-4 w-4 mr-2" />
-                      {isLeague ? 'Enviar Invitación' : 'Enviar Solicitud'}
-                    </>
-                  )}
-                </button>
               </div>
             </div>
           </div>
