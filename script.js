@@ -67,6 +67,7 @@ function cacheElements() {
     joinWaitlist: document.getElementById('joinWaitlistBtn')
   };
   elements.contactForm = document.getElementById('contactForm');
+  elements.newsletterForm = document.getElementById('newsletterForm');
   elements.tabButtons = document.querySelectorAll('.tab-btn');
   elements.tabPanels = document.querySelectorAll('.tab-panel');
 }
@@ -504,6 +505,10 @@ function initializeFormHandling() {
   if (elements.contactForm) {
     elements.contactForm.addEventListener('submit', handleFormSubmit);
   }
+  
+  if (elements.newsletterForm) {
+    elements.newsletterForm.addEventListener('submit', handleNewsletterSubmit);
+  }
 }
 
 async function handleFormSubmit(e) {
@@ -539,6 +544,45 @@ async function handleFormSubmit(e) {
   } catch (error) {
     console.error('Error al enviar formulario:', error);
     showNotification('Error al enviar el mensaje. Inténtalo de nuevo.', 'error');
+  } finally {
+    submitButton.classList.remove('loading');
+    submitButton.disabled = false;
+  }
+}
+
+async function handleNewsletterSubmit(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(e.target);
+  const email = formData.get('email') || e.target.querySelector('input[type="email"]').value;
+  
+  // Validación básica
+  if (!email) {
+    showNotification('Por favor ingresa tu email', 'error');
+    return;
+  }
+  
+  if (!isValidEmail(email)) {
+    showNotification('Por favor ingresa un email válido', 'error');
+    return;
+  }
+  
+  const submitButton = e.target.querySelector('button[type="submit"]');
+  submitButton.classList.add('loading');
+  submitButton.disabled = true;
+  
+  try {
+    showNotification('Suscribiendo...', 'info');
+    
+    // Simular suscripción
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    showNotification('¡Te has suscrito exitosamente! Recibirás nuestras actualizaciones.', 'success');
+    e.target.reset();
+    
+  } catch (error) {
+    console.error('Error al suscribir:', error);
+    showNotification('Error al procesar la suscripción. Inténtalo de nuevo.', 'error');
   } finally {
     submitButton.classList.remove('loading');
     submitButton.disabled = false;
