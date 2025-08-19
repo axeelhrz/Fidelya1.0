@@ -6,13 +6,18 @@ const CONFIG = {
     desktop: 1200
   },
   animations: {
-    duration: 300,
-    easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+    duration: 600,
+    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    stagger: 150
   },
   ui: {
     scrollOffset: 72,
     throttleDelay: 16,
     notificationDuration: 4000
+  },
+  intersection: {
+    threshold: 0.15,
+    rootMargin: '0px 0px -100px 0px'
   }
 };
 
@@ -22,7 +27,8 @@ const state = {
   scrollY: 0,
   currentSection: 'inicio',
   reducedMotion: false,
-  touchDevice: false
+  touchDevice: false,
+  animatedElements: new Set()
 };
 
 // Cache de elementos DOM
@@ -38,7 +44,7 @@ function initializeApp() {
   initializeScrollEffects();
   initializeCTAButtons();
   initializeFormHandling();
-  initializeAnimations();
+  initializeSmoothAnimations();
   initializeTabs();
   
   console.log('✅ Nodo Locker - Aplicación premium inicializada');
@@ -162,6 +168,135 @@ function initializeActiveNavigation() {
   });
 }
 
+// Sistema de animaciones suaves y limpias
+function initializeSmoothAnimations() {
+  if (state.reducedMotion) return;
+  
+  // Crear observer para animaciones de entrada
+  const animationObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const element = entry.target;
+        const animationType = element.dataset.animate || 'fadeInUp';
+        const delay = element.dataset.delay || 0;
+        
+        // Evitar re-animar elementos ya animados
+        if (state.animatedElements.has(element)) return;
+        
+        setTimeout(() => {
+          animateElement(element, animationType);
+          state.animatedElements.add(element);
+        }, parseInt(delay));
+        
+        // Dejar de observar el elemento una vez animado
+        animationObserver.unobserve(element);
+      }
+    });
+  }, {
+    threshold: CONFIG.intersection.threshold,
+    rootMargin: CONFIG.intersection.rootMargin
+  });
+  
+  // Observar todos los elementos con data-animate
+  const animatedElements = document.querySelectorAll('[data-animate]');
+  animatedElements.forEach(element => {
+    // Preparar elemento para animación
+    prepareElementForAnimation(element);
+    animationObserver.observe(element);
+  });
+  
+  // Animar elementos en grupos con stagger
+  initializeStaggeredAnimations();
+}
+
+function prepareElementForAnimation(element) {
+  const animationType = element.dataset.animate || 'fadeInUp';
+  
+  // Aplicar estilos iniciales según el tipo de animación
+  switch (animationType) {
+    case 'fadeInUp':
+      element.style.opacity = '0';
+      element.style.transform = 'translateY(40px)';
+      break;
+    case 'fadeInDown':
+      element.style.opacity = '0';
+      element.style.transform = 'translateY(-40px)';
+      break;
+    case 'fadeInLeft':
+      element.style.opacity = '0';
+      element.style.transform = 'translateX(-40px)';
+      break;
+    case 'fadeInRight':
+      element.style.opacity = '0';
+      element.style.transform = 'translateX(40px)';
+      break;
+    case 'fadeIn':
+      element.style.opacity = '0';
+      break;
+    case 'scaleIn':
+      element.style.opacity = '0';
+      element.style.transform = 'scale(0.8)';
+      break;
+    case 'slideInUp':
+      element.style.opacity = '0';
+      element.style.transform = 'translateY(60px)';
+      break;
+    default:
+      element.style.opacity = '0';
+      element.style.transform = 'translateY(40px)';
+  }
+  
+  element.style.transition = `all ${CONFIG.animations.duration}ms ${CONFIG.animations.easing}`;
+}
+
+function animateElement(element, animationType) {
+  // Aplicar animación según el tipo
+  switch (animationType) {
+    case 'fadeInUp':
+    case 'fadeInDown':
+    case 'fadeInLeft':
+    case 'fadeInRight':
+    case 'slideInUp':
+      element.style.opacity = '1';
+      element.style.transform = 'translateY(0) translateX(0)';
+      break;
+    case 'fadeIn':
+      element.style.opacity = '1';
+      break;
+    case 'scaleIn':
+      element.style.opacity = '1';
+      element.style.transform = 'scale(1)';
+      break;
+    default:
+      element.style.opacity = '1';
+      element.style.transform = 'translateY(0)';
+  }
+  
+  // Añadir clase para efectos adicionales si es necesario
+  element.classList.add('animated');
+}
+
+function initializeStaggeredAnimations() {
+  // Animar grupos de elementos con retraso escalonado
+  const staggerGroups = [
+    { selector: '.feature-card', delay: 100 },
+    { selector: '.step', delay: 150 },
+    { selector: '.timeline-item', delay: 200 },
+    { selector: '.stat', delay: 80 },
+    { selector: '.benefit-list li', delay: 60 }
+  ];
+  
+  staggerGroups.forEach(group => {
+    const elements = document.querySelectorAll(group.selector);
+    elements.forEach((element, index) => {
+      if (!element.hasAttribute('data-animate')) {
+        element.setAttribute('data-animate', 'fadeInUp');
+        element.setAttribute('data-delay', index * group.delay);
+      }
+    });
+  });
+}
+
 // Efectos de scroll optimizados
 function initializeScrollEffects() {
   const throttledScrollHandler = throttle(updateScrollEffects, CONFIG.ui.throttleDelay);
@@ -210,15 +345,32 @@ function handleTabClick(e) {
   });
   e.target.classList.add('active');
   
-  // Actualizar paneles
+  // Actualizar paneles con animación suave
   elements.tabPanels.forEach(panel => {
-    panel.classList.remove('active');
+    if (panel.classList.contains('active')) {
+      panel.style.opacity = '0';
+      panel.style.transform = 'translateY(20px)';
+      
+      setTimeout(() => {
+        panel.classList.remove('active');
+      }, 200);
+    }
   });
   
-  const targetPanel = document.getElementById(targetTab);
-  if (targetPanel) {
-    targetPanel.classList.add('active');
-  }
+  // Mostrar nuevo panel
+  setTimeout(() => {
+    const targetPanel = document.getElementById(targetTab);
+    if (targetPanel) {
+      targetPanel.classList.add('active');
+      targetPanel.style.opacity = '0';
+      targetPanel.style.transform = 'translateY(20px)';
+      
+      setTimeout(() => {
+        targetPanel.style.opacity = '1';
+        targetPanel.style.transform = 'translateY(0)';
+      }, 50);
+    }
+  }, 200);
 }
 
 // Sistema de botones CTA
@@ -278,7 +430,6 @@ async function handleScheduleMeeting(button) {
     
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Simular apertura de calendario
     showNotification('Redirigiendo al calendario de reuniones', 'success');
     
   } catch (error) {
@@ -364,29 +515,6 @@ function isValidEmail(email) {
   return emailRegex.test(email);
 }
 
-// Sistema de animaciones
-function initializeAnimations() {
-  if (state.reducedMotion) return;
-  
-  const animatedElements = document.querySelectorAll('[data-animate]');
-  
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('animate-in');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-  });
-  
-  animatedElements.forEach(element => {
-    observer.observe(element);
-  });
-}
-
 // Sistema de notificaciones
 function showNotification(message, type = 'info') {
   const notification = document.createElement('div');
@@ -410,7 +538,7 @@ function showNotification(message, type = 'info') {
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     border-left: 4px solid ${getNotificationColor(type)};
-    animation: slideInRight 0.3s ease-out;
+    animation: slideInRight 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     transform: translateX(100%);
     opacity: 0;
   `;
@@ -467,13 +595,13 @@ function showNotification(message, type = 'info') {
   
   document.body.appendChild(notification);
   
-  // Animación de entrada
+  // Animación de entrada suave
   requestAnimationFrame(() => {
     notification.style.transform = 'translateX(0)';
     notification.style.opacity = '1';
   });
   
-  // Auto-remove
+  // Auto-remove con animación suave
   setTimeout(() => {
     if (notification.parentElement) {
       notification.style.transform = 'translateX(100%)';
@@ -482,7 +610,7 @@ function showNotification(message, type = 'info') {
         if (notification.parentElement) {
           notification.remove();
         }
-      }, 300);
+      }, 400);
     }
   }, CONFIG.ui.notificationDuration);
 }
@@ -539,7 +667,7 @@ window.addEventListener('error', function(e) {
   showNotification('Se produjo un error inesperado', 'error');
 });
 
-// Añadir estilos de animación
+// Añadir estilos de animación mejorados
 const animationStyles = `
   @keyframes slideInRight {
     from {
@@ -552,19 +680,12 @@ const animationStyles = `
     }
   }
   
-  .animate-in {
-    animation: fadeInUp 0.6s ease-out forwards;
+  .animated {
+    animation-fill-mode: both;
   }
   
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .tab-panel {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
   
   .loading {
@@ -590,12 +711,35 @@ const animationStyles = `
   @keyframes spin {
     to { transform: translate(-50%, -50%) rotate(360deg); }
   }
+  
+  /* Animaciones de entrada suaves */
+  [data-animate] {
+    will-change: transform, opacity;
+  }
+  
+  /* Mejoras de rendimiento */
+  .hero-image-container,
+  .stat,
+  .feature-card,
+  .step {
+    will-change: transform;
+  }
+  
+  /* Transiciones suaves para elementos interactivos */
+  .btn-primary,
+  .btn-secondary,
+  .nav-link,
+  .feature-card,
+  .stat,
+  .step {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
 `;
 
 // Añadir estilos al documento
-if (!document.querySelector('#animation-styles')) {
+if (!document.querySelector('#smooth-animation-styles')) {
   const style = document.createElement('style');
-  style.id = 'animation-styles';
+  style.id = 'smooth-animation-styles';
   style.textContent = animationStyles;
   document.head.appendChild(style);
 }
@@ -608,4 +752,4 @@ window.NodoLocker = {
   elements
 };
 
-console.log('🚀 Nodo Locker - Versión premium cargada');
+console.log('🚀 Nodo Locker - Animaciones suaves cargadas');
