@@ -171,9 +171,12 @@ function openMobileMenu() {
   
   // Animar hamburger
   const spans = elements.navToggle.querySelectorAll('span');
-  spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+  spans[0].style.transform = 'rotate(45deg) translate(7px, 7px)';
+  spans[0].style.background = 'var(--primary)';
   spans[1].style.opacity = '0';
-  spans[2].style.transform = 'rotate(-45deg) translate(7px, -6px)';
+  spans[1].style.transform = 'scale(0)';
+  spans[2].style.transform = 'rotate(-45deg) translate(7px, -7px)';
+  spans[2].style.background = 'var(--primary)';
 }
 
 function closeMobileMenu() {
@@ -186,6 +189,7 @@ function closeMobileMenu() {
   spans.forEach(span => {
     span.style.transform = '';
     span.style.opacity = '';
+    span.style.background = '';
   });
 }
 
@@ -273,7 +277,7 @@ function switchTab(targetTab) {
     activeButton.classList.add('active');
     activePanel.classList.add('active');
     
-    // Efecto de animación
+    // Efecto de animación mejorado
     activePanel.style.transform = 'translateY(20px)';
     activePanel.style.opacity = '0';
     
@@ -603,7 +607,7 @@ function initializeAnimations() {
     const scrolled = window.pageYOffset;
     const hero = document.querySelector('.hero');
     if (hero) {
-      hero.style.transform = `translateY(${scrolled * 0.1}px)`;
+      hero.style.transform = `translateY(${scrolled * 0.05}px)`;
     }
   }, 16), { passive: true });
 }
