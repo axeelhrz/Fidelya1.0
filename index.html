@@ -7,14 +7,14 @@
     <meta name="description" content="La primera red inteligente de lockers en México. Tecnología confiable para la logística urbana del futuro.">
     
     <!-- Preload critical resources -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style">
     <link rel="preload" href="Assets/NODO-LOCKER_ICONO.gif" as="image">
     <link rel="preload" href="Assets/NODO LOCKER.jpg" as="image">
     
     <!-- Google Fonts optimized -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -22,14 +22,13 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Modern Navigation -->
+    <!-- Navegación Premium -->
     <nav class="navbar" id="navbar" role="navigation" aria-label="Navegación principal">
         <div class="nav-container">
-            <!-- Logo Section -->
+            <!-- Logo -->
             <div class="nav-logo">
                 <div class="logo-wrapper">
                     <img src="Assets/NODO-LOCKER_ICONO.gif" alt="Nodo Locker" class="logo-image" loading="eager">
-                    <div class="logo-glow"></div>
                 </div>
                 <span class="logo-text">
                     <span class="logo-primary">Nodo</span>
@@ -37,7 +36,7 @@
                 </span>
             </div>
             
-            <!-- Navigation Menu -->
+            <!-- Menú de Navegación -->
             <div class="nav-menu" id="navMenu" role="menubar">
                 <a href="#inicio" class="nav-link active" role="menuitem">
                     <span class="nav-link-text">Inicio</span>
@@ -65,11 +64,10 @@
                 </a>
             </div>
             
-            <!-- CTA Section -->
+            <!-- CTA Button -->
             <div class="nav-cta">
-                <button class="btn-primary modern" id="joinWaitlistBtn">
+                <button class="btn-primary" id="joinWaitlistBtn">
                     <span class="btn-text">Únete al MVP</span>
-                    <div class="btn-ripple"></div>
                     <i class="ph ph-arrow-right btn-icon"></i>
                 </button>
             </div>
@@ -81,74 +79,51 @@
                 <span class="hamburger-line"></span>
             </button>
         </div>
-        
-        <!-- Navigation Background Blur -->
-        <div class="nav-backdrop"></div>
     </nav>
 
-    <!-- Modern Hero Section -->
-    <section class="hero modern" id="inicio">
-        <!-- Hero Background Elements -->
-        <div class="hero-bg">
-            <div class="hero-gradient"></div>
-            <div class="hero-pattern"></div>
-            <div class="hero-particles">
-                <div class="particle" style="--delay: 0s; --duration: 20s;"></div>
-                <div class="particle" style="--delay: 5s; --duration: 25s;"></div>
-                <div class="particle" style="--delay: 10s; --duration: 30s;"></div>
-                <div class="particle" style="--delay: 15s; --duration: 22s;"></div>
-            </div>
-        </div>
-        
+    <!-- Hero Section Premium -->
+    <section class="hero" id="inicio">
         <div class="hero-container">
-            <!-- Hero Content -->
+            <!-- Contenido del Hero -->
             <div class="hero-content">
-                <!-- Badge with animation -->
-                <div class="hero-badge modern">
+                <!-- Badge -->
+                <div class="hero-badge" data-animate>
                     <div class="badge-icon">
                         <i class="ph ph-lightning"></i>
                     </div>
                     <span class="badge-text">Revolucionando la última milla en México</span>
-                    <div class="badge-glow"></div>
                 </div>
                 
-                <!-- Main Title with gradient -->
-                <h1 class="hero-title modern">
+                <!-- Título Principal -->
+                <h1 class="hero-title" data-animate>
                     <span class="title-line">Tecnología</span>
                     <span class="title-line gradient-text">confiable</span>
                     <span class="title-line">desde el primer día</span>
                 </h1>
                 
-                <!-- Description -->
-                <p class="hero-description modern">
+                <!-- Descripción -->
+                <p class="hero-description" data-animate>
                     La primera red inteligente de lockers en México que transforma 
                     la logística urbana con <strong>tecnología de vanguardia</strong> y 
                     <strong>confiabilidad garantizada</strong>.
                 </p>
                 
-                <!-- Action Buttons -->
-                <div class="hero-actions modern">
-                    <button class="btn-primary large modern" id="downloadBtn">
-                        <div class="btn-content">
-                            <i class="ph ph-download-simple btn-icon-left"></i>
-                            <span class="btn-text">Descargar presentación</span>
-                        </div>
-                        <div class="btn-ripple"></div>
-                        <div class="btn-glow"></div>
+                <!-- Botones de Acción -->
+                <div class="hero-actions" data-animate>
+                    <button class="btn-primary large" id="downloadBtn">
+                        <i class="ph ph-download-simple btn-icon-left"></i>
+                        <span class="btn-text">Descargar presentación</span>
                     </button>
                     
-                    <button class="btn-secondary large modern" id="scheduleBtn">
-                        <div class="btn-content">
-                            <i class="ph ph-calendar btn-icon-left"></i>
-                            <span class="btn-text">Agendar reunión</span>
-                        </div>
-                        <div class="btn-ripple"></div>
+                    <button class="btn-secondary large" id="scheduleBtn">
+                        <i class="ph ph-calendar btn-icon-left"></i>
+                        <span class="btn-text">Agendar reunión</span>
                     </button>
                 </div>
                 
-                <!-- Enhanced Stats -->
-                <div class="hero-stats modern">
-                    <div class="stat modern" data-value="40">
+                <!-- Estadísticas -->
+                <div class="hero-stats" data-animate>
+                    <div class="stat">
                         <div class="stat-icon">
                             <i class="ph ph-clock"></i>
                         </div>
@@ -156,12 +131,9 @@
                             <div class="stat-number">40%</div>
                             <div class="stat-label">Menos tiempo en entregas</div>
                         </div>
-                        <div class="stat-progress">
-                            <div class="stat-progress-bar" style="--progress: 40%"></div>
-                        </div>
                     </div>
                     
-                    <div class="stat modern" data-value="24">
+                    <div class="stat">
                         <div class="stat-icon">
                             <i class="ph ph-clock-clockwise"></i>
                         </div>
@@ -169,12 +141,9 @@
                             <div class="stat-number">24/7</div>
                             <div class="stat-label">Disponibilidad</div>
                         </div>
-                        <div class="stat-progress">
-                            <div class="stat-progress-bar" style="--progress: 100%"></div>
-                        </div>
                     </div>
                     
-                    <div class="stat modern" data-value="60">
+                    <div class="stat">
                         <div class="stat-icon">
                             <i class="ph ph-check-circle"></i>
                         </div>
@@ -182,45 +151,21 @@
                             <div class="stat-number">60%</div>
                             <div class="stat-label">Más entregas exitosas</div>
                         </div>
-                        <div class="stat-progress">
-                            <div class="stat-progress-bar" style="--progress: 60%"></div>
-                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Hero Visual -->
-            <div class="hero-visual modern">
-                <div class="hero-image-container modern">
-                    <!-- Image with loading optimization -->
+            <!-- Visual del Hero -->
+            <div class="hero-visual" data-animate>
+                <div class="hero-image-container">
                     <img src="Assets/NODO LOCKER.jpg" 
                          alt="Sistema Nodo Locker - Red inteligente de lockers" 
-                         class="hero-image modern"
+                         class="hero-image"
                          loading="eager"
                          decoding="async">
-                    
-                    <!-- Image overlays and effects -->
-                    <div class="image-overlay"></div>
-                    <div class="image-glow"></div>
-                    
-                    <!-- Floating elements -->
-                    <div class="floating-elements">
-                        <div class="floating-card" style="--delay: 0s;">
-                            <i class="ph ph-shield-check"></i>
-                            <span>Seguro</span>
-                        </div>
-                        <div class="floating-card" style="--delay: 1s;">
-                            <i class="ph ph-lightning"></i>
-                            <span>Rápido</span>
-                        </div>
-                        <div class="floating-card" style="--delay: 2s;">
-                            <i class="ph ph-gear"></i>
-                            <span>Inteligente</span>
-                        </div>
-                    </div>
                 </div>
                 
-                <!-- Trust indicators -->
+                <!-- Indicadores de Confianza -->
                 <div class="trust-indicators">
                     <div class="trust-item">
                         <i class="ph ph-certificate"></i>
@@ -238,7 +183,7 @@
             </div>
         </div>
         
-        <!-- Scroll indicator -->
+        <!-- Indicador de Scroll -->
         <div class="scroll-indicator">
             <div class="scroll-text">Descubre más</div>
             <div class="scroll-arrow">
@@ -247,10 +192,10 @@
         </div>
     </section>
 
-    <!-- Technology Section -->
-    <section class="section technology" id="tecnologia">
+    <!-- Sección de Tecnología -->
+    <section class="section" id="tecnologia">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header" data-animate>
                 <h2 class="section-title">Tecnología de vanguardia</h2>
                 <p class="section-description">
                     Cada componente está diseñado para ofrecer máxima confiabilidad y eficiencia.
@@ -258,15 +203,15 @@
             </div>
             
             <div class="features-grid">
-                <div class="feature-card">
+                <div class="feature-card" data-animate>
                     <div class="feature-icon">
                         <i class="ph ph-monitor"></i>
                     </div>
                     <h3>Pantalla táctil</h3>
-                    <p>Interfaz intuitiva para una experiencia de usuario fluida.</p>
+                    <p>Interfaz intuitiva para una experiencia de usuario fluida y accesible.</p>
                 </div>
                 
-                <div class="feature-card">
+                <div class="feature-card" data-animate>
                     <div class="feature-icon">
                         <i class="ph ph-qr-code"></i>
                     </div>
@@ -274,47 +219,47 @@
                     <p>Retiros rápidos y seguros con tecnología de escaneo avanzada.</p>
                 </div>
                 
-                <div class="feature-card">
+                <div class="feature-card" data-animate>
                     <div class="feature-icon">
                         <i class="ph ph-lightbulb"></i>
                     </div>
                     <h3>Iluminación LED</h3>
-                    <p>Visibilidad 24/7 con sistema de iluminación eficiente.</p>
+                    <p>Visibilidad 24/7 con sistema de iluminación eficiente y sostenible.</p>
                 </div>
                 
-                <div class="feature-card">
+                <div class="feature-card" data-animate>
                     <div class="feature-icon">
                         <i class="ph ph-lock"></i>
                     </div>
                     <h3>Cerradura electrónica</h3>
-                    <p>Seguridad garantizada con acceso mediante código único.</p>
+                    <p>Seguridad garantizada con acceso mediante código único encriptado.</p>
                 </div>
 
-                <div class="feature-card">
+                <div class="feature-card" data-animate>
                     <div class="feature-icon">
                         <i class="ph ph-cube"></i>
                     </div>
                     <h3>Módulos adaptables</h3>
-                    <p>Diferentes tamaños para maximizar la eficiencia del espacio.</p>
+                    <p>Diferentes tamaños para maximizar la eficiencia del espacio disponible.</p>
                 </div>
 
-                <div class="feature-card">
+                <div class="feature-card" data-animate>
                     <div class="feature-icon">
                         <i class="ph ph-code"></i>
                     </div>
                     <h3>API de integración</h3>
-                    <p>Compatible con plataformas de paquetería existentes.</p>
+                    <p>Compatible con todas las plataformas de paquetería existentes.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Validation Section -->
-    <section class="section validation-section">
+    <!-- Sección de Validación -->
+    <section class="validation-section">
         <div class="container">
-            <div class="validation-content">
+            <div class="validation-content" data-animate>
                 <h3>Modelo probado en +30 países</h3>
-                <p>Ahora adaptado a las necesidades del mercado mexicano</p>
+                <p>Ahora adaptado específicamente a las necesidades del mercado mexicano</p>
                 <div class="validation-logos">
                     <div class="logo-item">
                         <img src="Assets/amazon-logo.svg" alt="Amazon Locker" class="company-logo">
@@ -333,17 +278,17 @@
         </div>
     </section>
 
-    <!-- Benefits Section -->
-    <section class="section benefits" id="beneficios">
+    <!-- Sección de Beneficios -->
+    <section class="section" id="beneficios">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header" data-animate>
                 <h2 class="section-title">Beneficios para cada aliado</h2>
                 <p class="section-description">
                     Cada actor del ecosistema obtiene beneficios únicos y medibles
                 </p>
             </div>
             
-            <div class="benefits-tabs">
+            <div class="benefits-tabs" data-animate>
                 <div class="tabs-nav">
                     <button class="tab-btn active" data-tab="couriers">
                         Para Couriers
@@ -363,9 +308,10 @@
                                 <h3>Para Couriers</h3>
                                 <p class="benefit-subtitle">Optimización total de operaciones</p>
                                 <ul class="benefit-list">
-                                    <li>Menos entregas fallidas</li>
-                                    <li>Menor costo operativo</li>
-                                    <li>Entrega 24/7 sin segundo intento</li>
+                                    <li>Reducción significativa de entregas fallidas</li>
+                                    <li>Menor costo operativo por entrega</li>
+                                    <li>Entrega 24/7 sin necesidad de segundo intento</li>
+                                    <li>Mayor eficiencia en rutas de distribución</li>
                                 </ul>
                             </div>
                             <div class="benefit-visual">
@@ -382,9 +328,10 @@
                                 <h3>Para Retailers</h3>
                                 <p class="benefit-subtitle">Crecimiento inteligente del negocio</p>
                                 <ul class="benefit-list">
-                                    <li>Más tráfico en tienda</li>
-                                    <li>Monetización de espacio</li>
-                                    <li>Estrategias omnicanal</li>
+                                    <li>Incremento del tráfico en tienda física</li>
+                                    <li>Monetización efectiva del espacio disponible</li>
+                                    <li>Estrategias omnicanal integradas</li>
+                                    <li>Nuevas fuentes de ingresos pasivos</li>
                                 </ul>
                             </div>
                             <div class="benefit-visual">
@@ -401,9 +348,10 @@
                                 <h3>Para Usuarios</h3>
                                 <p class="benefit-subtitle">Conveniencia total garantizada</p>
                                 <ul class="benefit-list">
-                                    <li>Retiro rápido sin filas</li>
-                                    <li>Seguridad y conveniencia</li>
-                                    <li>Disponibilidad extendida</li>
+                                    <li>Retiro rápido sin filas ni esperas</li>
+                                    <li>Máxima seguridad y conveniencia</li>
+                                    <li>Disponibilidad extendida 24/7</li>
+                                    <li>Ubicaciones estratégicas y accesibles</li>
                                 </ul>
                             </div>
                             <div class="benefit-visual">
@@ -418,10 +366,10 @@
         </div>
     </section>
 
-    <!-- Process Section -->
-    <section class="section process" id="proceso">
+    <!-- Sección de Proceso -->
+    <section class="section" id="proceso">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header" data-animate>
                 <h2 class="section-title">Proceso simple</h2>
                 <p class="section-description">
                     Tres pasos para revolucionar tus entregas
@@ -429,27 +377,27 @@
             </div>
             
             <div class="steps-container">
-                <div class="step">
+                <div class="step" data-animate>
                     <div class="step-number">01</div>
                     <div class="step-content">
                         <h3>Regístrate</h3>
-                        <p>Accede a nuestra red de lockers distribuidos estratégicamente por la ciudad.</p>
+                        <p>Accede a nuestra red de lockers distribuidos estratégicamente por toda la ciudad.</p>
                     </div>
                 </div>
 
-                <div class="step">
+                <div class="step" data-animate>
                     <div class="step-number">02</div>
                     <div class="step-content">
                         <h3>Envía o recibe</h3>
-                        <p>Selecciona el locker más conveniente y recibe un código único de acceso.</p>
+                        <p>Selecciona el locker más conveniente y recibe un código único de acceso seguro.</p>
                     </div>
                 </div>
 
-                <div class="step">
+                <div class="step" data-animate>
                     <div class="step-number">03</div>
                     <div class="step-content">
                         <h3>Retira cuando quieras</h3>
-                        <p>Usa tu código para abrir el locker. Disponible 24/7 con máxima seguridad.</p>
+                        <p>Usa tu código para abrir el locker. Disponible 24/7 con máxima seguridad garantizada.</p>
                     </div>
                 </div>
             </div>
@@ -457,22 +405,22 @@
     </section>
 
     <!-- Roadmap -->
-    <section class="section roadmap" id="roadmap">
+    <section class="section" id="roadmap">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header" data-animate>
                 <h2 class="section-title">Roadmap</h2>
                 <p class="section-description">
                     El camino hacia la transformación de la logística urbana
                 </p>
             </div>
             
-            <div class="timeline">
+            <div class="timeline" data-animate>
                 <div class="timeline-item completed">
                     <div class="timeline-marker"></div>
                     <div class="timeline-content">
                         <div class="timeline-date">Q1 2024</div>
                         <h3>Investigación y Desarrollo</h3>
-                        <p>Análisis de mercado y desarrollo de tecnología core.</p>
+                        <p>Análisis exhaustivo de mercado y desarrollo de tecnología core.</p>
                         <span class="status completed">Completado</span>
                     </div>
                 </div>
@@ -482,7 +430,7 @@
                     <div class="timeline-content">
                         <div class="timeline-date">Q2 2024</div>
                         <h3>Prototipo Funcional</h3>
-                        <p>Primer prototipo de locker inteligente y aplicación móvil.</p>
+                        <p>Primer prototipo de locker inteligente y aplicación móvil nativa.</p>
                         <span class="status completed">Completado</span>
                     </div>
                 </div>
@@ -492,7 +440,7 @@
                     <div class="timeline-content">
                         <div class="timeline-date">Q3 2024</div>
                         <h3>MVP y Alianzas</h3>
-                        <p>Lanzamiento del MVP con primeros aliados estratégicos.</p>
+                        <p>Lanzamiento del MVP con primeros aliados estratégicos confirmados.</p>
                         <span class="status current">En progreso</span>
                     </div>
                 </div>
@@ -502,7 +450,7 @@
                     <div class="timeline-content">
                         <div class="timeline-date">Q4 2024</div>
                         <h3>Fase piloto</h3>
-                        <p>Primeras unidades en ubicaciones clave de CDMX.</p>
+                        <p>Primeras 10 unidades en ubicaciones clave de CDMX y área metropolitana.</p>
                         <span class="status future">Próximamente</span>
                     </div>
                 </div>
@@ -512,7 +460,7 @@
                     <div class="timeline-content">
                         <div class="timeline-date">Q1 2025</div>
                         <h3>Escalamiento</h3>
-                        <p>+50 unidades en principales ciudades del país.</p>
+                        <p>+50 unidades en principales ciudades del país y expansión nacional.</p>
                         <span class="status future">Planificado</span>
                     </div>
                 </div>
@@ -520,10 +468,10 @@
         </div>
     </section>
 
-    <!-- Contact Form -->
+    <!-- Formulario de Contacto -->
     <section class="section contact-form" id="contacto">
         <div class="container">
-            <div class="form-container">
+            <div class="form-container" data-animate>
                 <div class="form-header">
                     <h2>Contáctanos</h2>
                     <p>Te contactaremos en menos de 24 horas</p>
@@ -568,7 +516,7 @@
                         <img src="Assets/NODO-LOCKER_TEXTO.gif" alt="Nodo Locker" class="footer-logo-image">
                     </div>
                     <p class="footer-description">
-                        Revolucionando la última milla en México con tecnología inteligente.
+                        Revolucionando la última milla en México con tecnología inteligente y sostenible.
                     </p>
                 </div>
                 
