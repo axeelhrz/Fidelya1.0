@@ -131,7 +131,7 @@ body {
 /* Navegación futurista FLOTANTE */
 .navbar {
   position: fixed;
-  top: var(--space-1); /* Cambiado de var(--space-4) a var(--space-2) para subirlo más */
+  top: 0; /* Cambiado a 0 para que esté completamente arriba desde el inicio */
   left: 0;
   right: 0;
   background: transparent; /* Completamente transparente */
