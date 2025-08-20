@@ -178,8 +178,23 @@ const RegistroRapidoClient: React.FC = () => {
         }
       });
 
-      // Add photo if selected
+      // Add photo if selected (optional)
       if (selectedPhoto) {
+        // Validate photo size (5MB max)
+        if (selectedPhoto.size > 5 * 1024 * 1024) {
+          alert('La foto es demasiado grande. El tamaño máximo es 5MB.');
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // Validate photo type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(selectedPhoto.type)) {
+          alert('Tipo de archivo no válido. Solo se permiten imágenes (JPEG, PNG, GIF, WebP).');
+          setIsSubmitting(false);
+          return;
+        }
+        
         formData.append('photo', selectedPhoto);
       }
 
@@ -191,9 +206,24 @@ const RegistroRapidoClient: React.FC = () => {
 
       setRegistrationCode(response.data.registration_code);
       setIsSuccess(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error en registro rápido:', error);
-      alert('Error al registrarse. Por favor intenta de nuevo.');
+      
+      // Handle specific error messages
+      if (error.response?.status === 422) {
+        const errors = error.response.data.errors;
+        if (errors?.email) {
+          alert('Este email ya está registrado en el censo.');
+        } else if (errors?.photo) {
+          alert('Error con la foto: ' + errors.photo[0]);
+        } else {
+          alert('Error de validación: ' + (error.response.data.message || 'Por favor revisa los datos ingresados.'));
+        }
+      } else if (error.response?.status === 500) {
+        alert('Error interno del servidor. Por favor intenta de nuevo más tarde.');
+      } else {
+        alert('Error al registrarse. Por favor intenta de nuevo.');
+      }
     } finally {
       setIsSubmitting(false);
     }
