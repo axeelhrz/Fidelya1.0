@@ -13,29 +13,74 @@ return new class extends Migration
     {
         Schema::create('quick_registrations', function (Blueprint $table) {
             $table->id();
-            $table->string('first_name');
-            $table->string('last_name');
+            
+            // Código de registro secuencial
+            $table->string('registration_code')->unique(); // CensoCodigo1, CensoCodigo2, etc.
+            
+            // Información personal básica
+            $table->string('first_name'); // Nombres
+            $table->string('last_name'); // Apellido
+            $table->string('doc_id')->nullable(); // Cédula
             $table->string('email')->unique();
-            $table->string('phone');
-            $table->string('doc_id')->nullable();
-            $table->date('birth_date')->nullable();
-            $table->enum('gender', ['male', 'female', 'other'])->nullable();
-            $table->string('province');
-            $table->string('city');
-            $table->enum('interest_type', ['player', 'club_owner', 'league_admin']);
-            $table->string('preferred_sport')->nullable();
-            $table->enum('experience_level', ['beginner', 'intermediate', 'advanced'])->nullable();
+            $table->string('phone'); // Celular
+            $table->date('birth_date')->nullable(); // Fecha de nacimiento
+            $table->enum('gender', ['masculino', 'femenino'])->nullable(); // Sexo
+            
+            // Ubicación
+            $table->string('country')->default('Ecuador'); // País
+            $table->string('province'); // Provincia
+            $table->string('city'); // Ciudad
+            
+            // Club y federación
+            $table->string('club_name')->nullable(); // Club
+            $table->string('federation')->nullable(); // Federación
+            
+            // Estilo de juego
+            $table->enum('playing_side', ['derecho', 'zurdo'])->nullable(); // Lado de juego
+            $table->enum('playing_style', ['clasico', 'lapicero'])->nullable(); // Tipo de juego
+            
+            // Raqueta - palo
+            $table->string('racket_brand')->nullable(); // Marca
+            $table->string('racket_model')->nullable(); // Modelo
+            $table->string('racket_custom_brand')->nullable(); // Marca personalizada
+            $table->string('racket_custom_model')->nullable(); // Modelo personalizado
+            
+            // Caucho del drive
+            $table->string('drive_rubber_brand')->nullable(); // Marca
+            $table->string('drive_rubber_model')->nullable(); // Modelo
+            $table->enum('drive_rubber_type', ['liso', 'pupo_largo', 'pupo_corto', 'antitopspin'])->nullable(); // Tipo
+            $table->enum('drive_rubber_color', ['negro', 'rojo', 'verde', 'azul', 'amarillo', 'morado', 'fucsia'])->nullable(); // Color
+            $table->string('drive_rubber_sponge')->nullable(); // Esponja
+            $table->string('drive_rubber_hardness')->nullable(); // Hardness
+            $table->string('drive_rubber_custom_brand')->nullable(); // Marca personalizada
+            $table->string('drive_rubber_custom_model')->nullable(); // Modelo personalizado
+            
+            // Caucho del back
+            $table->string('backhand_rubber_brand')->nullable(); // Marca
+            $table->string('backhand_rubber_model')->nullable(); // Modelo
+            $table->enum('backhand_rubber_type', ['liso', 'pupo_largo', 'pupo_corto', 'antitopspin'])->nullable(); // Tipo
+            $table->enum('backhand_rubber_color', ['negro', 'rojo', 'verde', 'azul', 'amarillo', 'morado', 'fucsia'])->nullable(); // Color
+            $table->string('backhand_rubber_sponge')->nullable(); // Esponja
+            $table->string('backhand_rubber_hardness')->nullable(); // Hardness
+            $table->string('backhand_rubber_custom_brand')->nullable(); // Marca personalizada
+            $table->string('backhand_rubber_custom_model')->nullable(); // Modelo personalizado
+            
+            // Información adicional
             $table->text('notes')->nullable();
+            $table->string('photo_path')->nullable(); // Ruta de la foto
+            
+            // Estados y metadatos
             $table->enum('status', ['pending', 'contacted', 'approved', 'rejected'])->default('pending');
             $table->timestamp('contacted_at')->nullable();
             $table->timestamp('approved_at')->nullable();
-            $table->json('metadata')->nullable(); // For additional data
+            $table->json('metadata')->nullable(); // Para datos adicionales
             $table->timestamps();
 
             // Indexes
             $table->index(['status', 'created_at']);
             $table->index(['province', 'city']);
-            $table->index(['interest_type', 'preferred_sport']);
+            $table->index(['club_name', 'federation']);
+            $table->index('registration_code');
         });
     }
 
