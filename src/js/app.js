@@ -2355,17 +2355,31 @@ function initializeFAQ() {
     const faqList = document.getElementById('faq-list');
     const faqNoResults = document.getElementById('faq-no-results');
     
+    console.log(`🔧 Inicializando FAQ - ${faqItems.length} elementos encontrados`);
+    
     // Configurar eventos para cada pregunta FAQ
     faqItems.forEach((item, index) => {
         const question = item.querySelector('.faq__question');
         const answer = item.querySelector('.faq__answer');
         const icon = item.querySelector('.faq__icon');
         
-        if (!question || !answer) return;
+        if (!question || !answer) {
+            console.warn(`❌ FAQ item ${index} no tiene pregunta o respuesta`);
+            return;
+        }
+        
+        console.log(`🔧 Configurando FAQ item ${index + 1}`);
+        
+        // Variable para prevenir doble activación en móviles
+        let touchProcessed = false;
+        let touchStartTime = 0;
         
         // Función para toggle FAQ
-        const toggleFAQ = (e) => {
+        const toggleFAQ = (e, source = 'unknown') => {
             e.preventDefault();
+            e.stopPropagation();
+            
+            console.log(`🎯 Toggle FAQ ${index + 1} desde: ${source}`);
             
             const isExpanded = question.getAttribute('aria-expanded') === 'true';
             
@@ -2381,6 +2395,7 @@ function initializeFAQ() {
                         
                         if (!performanceMode) {
                             otherAnswer.style.maxHeight = '0';
+                            otherAnswer.classList.remove('active');
                         }
                     }
                 }
@@ -2388,52 +2403,124 @@ function initializeFAQ() {
             
             // Toggle la FAQ actual
             if (isExpanded) {
+                console.log(`📝 Cerrando FAQ ${index + 1}`);
                 question.setAttribute('aria-expanded', 'false');
                 item.classList.remove('active');
                 
                 if (!performanceMode) {
                     answer.style.maxHeight = '0';
+                    answer.classList.remove('active');
                 }
             } else {
+                console.log(`📝 Abriendo FAQ ${index + 1}`);
                 question.setAttribute('aria-expanded', 'true');
                 item.classList.add('active');
                 
                 if (!performanceMode) {
-                    answer.style.maxHeight = answer.scrollHeight + 'px';
+                    // Calcular altura dinámica
+                    const contentHeight = answer.scrollHeight;
+                    answer.style.maxHeight = contentHeight + 'px';
+                    answer.classList.add('active');
+                } else {
+                    answer.classList.add('active');
                 }
             }
         };
         
-        // Event listeners
-        question.addEventListener('click', toggleFAQ);
+        if (isMobile) {
+            // ===== EVENTOS MÓVILES OPTIMIZADOS =====
+            
+            // Touch start - preparar para interacción
+            question.addEventListener('touchstart', (e) => {
+                touchProcessed = false;
+                touchStartTime = Date.now();
+                question.style.transform = 'scale(0.98)';
+                question.style.transition = 'transform 0.1s ease';
+                console.log(`👆 Touch start en FAQ ${index + 1}`);
+            }, { passive: true });
+            
+            // Touch end - ejecutar acción
+            question.addEventListener('touchend', (e) => {
+                const touchDuration = Date.now() - touchStartTime;
+                
+                // Resetear transform
+                setTimeout(() => {
+                    question.style.transform = '';
+                }, 150);
+                
+                // Solo procesar si es un toque válido y no se ha procesado ya
+                if (!touchProcessed && touchDuration < 500) {
+                    touchProcessed = true;
+                    console.log(`✅ Touch end válido en FAQ ${index + 1} (duración: ${touchDuration}ms)`);
+                    
+                    // Prevenir el evento click que viene después
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Ejecutar toggle
+                    toggleFAQ(e, 'touch');
+                }
+            }, { passive: false });
+            
+            // Touch cancel - limpiar estado
+            question.addEventListener('touchcancel', () => {
+                question.style.transform = '';
+                touchProcessed = true;
+                console.log(`❌ Touch cancel en FAQ ${index + 1}`);
+            }, { passive: true });
+            
+            // Click como fallback (pero solo si no se procesó touch)
+            question.addEventListener('click', (e) => {
+                if (!touchProcessed) {
+                    console.log(`🖱️ Click fallback en FAQ ${index + 1}`);
+                    toggleFAQ(e, 'click-fallback');
+                } else {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log(`🚫 Click bloqueado después de touch en FAQ ${index + 1}`);
+                }
+                
+                // Resetear flag después de un tiempo
+                setTimeout(() => {
+                    touchProcessed = false;
+                }, 300);
+            });
+            
+        } else {
+            // ===== EVENTOS DESKTOP =====
+            question.addEventListener('click', (e) => {
+                console.log(`🖱️ Click desktop en FAQ ${index + 1}`);
+                toggleFAQ(e, 'desktop-click');
+            });
+        }
         
-        // Soporte para teclado
+        // Soporte para teclado (universal)
         question.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                toggleFAQ(e);
+                console.log(`⌨️ Teclado en FAQ ${index + 1}: ${e.key}`);
+                toggleFAQ(e, 'keyboard');
             }
         });
         
-        // Efectos táctiles para móvil
-        if (isMobile) {
-            question.addEventListener('touchstart', () => {
-                question.style.transform = 'scale(0.98)';
-            }, { passive: true });
-            question.addEventListener('touchend', () => {
-                question.style.transform = '';
-            }, { passive: true });
-        }
+        // Configurar atributos de accesibilidad
+        question.setAttribute('aria-expanded', 'false');
+        question.setAttribute('tabindex', '0');
+        question.setAttribute('role', 'button');
+        answer.setAttribute('id', `faq-answer-${index + 1}`);
+        question.setAttribute('aria-controls', `faq-answer-${index + 1}`);
     });
     
     // Funcionalidad de búsqueda FAQ
     if (faqSearch) {
+        console.log('🔍 Configurando búsqueda de FAQ');
         let searchTimeout;
         
         faqSearch.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 const searchTerm = e.target.value.toLowerCase().trim();
+                console.log(`🔍 Buscando: "${searchTerm}"`);
                 filterFAQs(searchTerm);
             }, 300);
         });
@@ -2441,6 +2528,7 @@ function initializeFAQ() {
         // Limpiar búsqueda con Escape
         faqSearch.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                console.log('🔍 Limpiando búsqueda con Escape');
                 faqSearch.value = '';
                 filterFAQs('');
             }
@@ -2450,7 +2538,7 @@ function initializeFAQ() {
     function filterFAQs(searchTerm) {
         let visibleCount = 0;
         
-        faqItems.forEach(item => {
+        faqItems.forEach((item, itemIndex) => {
             const question = item.querySelector('.faq__question-text');
             const answer = item.querySelector('.faq__answer-text');
             
@@ -2476,20 +2564,26 @@ function initializeFAQ() {
                     item.classList.remove('active');
                     if (!performanceMode) {
                         answerDiv.style.maxHeight = '0';
+                        answerDiv.classList.remove('active');
                     }
                 }
             }
         });
         
+        console.log(`🔍 Filtro aplicado: ${visibleCount} FAQs visibles de ${faqItems.length}`);
+        
         // Mostrar/ocultar mensaje de "no resultados"
         if (faqNoResults) {
             if (visibleCount === 0 && searchTerm !== '') {
                 faqNoResults.style.display = 'block';
+                console.log('🔍 Mostrando mensaje de "no resultados"');
             } else {
                 faqNoResults.style.display = 'none';
             }
         }
     }
+    
+    console.log('✅ FAQ inicializado correctamente');
 }
 
 // ===== FUNCIONES DE VIDEO ULTRA-OPTIMIZADAS =====
@@ -2647,4 +2741,3 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 console.log('📱 StarFlex JavaScript cargado completamente');
-
