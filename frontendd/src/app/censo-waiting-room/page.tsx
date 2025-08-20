@@ -19,13 +19,14 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     code?: string;
-  };
+  }>;
 }
 
-const CensoWaitingRoomPage: React.FC<PageProps> = ({ searchParams }) => {
-  const registrationCode = searchParams.code;
+const CensoWaitingRoomPage: React.FC<PageProps> = async ({ searchParams }) => {
+  const params = await searchParams;
+  const registrationCode = params.code;
 
   return (
     <ThemeProvider theme={authTheme}>
