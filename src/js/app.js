@@ -2383,7 +2383,7 @@ function initializeFAQ() {
             
             const isExpanded = question.getAttribute('aria-expanded') === 'true';
             
-            // Cerrar todas las otras FAQs
+            // SIEMPRE cerrar todas las otras FAQs primero
             faqItems.forEach(otherItem => {
                 if (otherItem !== item) {
                     const otherQuestion = otherItem.querySelector('.faq__question');
@@ -2396,6 +2396,8 @@ function initializeFAQ() {
                         if (!performanceMode) {
                             otherAnswer.style.maxHeight = '0';
                             otherAnswer.classList.remove('active');
+                        } else {
+                            otherAnswer.classList.remove('active');
                         }
                     }
                 }
@@ -2403,6 +2405,7 @@ function initializeFAQ() {
             
             // Toggle la FAQ actual
             if (isExpanded) {
+                // Si ya estaba abierta, cerrarla
                 console.log(`📝 Cerrando FAQ ${index + 1}`);
                 question.setAttribute('aria-expanded', 'false');
                 item.classList.remove('active');
@@ -2410,8 +2413,11 @@ function initializeFAQ() {
                 if (!performanceMode) {
                     answer.style.maxHeight = '0';
                     answer.classList.remove('active');
+                } else {
+                    answer.classList.remove('active');
                 }
             } else {
+                // Si estaba cerrada, abrirla
                 console.log(`📝 Abriendo FAQ ${index + 1}`);
                 question.setAttribute('aria-expanded', 'true');
                 item.classList.add('active');
