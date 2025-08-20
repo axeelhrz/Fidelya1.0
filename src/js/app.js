@@ -2422,39 +2422,37 @@ function initializeFAQ() {
             }
         };
         
-        // Event listeners - MEJORADOS PARA MÓVIL PERO MANTENIENDO FUNCIONALIDAD
+        // Event listeners - SIMPLIFICADOS PARA MEJOR COMPATIBILIDAD MÓVIL
         if (isMobile) {
-            // Para móvil: usar touchend con prevención de doble activación
-            let touchProcessed = false;
-            
+            // Para móvil: usar tanto click como touch para máxima compatibilidad
+            let touchStarted = false;
             question.addEventListener('touchstart', (e) => {
-                touchProcessed = false;
+                touchStarted = true;
                 question.style.transform = 'scale(0.98)';
                 question.style.transition = 'transform 0.1s ease';
                 console.log(`👆 Touch start en FAQ ${index + 1}`);
             }, { passive: true });
             
             question.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
                 // Resetear transform
                 setTimeout(() => {
                     question.style.transform = '';
                 }, 150);
                 
-                // Procesar solo una vez
-                if (!touchProcessed) {
-                    touchProcessed = true;
-                    console.log(`👆 Touch válido en FAQ ${index + 1}`);
-                    toggleFAQ(e);
-                }
-            }, { passive: false });
+                // NO prevenir el evento por defecto para permitir que el click se dispare
+                console.log(`👆 Touch end en FAQ ${index + 1}`);
+            }, { passive: true });
             
             question.addEventListener('touchcancel', () => {
                 question.style.transform = '';
-                touchProcessed = true;
+                touchStarted = false;
             }, { passive: true });
+            
+            // Usar click normal que funciona tanto con touch como con mouse
+            question.addEventListener('click', (e) => {
+                console.log(`🖱️ Click en FAQ ${index + 1} (móvil)`);
+                toggleFAQ(e);
+            });
             
         } else {
             // Para desktop: usar click normal
@@ -2468,6 +2466,14 @@ function initializeFAQ() {
                 toggleFAQ(e);
             }
         });
+        
+        // Asegurar que el botón tenga los atributos correctos
+        question.setAttribute('tabindex', '0');
+        question.setAttribute('role', 'button');
+        question.style.cursor = 'pointer';
+        question.style.userSelect = 'none';
+        question.style.webkitUserSelect = 'none';
+        question.style.webkitTouchCallout = 'none';
         
         console.log(`✅ FAQ item ${index + 1} configurado correctamente`);
     });
