@@ -731,6 +731,47 @@ body {
   border-radius: var(--radius-full);
 }
 
+/* Galería de Lockers Limpia */
+.locker-gallery {
+  margin: var(--space-20) 0;
+  padding: var(--space-16) 0;
+  background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--gray-200);
+}
+
+.locker-showcase {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-16);
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 var(--space-8);
+}
+
+.locker-image-container {
+  position: relative;
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-xl);
+  transition: var(--transition-slow);
+  background: var(--white);
+  padding: var(--space-4);
+}
+
+.locker-image-container:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-2xl), var(--glow-primary);
+}
+
+.locker-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius-lg);
+  transition: var(--transition-slow);
+}
+
 /* Grid de Características Premium */
 .features-grid {
   display: grid;
@@ -1366,8 +1407,7 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
-.cta-buttons .btn-secondary.large
-{
+.cta-buttons .btn-secondary.large {
   background: transparent;
   color: var(--white);
   border: 2px solid var(--white);
@@ -2071,6 +2111,31 @@ body {
   width: 100%;
   justify-content: center;
   margin-top: var(--space-4);
+}
+
+/* Responsive Design para Galería de Lockers */
+@media (max-width: 1024px) {
+  .locker-showcase {
+    grid-template-columns: 1fr;
+    gap: var(--space-12);
+  }
+  
+  .locker-gallery {
+    margin: var(--space-16) 0;
+    padding: var(--space-12) 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .locker-gallery {
+    margin: var(--space-12) 0;
+    padding: var(--space-8) 0;
+  }
+  
+  .locker-showcase {
+    padding: 0 var(--space-4);
+    gap: var(--space-8);
+  }
 }
 
 /* Responsive Design para Contacto */
