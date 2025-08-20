@@ -11,19 +11,43 @@ class QuickRegistration extends Model
     use HasFactory;
 
     protected $fillable = [
+        'registration_code',
         'first_name',
         'last_name',
+        'doc_id',
         'email',
         'phone',
-        'doc_id',
         'birth_date',
         'gender',
+        'country',
         'province',
         'city',
-        'interest_type',
-        'preferred_sport',
-        'experience_level',
+        'club_name',
+        'federation',
+        'playing_side',
+        'playing_style',
+        'racket_brand',
+        'racket_model',
+        'racket_custom_brand',
+        'racket_custom_model',
+        'drive_rubber_brand',
+        'drive_rubber_model',
+        'drive_rubber_type',
+        'drive_rubber_color',
+        'drive_rubber_sponge',
+        'drive_rubber_hardness',
+        'drive_rubber_custom_brand',
+        'drive_rubber_custom_model',
+        'backhand_rubber_brand',
+        'backhand_rubber_model',
+        'backhand_rubber_type',
+        'backhand_rubber_color',
+        'backhand_rubber_sponge',
+        'backhand_rubber_hardness',
+        'backhand_rubber_custom_brand',
+        'backhand_rubber_custom_model',
         'notes',
+        'photo_path',
         'status',
         'contacted_at',
         'approved_at',
@@ -38,6 +62,30 @@ class QuickRegistration extends Model
     ];
 
     protected $appends = ['full_name', 'age', 'days_waiting'];
+
+    /**
+     * Boot method to generate registration code automatically.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (!$model->registration_code) {
+                $model->registration_code = self::generateRegistrationCode();
+            }
+        });
+    }
+
+    /**
+     * Generate sequential registration code.
+     */
+    private static function generateRegistrationCode(): string
+    {
+        $lastRegistration = self::orderBy('id', 'desc')->first();
+        $nextNumber = $lastRegistration ? ($lastRegistration->id + 1) : 1;
+        return 'CensoCodigo' . $nextNumber;
+    }
 
     /**
      * Get the person's full name.
@@ -68,6 +116,47 @@ class QuickRegistration extends Model
     }
 
     /**
+     * Get racket summary.
+     */
+    public function getRacketSummaryAttribute(): array
+    {
+        return [
+            'brand' => $this->racket_custom_brand ?: $this->racket_brand,
+            'model' => $this->racket_custom_model ?: $this->racket_model,
+        ];
+    }
+
+    /**
+     * Get drive rubber summary.
+     */
+    public function getDriveRubberSummaryAttribute(): array
+    {
+        return [
+            'brand' => $this->drive_rubber_custom_brand ?: $this->drive_rubber_brand,
+            'model' => $this->drive_rubber_custom_model ?: $this->drive_rubber_model,
+            'type' => $this->drive_rubber_type,
+            'color' => $this->drive_rubber_color,
+            'sponge' => $this->drive_rubber_sponge,
+            'hardness' => $this->drive_rubber_hardness,
+        ];
+    }
+
+    /**
+     * Get backhand rubber summary.
+     */
+    public function getBackhandRubberSummaryAttribute(): array
+    {
+        return [
+            'brand' => $this->backhand_rubber_custom_brand ?: $this->backhand_rubber_brand,
+            'model' => $this->backhand_rubber_custom_model ?: $this->backhand_rubber_model,
+            'type' => $this->backhand_rubber_type,
+            'color' => $this->backhand_rubber_color,
+            'sponge' => $this->backhand_rubber_sponge,
+            'hardness' => $this->backhand_rubber_hardness,
+        ];
+    }
+
+    /**
      * Scope a query to only include pending registrations.
      */
     public function scopePending($query)
@@ -92,11 +181,11 @@ class QuickRegistration extends Model
     }
 
     /**
-     * Scope a query to filter by interest type.
+     * Scope a query to filter by club.
      */
-    public function scopeByInterest($query, $interestType)
+    public function scopeByClub($query, $clubName)
     {
-        return $query->where('interest_type', $interestType);
+        return $query->where('club_name', $clubName);
     }
 
     /**
@@ -114,11 +203,17 @@ class QuickRegistration extends Model
     }
 
     /**
-     * Scope a query to filter by sport.
+     * Scope a query to filter by playing style.
      */
-    public function scopeBySport($query, $sport)
+    public function scopeByPlayingStyle($query, $playingSide = null, $playingStyle = null)
     {
-        return $query->where('preferred_sport', $sport);
+        if ($playingSide) {
+            $query->where('playing_side', $playingSide);
+        }
+        if ($playingStyle) {
+            $query->where('playing_style', $playingStyle);
+        }
+        return $query;
     }
 
     /**
@@ -154,31 +249,49 @@ class QuickRegistration extends Model
     }
 
     /**
-     * Get interest type label.
+     * Get gender label.
      */
-    public function getInterestTypeLabelAttribute(): string
+    public function getGenderLabelAttribute(): ?string
     {
-        return match($this->interest_type) {
-            'player' => 'Jugador/Miembro',
-            'club_owner' => 'Administrador de Club',
-            'league_admin' => 'Administrador de Liga',
+        if (!$this->gender) {
+            return null;
+        }
+
+        return match($this->gender) {
+            'masculino' => 'Masculino',
+            'femenino' => 'Femenino',
             default => 'No especificado',
         };
     }
 
     /**
-     * Get experience level label.
+     * Get playing side label.
      */
-    public function getExperienceLevelLabelAttribute(): ?string
+    public function getPlayingSideLabelAttribute(): ?string
     {
-        if (!$this->experience_level) {
+        if (!$this->playing_side) {
             return null;
         }
 
-        return match($this->experience_level) {
-            'beginner' => 'Principiante',
-            'intermediate' => 'Intermedio',
-            'advanced' => 'Avanzado',
+        return match($this->playing_side) {
+            'derecho' => 'Derecho',
+            'zurdo' => 'Zurdo',
+            default => 'No especificado',
+        };
+    }
+
+    /**
+     * Get playing style label.
+     */
+    public function getPlayingStyleLabelAttribute(): ?string
+    {
+        if (!$this->playing_style) {
+            return null;
+        }
+
+        return match($this->playing_style) {
+            'clasico' => 'Clásico',
+            'lapicero' => 'Lapicero',
             default => 'No especificado',
         };
     }
@@ -225,5 +338,17 @@ class QuickRegistration extends Model
     public function getLocationSummaryAttribute(): string
     {
         return $this->city . ', ' . $this->province;
+    }
+
+    /**
+     * Get club and federation summary.
+     */
+    public function getClubSummaryAttribute(): string
+    {
+        $summary = $this->club_name ?: 'Sin club';
+        if ($this->federation) {
+            $summary .= ' - ' . $this->federation;
+        }
+        return $summary;
     }
 }
