@@ -46,6 +46,7 @@ function initializeApp() {
   initializeFormHandling();
   initializeSmoothAnimations();
   initializeTabs();
+  initializeFloatingCTA();
   
   console.log('✅ Nodo Locker - Aplicación premium inicializada');
 }
@@ -64,12 +65,15 @@ function cacheElements() {
   elements.ctaButtons = {
     download: document.getElementById('downloadBtn'),
     schedule: document.getElementById('scheduleBtn'),
+    scheduleMain: document.getElementById('scheduleMainBtn'),
+    integrate: document.getElementById('integrateBtn'),
     joinWaitlist: document.getElementById('joinWaitlistBtn')
   };
   elements.contactForm = document.getElementById('contactForm');
   elements.newsletterForm = document.getElementById('newsletterForm');
   elements.tabButtons = document.querySelectorAll('.tab-btn');
   elements.tabPanels = document.querySelectorAll('.tab-panel');
+  elements.floatingCTA = document.getElementById('floatingCTA');
 }
 
 // Sistema de navegación refinado
@@ -409,6 +413,41 @@ function handleTabClick(e) {
   }, 200);
 }
 
+// Sistema de botón flotante CTA
+function initializeFloatingCTA() {
+  if (!elements.floatingCTA) return;
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        elements.floatingCTA.classList.remove('visible');
+      } else {
+        elements.floatingCTA.classList.add('visible');
+      }
+    });
+  }, {
+    threshold: 0.1,
+    rootMargin: '0px 0px -100px 0px'
+  });
+  
+  // Observar la sección de contacto
+  const contactSection = document.getElementById('contacto');
+  if (contactSection) {
+    observer.observe(contactSection);
+  }
+  
+  // Agregar evento click al botón flotante
+  const floatingBtn = elements.floatingCTA.querySelector('.btn-floating');
+  if (floatingBtn) {
+    floatingBtn.addEventListener('click', () => {
+      const contactSection = document.getElementById('contacto');
+      if (contactSection) {
+        smoothScrollTo(contactSection);
+      }
+    });
+  }
+}
+
 // Sistema de botones CTA
 function initializeCTAButtons() {
   Object.entries(elements.ctaButtons).forEach(([key, button]) => {
@@ -430,7 +469,11 @@ function handleCTAClick(buttonType, event) {
       handleDownload(button);
       break;
     case 'schedule':
+    case 'scheduleMain':
       handleScheduleMeeting(button);
+      break;
+    case 'integrate':
+      handleIntegrateOperation(button);
       break;
     case 'joinWaitlist':
       handleJoinWaitlist(button);
@@ -476,24 +519,48 @@ async function handleScheduleMeeting(button) {
   }
 }
 
-async function handleJoinWaitlist(button) {
+async function handleIntegrateOperation(button) {
   try {
-    showNotification('Agregándote a la lista de early adopters...', 'info');
+    showNotification('Procesando solicitud de integración...', 'info');
     
     await new Promise(resolve => setTimeout(resolve, 1200));
     
-    showNotification('¡Te has unido exitosamente al MVP!', 'success');
+    showNotification('¡Solicitud enviada! Te contactaremos pronto para discutir la integración.', 'success');
     
     const buttonText = button.querySelector('.btn-text');
     if (buttonText) {
-      buttonText.textContent = '¡Ya estás en la lista!';
+      buttonText.textContent = '¡Solicitud enviada!';
     }
     
     button.disabled = true;
     button.style.opacity = '0.7';
     
   } catch (error) {
-    console.error('Error al unirse al MVP:', error);
+    console.error('Error al procesar integración:', error);
+    showNotification('Error al procesar la solicitud', 'error');
+  } finally {
+    button.classList.remove('loading');
+  }
+}
+
+async function handleJoinWaitlist(button) {
+  try {
+    showNotification('Agendando reunión...', 'info');
+    
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    
+    showNotification('¡Reunión agendada exitosamente!', 'success');
+    
+    const buttonText = button.querySelector('.btn-text');
+    if (buttonText) {
+      buttonText.textContent = '¡Reunión agendada!';
+    }
+    
+    button.disabled = true;
+    button.style.opacity = '0.7';
+    
+  } catch (error) {
+    console.error('Error al agendar reunión:', error);
     showNotification('Error al procesar la solicitud', 'error');
   } finally {
     button.classList.remove('loading');
@@ -832,3 +899,4 @@ window.NodoLocker = {
 };
 
 console.log('🚀 Nodo Locker - Animaciones suaves cargadas');
+
