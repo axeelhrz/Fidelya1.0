@@ -1,9 +1,5 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
-import authTheme from '@/theme/authTheme';
-import AuthLayout from '@/components/auth/AuthLayout';
 import QuickRegistrationWaitingRoom from '@/components/auth/QuickRegistrationWaitingRoom';
 
 // SEO Metadata
@@ -29,14 +25,11 @@ const CensoWaitingRoomPage: React.FC<PageProps> = async ({ searchParams }) => {
   const registrationCode = params.code;
 
   return (
-    <ThemeProvider theme={authTheme}>
-      <CssBaseline />
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 py-8 px-4 sm:px-6 lg:px-8">
-        <AuthLayout>
-          <QuickRegistrationWaitingRoom registrationCode={registrationCode} />
-        </AuthLayout>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <QuickRegistrationWaitingRoom registrationCode={registrationCode} />
       </div>
-    </ThemeProvider>
+    </div>
   );
 };
 
