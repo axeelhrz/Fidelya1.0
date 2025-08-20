@@ -363,6 +363,16 @@ const RegistroRapidoClient: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Photo info */}
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 font-medium">
+                    📸 Foto opcional - Máximo 5MB (JPEG, PNG, GIF, WebP)
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Puedes completar el registro sin foto y agregarla después
+                  </p>
+                </div>
+
                 {/* Información Personal */}
                 <div className="space-y-6">
                   <h3 className={sectionTitleStyles}>
