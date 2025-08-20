@@ -59,7 +59,6 @@ const memberSchema = z.object({
   notes: z.string().optional(),
   ranking_position: z.number().optional(),
   ranking_last_updated: z.string().optional(),
-  photo_path: z.string().optional(),
 });
 
 type MemberFormValues = z.infer<typeof memberSchema>;
@@ -67,7 +66,7 @@ type MemberFormValues = z.infer<typeof memberSchema>;
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: MemberFormValues) => Promise<void>;
+  onSubmit: (data: MemberFormValues, photo?: File) => Promise<void>;
   member?: Member | null;
   clubs: Club[];
   isSubmitting?: boolean;
@@ -84,7 +83,12 @@ const STEP_TITLES = [
 ];
 
 const RUBBER_COLORS = ['negro', 'rojo', 'verde', 'azul', 'amarillo', 'morado', 'fucsia'];
-const RUBBER_TYPES = ['liso', 'pupo_largo', 'pupo_corto', 'antitopspin'];
+const RUBBER_TYPES = [
+  { value: 'liso', label: 'Liso' },
+  { value: 'pupo_largo', label: 'Pupo Largo' },
+  { value: 'pupo_corto', label: 'Pupo Corto' },
+  { value: 'antitopspin', label: 'Antitopspin' }
+];
 const SPONGE_THICKNESSES = ['0.5', '0.7', '1.5', '1.6', '1.8', '1.9', '2', '2.1', '2.2', 'sin esponja'];
 const HARDNESS_LEVELS = ['h42', 'h44', 'h46', 'h48', 'h50', 'n/a'];
 const POPULAR_BRANDS = ['Butterfly', 'DHS', 'Sanwei', 'Nittaku', 'Yasaka', 'Stiga', 'Victas', 'Joola', 'Xiom', 'Saviga', 'Friendship', 'Dr. Neubauer'];
@@ -100,6 +104,26 @@ const ECUADOR_PROVINCES = [
   { name: 'Galápagos', cities: ['Puerto Ayora'] },
 ];
 
+const TT_CLUBS_ECUADOR = [
+  { name: 'PPH Cuenca', city: 'Cuenca', province: 'Azuay', federation: 'Fede Guayas' },
+  { name: 'Ping Pro', city: 'Guayaquil', province: 'Guayas', federation: 'Fede Guayas' },
+  { name: 'Billy Team', city: 'Guayaquil', province: 'Guayas', federation: 'Fede Guayas' },
+  { name: 'Independiente', city: 'Guayaquil', province: 'Guayas', federation: 'Fede Guayas' },
+  { name: 'BackSpin', city: 'Guayaquil', province: 'Guayas', federation: 'Fede Guayas' },
+  { name: 'Spin Factor', city: 'Portoviejo', province: 'Manabí', federation: 'Fede - Manabí' },
+  { name: 'Spin Zone', city: 'Ambato', province: 'Tungurahua', federation: 'Fede Tungurahua' },
+  { name: 'TM - Manta', city: 'Manta', province: 'Manabí', federation: 'Fede - Manabí' },
+  { name: 'Primorac', city: 'Quito', province: 'Pichincha', federation: 'Fede Pichincha' },
+  { name: 'TT Quevedo', city: 'Quevedo', province: 'Los Ríos', federation: 'Fede Los Ríos' },
+  { name: 'Fede Santa Elena', city: 'La Libertad', province: 'Santa Elena', federation: 'Fede Santa Elena' },
+  { name: 'Ranking Uartes', city: 'Puerto Ayora', province: 'Galápagos', federation: 'Fede Galápagos' },
+  { name: 'Guayaquil City', city: 'Guayaquil', province: 'Guayas', federation: 'Fede Guayas' },
+  { name: 'Buena Fe', city: 'Buena Fe', province: 'Guayas', federation: 'Fede Guayas' },
+  { name: 'Milagro', city: 'Milagro', province: 'Guayas', federation: 'Fede Guayas' },
+  { name: 'Ping Pong Rick', city: 'Guayaquil', province: 'Guayas', federation: 'Fede Guayas' },
+  { name: 'Ranking Liga 593', city: 'Guayaquil', province: 'Guayas', federation: 'LATEM' },
+];
+
 export default function MemberModal({ 
   isOpen, 
   onClose, 
@@ -112,6 +136,8 @@ export default function MemberModal({
   const [showCustomRacketBrand, setShowCustomRacketBrand] = useState(false);
   const [showCustomDriveRubber, setShowCustomDriveRubber] = useState(false);
   const [showCustomBackhandRubber, setShowCustomBackhandRubber] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const {
     register,
@@ -138,14 +164,10 @@ export default function MemberModal({
       dominant_hand: member?.dominant_hand || undefined,
       playing_side: member?.playing_side || undefined,
       playing_style: member?.playing_style || undefined,
-      // ... rest of defaults
     },
   });
 
   const watchedProvince = watch('province');
-  const watchedRacketBrand = watch('racket_brand');
-  const watchedDriveRubberBrand = watch('drive_rubber_brand');
-  const watchedBackhandRubberBrand = watch('backhand_rubber_brand');
 
   // Auto-select club if only one is available
   useEffect(() => {
@@ -153,6 +175,27 @@ export default function MemberModal({
       setValue('club_id', clubs[0].id);
     }
   }, [clubs, member, setValue]);
+
+  // Handle photo selection
+  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedPhoto(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPhotoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Remove photo
+  const removePhoto = () => {
+    setSelectedPhoto(null);
+    setPhotoPreview(null);
+    const fileInput = document.getElementById('photo') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+  };
 
   const handleFormSubmit = async (data: MemberFormValues) => {
     // Clean up empty strings
@@ -164,9 +207,11 @@ export default function MemberModal({
     ) as MemberFormValues;
     
     try {
-      await onSubmit(cleanData);
+      await onSubmit(cleanData, selectedPhoto || undefined);
       reset();
       setCurrentStep(0);
+      setSelectedPhoto(null);
+      setPhotoPreview(null);
     } catch (error) {
       console.error('Error in handleFormSubmit:', error);
     }
@@ -178,6 +223,8 @@ export default function MemberModal({
     setShowCustomRacketBrand(false);
     setShowCustomDriveRubber(false);
     setShowCustomBackhandRubber(false);
+    setSelectedPhoto(null);
+    setPhotoPreview(null);
     onClose();
   };
 
@@ -201,6 +248,55 @@ export default function MemberModal({
       case 0: // Información Personal
         return (
           <div className="space-y-6">
+            {/* Photo Upload Section */}
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700">Foto del Jugador</label>
+              <div className="flex items-center space-x-6">
+                <div className="shrink-0">
+                  {photoPreview || member?.photo_path ? (
+                    <img
+                      className="h-20 w-20 object-cover rounded-full border-2 border-gray-300"
+                      src={photoPreview || (member?.photo_path ? `/storage/${member.photo_path}` : '')}
+                      alt="Vista previa"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
+                      <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3">
+                    <label
+                      htmlFor="photo"
+                      className="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 cursor-pointer"
+                    >
+                      {photoPreview || member?.photo_path ? 'Cambiar foto' : 'Subir foto'}
+                    </label>
+                    <input
+                      id="photo"
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoChange}
+                      className="sr-only"
+                    />
+                    {(photoPreview || member?.photo_path) && (
+                      <button
+                        type="button"
+                        onClick={removePhoto}
+                        className="bg-red-100 py-2 px-3 border border-red-300 rounded-md shadow-sm text-sm leading-4 font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      >
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500">PNG, JPG, GIF hasta 10MB</p>
+                </div>
+              </div>
+            </div>
+
             {/* Club Field - Hidden if only one club */}
             {clubs.length > 1 ? (
               <div className="space-y-2">
@@ -255,7 +351,7 @@ export default function MemberModal({
                   {...register('first_name')}
                   type="text"
                   id="first_name"
-                  placeholder="Ingresa el nombre"
+                  placeholder="Luis Abelardo"
                   className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-900 placeholder-gray-500 ${
                     errors.first_name ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
                   }`}
@@ -273,7 +369,7 @@ export default function MemberModal({
                   {...register('last_name')}
                   type="text"
                   id="last_name"
-                  placeholder="Ingresa el apellido"
+                  placeholder="Vale Zurita"
                   className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-900 placeholder-gray-500 ${
                     errors.last_name ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
                   }`}
@@ -292,7 +388,7 @@ export default function MemberModal({
                   {...register('email')}
                   type="email"
                   id="email"
-                  placeholder="correo@ejemplo.com"
+                  placeholder="correo@hotmail.com"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900 placeholder-gray-500"
                 />
                 {errors.email && (
@@ -331,6 +427,7 @@ export default function MemberModal({
                   {...register('birth_date')}
                   type="date"
                   id="birth_date"
+                  max="1970-08-10"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900"
                 />
               </div>
@@ -412,6 +509,22 @@ export default function MemberModal({
                 </select>
               </div>
             </div>
+
+            {/* Reference clubs info */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <h4 className="text-sm font-medium text-blue-900 mb-2">Clubes de Tenis de Mesa en Ecuador</h4>
+              <div className="text-xs text-blue-700 space-y-1">
+                <p><strong>593 Liga Amateur de Tenis de Mesa (LATEM)</strong></p>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {TT_CLUBS_ECUADOR.slice(0, 8).map((club) => (
+                    <div key={club.name} className="text-xs">
+                      <span className="font-medium">{club.name}</span> - {club.city}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-blue-600 mt-2">Y más clubes en todo Ecuador...</p>
+              </div>
+            </div>
           </div>
         );
 
@@ -427,8 +540,8 @@ export default function MemberModal({
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900"
                 >
                   <option value="">Seleccionar</option>
-                  <option value="right">Derecha</option>
-                  <option value="left">Izquierda</option>
+                  <option value="right">Derecha (Right Hand)</option>
+                  <option value="left">Izquierda (Left Hand)</option>
                 </select>
               </div>
 
@@ -458,13 +571,24 @@ export default function MemberModal({
                 </select>
               </div>
             </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+              <h4 className="text-sm font-medium text-yellow-900 mb-2">Información sobre Estilos de Juego</h4>
+              <div className="text-xs text-yellow-700 space-y-1">
+                <p><strong>Clásico:</strong> Estilo tradicional con empuñadura europea</p>
+                <p><strong>Lapicero:</strong> Estilo asiático con empuñadura tipo lapicero</p>
+              </div>
+            </div>
           </div>
         );
 
       case 3: // Raqueta
         return (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Raqueta - Palo</h3>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <span className="mr-2">🏓</span>
+              Raqueta - Palo
+            </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -486,22 +610,9 @@ export default function MemberModal({
                       {brand}
                     </option>
                   ))}
-                  <option value="custom">Otra marca (personalizada)</option>
+                  <option value="custom">🔧 Otra marca (personalizada)</option>
                 </select>
               </div>
-
-              {showCustomRacketBrand && (
-                <div className="space-y-2">
-                  <label htmlFor="racket_custom_brand" className="block text-sm font-medium text-gray-700">Marca Personalizada</label>
-                  <input
-                    {...register('racket_custom_brand')}
-                    type="text"
-                    id="racket_custom_brand"
-                    placeholder="Ingresa la marca"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900 placeholder-gray-500"
-                  />
-                </div>
-              )}
 
               <div className="space-y-2">
                 <label htmlFor="racket_model" className="block text-sm font-medium text-gray-700">Modelo</label>
@@ -515,17 +626,39 @@ export default function MemberModal({
               </div>
 
               {showCustomRacketBrand && (
-                <div className="space-y-2">
-                  <label htmlFor="racket_custom_model" className="block text-sm font-medium text-gray-700">Modelo Personalizado</label>
-                  <input
-                    {...register('racket_custom_model')}
-                    type="text"
-                    id="racket_custom_model"
-                    placeholder="Ingresa el modelo"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900 placeholder-gray-500"
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <label htmlFor="racket_custom_brand" className="block text-sm font-medium text-gray-700">Marca Personalizada</label>
+                    <input
+                      {...register('racket_custom_brand')}
+                      type="text"
+                      id="racket_custom_brand"
+                      placeholder="Ingresa la marca"
+                      className="w-full px-4 py-3 rounded-xl border border-yellow-300 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-400 text-gray-900 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="racket_custom_model" className="block text-sm font-medium text-gray-700">Modelo Personalizado</label>
+                    <input
+                      {...register('racket_custom_model')}
+                      type="text"
+                      id="racket_custom_model"
+                      placeholder="Ingresa el modelo"
+                      className="w-full px-4 py-3 rounded-xl border border-yellow-300 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-400 text-gray-900 placeholder-gray-500"
+                    />
+                  </div>
+                </>
               )}
+            </div>
+
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <h4 className="text-sm font-medium text-green-900 mb-2">💡 Marcas Populares</h4>
+              <div className="grid grid-cols-3 gap-2 text-xs text-green-700">
+                <div><strong>Sanwei:</strong> 5L carbono+</div>
+                <div><strong>Butterfly:</strong> Viscaria</div>
+                <div><strong>DHS:</strong> Hurricane Long</div>
+              </div>
             </div>
           </div>
         );
@@ -533,7 +666,10 @@ export default function MemberModal({
       case 4: // Goma Drive
         return (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Caucho del Drive</h3>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <span className="mr-2">🔴</span>
+              Caucho del Drive
+            </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -555,7 +691,7 @@ export default function MemberModal({
                       {brand}
                     </option>
                   ))}
-                  <option value="custom">Otra marca (personalizada)</option>
+                  <option value="custom">🔧 Otra marca (personalizada)</option>
                 </select>
               </div>
 
@@ -579,7 +715,7 @@ export default function MemberModal({
                       type="text"
                       id="drive_rubber_custom_brand"
                       placeholder="Ingresa la marca"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900 placeholder-gray-500"
+                      className="w-full px-4 py-3 rounded-xl border border-yellow-300 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-400 text-gray-900 placeholder-gray-500"
                     />
                   </div>
 
@@ -590,7 +726,7 @@ export default function MemberModal({
                       type="text"
                       id="drive_rubber_custom_model"
                       placeholder="Ingresa el modelo"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900 placeholder-gray-500"
+                      className="w-full px-4 py-3 rounded-xl border border-yellow-300 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-400 text-gray-900 placeholder-gray-500"
                     />
                   </div>
                 </>
@@ -605,8 +741,8 @@ export default function MemberModal({
                 >
                   <option value="">Seleccionar tipo</option>
                   {RUBBER_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type.replace('_', ' ')}
+                    <option key={type.value} value={type.value}>
+                      {type.label}
                     </option>
                   ))}
                 </select>
@@ -622,7 +758,7 @@ export default function MemberModal({
                   <option value="">Seleccionar color</option>
                   {RUBBER_COLORS.map((color) => (
                     <option key={color} value={color}>
-                      {color}
+                      {color.charAt(0).toUpperCase() + color.slice(1)}
                     </option>
                   ))}
                 </select>
@@ -638,7 +774,7 @@ export default function MemberModal({
                   <option value="">Seleccionar esponja</option>
                   {SPONGE_THICKNESSES.map((thickness) => (
                     <option key={thickness} value={thickness}>
-                      {thickness}
+                      {thickness} {thickness !== 'sin esponja' && 'mm'}
                     </option>
                   ))}
                 </select>
@@ -660,13 +796,23 @@ export default function MemberModal({
                 </select>
               </div>
             </div>
+
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <h4 className="text-sm font-medium text-red-900 mb-2">Ejemplo: Friendship Cross 729</h4>
+              <div className="text-xs text-red-700 space-y-1">
+                <p><strong>Tipo:</strong> Liso | <strong>Color:</strong> Negro | <strong>Esponja:</strong> 2.1mm | <strong>Hardness:</strong> h42</p>
+              </div>
+            </div>
           </div>
         );
 
       case 5: // Goma Backhand
         return (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Caucho del Backhand</h3>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <span className="mr-2">⚫</span>
+              Caucho del Backhand
+            </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -688,7 +834,7 @@ export default function MemberModal({
                       {brand}
                     </option>
                   ))}
-                  <option value="custom">Otra marca (personalizada)</option>
+                  <option value="custom">🔧 Otra marca (personalizada)</option>
                 </select>
               </div>
 
@@ -712,7 +858,7 @@ export default function MemberModal({
                       type="text"
                       id="backhand_rubber_custom_brand"
                       placeholder="Ingresa la marca"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900 placeholder-gray-500"
+                      className="w-full px-4 py-3 rounded-xl border border-yellow-300 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-400 text-gray-900 placeholder-gray-500"
                     />
                   </div>
 
@@ -723,7 +869,7 @@ export default function MemberModal({
                       type="text"
                       id="backhand_rubber_custom_model"
                       placeholder="Ingresa el modelo"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900 placeholder-gray-500"
+                      className="w-full px-4 py-3 rounded-xl border border-yellow-300 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-400 text-gray-900 placeholder-gray-500"
                     />
                   </div>
                 </>
@@ -738,8 +884,8 @@ export default function MemberModal({
                 >
                   <option value="">Seleccionar tipo</option>
                   {RUBBER_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type.replace('_', ' ')}
+                    <option key={type.value} value={type.value}>
+                      {type.label}
                     </option>
                   ))}
                 </select>
@@ -755,7 +901,7 @@ export default function MemberModal({
                   <option value="">Seleccionar color</option>
                   {RUBBER_COLORS.map((color) => (
                     <option key={color} value={color}>
-                      {color}
+                      {color.charAt(0).toUpperCase() + color.slice(1)}
                     </option>
                   ))}
                 </select>
@@ -771,7 +917,7 @@ export default function MemberModal({
                   <option value="">Seleccionar esponja</option>
                   {SPONGE_THICKNESSES.map((thickness) => (
                     <option key={thickness} value={thickness}>
-                      {thickness}
+                      {thickness} {thickness !== 'sin esponja' && 'mm'}
                     </option>
                   ))}
                 </select>
@@ -793,12 +939,24 @@ export default function MemberModal({
                 </select>
               </div>
             </div>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Ejemplo: Saviga Vpupo</h4>
+              <div className="text-xs text-gray-700 space-y-1">
+                <p><strong>Tipo:</strong> Pupo Largo | <strong>Color:</strong> Rojo | <strong>Esponja:</strong> 0.5mm | <strong>Hardness:</strong> n/a</p>
+              </div>
+            </div>
           </div>
         );
 
       case 6: // Información Adicional
         return (
           <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <span className="mr-2">📊</span>
+              Información Adicional
+            </h3>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="ranking_position" className="block text-sm font-medium text-gray-700">Ranking</label>
@@ -807,6 +965,7 @@ export default function MemberModal({
                   type="number"
                   id="ranking_position"
                   placeholder="Posición en ranking"
+                  min="1"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900 placeholder-gray-500"
                 />
               </div>
@@ -828,47 +987,64 @@ export default function MemberModal({
                 {...register('notes')}
                 id="notes"
                 rows={4}
-                placeholder="Información adicional sobre el jugador..."
+                placeholder="Información adicional sobre el jugador... (ej: Estilo de juego especial, logros, observaciones)"
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 hover:border-gray-300 text-gray-900 placeholder-gray-500 resize-none"
               />
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="photo_path" className="block text-sm font-medium text-gray-700">Foto del Jugador</label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-gray-400 transition-colors duration-200">
-                <div className="space-y-1 text-center">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div className="flex text-sm text-gray-600">
-                    <label
-                      htmlFor="photo_path"
-                      className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
-                    >
-                      <span>Subir una foto</span>
-                      <input
-                        {...register('photo_path')}
-                        id="photo_path"
-                        name="photo_path"
-                        type="file"
-                        accept="image/*"
-                        className="sr-only"
-                      />
-                    </label>
-                    <p className="pl-1">o arrastra y suelta</p>
+            {/* Ranking Information */}
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+              <h4 className="text-sm font-medium text-purple-900 mb-2">📈 Información sobre Ranking</h4>
+              <div className="text-xs text-purple-700 space-y-1">
+                <p><strong>Gráfico de movimiento de ranking por jugador:</strong></p>
+                <p>• Después de 6 meses se puede cambiar de club</p>
+                <p>• Estado de cuenta del jugador ranking</p>
+                <p>• Ranking Liga 593 - LATEM (Liga Amateur de Tenis de Mesa)</p>
+              </div>
+            </div>
+
+            {/* Summary Card */}
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <span className="mr-2">✅</span>
+                Resumen del Censo de Miembro
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Nombre:</span>
+                    <span className="font-medium">{watch('first_name')} {watch('last_name')}</span>
                   </div>
-                  <p className="text-xs text-gray-500">PNG, JPG, GIF hasta 10MB</p>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Cédula:</span>
+                    <span className="font-medium">{watch('doc_id') || 'No especificada'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Email:</span>
+                    <span className="font-medium">{watch('email') || 'No especificado'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Ubicación:</span>
+                    <span className="font-medium">{watch('city')}, {watch('province')}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Raqueta:</span>
+                    <span className="font-medium">{watch('racket_brand')} {watch('racket_model')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Drive:</span>
+                    <span className="font-medium">{watch('drive_rubber_brand')} {watch('drive_rubber_model')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Backhand:</span>
+                    <span className="font-medium">{watch('backhand_rubber_brand')} {watch('backhand_rubber_model')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Estilo:</span>
+                    <span className="font-medium">{watch('playing_style')} - {watch('dominant_hand')}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -884,7 +1060,7 @@ export default function MemberModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={member ? 'Editar Miembro' : 'Nuevo Miembro'}
+      title={member ? 'Editar Miembro' : 'Nuevo Miembro - Censo Completo'}
       size="xl"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
@@ -900,30 +1076,38 @@ export default function MemberModal({
           </div>
           
           {/* Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-3">
             <div
-              className="bg-green-600 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${((currentStep + 1) / STEP_TITLES.length) * 100}%` }}
             />
           </div>
           
           {/* Step Indicators */}
-          <div className="flex justify-between mt-2">
+          <div className="flex justify-between mt-3">
             {STEP_TITLES.map((title, index) => (
               <div
                 key={index}
-                className={`flex flex-col items-center ${
+                className={`flex flex-col items-center transition-all duration-300 ${
                   index <= currentStep ? 'text-green-600' : 'text-gray-400'
                 }`}
               >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
-                    index <= currentStep
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-300 ${
+                    index < currentStep
                       ? 'bg-green-600 text-white'
+                      : index === currentStep
+                      ? 'bg-green-500 text-white ring-4 ring-green-200'
                       : 'bg-gray-200 text-gray-400'
                   }`}
                 >
-                  {index + 1}
+                  {index < currentStep ? (
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    index + 1
+                  )}
                 </div>
                 <span className="text-xs mt-1 text-center max-w-16 truncate">
                   {title.split(' ')[0]}
@@ -934,7 +1118,7 @@ export default function MemberModal({
         </div>
 
         {/* Step Content */}
-        <div className="min-h-[400px]">
+        <div className="min-h-[500px]">
           {renderStepContent()}
         </div>
 
@@ -953,8 +1137,11 @@ export default function MemberModal({
               <button
                 type="button"
                 onClick={prevStep}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500/20"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500/20 flex items-center gap-2"
               >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
                 Anterior
               </button>
             )}
@@ -965,15 +1152,18 @@ export default function MemberModal({
               <button
                 type="button"
                 onClick={nextStep}
-                className="px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                className="px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 flex items-center gap-2"
               >
                 Siguiente
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             ) : (
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 flex items-center gap-2"
+                className="px-8 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-green-700 rounded-xl hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 flex items-center gap-2"
               >
                 {isSubmitting ? (
                   <>
@@ -984,7 +1174,12 @@ export default function MemberModal({
                     Guardando...
                   </>
                 ) : (
-                  member ? 'Actualizar Miembro' : 'Crear Miembro'
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {member ? 'Actualizar Miembro' : 'Crear Miembro'}
+                  </>
                 )}
               </button>
             )}
