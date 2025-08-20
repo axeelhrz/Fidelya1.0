@@ -8,186 +8,169 @@ use Illuminate\Support\Facades\DB;
 class EquipmentReferenceSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Run the database seeder.
      */
     public function run(): void
     {
         // Seed racket brands
         $racketBrands = [
-            ['name' => 'Butterfly', 'country' => 'Japan'],
-            ['name' => 'DHS', 'country' => 'China'],
-            ['name' => 'Sanwei', 'country' => 'China'],
-            ['name' => 'Nittaku', 'country' => 'Japan'],
-            ['name' => 'Yasaka', 'country' => 'Sweden'],
-            ['name' => 'Stiga', 'country' => 'Sweden'],
-            ['name' => 'Victas', 'country' => 'Japan'],
-            ['name' => 'Joola', 'country' => 'Germany'],
-            ['name' => 'Xiom', 'country' => 'South Korea'],
+            ['name' => 'Butterfly', 'country' => 'Japan', 'is_active' => true],
+            ['name' => 'DHS', 'country' => 'China', 'is_active' => true],
+            ['name' => 'Sanwei', 'country' => 'China', 'is_active' => true],
+            ['name' => 'Nittaku', 'country' => 'Japan', 'is_active' => true],
+            ['name' => 'Yasaka', 'country' => 'Sweden', 'is_active' => true],
+            ['name' => 'Stiga', 'country' => 'Sweden', 'is_active' => true],
+            ['name' => 'Victas', 'country' => 'Japan', 'is_active' => true],
+            ['name' => 'Joola', 'country' => 'Germany', 'is_active' => true],
+            ['name' => 'Xiom', 'country' => 'South Korea', 'is_active' => true],
+            ['name' => 'Saviga', 'country' => 'China', 'is_active' => true],
+            ['name' => 'Friendship', 'country' => 'China', 'is_active' => true],
+            ['name' => 'Dr. Neubauer', 'country' => 'Germany', 'is_active' => true],
         ];
 
         foreach ($racketBrands as $brand) {
-            DB::table('racket_brands')->insert(array_merge($brand, [
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]));
+            DB::table('racket_brands')->updateOrInsert(
+                ['name' => $brand['name']],
+                $brand + ['created_at' => now(), 'updated_at' => now()]
+            );
         }
 
-        // Seed rubber brands
-        $rubberBrands = [
-            ['name' => 'Butterfly', 'country' => 'Japan'],
-            ['name' => 'DHS', 'country' => 'China'],
-            ['name' => 'Sanwei', 'country' => 'China'],
-            ['name' => 'Nittaku', 'country' => 'Japan'],
-            ['name' => 'Yasaka', 'country' => 'Sweden'],
-            ['name' => 'Stiga', 'country' => 'Sweden'],
-            ['name' => 'Victas', 'country' => 'Japan'],
-            ['name' => 'Joola', 'country' => 'Germany'],
-            ['name' => 'Xiom', 'country' => 'South Korea'],
-            ['name' => 'Saviga', 'country' => 'China'],
-            ['name' => 'Friendship', 'country' => 'China'],
-            ['name' => 'Dr. Neubauer', 'country' => 'Germany'],
-        ];
-
-        foreach ($rubberBrands as $brand) {
-            DB::table('rubber_brands')->insert(array_merge($brand, [
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]));
-        }
-
-        // Seed some popular racket models
-        $racketModels = [
-            // Sanwei models
-            ['brand_name' => 'Sanwei', 'name' => '5L Carbono+', 'type' => 'carbono', 'speed' => 8, 'control' => 7],
-            ['brand_name' => 'Sanwei', 'name' => 'F3', 'type' => 'carbono', 'speed' => 9, 'control' => 6],
-            
-            // Butterfly models
-            ['brand_name' => 'Butterfly', 'name' => 'Timo Boll ALC', 'type' => 'carbono', 'speed' => 9, 'control' => 8],
-            ['brand_name' => 'Butterfly', 'name' => 'Viscaria', 'type' => 'carbono', 'speed' => 10, 'control' => 7],
-            
-            // DHS models
-            ['brand_name' => 'DHS', 'name' => 'Hurricane Long 5', 'type' => 'madera', 'speed' => 7, 'control' => 9],
-            ['brand_name' => 'DHS', 'name' => 'Power G7', 'type' => 'carbono', 'speed' => 9, 'control' => 6],
-        ];
-
-        foreach ($racketModels as $model) {
-            $brandId = DB::table('racket_brands')->where('name', $model['brand_name'])->first()->id;
-            DB::table('racket_models')->insert([
-                'brand_id' => $brandId,
-                'name' => $model['name'],
-                'type' => $model['type'],
-                'speed' => $model['speed'],
-                'control' => $model['control'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        // Seed some popular rubber models
-        $rubberModels = [
-            // Friendship models
-            [
-                'brand_name' => 'Friendship',
-                'name' => 'Cross 729',
-                'type' => 'liso',
-                'speed' => 7,
-                'spin' => 8,
-                'control' => 8,
-                'available_colors' => json_encode(['negro', 'rojo']),
-                'available_sponges' => json_encode(['2.1']),
-                'available_hardness' => json_encode(['h42'])
-            ],
-            
-            // Saviga models
-            [
-                'brand_name' => 'Saviga',
-                'name' => 'Vpupo',
-                'type' => 'pupo_largo',
-                'speed' => 6,
-                'spin' => 9,
-                'control' => 7,
-                'available_colors' => json_encode(['rojo', 'negro']),
-                'available_sponges' => json_encode(['0.5']),
-                'available_hardness' => json_encode(['n/a'])
-            ],
-            
-            // DHS models
-            [
-                'brand_name' => 'DHS',
-                'name' => 'Hurricane 3',
-                'type' => 'liso',
-                'speed' => 9,
-                'spin' => 10,
-                'control' => 7,
-                'available_colors' => json_encode(['negro', 'rojo']),
-                'available_sponges' => json_encode(['2.1', '2.2']),
-                'available_hardness' => json_encode(['h42', 'h44', 'h46'])
-            ],
-        ];
-
-        foreach ($rubberModels as $model) {
-            $brandId = DB::table('rubber_brands')->where('name', $model['brand_name'])->first()->id;
-            DB::table('rubber_models')->insert([
-                'brand_id' => $brandId,
-                'name' => $model['name'],
-                'type' => $model['type'],
-                'speed' => $model['speed'],
-                'spin' => $model['spin'],
-                'control' => $model['control'],
-                'available_colors' => $model['available_colors'],
-                'available_sponges' => $model['available_sponges'],
-                'available_hardness' => $model['available_hardness'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        // Seed rubber brands (same as racket brands for table tennis)
+        foreach ($racketBrands as $brand) {
+            DB::table('rubber_brands')->updateOrInsert(
+                ['name' => $brand['name']],
+                $brand + ['created_at' => now(), 'updated_at' => now()]
+            );
         }
 
         // Seed Ecuador locations
         $ecuadorLocations = [
-            ['province' => 'Guayas', 'city' => 'Guayaquil'],
-            ['province' => 'Guayas', 'city' => 'Milagro'],
-            ['province' => 'Guayas', 'city' => 'Buena Fe'],
-            ['province' => 'Pichincha', 'city' => 'Quito'],
-            ['province' => 'Manabí', 'city' => 'Manta'],
-            ['province' => 'Manabí', 'city' => 'Portoviejo'],
-            ['province' => 'Azuay', 'city' => 'Cuenca'],
-            ['province' => 'Tungurahua', 'city' => 'Ambato'],
-            ['province' => 'Los Ríos', 'city' => 'Quevedo'],
-            ['province' => 'Santa Elena', 'city' => 'La Libertad'],
-            ['province' => 'Galápagos', 'city' => 'Puerto Ayora'],
-            ['province' => 'Los Ríos', 'city' => 'Urdaneta'],
+            ['province' => 'Guayas', 'city' => 'Guayaquil', 'is_active' => true],
+            ['province' => 'Guayas', 'city' => 'Milagro', 'is_active' => true],
+            ['province' => 'Guayas', 'city' => 'Buena Fe', 'is_active' => true],
+            ['province' => 'Pichincha', 'city' => 'Quito', 'is_active' => true],
+            ['province' => 'Manabí', 'city' => 'Manta', 'is_active' => true],
+            ['province' => 'Manabí', 'city' => 'Portoviejo', 'is_active' => true],
+            ['province' => 'Azuay', 'city' => 'Cuenca', 'is_active' => true],
+            ['province' => 'Tungurahua', 'city' => 'Ambato', 'is_active' => true],
+            ['province' => 'Los Ríos', 'city' => 'Quevedo', 'is_active' => true],
+            ['province' => 'Los Ríos', 'city' => 'Urdaneta', 'is_active' => true],
+            ['province' => 'Santa Elena', 'city' => 'La Libertad', 'is_active' => true],
+            ['province' => 'Galápagos', 'city' => 'Puerto Ayora', 'is_active' => true],
         ];
 
         foreach ($ecuadorLocations as $location) {
-            DB::table('ecuador_locations')->insert(array_merge($location, [
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]));
+            DB::table('ecuador_locations')->updateOrInsert(
+                ['province' => $location['province'], 'city' => $location['city']],
+                $location + ['created_at' => now(), 'updated_at' => now()]
+            );
         }
 
-        // Seed table tennis clubs reference
+        // Seed table tennis clubs in Ecuador
         $ttClubs = [
-            ['name' => 'PPHC', 'city' => 'Cuenca', 'province' => 'Azuay', 'federation' => 'Fede Guayas'],
-            ['name' => 'Ping Pro', 'city' => 'Guayaquil', 'province' => 'Guayas', 'federation' => 'Fede Guayas'],
-            ['name' => 'Billy Team', 'city' => 'Guayaquil', 'province' => 'Guayas', 'federation' => 'Fede Guayas'],
-            ['name' => 'Independiente', 'city' => 'Guayaquil', 'province' => 'Guayas', 'federation' => 'Fede Guayas'],
-            ['name' => 'BackSpin', 'city' => 'Guayaquil', 'province' => 'Guayas', 'federation' => 'Fede Guayas'],
-            ['name' => 'Spin Factor', 'city' => 'Portoviejo', 'province' => 'Manabí', 'federation' => 'Fede Manabí'],
-            ['name' => 'Spin Zone', 'city' => 'Ambato', 'province' => 'Tungurahua', 'federation' => null],
-            ['name' => 'TM', 'city' => 'Manta', 'province' => 'Manabí', 'federation' => 'Fede Manabí'],
-            ['name' => 'Primorac', 'city' => 'Quito', 'province' => 'Pichincha', 'federation' => null],
-            ['name' => 'TT Quevedo', 'city' => 'Quevedo', 'province' => 'Los Ríos', 'federation' => null],
-            ['name' => 'Ranking Uartes', 'city' => 'Puerto Ayora', 'province' => 'Galápagos', 'federation' => 'Fede Santa Elena'],
-            ['name' => 'Guayaquil City', 'city' => 'Guayaquil', 'province' => 'Guayas', 'federation' => 'Fede Guayas'],
-            ['name' => 'Ping Pong Rick', 'city' => 'Milagro', 'province' => 'Guayas', 'federation' => 'Fede Guayas'],
-            ['name' => 'Ranking Liga 593', 'city' => 'Guayaquil', 'province' => 'Guayas', 'federation' => 'LATEM'],
+            ['name' => 'PPH Cuenca', 'city' => 'Cuenca', 'province' => 'Azuay', 'federation' => 'Fede Guayas', 'is_active' => true],
+            ['name' => 'Ping Pro', 'city' => 'Guayaquil', 'province' => 'Guayas', 'federation' => 'Fede Guayas', 'is_active' => true],
+            ['name' => 'Billy Team', 'city' => 'Guayaquil', 'province' => 'Guayas', 'federation' => 'Fede Guayas', 'is_active' => true],
+            ['name' => 'Independiente', 'city' => 'Guayaquil', 'province' => 'Guayas', 'federation' => 'Fede Guayas', 'is_active' => true],
+            ['name' => 'BackSpin', 'city' => 'Guayaquil', 'province' => 'Guayas', 'federation' => 'Fede Guayas', 'is_active' => true],
+            ['name' => 'Spin Factor', 'city' => 'Portoviejo', 'province' => 'Manabí', 'federation' => 'Fede - Manabí', 'is_active' => true],
+            ['name' => 'Spin Zone', 'city' => 'Ambato', 'province' => 'Tungurahua', 'federation' => 'Fede Tungurahua', 'is_active' => true],
+            ['name' => 'TM - Manta', 'city' => 'Manta', 'province' => 'Manabí', 'federation' => 'Fede - Manabí', 'is_active' => true],
+            ['name' => 'Primorac', 'city' => 'Quito', 'province' => 'Pichincha', 'federation' => 'Fede Pichincha', 'is_active' => true],
+            ['name' => 'TT Quevedo', 'city' => 'Quevedo', 'province' => 'Los Ríos', 'federation' => 'Fede Los Ríos', 'is_active' => true],
+            ['name' => 'Fede Santa Elena', 'city' => 'La Libertad', 'province' => 'Santa Elena', 'federation' => 'Fede Santa Elena', 'is_active' => true],
+            ['name' => 'Ranking Uartes', 'city' => 'Puerto Ayora', 'province' => 'Galápagos', 'federation' => 'Fede Galápagos', 'is_active' => true],
+            ['name' => 'Guayaquil City', 'city' => 'Guayaquil', 'province' => 'Guayas', 'federation' => 'Fede Guayas', 'is_active' => true],
+            ['name' => 'Buena Fe', 'city' => 'Buena Fe', 'province' => 'Guayas', 'federation' => 'Fede Guayas', 'is_active' => true],
+            ['name' => 'Milagro', 'city' => 'Milagro', 'province' => 'Guayas', 'federation' => 'Fede Guayas', 'is_active' => true],
+            ['name' => 'Ping Pong Rick', 'city' => 'Guayaquil', 'province' => 'Guayas', 'federation' => 'Fede Guayas', 'is_active' => true],
+            ['name' => 'Ranking Liga 593', 'city' => 'Guayaquil', 'province' => 'Guayas', 'federation' => 'LATEM', 'is_active' => true],
         ];
 
         foreach ($ttClubs as $club) {
-            DB::table('tt_clubs_reference')->insert(array_merge($club, [
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]));
+            DB::table('tt_club_references')->updateOrInsert(
+                ['name' => $club['name'], 'city' => $club['city']],
+                $club + ['created_at' => now(), 'updated_at' => now()]
+            );
+        }
+
+        // Seed popular racket models
+        $racketModels = [
+            // Sanwei models
+            ['brand_name' => 'Sanwei', 'name' => '5L carbono+', 'type' => 'Offensive', 'speed' => 9, 'control' => 7, 'weight' => 85],
+            ['brand_name' => 'Sanwei', 'name' => 'Fextra 7', 'type' => 'All-round+', 'speed' => 8, 'control' => 8, 'weight' => 87],
+            ['brand_name' => 'Sanwei', 'name' => 'Target National', 'type' => 'Offensive', 'speed' => 9, 'control' => 6, 'weight' => 83],
+            
+            // Butterfly models
+            ['brand_name' => 'Butterfly', 'name' => 'Timo Boll ALC', 'type' => 'Offensive', 'speed' => 9, 'control' => 8, 'weight' => 86],
+            ['brand_name' => 'Butterfly', 'name' => 'Viscaria', 'type' => 'Offensive', 'speed' => 10, 'control' => 7, 'weight' => 85],
+            ['brand_name' => 'Butterfly', 'name' => 'Primorac Carbon', 'type' => 'All-round+', 'speed' => 8, 'control' => 9, 'weight' => 88],
+            
+            // DHS models
+            ['brand_name' => 'DHS', 'name' => 'Hurricane Long 5', 'type' => 'Offensive', 'speed' => 9, 'control' => 7, 'weight' => 84],
+            ['brand_name' => 'DHS', 'name' => 'Power G7', 'type' => 'All-round+', 'speed' => 8, 'control' => 8, 'weight' => 86],
+        ];
+
+        foreach ($racketModels as $model) {
+            $brandId = DB::table('racket_brands')->where('name', $model['brand_name'])->value('id');
+            if ($brandId) {
+                DB::table('racket_models')->updateOrInsert(
+                    ['brand_id' => $brandId, 'name' => $model['name']],
+                    [
+                        'brand_id' => $brandId,
+                        'name' => $model['name'],
+                        'type' => $model['type'],
+                        'speed' => $model['speed'],
+                        'control' => $model['control'],
+                        'weight' => $model['weight'],
+                        'is_active' => true,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]
+                );
+            }
+        }
+
+        // Seed popular rubber models
+        $rubberModels = [
+            // Friendship models
+            ['brand_name' => 'Friendship', 'name' => 'Cross 729', 'type' => 'liso', 'speed' => 8, 'spin' => 9, 'control' => 7],
+            ['brand_name' => 'Friendship', 'name' => 'Battle II', 'type' => 'liso', 'speed' => 9, 'spin' => 8, 'control' => 6],
+            
+            // Saviga models
+            ['brand_name' => 'Saviga', 'name' => 'Vpupo', 'type' => 'pupo_largo', 'speed' => 6, 'spin' => 10, 'control' => 8],
+            ['brand_name' => 'Saviga', 'name' => 'Anti-Top', 'type' => 'antitopspin', 'speed' => 4, 'spin' => 2, 'control' => 9],
+            
+            // DHS models
+            ['brand_name' => 'DHS', 'name' => 'Hurricane 3', 'type' => 'liso', 'speed' => 9, 'spin' => 10, 'control' => 6],
+            ['brand_name' => 'DHS', 'name' => 'Skyline 3', 'type' => 'liso', 'speed' => 8, 'spin' => 8, 'control' => 8],
+            
+            // Butterfly models
+            ['brand_name' => 'Butterfly', 'name' => 'Tenergy 05', 'type' => 'liso', 'speed' => 9, 'spin' => 10, 'control' => 7],
+            ['brand_name' => 'Butterfly', 'name' => 'Sriver', 'type' => 'liso', 'speed' => 7, 'spin' => 7, 'control' => 9],
+        ];
+
+        foreach ($rubberModels as $model) {
+            $brandId = DB::table('rubber_brands')->where('name', $model['brand_name'])->value('id');
+            if ($brandId) {
+                DB::table('rubber_models')->updateOrInsert(
+                    ['brand_id' => $brandId, 'name' => $model['name']],
+                    [
+                        'brand_id' => $brandId,
+                        'name' => $model['name'],
+                        'type' => $model['type'],
+                        'speed' => $model['speed'],
+                        'spin' => $model['spin'],
+                        'control' => $model['control'],
+                        'available_colors' => json_encode(['negro', 'rojo']),
+                        'available_sponges' => json_encode(['1.8', '2.0', '2.1', '2.2']),
+                        'available_hardness' => json_encode(['h42', 'h44', 'h46']),
+                        'is_active' => true,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]
+                );
+            }
         }
     }
 }
