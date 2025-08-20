@@ -67,16 +67,53 @@ class QuickRegistrationController extends Controller
             // Información adicional
             'notes' => 'nullable|string|max:1000',
             
-            // Photo upload
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
+            // Photo upload - made optional and with better validation
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
         ]);
 
-        // Handle photo upload
+        // Handle photo upload with better error handling
         if ($request->hasFile('photo')) {
-            $photo = $request->file('photo');
-            $filename = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
-            $path = $photo->storeAs('quick_registrations/photos', $filename, 'public');
-            $validated['photo_path'] = $path;
+            try {
+                $photo = $request->file('photo');
+                
+                // Validate the file is actually an image
+                if (!$photo->isValid()) {
+                    return response()->json([
+                        'message' => 'El archivo de foto no es válido.',
+                        'errors' => ['photo' => ['El archivo de foto está corrupto o no es válido.']]
+                    ], 422);
+                }
+                
+                // Create directory if it doesn't exist
+                $directory = 'quick_registrations/photos';
+                if (!Storage::disk('public')->exists($directory)) {
+                    Storage::disk('public')->makeDirectory($directory);
+                }
+                
+                // Generate unique filename
+                $filename = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+                
+                // Store the file
+                $path = $photo->storeAs($directory, $filename, 'public');
+                
+                if ($path) {
+                    $validated['photo_path'] = $path;
+                } else {
+                    // If photo upload fails, log the error but continue without photo
+                    \Log::warning('Photo upload failed for quick registration', [
+                        'email' => $validated['email'],
+                        'filename' => $filename
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Log the error but don't fail the registration
+                \Log::error('Photo upload error in quick registration', [
+                    'error' => $e->getMessage(),
+                    'email' => $validated['email']
+                ]);
+                
+                // Continue without photo - don't fail the entire registration
+            }
         }
 
         // Remove photo from validated data as it's not a database field
@@ -93,14 +130,26 @@ class QuickRegistrationController extends Controller
             'timestamp' => now()->toISOString(),
         ];
 
-        $registration = QuickRegistration::create($validated);
+        try {
+            $registration = QuickRegistration::create($validated);
 
-        return response()->json([
-            'message' => 'Registro exitoso. Te contactaremos pronto.',
-            'data' => $registration,
-            'registration_id' => $registration->id,
-            'registration_code' => $registration->registration_code,
-        ], 201);
+            return response()->json([
+                'message' => 'Registro exitoso. Te contactaremos pronto.',
+                'data' => $registration,
+                'registration_id' => $registration->id,
+                'registration_code' => $registration->registration_code,
+            ], 201);
+        } catch (\Exception $e) {
+            \Log::error('Error creating quick registration', [
+                'error' => $e->getMessage(),
+                'email' => $validated['email'] ?? 'unknown'
+            ]);
+            
+            return response()->json([
+                'message' => 'Error al crear el registro. Por favor intenta de nuevo.',
+                'errors' => ['general' => ['Error interno del servidor.']]
+            ], 500);
+        }
     }
 
     /**
