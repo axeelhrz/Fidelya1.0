@@ -1,54 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Card, CardContent, Avatar, Button, Divider, TextField, Alert } from '@mui/material';
 import { motion } from 'framer-motion';
-import { styled } from '@mui/material/styles';
-import PingPongIcon from '@mui/icons-material/SportsBaseball';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import EmailIcon from '@mui/icons-material/Email';
-import SearchIcon from '@mui/icons-material/Search';
-import PersonIcon from '@mui/icons-material/Person';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import SportsIcon from '@mui/icons-material/Sports';
 import axios from '@/lib/axios';
-
-const StyledCard = styled(Card)(({  }) => ({
-  background: 'rgba(255, 255, 255, 0.95)',
-  backdropFilter: 'blur(10px)',
-  border: '1px solid rgba(255, 255, 255, 0.1)',
-  borderRadius: 16,
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.06)',
-  overflow: 'hidden',
-  position: 'relative',
-}));
-
-const PulseIcon = styled(Box)(({  }) => ({
-  position: 'relative',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    width: '100%',
-    height: '100%',
-    borderRadius: '50%',
-    background: 'rgba(34, 197, 94, 0.3)',
-    transform: 'translate(-50%, -50%)',
-    animation: 'pulse 2s infinite',
-  },
-  '@keyframes pulse': {
-    '0%': {
-      transform: 'translate(-50%, -50%) scale(1)',
-      opacity: 1,
-    },
-    '100%': {
-      transform: 'translate(-50%, -50%) scale(1.4)',
-      opacity: 0,
-    },
-  },
-}));
 
 interface RegistrationData {
   id: number;
@@ -146,129 +100,79 @@ const QuickRegistrationWaitingRoom: React.FC<QuickRegistrationWaitingRoomProps> 
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending': return <AccessTimeIcon />;
-      case 'contacted': return <EmailIcon />;
-      case 'approved': return <CheckCircleIcon />;
-      case 'rejected': return <CheckCircleIcon />;
-      default: return <AccessTimeIcon />;
+      case 'pending': return '⏳';
+      case 'contacted': return '📧';
+      case 'approved': return '✅';
+      case 'rejected': return '❌';
+      default: return '⏳';
     }
   };
 
   if (showSearch) {
     return (
-      <Box sx={{ maxWidth: 500, mx: 'auto' }}>
+      <div className="max-w-lg mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          className="bg-white rounded-2xl shadow-xl p-8"
         >
-          <StyledCard>
-            <CardContent sx={{ p: 5, textAlign: 'center' }}>
-              <PulseIcon sx={{ display: 'inline-block', mb: 3 }}>
-                <Avatar
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    backgroundColor: '#22C55E',
-                    color: 'white',
-                    mx: 'auto',
-                  }}
-                >
-                  <PingPongIcon sx={{ fontSize: 40 }} />
-                </Avatar>
-              </PulseIcon>
-              
-              <Typography
-                variant="h3"
-                sx={{
-                  fontSize: '2rem',
-                  fontWeight: 700,
-                  color: 'text.primary',
-                  mb: 2,
-                  background: 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Sala de Espera
-              </Typography>
-              
-              <Typography
-                variant="h6"
-                sx={{
-                  color: 'text.secondary',
-                  fontSize: '1.125rem',
-                  fontWeight: 500,
-                  mb: 4,
-                }}
-              >
-                Censo de Tenis de Mesa Ecuador
-              </Typography>
+          <div className="text-center mb-6">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">🏓</span>
+            </div>
+            
+            <h1 className="text-3xl font-bold text-gray-900 mb-2 bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+              Sala de Espera
+            </h1>
+            
+            <h2 className="text-lg text-gray-600 font-medium mb-4">
+              Censo de Tenis de Mesa Ecuador
+            </h2>
 
-              <Typography
-                variant="body1"
-                sx={{
-                  color: 'text.primary',
-                  fontSize: '1rem',
-                  lineHeight: 1.6,
-                  mb: 4,
-                }}
-              >
-                Ingresa tu email para consultar el estado de tu registro en el censo
-              </Typography>
+            <p className="text-gray-700 mb-6">
+              Ingresa tu email para consultar el estado de tu registro en el censo
+            </p>
+          </div>
 
-              <Box sx={{ mb: 3 }}>
-                <TextField
-                  fullWidth
-                  type="email"
-                  label="Email de registro"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearchByEmail()}
-                  disabled={loading}
-                  sx={{
-                    mb: 2,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                    },
-                  }}
-                />
-                
-                {error && (
-                  <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
-                    {error}
-                  </Alert>
-                )}
+          <div className="space-y-4">
+            <div>
+              <input
+                type="email"
+                placeholder="Email de registro"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearchByEmail()}
+                disabled={loading}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-900 font-medium placeholder-gray-500"
+              />
+            </div>
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                <p className="text-red-700 text-sm font-medium">{error}</p>
+              </div>
+            )}
 
-                <Button
-                  fullWidth
-                  variant="contained"
-                  size="large"
-                  onClick={handleSearchByEmail}
-                  disabled={loading}
-                  startIcon={<SearchIcon />}
-                  sx={{
-                    height: 48,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    backgroundColor: '#22C55E',
-                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)',
-                    '&:hover': {
-                      backgroundColor: '#16A34A',
-                      boxShadow: '0 6px 16px rgba(34, 197, 94, 0.4)',
-                    },
-                  }}
-                >
-                  {loading ? 'Buscando...' : 'Consultar Estado'}
-                </Button>
-              </Box>
-            </CardContent>
-          </StyledCard>
+            <button
+              onClick={handleSearchByEmail}
+              disabled={loading}
+              className="w-full bg-green-600 text-white py-3 px-4 rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-bold flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Buscando...
+                </>
+              ) : (
+                <>
+                  🔍 Consultar Estado
+                </>
+              )}
+            </button>
+          </div>
         </motion.div>
-      </Box>
+      </div>
     );
   }
 
@@ -277,441 +181,207 @@ const QuickRegistrationWaitingRoom: React.FC<QuickRegistrationWaitingRoomProps> 
   }
 
   return (
-    <Box sx={{ maxWidth: 700, mx: 'auto' }}>
+    <div className="max-w-4xl mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        className="bg-white rounded-2xl shadow-xl p-8"
       >
-        <StyledCard>
-          <CardContent sx={{ p: 5 }}>
-            {/* Header */}
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <PulseIcon sx={{ display: 'inline-block', mb: 3 }}>
-                <Avatar
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    backgroundColor: '#22C55E',
-                    color: 'white',
-                    mx: 'auto',
-                  }}
-                >
-                  <PingPongIcon sx={{ fontSize: 40 }} />
-                </Avatar>
-              </PulseIcon>
-              
-              <Typography
-                variant="h3"
-                sx={{
-                  fontSize: '2rem',
-                  fontWeight: 700,
-                  color: 'text.primary',
-                  mb: 2,
-                  background: 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                ¡Hola, {registrationData.full_name}!
-              </Typography>
-              
-              <Typography
-                variant="h6"
-                sx={{
-                  color: 'text.secondary',
-                  fontSize: '1.125rem',
-                  fontWeight: 500,
-                  mb: 2,
-                }}
-              >
-                Censo de Tenis de Mesa Ecuador
-              </Typography>
+        {/* Header */}
+        <div className="text-center mb-6">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">🏓</span>
+          </div>
+          
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+            ¡Hola, {registrationData.full_name}!
+          </h1>
+          
+          <h2 className="text-lg text-gray-600 font-medium mb-4">
+            Censo de Tenis de Mesa Ecuador
+          </h2>
 
-              <Box
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  px: 3,
-                  py: 1,
-                  backgroundColor: `${getStatusColor(registrationData.status)}20`,
-                  color: getStatusColor(registrationData.status),
-                  borderRadius: 2,
-                  border: `1px solid ${getStatusColor(registrationData.status)}40`,
-                }}
-              >
-                {getStatusIcon(registrationData.status)}
-                <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  {registrationData.status_label}
-                </Typography>
-              </Box>
-            </Box>
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2"
+            style={{
+              backgroundColor: `${getStatusColor(registrationData.status)}20`,
+              color: getStatusColor(registrationData.status),
+              borderColor: `${getStatusColor(registrationData.status)}40`,
+            }}
+          >
+            <span className="text-lg">{getStatusIcon(registrationData.status)}</span>
+            <span className="font-bold">{registrationData.status_label}</span>
+          </div>
+        </div>
 
-            {/* Registration Info */}
-            <Box
-              sx={{
-                backgroundColor: 'rgba(34, 197, 94, 0.08)',
-                border: '1px solid rgba(34, 197, 94, 0.2)',
-                borderRadius: 3,
-                p: 4,
-                mb: 4,
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{
-                  color: '#22C55E',
-                  fontWeight: 600,
-                  mb: 2,
-                  fontSize: '1.25rem',
-                }}
-              >
-                📋 Información de tu Registro
-              </Typography>
-              
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
-                <Box>
-                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-                    Código de Registro
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600, color: '#22C55E' }}>
-                    {registrationData.registration_code}
-                  </Typography>
-                </Box>
-                
-                <Box>
-                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-                    Días en espera
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {registrationData.days_waiting} días
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
+        {/* Registration Info */}
+        <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6 mb-6">
+          <h3 className="text-xl font-bold text-green-800 mb-4 flex items-center gap-2">
+            📋 Información de tu Registro
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Código de Registro</p>
+              <p className="font-bold text-green-700 text-lg">{registrationData.registration_code}</p>
+            </div>
+            
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Días en espera</p>
+              <p className="font-bold text-gray-800">{registrationData.days_waiting} días</p>
+            </div>
+          </div>
+        </div>
 
-            {/* Personal Info */}
-            <Box sx={{ mb: 4 }}>
-              <Typography
-                variant="h6"
-                sx={{
-                  color: 'text.primary',
-                  fontWeight: 600,
-                  mb: 3,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                }}
-              >
-                <PersonIcon /> Información Personal
-              </Typography>
-              
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
-                <Box
-                  sx={{
-                    p: 3,
-                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                    border: '1px solid rgba(0, 0, 0, 0.08)',
-                    borderRadius: 2,
-                  }}
-                >
-                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-                    <LocationOnIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                    Ubicación
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {registrationData.location_summary}
-                  </Typography>
-                </Box>
-                
-                <Box
-                  sx={{
-                    p: 3,
-                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                    border: '1px solid rgba(0, 0, 0, 0.08)',
-                    borderRadius: 2,
-                  }}
-                >
-                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-                    <SportsIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                    Club
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {registrationData.club_summary}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
+        {/* Personal Info */}
+        <div className="mb-6">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            👤 Información Personal
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gray-50 p-4 rounded-xl">
+              <p className="text-sm text-gray-600 mb-1 flex items-center gap-1">
+                📍 Ubicación
+              </p>
+              <p className="font-bold text-gray-800">{registrationData.location_summary}</p>
+            </div>
+            
+            <div className="bg-gray-50 p-4 rounded-xl">
+              <p className="text-sm text-gray-600 mb-1 flex items-center gap-1">
+                🏓 Club
+              </p>
+              <p className="font-bold text-gray-800">{registrationData.club_summary}</p>
+            </div>
+          </div>
+        </div>
 
-            {/* Playing Style */}
-            {(registrationData.playing_side_label || registrationData.playing_style_label) && (
-              <Box sx={{ mb: 4 }}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: 'text.primary',
-                    fontWeight: 600,
-                    mb: 3,
-                  }}
-                >
-                  🏓 Estilo de Juego
-                </Typography>
-                
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
-                  {registrationData.playing_side_label && (
-                    <Box
-                      sx={{
-                        p: 3,
-                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                        border: '1px solid rgba(0, 0, 0, 0.08)',
-                        borderRadius: 2,
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-                        Lado de Juego
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                        {registrationData.playing_side_label}
-                      </Typography>
-                    </Box>
-                  )}
-                  
-                  {registrationData.playing_style_label && (
-                    <Box
-                      sx={{
-                        p: 3,
-                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                        border: '1px solid rgba(0, 0, 0, 0.08)',
-                        borderRadius: 2,
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-                        Tipo de Juego
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                        {registrationData.playing_style_label}
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-              </Box>
-            )}
-
-            {/* Equipment */}
-            {(registrationData.racket_summary.brand || registrationData.drive_rubber_summary.brand || registrationData.backhand_rubber_summary.brand) && (
-              <Box sx={{ mb: 4 }}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: 'text.primary',
-                    fontWeight: 600,
-                    mb: 3,
-                  }}
-                >
-                  🏓 Equipamiento
-                </Typography>
-                
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
-                  {registrationData.racket_summary.brand && (
-                    <Box
-                      sx={{
-                        p: 3,
-                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                        border: '1px solid rgba(0, 0, 0, 0.08)',
-                        borderRadius: 2,
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-                        Raqueta
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                        {registrationData.racket_summary.brand}
-                      </Typography>
-                      {registrationData.racket_summary.model && (
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          {registrationData.racket_summary.model}
-                        </Typography>
-                      )}
-                    </Box>
-                  )}
-                  
-                  {registrationData.drive_rubber_summary.brand && (
-                    <Box
-                      sx={{
-                        p: 3,
-                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                        border: '1px solid rgba(0, 0, 0, 0.08)',
-                        borderRadius: 2,
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-                        Caucho Drive
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                        {registrationData.drive_rubber_summary.brand}
-                      </Typography>
-                      {registrationData.drive_rubber_summary.model && (
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          {registrationData.drive_rubber_summary.model}
-                        </Typography>
-                      )}
-                      {registrationData.drive_rubber_summary.color && (
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          Color: {registrationData.drive_rubber_summary.color}
-                        </Typography>
-                      )}
-                    </Box>
-                  )}
-                  
-                  {registrationData.backhand_rubber_summary.brand && (
-                    <Box
-                      sx={{
-                        p: 3,
-                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                        border: '1px solid rgba(0, 0, 0, 0.08)',
-                        borderRadius: 2,
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-                        Caucho Back
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                        {registrationData.backhand_rubber_summary.brand}
-                      </Typography>
-                      {registrationData.backhand_rubber_summary.model && (
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          {registrationData.backhand_rubber_summary.model}
-                        </Typography>
-                      )}
-                      {registrationData.backhand_rubber_summary.color && (
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          Color: {registrationData.backhand_rubber_summary.color}
-                        </Typography>
-                      )}
-                    </Box>
-                  )}
-                </Box>
-              </Box>
-            )}
-
-            <Divider sx={{ my: 4 }} />
-
-            {/* Status Message */}
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <Typography
-                variant="h6"
-                sx={{
-                  color: 'text.primary',
-                  fontWeight: 600,
-                  mb: 2,
-                }}
-              >
-                ¿Qué sigue?
-              </Typography>
-              
-              {registrationData.status === 'pending' && (
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: 'text.secondary',
-                    fontSize: '1rem',
-                    lineHeight: 1.6,
-                    mb: 3,
-                  }}
-                >
-                  Tu registro está siendo revisado por nuestro equipo. Te contactaremos pronto 
-                  para confirmar tu participación en el censo de tenis de mesa de Ecuador.
-                </Typography>
+        {/* Playing Style */}
+        {(registrationData.playing_side_label || registrationData.playing_style_label) && (
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              🏓 Estilo de Juego
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {registrationData.playing_side_label && (
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">Lado de Juego</p>
+                  <p className="font-bold text-gray-800">{registrationData.playing_side_label}</p>
+                </div>
               )}
               
-              {registrationData.status === 'contacted' && (
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: 'text.secondary',
-                    fontSize: '1rem',
-                    lineHeight: 1.6,
-                    mb: 3,
-                  }}
-                >
-                  ¡Genial! Ya hemos establecido contacto contigo. Estamos procesando tu información 
-                  para incluirte oficialmente en el censo.
-                </Typography>
+              {registrationData.playing_style_label && (
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">Tipo de Juego</p>
+                  <p className="font-bold text-gray-800">{registrationData.playing_style_label}</p>
+                </div>
               )}
-              
-              {registrationData.status === 'approved' && (
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: 'text.secondary',
-                    fontSize: '1rem',
-                    lineHeight: 1.6,
-                    mb: 3,
-                  }}
-                >
-                  ¡Felicitaciones! Tu registro ha sido aprobado y ahora formas parte oficial 
-                  del censo de tenis de mesa de Ecuador.
-                </Typography>
-              )}
-            </Box>
+            </div>
+          </div>
+        )}
 
-            {/* Action Buttons */}
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={() => {
-                  setRegistrationData(null);
-                  setShowSearch(true);
-                  setEmail('');
-                  setError('');
-                }}
-                sx={{
-                  height: 48,
-                  px: 4,
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  borderColor: '#22C55E',
-                  color: '#22C55E',
-                  '&:hover': {
-                    borderColor: '#16A34A',
-                    backgroundColor: 'rgba(34, 197, 94, 0.04)',
-                  },
-                }}
-              >
-                Consultar Otro Registro
-              </Button>
+        {/* Equipment */}
+        {(registrationData.racket_summary.brand || registrationData.drive_rubber_summary.brand || registrationData.backhand_rubber_summary.brand) && (
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              🏓 Equipamiento
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {registrationData.racket_summary.brand && (
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">Raqueta</p>
+                  <p className="font-bold text-gray-800">{registrationData.racket_summary.brand}</p>
+                  {registrationData.racket_summary.model && (
+                    <p className="text-sm text-gray-600">{registrationData.racket_summary.model}</p>
+                  )}
+                </div>
+              )}
               
-              <Button
-                variant="contained"
-                size="large"
-                onClick={() => window.location.href = '/'}
-                sx={{
-                  height: 48,
-                  px: 4,
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  backgroundColor: '#22C55E',
-                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)',
-                  '&:hover': {
-                    backgroundColor: '#16A34A',
-                    boxShadow: '0 6px 16px rgba(34, 197, 94, 0.4)',
-                  },
-                }}
-              >
-                Volver al Inicio
-              </Button>
-            </Box>
-          </CardContent>
-        </StyledCard>
+              {registrationData.drive_rubber_summary.brand && (
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">Caucho Drive</p>
+                  <p className="font-bold text-gray-800">{registrationData.drive_rubber_summary.brand}</p>
+                  {registrationData.drive_rubber_summary.model && (
+                    <p className="text-sm text-gray-600">{registrationData.drive_rubber_summary.model}</p>
+                  )}
+                  {registrationData.drive_rubber_summary.color && (
+                    <p className="text-xs text-gray-500">Color: {registrationData.drive_rubber_summary.color}</p>
+                  )}
+                </div>
+              )}
+              
+              {registrationData.backhand_rubber_summary.brand && (
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">Caucho Back</p>
+                  <p className="font-bold text-gray-800">{registrationData.backhand_rubber_summary.brand}</p>
+                  {registrationData.backhand_rubber_summary.model && (
+                    <p className="text-sm text-gray-600">{registrationData.backhand_rubber_summary.model}</p>
+                  )}
+                  {registrationData.backhand_rubber_summary.color && (
+                    <p className="text-xs text-gray-500">Color: {registrationData.backhand_rubber_summary.color}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <hr className="my-6 border-gray-200" />
+
+        {/* Status Message */}
+        <div className="text-center mb-6">
+          <h3 className="text-xl font-bold text-gray-800 mb-3">
+            ¿Qué sigue?
+          </h3>
+          
+          {registrationData.status === 'pending' && (
+            <p className="text-gray-600 mb-4">
+              Tu registro está siendo revisado por nuestro equipo. Te contactaremos pronto 
+              para confirmar tu participación en el censo de tenis de mesa de Ecuador.
+            </p>
+          )}
+          
+          {registrationData.status === 'contacted' && (
+            <p className="text-gray-600 mb-4">
+              ¡Genial! Ya hemos establecido contacto contigo. Estamos procesando tu información 
+              para incluirte oficialmente en el censo.
+            </p>
+          )}
+          
+          {registrationData.status === 'approved' && (
+            <p className="text-gray-600 mb-4">
+              ¡Felicitaciones! Tu registro ha sido aprobado y ahora formas parte oficial 
+              del censo de tenis de mesa de Ecuador.
+            </p>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={() => {
+              setRegistrationData(null);
+              setShowSearch(true);
+              setEmail('');
+              setError('');
+            }}
+            className="px-6 py-3 border-2 border-green-600 text-green-600 rounded-xl hover:bg-green-50 transition-colors duration-200 font-bold"
+          >
+            Consultar Otro Registro
+          </button>
+          
+          <button
+            onClick={() => window.location.href = '/'}
+            className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors duration-200 font-bold"
+          >
+            Volver al Inicio
+          </button>
+        </div>
       </motion.div>
-    </Box>
+    </div>
   );
 };
 
