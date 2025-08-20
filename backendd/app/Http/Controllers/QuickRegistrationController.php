@@ -6,6 +6,7 @@ use App\Models\QuickRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class QuickRegistrationController extends Controller
 {
@@ -15,20 +16,74 @@ class QuickRegistrationController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            // Información personal básica
             'first_name' => 'required|string|min:2|max:255',
             'last_name' => 'required|string|min:2|max:255',
+            'doc_id' => 'nullable|string|max:20',
             'email' => 'required|email|max:255|unique:quick_registrations,email',
             'phone' => 'required|string|min:10|max:20',
-            'doc_id' => 'nullable|string|max:20',
             'birth_date' => 'nullable|date|before:today',
-            'gender' => 'nullable|in:male,female,other',
+            'gender' => 'nullable|in:masculino,femenino',
+            
+            // Ubicación
+            'country' => 'nullable|string|max:100',
             'province' => 'required|string|max:100',
             'city' => 'required|string|max:100',
-            'interest_type' => 'required|in:player,club_owner,league_admin',
-            'preferred_sport' => 'nullable|string|max:100',
-            'experience_level' => 'nullable|in:beginner,intermediate,advanced',
+            
+            // Club y federación
+            'club_name' => 'nullable|string|max:255',
+            'federation' => 'nullable|string|max:255',
+            
+            // Estilo de juego
+            'playing_side' => 'nullable|in:derecho,zurdo',
+            'playing_style' => 'nullable|in:clasico,lapicero',
+            
+            // Raqueta - palo
+            'racket_brand' => 'nullable|string|max:100',
+            'racket_model' => 'nullable|string|max:100',
+            'racket_custom_brand' => 'nullable|string|max:100',
+            'racket_custom_model' => 'nullable|string|max:100',
+            
+            // Caucho del drive
+            'drive_rubber_brand' => 'nullable|string|max:100',
+            'drive_rubber_model' => 'nullable|string|max:100',
+            'drive_rubber_type' => 'nullable|in:liso,pupo_largo,pupo_corto,antitopspin',
+            'drive_rubber_color' => 'nullable|in:negro,rojo,verde,azul,amarillo,morado,fucsia',
+            'drive_rubber_sponge' => 'nullable|string|max:20',
+            'drive_rubber_hardness' => 'nullable|string|max:20',
+            'drive_rubber_custom_brand' => 'nullable|string|max:100',
+            'drive_rubber_custom_model' => 'nullable|string|max:100',
+            
+            // Caucho del back
+            'backhand_rubber_brand' => 'nullable|string|max:100',
+            'backhand_rubber_model' => 'nullable|string|max:100',
+            'backhand_rubber_type' => 'nullable|in:liso,pupo_largo,pupo_corto,antitopspin',
+            'backhand_rubber_color' => 'nullable|in:negro,rojo,verde,azul,amarillo,morado,fucsia',
+            'backhand_rubber_sponge' => 'nullable|string|max:20',
+            'backhand_rubber_hardness' => 'nullable|string|max:20',
+            'backhand_rubber_custom_brand' => 'nullable|string|max:100',
+            'backhand_rubber_custom_model' => 'nullable|string|max:100',
+            
+            // Información adicional
             'notes' => 'nullable|string|max:1000',
+            
+            // Photo upload
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
         ]);
+
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $photo = $request->file('photo');
+            $filename = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+            $path = $photo->storeAs('quick_registrations/photos', $filename, 'public');
+            $validated['photo_path'] = $path;
+        }
+
+        // Remove photo from validated data as it's not a database field
+        unset($validated['photo']);
+
+        // Set default values
+        $validated['country'] = $validated['country'] ?? 'Ecuador';
 
         // Add metadata
         $validated['metadata'] = [
@@ -44,6 +99,7 @@ class QuickRegistrationController extends Controller
             'message' => 'Registro exitoso. Te contactaremos pronto.',
             'data' => $registration,
             'registration_id' => $registration->id,
+            'registration_code' => $registration->registration_code,
         ], 201);
     }
 
@@ -59,10 +115,6 @@ class QuickRegistrationController extends Controller
             $query->where('status', $request->status);
         }
 
-        if ($request->has('interest_type') && $request->interest_type) {
-            $query->where('interest_type', $request->interest_type);
-        }
-
         if ($request->has('province') && $request->province) {
             $query->where('province', $request->province);
         }
@@ -71,8 +123,20 @@ class QuickRegistrationController extends Controller
             $query->where('city', $request->city);
         }
 
-        if ($request->has('preferred_sport') && $request->preferred_sport) {
-            $query->where('preferred_sport', $request->preferred_sport);
+        if ($request->has('club_name') && $request->club_name) {
+            $query->where('club_name', 'like', '%' . $request->club_name . '%');
+        }
+
+        if ($request->has('federation') && $request->federation) {
+            $query->where('federation', 'like', '%' . $request->federation . '%');
+        }
+
+        if ($request->has('playing_side') && $request->playing_side) {
+            $query->where('playing_side', $request->playing_side);
+        }
+
+        if ($request->has('playing_style') && $request->playing_style) {
+            $query->where('playing_style', $request->playing_style);
         }
 
         if ($request->has('search') && $request->search) {
@@ -82,7 +146,8 @@ class QuickRegistrationController extends Controller
                   ->orWhere('last_name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('doc_id', 'like', "%{$search}%");
+                  ->orWhere('doc_id', 'like', "%{$search}%")
+                  ->orWhere('registration_code', 'like', "%{$search}%");
             });
         }
 
@@ -137,6 +202,33 @@ class QuickRegistrationController extends Controller
     }
 
     /**
+     * Upload photo for registration.
+     */
+    public function uploadPhoto(Request $request, QuickRegistration $quickRegistration): JsonResponse
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
+        ]);
+
+        // Delete old photo if exists
+        if ($quickRegistration->photo_path && Storage::disk('public')->exists($quickRegistration->photo_path)) {
+            Storage::disk('public')->delete($quickRegistration->photo_path);
+        }
+
+        $photo = $request->file('photo');
+        $filename = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+        $path = $photo->storeAs('quick_registrations/photos', $filename, 'public');
+
+        $quickRegistration->update(['photo_path' => $path]);
+
+        return response()->json([
+            'message' => 'Foto subida exitosamente',
+            'photo_url' => Storage::url($path),
+            'data' => $quickRegistration->fresh()
+        ]);
+    }
+
+    /**
      * Get registration statistics.
      */
     public function getStatistics(): JsonResponse
@@ -148,20 +240,59 @@ class QuickRegistrationController extends Controller
             'approved_registrations' => QuickRegistration::approved()->count(),
             'rejected_registrations' => QuickRegistration::where('status', 'rejected')->count(),
 
-            'by_interest_type' => QuickRegistration::select('interest_type', DB::raw('count(*) as count'))
-                ->groupBy('interest_type')
-                ->get(),
-
             'by_province' => QuickRegistration::select('province', DB::raw('count(*) as count'))
                 ->groupBy('province')
                 ->orderBy('count', 'desc')
                 ->get(),
 
-            'by_sport' => QuickRegistration::select('preferred_sport', DB::raw('count(*) as count'))
-                ->whereNotNull('preferred_sport')
-                ->groupBy('preferred_sport')
+            'by_club' => QuickRegistration::select('club_name', DB::raw('count(*) as count'))
+                ->whereNotNull('club_name')
+                ->groupBy('club_name')
+                ->orderBy('count', 'desc')
+                ->limit(10)
+                ->get(),
+
+            'by_federation' => QuickRegistration::select('federation', DB::raw('count(*) as count'))
+                ->whereNotNull('federation')
+                ->groupBy('federation')
                 ->orderBy('count', 'desc')
                 ->get(),
+
+            'by_playing_style' => QuickRegistration::select('playing_style', DB::raw('count(*) as count'))
+                ->whereNotNull('playing_style')
+                ->groupBy('playing_style')
+                ->get(),
+
+            'by_playing_side' => QuickRegistration::select('playing_side', DB::raw('count(*) as count'))
+                ->whereNotNull('playing_side')
+                ->groupBy('playing_side')
+                ->get(),
+
+            'by_gender' => QuickRegistration::select('gender', DB::raw('count(*) as count'))
+                ->whereNotNull('gender')
+                ->groupBy('gender')
+                ->get(),
+
+            'equipment_stats' => [
+                'racket_brands' => QuickRegistration::select('racket_brand', DB::raw('count(*) as count'))
+                    ->whereNotNull('racket_brand')
+                    ->groupBy('racket_brand')
+                    ->orderBy('count', 'desc')
+                    ->limit(10)
+                    ->get(),
+                'drive_rubber_brands' => QuickRegistration::select('drive_rubber_brand', DB::raw('count(*) as count'))
+                    ->whereNotNull('drive_rubber_brand')
+                    ->groupBy('drive_rubber_brand')
+                    ->orderBy('count', 'desc')
+                    ->limit(10)
+                    ->get(),
+                'backhand_rubber_brands' => QuickRegistration::select('backhand_rubber_brand', DB::raw('count(*) as count'))
+                    ->whereNotNull('backhand_rubber_brand')
+                    ->groupBy('backhand_rubber_brand')
+                    ->orderBy('count', 'desc')
+                    ->limit(10)
+                    ->get(),
+            ],
 
             'recent_registrations' => QuickRegistration::where('created_at', '>=', now()->subDays(7))
                 ->count(),
@@ -222,15 +353,19 @@ class QuickRegistrationController extends Controller
             'found' => true,
             'data' => [
                 'id' => $registration->id,
+                'registration_code' => $registration->registration_code,
                 'full_name' => $registration->full_name,
                 'status' => $registration->status,
                 'status_label' => $registration->status_label,
                 'status_color' => $registration->status_color,
                 'days_waiting' => $registration->days_waiting,
-                'interest_type' => $registration->interest_type,
-                'interest_type_label' => $registration->interest_type_label,
-                'preferred_sport' => $registration->preferred_sport,
+                'club_summary' => $registration->club_summary,
                 'location_summary' => $registration->location_summary,
+                'playing_side_label' => $registration->playing_side_label,
+                'playing_style_label' => $registration->playing_style_label,
+                'racket_summary' => $registration->racket_summary,
+                'drive_rubber_summary' => $registration->drive_rubber_summary,
+                'backhand_rubber_summary' => $registration->backhand_rubber_summary,
                 'created_at' => $registration->created_at,
                 'contacted_at' => $registration->contacted_at,
                 'approved_at' => $registration->approved_at,
@@ -243,6 +378,11 @@ class QuickRegistrationController extends Controller
      */
     public function destroy(QuickRegistration $quickRegistration): JsonResponse
     {
+        // Delete photo if exists
+        if ($quickRegistration->photo_path && Storage::disk('public')->exists($quickRegistration->photo_path)) {
+            Storage::disk('public')->delete($quickRegistration->photo_path);
+        }
+
         $quickRegistration->delete();
 
         return response()->json([
