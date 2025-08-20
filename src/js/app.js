@@ -552,6 +552,7 @@ const translationData = {
         'faq-6-answer': 'El sistema de referidos es simple y gratificante. <span class="faq__answer-highlight">Obtienes un enlace único de referido y código QR</span> que puedes compartir con otros conductores. Cuando alguien se registra usando tu enlace y completa su primera semana exitosa, <span class="faq__answer-highlight">tanto tú como tu referido reciben una semana completamente gratis</span> de StarFlex. Puedes rastrear todos tus referidos en tiempo real a través de tu panel de control y ganar semanas gratis ilimitadas ayudando a otros conductores a descubrir StarFlex.',
         'faq-7-question': '¿Cómo funcionan las notificaciones de llamadas con inteligencia artificial?',
         'faq-7-answer': 'StarFlex cuenta con un <span class="faq__answer-highlight">sistema avanzado de inteligencia artificial que realiza llamadas telefónicas automáticas</span> cuando se vuelven disponibles bloques premium. La IA habla con una voz clara y natural y proporciona información detallada sobre el bloque aceptado, incluyendo <span class="faq__answer-highlight">ubicación de la estación, horario, duración y monto del pago</span>. Esto asegura que seas informado inmediatamente de bloques importantes incluso cuando no puedes revisar tu teléfono, siendo perfecto para conductores que están trabajando actualmente o en situaciones donde no pueden ver las notificaciones.',
+        'faq-no-results': 'No se encontraron preguntas que coincidan con tu búsqueda',
         'faq-no-results-suggestion': 'Intenta con términos diferentes o contacta nuestro soporte',
         // Contact Section
         'contact-badge': 'Conecta con el Futuro',
@@ -1846,7 +1847,7 @@ function initializeMobileNavigation() {
     if (navDrawerOverlay) {
         navDrawerOverlay.addEventListener('click', () => {
             console.log('🔄 Click en overlay del drawer')
-                        closeMobileMenu();
+            closeMobileMenu();
         });
     }
     
@@ -2348,12 +2349,16 @@ function updateHeaderOnScroll() {
     }
 }
 
-// ===== FUNCIONES DE FAQ ULTRA-OPTIMIZADAS =====
+// ===== FUNCIONES DE FAQ ULTRA-OPTIMIZADAS - CORREGIDAS PARA MÓVIL =====
 function initializeFAQ() {
+    console.log('🔧 Inicializando FAQ - FUNCIONA IGUAL EN MÓVIL Y DESKTOP...');
+    
     const faqItems = document.querySelectorAll('.faq__item');
     const faqSearch = document.getElementById('faq-search');
     const faqList = document.getElementById('faq-list');
     const faqNoResults = document.getElementById('faq-no-results');
+    
+    console.log(`❓ FAQ items encontrados: ${faqItems.length}`);
     
     // Configurar eventos para cada pregunta FAQ
     faqItems.forEach((item, index) => {
@@ -2361,11 +2366,19 @@ function initializeFAQ() {
         const answer = item.querySelector('.faq__answer');
         const icon = item.querySelector('.faq__icon');
         
-        if (!question || !answer) return;
+        if (!question || !answer) {
+            console.warn(`❌ FAQ item ${index} no tiene pregunta o respuesta`);
+            return;
+        }
         
-        // Función para toggle FAQ
+        console.log(`🔧 Configurando FAQ item ${index + 1}`);
+        
+        // Función para toggle FAQ - IGUAL PARA MÓVIL Y DESKTOP
         const toggleFAQ = (e) => {
             e.preventDefault();
+            e.stopPropagation();
+            
+            console.log(`🎯 Toggle FAQ ${index + 1} - Dispositivo: ${isMobile ? 'móvil' : 'desktop'}`);
             
             const isExpanded = question.getAttribute('aria-expanded') === 'true';
             
@@ -2379,6 +2392,7 @@ function initializeFAQ() {
                         otherQuestion.setAttribute('aria-expanded', 'false');
                         otherItem.classList.remove('active');
                         
+                        // USAR MAXHEIGHT PARA TODOS LOS DISPOSITIVOS
                         if (!performanceMode) {
                             otherAnswer.style.maxHeight = '0';
                         }
@@ -2388,26 +2402,66 @@ function initializeFAQ() {
             
             // Toggle la FAQ actual
             if (isExpanded) {
+                console.log(`📤 Cerrando FAQ ${index + 1}`);
                 question.setAttribute('aria-expanded', 'false');
                 item.classList.remove('active');
                 
+                // USAR MAXHEIGHT PARA TODOS LOS DISPOSITIVOS
                 if (!performanceMode) {
                     answer.style.maxHeight = '0';
                 }
             } else {
+                console.log(`📥 Abriendo FAQ ${index + 1}`);
                 question.setAttribute('aria-expanded', 'true');
                 item.classList.add('active');
                 
+                // USAR MAXHEIGHT PARA TODOS LOS DISPOSITIVOS
                 if (!performanceMode) {
                     answer.style.maxHeight = answer.scrollHeight + 'px';
                 }
             }
         };
         
-        // Event listeners
-        question.addEventListener('click', toggleFAQ);
+        // Event listeners - MEJORADOS PARA MÓVIL PERO MANTENIENDO FUNCIONALIDAD
+        if (isMobile) {
+            // Para móvil: usar touchend con prevención de doble activación
+            let touchProcessed = false;
+            
+            question.addEventListener('touchstart', (e) => {
+                touchProcessed = false;
+                question.style.transform = 'scale(0.98)';
+                question.style.transition = 'transform 0.1s ease';
+                console.log(`👆 Touch start en FAQ ${index + 1}`);
+            }, { passive: true });
+            
+            question.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Resetear transform
+                setTimeout(() => {
+                    question.style.transform = '';
+                }, 150);
+                
+                // Procesar solo una vez
+                if (!touchProcessed) {
+                    touchProcessed = true;
+                    console.log(`👆 Touch válido en FAQ ${index + 1}`);
+                    toggleFAQ(e);
+                }
+            }, { passive: false });
+            
+            question.addEventListener('touchcancel', () => {
+                question.style.transform = '';
+                touchProcessed = true;
+            }, { passive: true });
+            
+        } else {
+            // Para desktop: usar click normal
+            question.addEventListener('click', toggleFAQ);
+        }
         
-        // Soporte para teclado
+        // Soporte para teclado (ambos dispositivos)
         question.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -2415,15 +2469,7 @@ function initializeFAQ() {
             }
         });
         
-        // Efectos táctiles para móvil
-        if (isMobile) {
-            question.addEventListener('touchstart', () => {
-                question.style.transform = 'scale(0.98)';
-            }, { passive: true });
-            question.addEventListener('touchend', () => {
-                question.style.transform = '';
-            }, { passive: true });
-        }
+        console.log(`✅ FAQ item ${index + 1} configurado correctamente`);
     });
     
     // Funcionalidad de búsqueda FAQ
@@ -2474,6 +2520,8 @@ function initializeFAQ() {
                 if (questionBtn && answerDiv) {
                     questionBtn.setAttribute('aria-expanded', 'false');
                     item.classList.remove('active');
+                    
+                    // USAR MAXHEIGHT PARA TODOS LOS DISPOSITIVOS
                     if (!performanceMode) {
                         answerDiv.style.maxHeight = '0';
                     }
@@ -2490,6 +2538,8 @@ function initializeFAQ() {
             }
         }
     }
+    
+    console.log('✅ FAQ inicializada correctamente - FUNCIONA IGUAL EN MÓVIL Y DESKTOP');
 }
 
 // ===== FUNCIONES DE VIDEO ULTRA-OPTIMIZADAS =====
@@ -2574,7 +2624,7 @@ function initializeApp() {
     // Inicializar efectos de scroll
     initializeScrollEffects();
     
-    // Inicializar FAQ
+    // Inicializar FAQ - CORREGIDA PARA FUNCIONAR IGUAL EN MÓVIL Y DESKTOP
     initializeFAQ();
     
     // Inicializar reproductor de video
@@ -2613,6 +2663,9 @@ window.addEventListener('resize', () => {
             // Reinicializar navegación
             initializeNavigation();
             
+            // Reinicializar FAQ con nueva lógica
+            initializeFAQ();
+            
             // Reinicializar selector de idioma si es necesario
             if (!isMobile) {
                 initializeLanguageSwitcher();
@@ -2647,4 +2700,3 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 console.log('📱 StarFlex JavaScript cargado completamente');
-
