@@ -250,7 +250,7 @@ const RegistroRapidoClient: React.FC = () => {
             </p>
             <div className="space-y-3">
               <button
-                onClick={() => router.push('/waiting-room')}
+                onClick={() => router.push('/censo-waiting-room')}
                 className="w-full bg-green-600 text-white py-3 px-4 rounded-xl hover:bg-green-700 transition-colors duration-200 font-bold"
               >
                 Ir a Sala de Espera
