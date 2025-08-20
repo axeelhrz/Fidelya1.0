@@ -7,6 +7,8 @@ use App\Models\Club;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class MemberController extends Controller
 {
@@ -120,14 +122,27 @@ class MemberController extends Controller
             'notes' => 'nullable|string|max:1000',
             'ranking_position' => 'nullable|integer|min:1',
             'ranking_last_updated' => 'nullable|date',
-            'photo_path' => 'nullable|string|max:255',
+            
+            // Photo upload
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
         ]);
+
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $photo = $request->file('photo');
+            $filename = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+            $path = $photo->storeAs('members/photos', $filename, 'public');
+            $validated['photo_path'] = $path;
+        }
 
         // Convert birth_date to birthdate for database compatibility
         if (isset($validated['birth_date'])) {
             $validated['birthdate'] = $validated['birth_date'];
             unset($validated['birth_date']);
         }
+
+        // Remove photo from validated data as it's not a database field
+        unset($validated['photo']);
 
         // Set default values
         $validated['status'] = $validated['status'] ?? 'active';
@@ -208,14 +223,32 @@ class MemberController extends Controller
             'notes' => 'nullable|string|max:1000',
             'ranking_position' => 'nullable|integer|min:1',
             'ranking_last_updated' => 'nullable|date',
-            'photo_path' => 'nullable|string|max:255',
+            
+            // Photo upload
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
         ]);
+
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            // Delete old photo if exists
+            if ($member->photo_path && Storage::disk('public')->exists($member->photo_path)) {
+                Storage::disk('public')->delete($member->photo_path);
+            }
+            
+            $photo = $request->file('photo');
+            $filename = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+            $path = $photo->storeAs('members/photos', $filename, 'public');
+            $validated['photo_path'] = $path;
+        }
 
         // Convert birth_date to birthdate for database compatibility
         if (isset($validated['birth_date'])) {
             $validated['birthdate'] = $validated['birth_date'];
             unset($validated['birth_date']);
         }
+
+        // Remove photo from validated data as it's not a database field
+        unset($validated['photo']);
 
         $member->update($validated);
         $member->load(['club.league', 'user']);
@@ -231,6 +264,11 @@ class MemberController extends Controller
      */
     public function destroy(Member $member): JsonResponse
     {
+        // Delete photo if exists
+        if ($member->photo_path && Storage::disk('public')->exists($member->photo_path)) {
+            Storage::disk('public')->delete($member->photo_path);
+        }
+
         $member->delete();
 
         return response()->json([
@@ -243,18 +281,210 @@ class MemberController extends Controller
      */
     public function getEquipmentData(): JsonResponse
     {
-        return response()->json([
-            'brands' => [
-                'racket' => \DB::table('racket_brands')->where('is_active', true)->get(),
-                'rubber' => \DB::table('rubber_brands')->where('is_active', true)->get(),
-            ],
-            'locations' => \DB::table('ecuador_locations')->where('is_active', true)->get(),
-            'constants' => [
-                'rubber_colors' => ['negro', 'rojo', 'verde', 'azul', 'amarillo', 'morado', 'fucsia'],
-                'rubber_types' => ['liso', 'pupo_largo', 'pupo_corto', 'antitopspin'],
-                'sponge_thicknesses' => ['0.5', '0.7', '1.5', '1.6', '1.8', '1.9', '2', '2.1', '2.2', 'sin esponja'],
-                'hardness_levels' => ['h42', 'h44', 'h46', 'h48', 'h50', 'n/a'],
-            ]
+        try {
+            $data = [
+                'brands' => [
+                    'racket' => DB::table('racket_brands')
+                        ->where('is_active', true)
+                        ->orderBy('name')
+                        ->get(['id', 'name', 'country']),
+                    'rubber' => DB::table('rubber_brands')
+                        ->where('is_active', true)
+                        ->orderBy('name')
+                        ->get(['id', 'name', 'country']),
+                ],
+                'models' => [
+                    'racket' => DB::table('racket_models')
+                        ->join('racket_brands', 'racket_models.brand_id', '=', 'racket_brands.id')
+                        ->where('racket_models.is_active', true)
+                        ->where('racket_brands.is_active', true)
+                        ->select('racket_models.*', 'racket_brands.name as brand_name')
+                        ->orderBy('racket_brands.name')
+                        ->orderBy('racket_models.name')
+                        ->get(),
+                    'rubber' => DB::table('rubber_models')
+                        ->join('rubber_brands', 'rubber_models.brand_id', '=', 'rubber_brands.id')
+                        ->where('rubber_models.is_active', true)
+                        ->where('rubber_brands.is_active', true)
+                        ->select('rubber_models.*', 'rubber_brands.name as brand_name')
+                        ->orderBy('rubber_brands.name')
+                        ->orderBy('rubber_models.name')
+                        ->get(),
+                ],
+                'locations' => DB::table('ecuador_locations')
+                    ->where('is_active', true)
+                    ->orderBy('province')
+                    ->orderBy('city')
+                    ->get(['province', 'city']),
+                'tt_clubs' => DB::table('tt_club_references')
+                    ->where('is_active', true)
+                    ->orderBy('province')
+                    ->orderBy('city')
+                    ->orderBy('name')
+                    ->get(['name', 'city', 'province', 'federation']),
+                'constants' => [
+                    'rubber_colors' => ['negro', 'rojo', 'verde', 'azul', 'amarillo', 'morado', 'fucsia'],
+                    'rubber_types' => ['liso', 'pupo_largo', 'pupo_corto', 'antitopspin'],
+                    'sponge_thicknesses' => ['0.5', '0.7', '1.5', '1.6', '1.8', '1.9', '2', '2.1', '2.2', 'sin esponja'],
+                    'hardness_levels' => ['h42', 'h44', 'h46', 'h48', 'h50', 'n/a'],
+                    'popular_brands' => [
+                        'Butterfly', 'DHS', 'Sanwei', 'Nittaku', 'Yasaka', 'Stiga', 
+                        'Victas', 'Joola', 'Xiom', 'Saviga', 'Friendship', 'Dr. Neubauer'
+                    ],
+                    'provinces' => [
+                        ['name' => 'Guayas', 'cities' => ['Guayaquil', 'Milagro', 'Buena Fe']],
+                        ['name' => 'Pichincha', 'cities' => ['Quito']],
+                        ['name' => 'Manabí', 'cities' => ['Manta', 'Portoviejo']],
+                        ['name' => 'Azuay', 'cities' => ['Cuenca']],
+                        ['name' => 'Tungurahua', 'cities' => ['Ambato']],
+                        ['name' => 'Los Ríos', 'cities' => ['Quevedo', 'Urdaneta']],
+                        ['name' => 'Santa Elena', 'cities' => ['La Libertad']],
+                        ['name' => 'Galápagos', 'cities' => ['Puerto Ayora']],
+                    ]
+                ]
+            ];
+
+            return response()->json($data);
+        } catch (\Exception $e) {
+            // Fallback to constants if database tables don't exist yet
+            return response()->json([
+                'brands' => [
+                    'racket' => [],
+                    'rubber' => [],
+                ],
+                'models' => [
+                    'racket' => [],
+                    'rubber' => [],
+                ],
+                'locations' => [],
+                'tt_clubs' => [],
+                'constants' => [
+                    'rubber_colors' => ['negro', 'rojo', 'verde', 'azul', 'amarillo', 'morado', 'fucsia'],
+                    'rubber_types' => ['liso', 'pupo_largo', 'pupo_corto', 'antitopspin'],
+                    'sponge_thicknesses' => ['0.5', '0.7', '1.5', '1.6', '1.8', '1.9', '2', '2.1', '2.2', 'sin esponja'],
+                    'hardness_levels' => ['h42', 'h44', 'h46', 'h48', 'h50', 'n/a'],
+                    'popular_brands' => [
+                        'Butterfly', 'DHS', 'Sanwei', 'Nittaku', 'Yasaka', 'Stiga', 
+                        'Victas', 'Joola', 'Xiom', 'Saviga', 'Friendship', 'Dr. Neubauer'
+                    ],
+                    'provinces' => [
+                        ['name' => 'Guayas', 'cities' => ['Guayaquil', 'Milagro', 'Buena Fe']],
+                        ['name' => 'Pichincha', 'cities' => ['Quito']],
+                        ['name' => 'Manabí', 'cities' => ['Manta', 'Portoviejo']],
+                        ['name' => 'Azuay', 'cities' => ['Cuenca']],
+                        ['name' => 'Tungurahua', 'cities' => ['Ambato']],
+                        ['name' => 'Los Ríos', 'cities' => ['Quevedo', 'Urdaneta']],
+                        ['name' => 'Santa Elena', 'cities' => ['La Libertad']],
+                        ['name' => 'Galápagos', 'cities' => ['Puerto Ayora']],
+                    ]
+                ]
+            ]);
+        }
+    }
+
+    /**
+     * Upload member photo
+     */
+    public function uploadPhoto(Request $request, Member $member): JsonResponse
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
         ]);
+
+        // Delete old photo if exists
+        if ($member->photo_path && Storage::disk('public')->exists($member->photo_path)) {
+            Storage::disk('public')->delete($member->photo_path);
+        }
+
+        $photo = $request->file('photo');
+        $filename = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+        $path = $photo->storeAs('members/photos', $filename, 'public');
+
+        $member->update(['photo_path' => $path]);
+
+        return response()->json([
+            'message' => 'Foto subida exitosamente',
+            'photo_url' => Storage::url($path),
+            'data' => $member->fresh(['club.league', 'user'])
+        ]);
+    }
+
+    /**
+     * Delete member photo
+     */
+    public function deletePhoto(Member $member): JsonResponse
+    {
+        if ($member->photo_path && Storage::disk('public')->exists($member->photo_path)) {
+            Storage::disk('public')->delete($member->photo_path);
+            $member->update(['photo_path' => null]);
+
+            return response()->json([
+                'message' => 'Foto eliminada exitosamente',
+                'data' => $member->fresh(['club.league', 'user'])
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'No hay foto para eliminar'
+        ], 404);
+    }
+
+    /**
+     * Get member statistics
+     */
+    public function getStatistics(Request $request): JsonResponse
+    {
+        $query = Member::query();
+
+        // Apply filters if provided
+        if ($request->has('club_id') && $request->club_id) {
+            $query->where('club_id', $request->club_id);
+        }
+
+        if ($request->has('league_id') && $request->league_id) {
+            $query->whereHas('club', function ($q) use ($request) {
+                $q->where('league_id', $request->league_id);
+            });
+        }
+
+        $stats = [
+            'total_members' => $query->count(),
+            'active_members' => $query->where('status', 'active')->count(),
+            'inactive_members' => $query->where('status', 'inactive')->count(),
+            'male_members' => $query->where('gender', 'male')->count(),
+            'female_members' => $query->where('gender', 'female')->count(),
+            'by_province' => $query->select('province', DB::raw('count(*) as count'))
+                ->whereNotNull('province')
+                ->groupBy('province')
+                ->orderBy('count', 'desc')
+                ->get(),
+            'by_playing_style' => $query->select('playing_style', DB::raw('count(*) as count'))
+                ->whereNotNull('playing_style')
+                ->groupBy('playing_style')
+                ->get(),
+            'by_dominant_hand' => $query->select('dominant_hand', DB::raw('count(*) as count'))
+                ->whereNotNull('dominant_hand')
+                ->groupBy('dominant_hand')
+                ->get(),
+            'average_age' => $query->whereNotNull('birthdate')
+                ->selectRaw('AVG(YEAR(CURDATE()) - YEAR(birthdate)) as avg_age')
+                ->value('avg_age'),
+            'equipment_stats' => [
+                'racket_brands' => $query->select('racket_brand', DB::raw('count(*) as count'))
+                    ->whereNotNull('racket_brand')
+                    ->groupBy('racket_brand')
+                    ->orderBy('count', 'desc')
+                    ->limit(10)
+                    ->get(),
+                'rubber_brands' => $query->select('drive_rubber_brand', DB::raw('count(*) as count'))
+                    ->whereNotNull('drive_rubber_brand')
+                    ->groupBy('drive_rubber_brand')
+                    ->orderBy('count', 'desc')
+                    ->limit(10)
+                    ->get(),
+            ]
+        ];
+
+        return response()->json($stats);
     }
 }
