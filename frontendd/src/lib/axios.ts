@@ -38,13 +38,26 @@ const getCsrfToken = async (): Promise<void> => {
   }
 };
 
+// List of endpoints that don't require CSRF tokens
+const csrfExemptEndpoints = [
+  '/api/registro-rapido',
+  '/api/auth/register',
+  '/api/auth/login',
+  '/sanctum/csrf-cookie'
+];
+
+// Check if URL is exempt from CSRF
+const isCSRFExempt = (url: string): boolean => {
+  return csrfExemptEndpoints.some(endpoint => url.includes(endpoint));
+};
+
 // Request interceptor
 api.interceptors.request.use(
   async (config) => {
-    // For non-GET requests, ensure we have a CSRF token
+    // For non-GET requests, ensure we have a CSRF token (except for exempt endpoints)
     if (config.method && !['get', 'head', 'options'].includes(config.method.toLowerCase())) {
-      // Skip CSRF token for specific endpoints
-      if (!config.url?.includes('/sanctum/csrf-cookie')) {
+      // Skip CSRF token for exempt endpoints
+      if (!isCSRFExempt(config.url || '')) {
         try {
           // First, try to get CSRF token from cookie
           let csrfToken = getCsrfTokenFromCookie();
@@ -78,8 +91,8 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // Handle 419 CSRF token mismatch
-    if (error.response?.status === 419 && !originalRequest._retry) {
+    // Handle 419 CSRF token mismatch (only for non-exempt endpoints)
+    if (error.response?.status === 419 && !originalRequest._retry && !isCSRFExempt(originalRequest.url || '')) {
       originalRequest._retry = true;
       
       try {
