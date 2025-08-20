@@ -117,18 +117,7 @@ const RUBBER_TYPES = [
 const SPONGE_THICKNESSES = ['0.5', '0.7', '1.5', '1.6', '1.8', '1.9', '2', '2.1', '2.2', 'sin esponja'];
 const HARDNESS_LEVELS = ['h42', 'h44', 'h46', 'h48', 'h50'];
 
-const STEP_TITLES = [
-  'Información Personal',
-  'Ubicación y Club',
-  'Estilo de Juego',
-  'Raqueta',
-  'Caucho Drive',
-  'Caucho Backhand',
-  'Información Adicional'
-];
-
 const RegistroRapidoClient: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [registrationCode, setRegistrationCode] = useState('');
@@ -210,18 +199,6 @@ const RegistroRapidoClient: React.FC = () => {
     }
   };
 
-  const nextStep = () => {
-    if (currentStep < STEP_TITLES.length - 1) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
@@ -242,6 +219,13 @@ const RegistroRapidoClient: React.FC = () => {
     },
   };
 
+  // Estilos mejorados para mejor visibilidad
+  const inputStyles = "w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-900 font-semibold placeholder-gray-600 bg-white hover:border-gray-400";
+  const inputErrorStyles = "border-red-400 bg-red-50 text-red-900 font-semibold placeholder-red-500";
+  const inputNormalStyles = "border-gray-300 hover:border-gray-400";
+  const labelStyles = "block text-sm font-bold text-gray-800 mb-1";
+  const sectionTitleStyles = "text-xl font-bold text-gray-900 border-b-2 border-gray-300 pb-3 mb-6";
+
   if (isSuccess) {
     return (
       <ThemeProvider theme={authTheme}>
@@ -258,22 +242,22 @@ const RegistroRapidoClient: React.FC = () => {
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Registro Exitoso</h2>
-            <p className="text-gray-600 mb-4">
-              Tu código de registro es: <span className="font-bold text-green-600">{registrationCode}</span>
+            <p className="text-gray-700 font-semibold mb-4">
+              Tu código de registro es: <span className="font-bold text-green-600 text-lg">{registrationCode}</span>
             </p>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-700 font-medium mb-6">
               Te has registrado exitosamente en el censo de tenis de mesa. Pronto nos pondremos en contacto contigo.
             </p>
             <div className="space-y-3">
               <button
                 onClick={() => router.push('/waiting-room')}
-                className="w-full bg-green-600 text-white py-3 px-4 rounded-xl hover:bg-green-700 transition-colors duration-200"
+                className="w-full bg-green-600 text-white py-3 px-4 rounded-xl hover:bg-green-700 transition-colors duration-200 font-bold"
               >
                 Ir a Sala de Espera
               </button>
               <button
                 onClick={() => router.push('/')}
-                className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-xl hover:bg-gray-200 transition-colors duration-200"
+                className="w-full bg-gray-100 text-gray-800 py-3 px-4 rounded-xl hover:bg-gray-200 transition-colors duration-200 font-bold"
               >
                 Volver al Inicio
               </button>
@@ -283,167 +267,6 @@ const RegistroRapidoClient: React.FC = () => {
       </ThemeProvider>
     );
   }
-
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 0: // Información Personal
-        return (
-          <div className="space-y-6">
-            {/* Photo Upload */}
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                {photoPreview ? (
-                  <img
-                    className="h-24 w-24 object-cover rounded-full border-4 border-gray-300"
-                    src={photoPreview}
-                    alt="Vista previa"
-                  />
-                ) : (
-                  <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center border-4 border-gray-300">
-                    <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                )}
-                <label
-                  htmlFor="photo"
-                  className="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </label>
-                <input
-                  id="photo"
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="sr-only"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
-                  Nombres <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...register('first_name')}
-                  type="text"
-                  id="first_name"
-                  placeholder="Luis Abelardo"
-                  className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
-                    errors.first_name ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
-                  }`}
-                />
-                {errors.first_name && (
-                  <p className="text-sm text-red-600">{errors.first_name.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
-                  Apellido <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...register('last_name')}
-                  type="text"
-                  id="last_name"
-                  placeholder="Vale Zurita"
-                  className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
-                    errors.last_name ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
-                  }`}
-                />
-                {errors.last_name && (
-                  <p className="text-sm text-red-600">{errors.last_name.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="doc_id" className="block text-sm font-medium text-gray-700">Cédula</label>
-                <input
-                  {...register('doc_id')}
-                  type="text"
-                  id="doc_id"
-                  placeholder="913909999"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-gray-300"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="birth_date" className="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
-                <input
-                  {...register('birth_date')}
-                  type="date"
-                  id="birth_date"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-gray-300"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="gender" className="block text-sm font-medium text-gray-700">Sexo</label>
-                <select
-                  {...register('gender')}
-                  id="gender"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-gray-300"
-                >
-                  <option value="">Seleccionar</option>
-                  <option value="masculino">Masculino</option>
-                  <option value="femenino">Femenino</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...register('email')}
-                  type="email"
-                  id="email"
-                  placeholder="correo@hotmail.com"
-                  className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
-                    errors.email ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
-                  }`}
-                />
-                {errors.email && (
-                  <p className="text-sm text-red-600">{errors.email.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                  Celular <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...register('phone')}
-                  type="tel"
-                  id="phone"
-                  placeholder="994818999"
-                  className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
-                    errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
-                  }`}
-                />
-                {errors.phone && (
-                  <p className="text-sm text-red-600">{errors.phone.message}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-
-      // ... (continúa con los otros casos)
-      
-      default:
-        return null;
-    }
-  };
 
   return (
     <ThemeProvider theme={authTheme}>
@@ -458,11 +281,12 @@ const RegistroRapidoClient: React.FC = () => {
         dense
         autoHideDuration={4000}
       >
-        <AuthLayout>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-8 px-4 sm:px-6 lg:px-8">
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
+            className="max-w-4xl mx-auto"
           >
             <motion.div variants={itemVariants}>
               <AuthHeader
@@ -471,80 +295,702 @@ const RegistroRapidoClient: React.FC = () => {
               />
             </motion.div>
 
-            <motion.div variants={itemVariants}>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                {/* Progress Steps */}
-                <div className="mb-8">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      {STEP_TITLES[currentStep]}
-                    </h2>
-                    <span className="text-sm text-gray-500">
-                      Paso {currentStep + 1} de {STEP_TITLES.length}
-                    </span>
-                  </div>
-                  
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${((currentStep + 1) / STEP_TITLES.length) * 100}%` }}
+            <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-xl p-8 mt-8">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                
+                {/* Foto */}
+                <div className="flex justify-center">
+                  <div className="relative">
+                    {photoPreview ? (
+                      <img
+                        className="h-32 w-32 object-cover rounded-full border-4 border-gray-400"
+                        src={photoPreview}
+                        alt="Vista previa"
+                      />
+                    ) : (
+                      <div className="h-32 w-32 rounded-full bg-gray-200 flex items-center justify-center border-4 border-gray-400">
+                        <svg className="h-12 w-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                    )}
+                    <label
+                      htmlFor="photo"
+                      className="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-3 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </label>
+                    <input
+                      id="photo"
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoChange}
+                      className="sr-only"
                     />
                   </div>
                 </div>
 
-                {/* Step Content */}
-                <div className="min-h-[400px]">
-                  {renderStepContent()}
+                {/* Información Personal */}
+                <div className="space-y-6">
+                  <h3 className={sectionTitleStyles}>
+                    Información Personal
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label htmlFor="first_name" className={labelStyles}>
+                        Nombres <span className="text-red-600 font-bold">*</span>
+                      </label>
+                      <input
+                        {...register('first_name')}
+                        type="text"
+                        id="first_name"
+                        placeholder="Luis Abelardo"
+                        className={`${inputStyles} ${errors.first_name ? inputErrorStyles : inputNormalStyles}`}
+                      />
+                      {errors.first_name && (
+                        <p className="text-sm text-red-700 font-semibold">{errors.first_name.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="last_name" className={labelStyles}>
+                        Apellido <span className="text-red-600 font-bold">*</span>
+                      </label>
+                      <input
+                        {...register('last_name')}
+                        type="text"
+                        id="last_name"
+                        placeholder="Vale Zurita"
+                        className={`${inputStyles} ${errors.last_name ? inputErrorStyles : inputNormalStyles}`}
+                      />
+                      {errors.last_name && (
+                        <p className="text-sm text-red-700 font-semibold">{errors.last_name.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label htmlFor="doc_id" className={labelStyles}>Cédula</label>
+                      <input
+                        {...register('doc_id')}
+                        type="text"
+                        id="doc_id"
+                        placeholder="913909999"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="birth_date" className={labelStyles}>Fecha de Nacimiento</label>
+                      <input
+                        {...register('birth_date')}
+                        type="date"
+                        id="birth_date"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="gender" className={labelStyles}>Sexo</label>
+                      <select
+                        {...register('gender')}
+                        id="gender"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar</option>
+                        <option value="masculino">Masculino</option>
+                        <option value="femenino">Femenino</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label htmlFor="email" className={labelStyles}>
+                        Email <span className="text-red-600 font-bold">*</span>
+                      </label>
+                      <input
+                        {...register('email')}
+                        type="email"
+                        id="email"
+                        placeholder="correo@hotmail.com"
+                        className={`${inputStyles} ${errors.email ? inputErrorStyles : inputNormalStyles}`}
+                      />
+                      {errors.email && (
+                        <p className="text-sm text-red-700 font-semibold">{errors.email.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="phone" className={labelStyles}>
+                        Celular <span className="text-red-600 font-bold">*</span>
+                      </label>
+                      <input
+                        {...register('phone')}
+                        type="tel"
+                        id="phone"
+                        placeholder="994818999"
+                        className={`${inputStyles} ${errors.phone ? inputErrorStyles : inputNormalStyles}`}
+                      />
+                      {errors.phone && (
+                        <p className="text-sm text-red-700 font-semibold">{errors.phone.message}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Navigation Buttons */}
-                <div className="flex justify-between pt-6 border-t border-gray-200">
-                  <div className="flex gap-3">
-                    {currentStep > 0 && (
-                      <button
-                        type="button"
-                        onClick={prevStep}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors duration-200"
-                      >
-                        Anterior
-                      </button>
-                    )}
-                  </div>
+                {/* Ubicación */}
+                <div className="space-y-6">
+                  <h3 className={sectionTitleStyles}>
+                    Ubicación
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label htmlFor="country" className={labelStyles}>País</label>
+                      <input
+                        {...register('country')}
+                        type="text"
+                        id="country"
+                        defaultValue="Ecuador"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      />
+                    </div>
 
-                  <div className="flex gap-3">
-                    {currentStep < STEP_TITLES.length - 1 ? (
-                      <button
-                        type="button"
-                        onClick={nextStep}
-                        className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors duration-200"
+                    <div className="space-y-2">
+                      <label htmlFor="province" className={labelStyles}>
+                        Provincia <span className="text-red-600 font-bold">*</span>
+                      </label>
+                      <select
+                        {...register('province')}
+                        id="province"
+                        className={`${inputStyles} ${errors.province ? inputErrorStyles : inputNormalStyles}`}
                       >
-                        Siguiente
-                      </button>
-                    ) : (
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="px-8 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
+                        <option value="">Seleccionar provincia</option>
+                        {ECUADOR_PROVINCES.map((province) => (
+                          <option key={province.name} value={province.name}>
+                            {province.name}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.province && (
+                        <p className="text-sm text-red-700 font-semibold">{errors.province.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="city" className={labelStyles}>
+                        Ciudad <span className="text-red-600 font-bold">*</span>
+                      </label>
+                      <select
+                        {...register('city')}
+                        id="city"
+                        disabled={!selectedProvince}
+                        className={`${inputStyles} ${errors.city ? inputErrorStyles : inputNormalStyles} ${!selectedProvince ? 'bg-gray-200 cursor-not-allowed' : ''}`}
                       >
-                        {isSubmitting ? (
-                          <>
-                            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Registrando...
-                          </>
-                        ) : (
-                          'Completar Registro'
-                        )}
-                      </button>
+                        <option value="">Seleccionar ciudad</option>
+                        {selectedProvince?.cities.map((city) => (
+                          <option key={city} value={city}>
+                            {city}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.city && (
+                        <p className="text-sm text-red-700 font-semibold">{errors.city.message}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Club y Federación */}
+                <div className="space-y-6">
+                  <h3 className={sectionTitleStyles}>
+                    Club y Federación
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label htmlFor="club_name" className={labelStyles}>Club</label>
+                      <select
+                        {...register('club_name')}
+                        id="club_name"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar club</option>
+                        {TT_CLUBS_ECUADOR.map((club) => (
+                          <option key={club.name} value={club.name}>
+                            {club.name}
+                          </option>
+                        ))}
+                        <option value="otro">Otro (no listado)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="federation" className={labelStyles}>Federación</label>
+                      <input
+                        {...register('federation')}
+                        type="text"
+                        id="federation"
+                        placeholder="Fede Guayas"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Estilo de Juego */}
+                <div className="space-y-6">
+                  <h3 className={sectionTitleStyles}>
+                    Estilo de Juego
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label htmlFor="playing_side" className={labelStyles}>Lado de Juego</label>
+                      <select
+                        {...register('playing_side')}
+                        id="playing_side"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar</option>
+                        <option value="derecho">Derecho</option>
+                        <option value="zurdo">Zurdo</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="playing_style" className={labelStyles}>Tipo de Juego</label>
+                      <select
+                        {...register('playing_style')}
+                        id="playing_style"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar</option>
+                        <option value="clasico">Clásico</option>
+                        <option value="lapicero">Lapicero</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Raqueta - Palo */}
+                <div className="space-y-6">
+                  <h3 className={sectionTitleStyles}>
+                    Raqueta - Palo
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label htmlFor="racket_brand" className={labelStyles}>Marca</label>
+                      <select
+                        {...register('racket_brand')}
+                        id="racket_brand"
+                        onChange={(e) => {
+                          setShowCustomRacketBrand(e.target.value === 'custom');
+                          if (e.target.value !== 'custom') {
+                            setValue('racket_custom_brand', '');
+                          }
+                        }}
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar marca</option>
+                        {POPULAR_BRANDS.map((brand) => (
+                          <option key={brand} value={brand}>
+                            {brand}
+                          </option>
+                        ))}
+                        <option value="custom">Otra marca (personalizada)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="racket_model" className={labelStyles}>Modelo</label>
+                      <input
+                        {...register('racket_model')}
+                        type="text"
+                        id="racket_model"
+                        placeholder="5L carbono+"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      />
+                    </div>
+
+                    {showCustomRacketBrand && (
+                      <>
+                        <div className="space-y-2">
+                          <label htmlFor="racket_custom_brand" className={labelStyles}>Marca Personalizada</label>
+                          <input
+                            {...register('racket_custom_brand')}
+                            type="text"
+                            id="racket_custom_brand"
+                            placeholder="Ingresa la marca"
+                            className="w-full px-4 py-3 rounded-xl border border-yellow-400 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-500 text-gray-900 font-semibold placeholder-yellow-700"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label htmlFor="racket_custom_model" className={labelStyles}>Modelo Personalizado</label>
+                          <input
+                            {...register('racket_custom_model')}
+                            type="text"
+                            id="racket_custom_model"
+                            placeholder="Ingresa el modelo"
+                            className="w-full px-4 py-3 rounded-xl border border-yellow-400 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-500 text-gray-900 font-semibold placeholder-yellow-700"
+                          />
+                        </div>
+                      </>
                     )}
                   </div>
+                </div>
+
+                {/* Caucho del Drive */}
+                <div className="space-y-6">
+                  <h3 className={sectionTitleStyles}>
+                    Caucho del Drive
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label htmlFor="drive_rubber_brand" className={labelStyles}>Marca</label>
+                      <select
+                        {...register('drive_rubber_brand')}
+                        id="drive_rubber_brand"
+                        onChange={(e) => {
+                          setShowCustomDriveRubber(e.target.value === 'custom');
+                          if (e.target.value !== 'custom') {
+                            setValue('drive_rubber_custom_brand', '');
+                          }
+                        }}
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar marca</option>
+                        {POPULAR_BRANDS.map((brand) => (
+                          <option key={brand} value={brand}>
+                            {brand}
+                          </option>
+                        ))}
+                        <option value="custom">Otra marca (personalizada)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="drive_rubber_model" className={labelStyles}>Modelo</label>
+                      <input
+                        {...register('drive_rubber_model')}
+                        type="text"
+                        id="drive_rubber_model"
+                        placeholder="Cross 729"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="drive_rubber_type" className={labelStyles}>Tipo</label>
+                      <select
+                        {...register('drive_rubber_type')}
+                        id="drive_rubber_type"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar tipo</option>
+                        {RUBBER_TYPES.map((type) => (
+                          <option key={type.value} value={type.value}>
+                            {type.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="drive_rubber_color" className={labelStyles}>Color</label>
+                      <select
+                        {...register('drive_rubber_color')}
+                        id="drive_rubber_color"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar color</option>
+                        {RUBBER_COLORS.map((color) => (
+                          <option key={color} value={color}>
+                            {color.charAt(0).toUpperCase() + color.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="drive_rubber_sponge" className={labelStyles}>Esponja</label>
+                      <select
+                        {...register('drive_rubber_sponge')}
+                        id="drive_rubber_sponge"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar esponja</option>
+                        {SPONGE_THICKNESSES.map((thickness) => (
+                          <option key={thickness} value={thickness}>
+                            {thickness} {thickness !== 'sin esponja' && 'mm'}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="drive_rubber_hardness" className={labelStyles}>Hardness</label>
+                      <select
+                        {...register('drive_rubber_hardness')}
+                        id="drive_rubber_hardness"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar hardness</option>
+                        {HARDNESS_LEVELS.map((hardness) => (
+                          <option key={hardness} value={hardness}>
+                            {hardness}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {showCustomDriveRubber && (
+                      <>
+                        <div className="space-y-2">
+                          <label htmlFor="drive_rubber_custom_brand" className={labelStyles}>Marca Personalizada</label>
+                          <input
+                            {...register('drive_rubber_custom_brand')}
+                            type="text"
+                            id="drive_rubber_custom_brand"
+                            placeholder="Ingresa la marca"
+                            className="w-full px-4 py-3 rounded-xl border border-yellow-400 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-500 text-gray-900 font-semibold placeholder-yellow-700"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label htmlFor="drive_rubber_custom_model" className={labelStyles}>Modelo Personalizado</label>
+                          <input
+                            {...register('drive_rubber_custom_model')}
+                            type="text"
+                            id="drive_rubber_custom_model"
+                            placeholder="Ingresa el modelo"
+                            className="w-full px-4 py-3 rounded-xl border border-yellow-400 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-500 text-gray-900 font-semibold placeholder-yellow-700"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Caucho del Back */}
+                <div className="space-y-6">
+                  <h3 className={sectionTitleStyles}>
+                    Caucho del Back
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label htmlFor="backhand_rubber_brand" className={labelStyles}>Marca</label>
+                      <select
+                        {...register('backhand_rubber_brand')}
+                        id="backhand_rubber_brand"
+                        onChange={(e) => {
+                          setShowCustomBackhandRubber(e.target.value === 'custom');
+                          if (e.target.value !== 'custom') {
+                            setValue('backhand_rubber_custom_brand', '');
+                          }
+                        }}
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar marca</option>
+                        {POPULAR_BRANDS.map((brand) => (
+                          <option key={brand} value={brand}>
+                            {brand}
+                          </option>
+                        ))}
+                        <option value="custom">Otra marca (personalizada)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="backhand_rubber_model" className={labelStyles}>Modelo</label>
+                      <input
+                        {...register('backhand_rubber_model')}
+                        type="text"
+                        id="backhand_rubber_model"
+                        placeholder="Vpupo"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="backhand_rubber_type" className={labelStyles}>Tipo</label>
+                      <select
+                        {...register('backhand_rubber_type')}
+                        id="backhand_rubber_type"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar tipo</option>
+                        {RUBBER_TYPES.map((type) => (
+                          <option key={type.value} value={type.value}>
+                            {type.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="backhand_rubber_color" className={labelStyles}>Color</label>
+                      <select
+                        {...register('backhand_rubber_color')}
+                        id="backhand_rubber_color"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar color</option>
+                        {RUBBER_COLORS.map((color) => (
+                          <option key={color} value={color}>
+                            {color.charAt(0).toUpperCase() + color.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="backhand_rubber_sponge" className={labelStyles}>Esponja</label>
+                      <select
+                        {...register('backhand_rubber_sponge')}
+                        id="backhand_rubber_sponge"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar esponja</option>
+                        {SPONGE_THICKNESSES.map((thickness) => (
+                          <option key={thickness} value={thickness}>
+                            {thickness} {thickness !== 'sin esponja' && 'mm'}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="backhand_rubber_hardness" className={labelStyles}>Hardness</label>
+                      <select
+                        {...register('backhand_rubber_hardness')}
+                        id="backhand_rubber_hardness"
+                        className={`${inputStyles} ${inputNormalStyles}`}
+                      >
+                        <option value="">Seleccionar hardness</option>
+                        {HARDNESS_LEVELS.map((hardness) => (
+                          <option key={hardness} value={hardness}>
+                            {hardness}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {showCustomBackhandRubber && (
+                      <>
+                        <div className="space-y-2">
+                          <label htmlFor="backhand_rubber_custom_brand" className={labelStyles}>Marca Personalizada</label>
+                          <input
+                            {...register('backhand_rubber_custom_brand')}
+                            type="text"
+                            id="backhand_rubber_custom_brand"
+                            placeholder="Ingresa la marca"
+                            className="w-full px-4 py-3 rounded-xl border border-yellow-400 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-500 text-gray-900 font-semibold placeholder-yellow-700"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label htmlFor="backhand_rubber_custom_model" className={labelStyles}>Modelo Personalizado</label>
+                          <input
+                            {...register('backhand_rubber_custom_model')}
+                            type="text"
+                            id="backhand_rubber_custom_model"
+                            placeholder="Ingresa el modelo"
+                            className="w-full px-4 py-3 rounded-xl border border-yellow-400 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-500 text-gray-900 font-semibold placeholder-yellow-700"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Información Adicional */}
+                <div className="space-y-6">
+                  <h3 className={sectionTitleStyles}>
+                    Información Adicional
+                  </h3>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="notes" className={labelStyles}>
+                      Comentarios Adicionales
+                    </label>
+                    <textarea
+                      {...register('notes')}
+                      id="notes"
+                      rows={4}
+                      placeholder="Información adicional sobre tu juego, logros, observaciones..."
+                      className={`${inputStyles} ${inputNormalStyles} resize-none`}
+                    />
+                  </div>
+                </div>
+
+                {/* Información del Censo */}
+                <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6">
+                  <h4 className="text-lg font-bold text-blue-900 mb-3">Información del Censo</h4>
+                  <div className="text-sm text-blue-800 font-medium space-y-2">
+                    <p><strong>593 Liga Amateur de Tenis de Mesa (LATEM)</strong></p>
+                    <p>Este censo nos ayuda a conocer mejor a la comunidad de tenis de mesa en Ecuador.</p>
+                    <p>Tu código de registro será generado automáticamente al completar el formulario.</p>
+                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs font-semibold">
+                      <div><strong>Marcas:</strong> Butterfly, DHS, Sanwei, Nittaku, Yasaka, Stiga, Victas, Joola, Xiom, Saviga, Friendship, Dr. Neubauer, Double Fish</div>
+                      <div><strong>Colores:</strong> Negro, Rojo, Verde, Azul, Amarillo, Morado, Fucsia</div>
+                      <div><strong>Esponja:</strong> 0.5, 0.7, 1.5, 1.6, 1.8, 1.9, 2, 2.1, 2.2 mm, sin esponja</div>
+                      <div><strong>Hardness:</strong> h42, h44, h46, h48, h50</div>
+                    </div>
+                    <div className="mt-4 text-xs font-semibold">
+                      <p><strong>Tipos de Cauchos:</strong> Liso, Pupo Largo, Pupo Corto, Antitopspin</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="pt-6">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 px-6 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 flex items-center justify-center gap-3 text-lg font-bold shadow-lg"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Registrando en el Censo...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Completar Registro en el Censo
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Footer Info */}
+                <div className="text-center pt-4 border-t-2 border-gray-200">
+                  <p className="text-sm text-gray-700 font-semibold">
+                    Al registrarte, formas parte del censo oficial de tenis de mesa de Ecuador.
+                    <br />
+                    <span className="text-blue-600 font-bold">Sin contraseña</span> • <span className="font-bold">Proceso simplificado</span> • <span className="font-bold">Código automático</span>
+                  </p>
                 </div>
               </form>
             </motion.div>
           </motion.div>
-        </AuthLayout>
+        </div>
       </SnackbarProvider>
     </ThemeProvider>
   );
