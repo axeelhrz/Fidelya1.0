@@ -369,3 +369,8 @@ export const getCurrentUrl = (): string => {
 export const getDynamicBaseUrl = (): string => {
   return getBaseUrl();
 };
+
+// Función para obtener la URL de producción (para reseteo de contraseña y verificación de email)
+export const getProductionUrl = (): string => {
+  return getProductionUrl();
+};
