@@ -68,6 +68,34 @@ export function useSocios(): UseSociosReturn {
     }
   }, [asociacionId, filters]);
 
+  // Función para forzar recarga inmediata (útil para desvinculaciones)
+  const forceReload = useCallback(async () => {
+    if (!asociacionId) return;
+
+    try {
+      setError(null);
+      
+      // Limpiar estado actual para forzar recarga
+      setSocios([]);
+      setLastDoc(null);
+      setHasMore(false);
+
+      const result = await socioService.getSociosByAsociacion(asociacionId, filters, 20);
+      
+      setSocios(result.socios);
+      setHasMore(result.hasMore);
+      setLastDoc(result.lastDoc);
+      
+      // También actualizar estadísticas
+      const newStats = await socioService.getAsociacionStats(asociacionId);
+      setStats(newStats);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al recargar socios';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+  }, [asociacionId, filters]);
+
   // Load more socios (pagination)
   const loadMoreSocios = useCallback(async () => {
     if (!asociacionId || !hasMore || loading) return;
