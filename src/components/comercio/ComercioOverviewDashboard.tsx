@@ -567,7 +567,7 @@ const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps> = ({
     const activitiesQuery = query(
       activitiesRef,
       where('comercioId', '==', user.uid),
-      orderBy('timestamp', 'desc'),
+      orderBy('fechaValidacion', 'desc'),
       limit(10)
     );
 
@@ -579,7 +579,7 @@ const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps> = ({
           type: 'validation_completed' as const,
           title: 'Validación completada',
           description: `Beneficio validado para ${data.socioNombre || 'cliente'}`,
-          timestamp: data.timestamp || Timestamp.now(),
+          timestamp: data.fechaValidacion || Timestamp.now(),
           metadata: data
         };
       }) as ActivityLog[];
@@ -630,7 +630,7 @@ const ComercioOverviewDashboard: React.FC<ComercioOverviewDashboardProps> = ({
 
   return (
     <div className="space-y-6 lg:space-y-8">
-      {/* DEBUG COMPONENT - TEMPORAL */}
+      {/* COMPONENTE DE DEBUG TEMPORAL */}
       <ValidacionesDebug />
 
       {/* Header */}
