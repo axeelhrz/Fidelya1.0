@@ -4,7 +4,8 @@ import { useAuth } from './useAuth';
 import { validacionesService, HistorialValidacion } from '@/services/validaciones.service';
 import { ValidacionResponse, Validacion } from '@/types/validacion';
 import { ValidacionStats } from '@/types/comercio';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, collection, query, where, orderBy, onSnapshot, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface UseValidacionesReturn {
   validaciones: Validacion[];
@@ -26,35 +27,35 @@ export const useValidaciones = (): UseValidacionesReturn => {
   const [hasMore, setHasMore] = useState(true);
   const [lastDoc, setLastDoc] = useState<DocumentSnapshot<DocumentData> | undefined>(undefined);
 
-  // Transform HistorialValidacion to Validacion
-  const transformHistorialToValidacion = useCallback((historial: HistorialValidacion): Validacion => {
+  // Transform real validation data to Validacion interface
+  const transformValidacionData = useCallback((data: any, id: string): Validacion => {
     return {
-      id: historial.id,
-      socioId: user?.uid || '',
-      socioNombre: user?.nombre || 'Usuario',
-      asociacionId: user?.asociacionId || '',
-      asociacionNombre: '', // This field doesn't exist in UserData, so we'll leave it empty
-      comercioId: historial.comercioId,
-      comercioNombre: historial.comercioNombre,
-      beneficioId: historial.beneficioId,
-      beneficioTitulo: historial.beneficioTitulo,
-      fechaHora: Timestamp.fromDate(historial.fechaValidacion),
-      resultado: historial.estado === 'exitosa' ? 'habilitado' : 
-                 historial.estado === 'fallida' ? 'no_habilitado' :
-                 historial.estado === 'cancelada' ? 'suspendido' : 'vencido',
-      motivo: historial.estado === 'exitosa' ? 'Validación exitosa' : 'Validación fallida',
-      montoDescuento: historial.montoDescuento,
+      id,
+      socioId: data.socioId || '',
+      socioNombre: data.socioNombre || 'Usuario',
+      asociacionId: data.asociacionId || '',
+      asociacionNombre: data.asociacionNombre || '',
+      comercioId: data.comercioId || '',
+      comercioNombre: data.comercioNombre || '',
+      beneficioId: data.beneficioUsado?.id || data.beneficioId || '',
+      beneficioTitulo: data.beneficioUsado?.titulo || data.beneficioTitulo || '',
+      fechaHora: data.fechaValidacion || Timestamp.now(),
+      resultado: data.estado === 'exitosa' ? 'habilitado' : 
+                 data.estado === 'fallida' ? 'no_habilitado' : 'vencido',
+      motivo: data.estado === 'exitosa' ? 'Validación exitosa' : 'Validación fallida',
+      montoDescuento: data.montoDescuento || 0,
       metadata: {
-        qrData: historial.codigoValidacion,
-        dispositivo: 'mobile',
+        qrData: data.codigoValidacion || '',
+        dispositivo: data.dispositivo?.tipo || 'mobile',
         ip: '0.0.0.0'
       },
-      estado: historial.estado === 'exitosa' ? 'completado' : 'fallido',
-      monto: historial.montoDescuento || 0,
-      ahorro: historial.montoDescuento || 0
+      estado: data.estado === 'exitosa' ? 'completado' : 'fallido',
+      monto: data.montoCompra || data.montoDescuento || 0,
+      ahorro: data.montoDescuento || 0
     };
-  }, [user]);
+  }, []);
 
+  // Load validaciones using real-time listener
   const cargarValidaciones = useCallback(async (reset = false) => {
     if (!user) {
       setValidaciones([]);
@@ -66,42 +67,64 @@ export const useValidaciones = (): UseValidacionesReturn => {
       setLoading(true);
       setError(null);
       
-      const result = await validacionesService.getHistorialValidaciones(
-        user.uid, 
-        20, // Load 20 items at a time
-        reset ? undefined : lastDoc
-      );
-      
-      // Transform HistorialValidacion[] to Validacion[]
-      const transformedValidaciones = result.validaciones.map(transformHistorialToValidacion);
-      
-      if (reset) {
-        setValidaciones(transformedValidaciones);
-      } else {
-        setValidaciones(prev => [...prev, ...transformedValidaciones]);
+      console.log('🔍 Cargando validaciones para usuario:', user.uid, 'rol:', user.role);
+
+      // Determinar el campo de filtro basado en el rol del usuario
+      let whereField = 'socioId';
+      if (user.role === 'comercio') {
+        whereField = 'comercioId';
+      } else if (user.role === 'asociacion') {
+        whereField = 'asociacionId';
       }
+
+      // Crear query en tiempo real
+      const validacionesRef = collection(db, 'validaciones');
+      const q = query(
+        validacionesRef,
+        where(whereField, '==', user.uid),
+        orderBy('fechaValidacion', 'desc'),
+        limit(50)
+      );
+
+      // Usar listener en tiempo real
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        console.log('📊 Validaciones encontradas:', snapshot.size);
+        
+        const validacionesData = snapshot.docs.map(doc => {
+          const data = doc.data();
+          console.log('📝 Validación data:', data);
+          return transformValidacionData(data, doc.id);
+        });
+
+        setValidaciones(validacionesData);
+        setHasMore(snapshot.docs.length >= 50);
+        setLoading(false);
+      }, (err) => {
+        console.error('❌ Error en listener de validaciones:', err);
+        setError(err.message);
+        setLoading(false);
+      });
+
+      // Guardar unsubscribe para cleanup
+      return unsubscribe;
       
-      // Convert null to undefined to match the expected type
-      setLastDoc(result.lastDoc || undefined);
-      setHasMore(result.hasMore);
     } catch (err) {
-      console.error('Error loading validaciones:', err);
+      console.error('❌ Error loading validaciones:', err);
       setError(err instanceof Error ? err.message : 'Error al cargar validaciones');
       if (reset) {
         setValidaciones([]);
       }
-    } finally {
       setLoading(false);
     }
-  }, [user, lastDoc, transformHistorialToValidacion]);
+  }, [user, transformValidacionData]);
 
   const loadMore = useCallback(async () => {
     if (!hasMore || loading) return;
-    await cargarValidaciones(false);
-  }, [hasMore, loading, cargarValidaciones]);
+    // TODO: Implementar paginación si es necesario
+  }, [hasMore, loading]);
 
   const refrescar = useCallback(async () => {
-    setLastDoc(undefined); // Reset pagination
+    setLastDoc(undefined);
     await cargarValidaciones(true);
   }, [cargarValidaciones]);
 
@@ -139,25 +162,22 @@ export const useValidaciones = (): UseValidacionesReturn => {
         id: result.data?.validacion?.id
       };
 
-      // Refresh data after successful validation
-      if (result.success) {
-        setTimeout(() => {
-          refrescar();
-        }, 1000);
-      }
-
+      // Las validaciones se actualizarán automáticamente por el listener en tiempo real
       return transformedResult;
     } catch (err) {
       console.error('Error validating QR:', err);
       throw err;
     }
-  }, [user, refrescar]);
+  }, [user]);
 
   const refresh = useCallback(async () => {
     await refrescar();
   }, [refrescar]);
 
+  // Calcular estadísticas basándose en las validaciones reales
   const getStats = useCallback(() => {
+    console.log('📊 Calculando stats con', validaciones.length, 'validaciones');
+    
     const stats = {
       totalValidaciones: validaciones.length,
       validacionesExitosas: validaciones.filter(v => v.resultado === 'habilitado').length,
@@ -165,11 +185,12 @@ export const useValidaciones = (): UseValidacionesReturn => {
       clientesUnicos: new Set(validaciones.map(v => v.socioId)).size,
       montoTotalDescuentos: validaciones.reduce((sum, v) => sum + (v.montoDescuento || 0), 0),
       porAsociacion: validaciones.reduce((acc, v) => {
-        acc[v.asociacionId] = (acc[v.asociacionId] || 0) + 1;
+        const key = v.asociacionId || 'sin_asociacion';
+        acc[key] = (acc[key] || 0) + 1;
         return acc;
       }, {} as Record<string, number>),
       porBeneficio: validaciones.reduce((acc, v) => {
-        const beneficioId = v.beneficioId ?? 'desconocido';
+        const beneficioId = v.beneficioId || 'sin_beneficio';
         acc[beneficioId] = (acc[beneficioId] || 0) + 1;
         return acc;
       }, {} as Record<string, number>),
@@ -186,13 +207,26 @@ export const useValidaciones = (): UseValidacionesReturn => {
         }, {} as Record<string, boolean>)).length)) : 0
     };
     
+    console.log('📈 Stats calculadas:', stats);
     return stats;
   }, [validaciones]);
 
   useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    
     if (user) {
-      cargarValidaciones(true);
+      cargarValidaciones(true).then((unsub) => {
+        if (typeof unsub === 'function') {
+          unsubscribe = unsub;
+        }
+      });
     }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [user, cargarValidaciones]);
 
   return {
