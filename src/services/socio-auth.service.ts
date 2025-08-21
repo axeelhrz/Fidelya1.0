@@ -2,11 +2,9 @@ import {
   createUserWithEmailAndPassword, 
   updateProfile,
   signOut as firebaseSignOut,
-  User
 } from 'firebase/auth';
 import { 
   doc, 
-  setDoc, 
   serverTimestamp,
   writeBatch 
 } from 'firebase/firestore';
@@ -20,6 +18,8 @@ export interface CreateSocioAuthAccountResult {
   uid?: string;
   error?: string;
 }
+
+type SocioDocData = { [key: string]: unknown };
 
 class SocioAuthService {
   /**
@@ -77,10 +77,8 @@ class SocioAuthService {
       };
 
       batch.set(userDocRef, userData);
-
-      // Documento en la colección socios
       const socioDocRef = doc(db, COLLECTIONS.SOCIOS, newUser.uid);
-      const socioDocData = {
+      const socioDocData: SocioDocData = {
         nombre: socioData.nombre,
         email: socioData.email.toLowerCase().trim(),
         dni: socioData.dni || '',
@@ -179,6 +177,11 @@ class SocioAuthService {
     return password.split('').sort(() => Math.random() - 0.5).join('');
   }
 
+  private isFirebaseAuthError(error: unknown): error is { code: string } {
+    const e = error as { [key: string]: unknown };
+    return typeof error === 'object' && error !== null && 'code' in e && typeof e['code'] === 'string';
+  }
+
   /**
    * Verifica si un email ya está registrado en Firebase Auth
    */
@@ -190,17 +193,32 @@ class SocioAuthService {
       const tempPassword = this.generateSecurePassword();
       
       try {
-        const userCredential = await createUserWithEmailAndPassword(
+        await createUserWithEmailAndPassword(
           auth,
           email.toLowerCase().trim(),
           tempPassword
         );
-        
-        // Si llegamos aquí, el email no existía, así que eliminamos el usuario temporal
-        await userCredential.user.delete();
-        return false;
-      } catch (error: any) {
-        if (error.code === 'auth/email-already-in-use') {
+
+        // Si se creó el usuario temporal, entonces el email NO existe en auth.
+        // Limpiar el usuario temporal creado para no dejar cuentas huérfanas.
+        try {
+          if (auth.currentUser) {
+            await auth.currentUser.delete();
+          }
+        } catch (cleanupError) {
+          console.warn('Advertencia al limpiar usuario temporal:', cleanupError);
+        }
+
+        // Asegurarse de cerrar sesión del usuario temporal
+        try {
+          await firebaseSignOut(auth);
+        } catch (signOutError) {
+          console.warn('Advertencia al cerrar sesión del usuario temporal:', signOutError);
+        }
+
+        return false; // email no existe
+      } catch (error: unknown) {
+        if (this.isFirebaseAuthError(error) && error.code === 'auth/email-already-in-use') {
           return true;
         }
         throw error;

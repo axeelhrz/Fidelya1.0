@@ -200,7 +200,7 @@ export const StorageConnectionTest: React.FC = () => {
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <h4 className="text-yellow-800 font-medium mb-2">📋 Instrucciones:</h4>
         <div className="text-yellow-700 text-sm space-y-1">
-          <p>1. Primero ejecuta la "Prueba de Conexión" para verificar el estado</p>
+          <p>1. Primero ejecuta la &quot;Prueba de Conexión&quot; para verificar el estado</p>
           <p>2. Si CORS no está configurado, ejecuta: <code className="bg-yellow-100 px-1 rounded">npm run setup-cors</code></p>
           <p>3. Luego prueba subir una imagen para verificar que todo funciona</p>
           <p>4. Si persisten los errores, revisa la consola del navegador para más detalles</p>

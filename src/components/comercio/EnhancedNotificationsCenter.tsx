@@ -62,6 +62,23 @@ interface Recipient {
   status: string;
 }
 
+/**
+ * Activity item used by the Dashboard recentActivity.
+ * Adjusted: removed index signature from notification so stricter backend Notification type is assignable.
+ */
+interface NotificationActivity {
+  time: string;
+  action: string;
+  count: number;
+  status: 'success' | 'error' | 'pending' | 'info' | string;
+  notification?: {
+    title?: string;
+    createdAt?: string | Date;
+  } | null;
+  title?: string;
+  date?: string;
+}
+
 type NotificationType = 'info' | 'success' | 'warning' | 'error' | 'benefit';
 type PriorityType = 'low' | 'normal' | 'high' | 'urgent';
 
@@ -149,7 +166,8 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
           action: 'No hay actividad reciente',
           count: 0,
           status: 'info',
-          notification: null
+          notification: null,
+          date: undefined
         }
       ];
     }
@@ -159,7 +177,6 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
       .filter(notification => notification.senderId === user.uid)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5); // Últimas 5 actividades
-
     if (userNotifications.length === 0) {
       return [
         {
@@ -167,7 +184,8 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
           action: 'Aún no has enviado notificaciones',
           count: 0,
           status: 'info',
-          notification: null
+          notification: null,
+          date: undefined
         }
       ];
     }
@@ -331,7 +349,7 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-slate-900">Tu Actividad Reciente</h3>
             {user && (
-              <div className="text-xs text-slate-500 bg-slate-50 px-2 py-1 rounded-full">
+              <div className="text-sm text-slate-500">
                 {user.nombre || user.email}
               </div>
             )}
@@ -339,7 +357,7 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
           
           <div className="space-y-4">
             {recentActivity.length === 0 || recentActivity[0].notification === null ? (
-              <div className="text-center py-8">
+              <div className="text-center py-6">
                 <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Bell className="w-6 h-6 text-slate-400" />
                 </div>
@@ -354,7 +372,7 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
                 </p>
               </div>
             ) : (
-              recentActivity.map((activity, index) => (
+              recentActivity.map((activity: NotificationActivity, index: number) => (
                 <div key={index} className="flex items-start gap-4 group hover:bg-slate-50 -mx-2 px-2 py-2 rounded-lg transition-colors">
                   <div className="flex flex-col items-center">
                     <div className="text-xs text-slate-500 font-medium mb-1">{activity.time}</div>
@@ -387,9 +405,9 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
                       </div>
                     </div>
                     
-                    {activity.title && (
+                    {(('title' in activity && activity.title) || activity.notification?.title) && (
                       <div className="text-xs text-slate-500 truncate mb-1">
-                        "{activity.title}"
+                        &quot;{ 'title' in activity ? activity.title : activity.notification?.title }&quot;
                       </div>
                     )}
                     

@@ -47,7 +47,12 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
   // Detectar si es móvil
   useEffect(() => {
     const checkMobile = () => {
-      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+      // Safely obtain vendor/opera without using `any`
+      const vendor = typeof navigator.vendor === 'string' ? navigator.vendor : '';
+      const win = window as unknown as { opera?: string | undefined };
+      const operaProp = typeof win.opera === 'string' ? win.opera : '';
+
+      const userAgent = navigator.userAgent || vendor || operaProp || '';
       const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
       const isSmallScreen = window.innerWidth <= 768;
       setIsMobile(isMobileDevice || isSmallScreen);

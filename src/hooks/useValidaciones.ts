@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { DocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { useAuth } from './useAuth';
-import { validacionesService, HistorialValidacion } from '@/services/validaciones.service';
+import { validacionesService } from '@/services/validaciones.service';
 import { ValidacionResponse, Validacion } from '@/types/validacion';
 import { ValidacionStats } from '@/types/comercio';
 import { Timestamp, collection, query, where, orderBy, onSnapshot, limit } from 'firebase/firestore';
@@ -25,35 +25,53 @@ export const useValidaciones = (): UseValidacionesReturn => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const [lastDoc, setLastDoc] = useState<DocumentSnapshot<DocumentData> | undefined>(undefined);
+  const [, setLastDoc] = useState<DocumentSnapshot<DocumentData> | undefined>(undefined);
 
   // Transform real validation data to Validacion interface
-  const transformValidacionData = useCallback((data: any, id: string): Validacion => {
-    return {
-      id,
-      socioId: data.socioId || '',
-      socioNombre: data.socioNombre || 'Usuario',
-      asociacionId: data.asociacionId || '',
-      asociacionNombre: data.asociacionNombre || '',
-      comercioId: data.comercioId || '',
-      comercioNombre: data.comercioNombre || '',
-      beneficioId: data.beneficioUsado?.id || data.beneficioId || '',
-      beneficioTitulo: data.beneficioUsado?.titulo || data.beneficioTitulo || '',
-      fechaHora: data.fechaValidacion || Timestamp.now(),
-      resultado: data.estado === 'exitosa' ? 'habilitado' : 
-                 data.estado === 'fallida' ? 'no_habilitado' : 'vencido',
-      motivo: data.estado === 'exitosa' ? 'Validación exitosa' : 'Validación fallida',
-      montoDescuento: data.montoDescuento || 0,
-      metadata: {
-        qrData: data.codigoValidacion || '',
-        dispositivo: data.dispositivo?.tipo || 'mobile',
-        ip: '0.0.0.0'
-      },
-      estado: data.estado === 'exitosa' ? 'completado' : 'fallido',
-      monto: data.montoCompra || data.montoDescuento || 0,
-      ahorro: data.montoDescuento || 0
-    };
-  }, []);
+    interface ValidacionFirestoreData {
+      socioId?: string;
+      socioNombre?: string;
+      asociacionId?: string;
+      asociacionNombre?: string;
+      comercioId?: string;
+      comercioNombre?: string;
+      beneficioUsado?: { id?: string; titulo?: string };
+      beneficioId?: string;
+      beneficioTitulo?: string;
+      fechaValidacion?: Timestamp;
+      estado?: 'exitosa' | 'fallida' | 'vencido' | string;
+      montoDescuento?: number;
+      codigoValidacion?: string;
+      dispositivo?: { tipo?: string };
+      montoCompra?: number;
+    }
+  
+    const transformValidacionData = useCallback((data: ValidacionFirestoreData, id: string): Validacion => {
+      return {
+        id,
+        socioId: data.socioId || '',
+        socioNombre: data.socioNombre || 'Usuario',
+        asociacionId: data.asociacionId || '',
+        asociacionNombre: data.asociacionNombre || '',
+        comercioId: data.comercioId || '',
+        comercioNombre: data.comercioNombre || '',
+        beneficioId: data.beneficioUsado?.id || data.beneficioId || '',
+        beneficioTitulo: data.beneficioUsado?.titulo || data.beneficioTitulo || '',
+        fechaHora: data.fechaValidacion || Timestamp.now(),
+        resultado: data.estado === 'exitosa' ? 'habilitado' : 
+                   data.estado === 'fallida' ? 'no_habilitado' : 'vencido',
+        motivo: data.estado === 'exitosa' ? 'Validación exitosa' : 'Validación fallida',
+        montoDescuento: data.montoDescuento || 0,
+        metadata: {
+          qrData: data.codigoValidacion || '',
+          dispositivo: data.dispositivo?.tipo || 'mobile',
+          ip: '0.0.0.0'
+        },
+        estado: data.estado === 'exitosa' ? 'completado' : 'fallido',
+        monto: data.montoCompra || data.montoDescuento || 0,
+        ahorro: data.montoDescuento || 0
+      };
+    }, []);
 
   // Load validaciones using real-time listener
   const cargarValidaciones = useCallback(async (reset = false) => {

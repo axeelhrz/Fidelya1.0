@@ -134,23 +134,20 @@ class UserSearchService {
   ): Promise<RegisteredUser[]> {
     try {
       // Build base query for users collection
-      let q = query(
-        collection(db, this.usersCollection),
-        where('estado', '==', 'activo'),
-        orderBy('nombre', 'asc'),
-        limit(pageSize * 2) // Get more to account for filtering
-      );
-
-      // If searching for socios specifically, filter by role
-      if (filters.role === 'socio') {
-        q = query(
-          collection(db, this.usersCollection),
-          where('role', '==', 'socio'),
-          where('estado', '==', 'activo'),
-          orderBy('nombre', 'asc'),
-          limit(pageSize * 2)
-        );
-      }
+      const q = filters.role === 'socio'
+        ? query(
+            collection(db, this.usersCollection),
+            where('role', '==', 'socio'),
+            where('estado', '==', 'activo'),
+            orderBy('nombre', 'asc'),
+            limit(pageSize * 2)
+          )
+        : query(
+            collection(db, this.usersCollection),
+            where('estado', '==', 'activo'),
+            orderBy('nombre', 'asc'),
+            limit(pageSize * 2) // Get more to account for filtering
+          );
 
       console.log('🔍 Executing Firestore query on users collection...');
       
@@ -195,7 +192,7 @@ class UserSearchService {
   ): Promise<RegisteredUser[]> {
     try {
       // Build query for socios collection
-      let q = query(
+      const q = query(
         collection(db, this.sociosCollection),
         where('estado', '==', 'activo'),
         orderBy('nombre', 'asc'),

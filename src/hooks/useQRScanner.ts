@@ -48,7 +48,7 @@ export const useQRScanner = (options: QRScannerOptions) => {
 
   // Detectar dispositivo móvil
   const detectMobile = useCallback(() => {
-    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+    const userAgent = navigator.userAgent || navigator.vendor || (window as Window & { opera?: string }).opera || '';
     const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
     const isSmallScreen = window.innerWidth <= 768;
     return isMobileDevice || isSmallScreen;
@@ -170,18 +170,23 @@ export const useQRScanner = (options: QRScannerOptions) => {
       setState(prev => ({ ...prev, hasPermission: true, error: null }));
       console.log('✅ Camera permission granted');
       return true;
-    } catch (error: any) {
-      console.error('❌ Camera permission denied:', error);
+    } catch (err) {
+      console.error('❌ Camera permission denied:', err);
       
       let errorMessage = 'Error al acceder a la cámara.';
+      let errorName: string | undefined;
       
-      if (error.name === 'NotAllowedError') {
+      if (err && typeof err === 'object' && 'name' in err) {
+        errorName = String((err as { name?: unknown }).name);
+      }
+
+      if (errorName === 'NotAllowedError') {
         errorMessage = 'Acceso a la cámara denegado. Por favor, permite el acceso a la cámara.';
-      } else if (error.name === 'NotFoundError') {
+      } else if (errorName === 'NotFoundError') {
         errorMessage = 'No se encontró una cámara disponible en tu dispositivo.';
-      } else if (error.name === 'NotReadableError') {
+      } else if (errorName === 'NotReadableError') {
         errorMessage = 'La cámara está siendo usada por otra aplicación.';
-      } else if (error.name === 'OverconstrainedError') {
+      } else if (errorName === 'OverconstrainedError') {
         errorMessage = 'La configuración de cámara no es compatible con tu dispositivo.';
       }
 

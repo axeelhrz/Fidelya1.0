@@ -15,10 +15,10 @@ import {
   Refresh,
 } from '@mui/icons-material';
 import { ProfileForm } from './perfil/ProfileForm';
-import { QRSection } from './perfil/QRSection';
 import { ImageUploader } from './perfil/ImageUploader';
 
 export const ComercioProfile: React.FC = () => {
+  const [imageUrl, setImageUrl] = React.useState<string | undefined>();
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <motion.div
@@ -71,15 +71,17 @@ export const ComercioProfile: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <Box>
           {/* Image Uploader */}
-          <ImageUploader />
+          <ImageUploader
+            currentImage={imageUrl}
+            onImageUpload={(url) => setImageUrl(url)}
+            onImageRemove={() => setImageUrl(undefined)}
+          />
           
           {/* Profile Form */}
+          {/* Profile Form */}
           <ProfileForm />
-          
-          {/* QR Section */}
-          <QRSection />
         </Box>
       </motion.div>
     </Container>
