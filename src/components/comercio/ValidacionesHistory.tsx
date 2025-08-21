@@ -318,7 +318,7 @@ export const ValidacionesHistory: React.FC = () => {
               icon: Activity,
               color: 'from-blue-500 to-blue-600',
               bgColor: 'from-blue-50 to-blue-100',
-              change: '+12%'
+              change: '+12'
             },
             {
               title: 'Validaciones Exitosas',
@@ -326,7 +326,7 @@ export const ValidacionesHistory: React.FC = () => {
               icon: CheckCircle,
               color: 'from-green-500 to-green-600',
               bgColor: 'from-green-50 to-green-100',
-              change: '+8%'
+              change: '+8'
             },
             {
               title: 'Clientes Únicos',
@@ -334,15 +334,15 @@ export const ValidacionesHistory: React.FC = () => {
               icon: Users,
               color: 'from-purple-500 to-purple-600',
               bgColor: 'from-purple-50 to-purple-100',
-              change: '+15%'
+              change: '+15'
             },
             {
               title: 'Tasa de Éxito',
-              value: `${stats.totalValidaciones > 0 ? ((stats.validacionesExitosas / stats.totalValidaciones) * 100).toFixed(1) : 0}%`,
+              value: stats.totalValidaciones > 0 ? Math.round((stats.validacionesExitosas / stats.totalValidaciones) * 100) : 0,
               icon: Target,
               color: 'from-orange-500 to-orange-600',
               bgColor: 'from-orange-50 to-orange-100',
-              change: '+2%'
+              change: '+2'
             }
           ].map((stat, index) => (
             <motion.div
