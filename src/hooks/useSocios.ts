@@ -22,6 +22,7 @@ interface UseSociosReturn {
   registerPayment: (socioId: string, amount: number, months?: number) => Promise<boolean>;
   updateMembershipStatus: () => Promise<number>;
   refreshStats: () => Promise<void>;
+  forceReload: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -377,6 +378,7 @@ export function useSocios(): UseSociosReturn {
     registerPayment,
     updateMembershipStatus,
     refreshStats,
+    forceReload,
     clearError,
   };
 }
