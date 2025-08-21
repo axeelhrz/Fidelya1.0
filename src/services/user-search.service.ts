@@ -58,12 +58,87 @@ class UserSearchService {
       const existingSociosEmails = await this.getExistingSociosEmails(filters.excludeAsociacionId);
       console.log('📧 Existing socios emails:', existingSociosEmails);
 
+      let allUsers: RegisteredUser[] = [];
+
+      // Search in users collection
+      const usersFromUsersCollection = await this.searchInUsersCollection(filters, pageSize);
+      console.log(`👥 Found ${usersFromUsersCollection.length} users in users collection`);
+      allUsers = [...usersFromUsersCollection];
+
+      // Search in socios collection (for socios that might not be in users collection)
+      const usersFromSociosCollection = await this.searchInSociosCollection(filters, pageSize);
+      console.log(`👤 Found ${usersFromSociosCollection.length} users in socios collection`);
+      
+      // Merge results, avoiding duplicates by email
+      const existingEmails = new Set(allUsers.map(u => u.email.toLowerCase()));
+      const uniqueSociosUsers = usersFromSociosCollection.filter(u => !existingEmails.has(u.email.toLowerCase()));
+      allUsers = [...allUsers, ...uniqueSociosUsers];
+
+      console.log(`👥 Total users before filtering: ${allUsers.length}`);
+
+      // Filter out existing socios from this association
+      const usersBeforeFilter = allUsers.length;
+      allUsers = allUsers.filter(user => !existingSociosEmails.includes(user.email.toLowerCase()));
+      console.log(`🚫 Filtered out ${usersBeforeFilter - allUsers.length} existing socios`);
+
+      // Apply client-side search filters
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase().trim();
+        console.log('🔍 Applying search filter:', searchTerm);
+        
+        const usersBeforeSearch = allUsers.length;
+        allUsers = allUsers.filter(user => {
+          const matchesName = user.nombre.toLowerCase().includes(searchTerm);
+          const matchesEmail = user.email.toLowerCase().includes(searchTerm);
+          const matchesDni = user.dni && user.dni.toString().includes(searchTerm); // Fixed: no toLowerCase() for DNI
+          const matchesPhone = user.telefono && user.telefono.includes(searchTerm);
+          
+          return matchesName || matchesEmail || matchesDni || matchesPhone;
+        });
+        console.log(`🔍 Search filtered: ${usersBeforeSearch} -> ${allUsers.length} users`);
+      }
+
+      // Sort by name
+      allUsers.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+      // Apply pagination
+      const hasMore = allUsers.length > pageSize;
+      if (hasMore) {
+        allUsers = allUsers.slice(0, pageSize);
+      }
+
+      console.log(`✅ Final result: ${allUsers.length} users found`);
+
+      return {
+        users: allUsers,
+        total: allUsers.length,
+        hasMore
+      };
+    } catch (error) {
+      console.error('❌ Error in searchRegisteredUsers:', error);
+      handleError(error, 'Search Registered Users');
+      return {
+        users: [],
+        total: 0,
+        hasMore: false
+      };
+    }
+  }
+
+  /**
+   * Search in users collection
+   */
+  private async searchInUsersCollection(
+    filters: UserSearchFilters,
+    pageSize: number
+  ): Promise<RegisteredUser[]> {
+    try {
       // Build base query for users collection
       let q = query(
         collection(db, this.usersCollection),
         where('estado', '==', 'activo'),
         orderBy('nombre', 'asc'),
-        limit(pageSize + 1) // Get one extra to check if there are more
+        limit(pageSize * 2) // Get more to account for filtering
       );
 
       // If searching for socios specifically, filter by role
@@ -73,27 +148,20 @@ class UserSearchService {
           where('role', '==', 'socio'),
           where('estado', '==', 'activo'),
           orderBy('nombre', 'asc'),
-          limit(pageSize + 1)
+          limit(pageSize * 2)
         );
       }
 
-      console.log('🔍 Executing Firestore query...');
+      console.log('🔍 Executing Firestore query on users collection...');
       
       // Execute query
       const snapshot = await getDocs(q);
       const docs = snapshot.docs;
       
-      console.log(`📊 Found ${docs.length} users in Firestore`);
-      
-      const hasMore = docs.length > pageSize;
+      console.log(`📊 Found ${docs.length} users in users collection`);
 
-      if (hasMore) {
-        docs.pop(); // Remove the extra document
-      }
-
-      let users = docs.map(doc => {
+      const users = docs.map(doc => {
         const data = doc.data();
-        console.log('👤 Processing user:', { id: doc.id, nombre: data.nombre, email: data.email, role: data.role });
         
         return {
           id: doc.id,
@@ -111,43 +179,60 @@ class UserSearchService {
         } as RegisteredUser;
       });
 
-      console.log(`👥 Processed ${users.length} users`);
-
-      // Filter out existing socios
-      const usersBeforeFilter = users.length;
-      users = users.filter(user => !existingSociosEmails.includes(user.email.toLowerCase()));
-      console.log(`🚫 Filtered out ${usersBeforeFilter - users.length} existing socios`);
-
-      // Apply client-side search filters
-      if (filters.search) {
-        const searchTerm = filters.search.toLowerCase();
-        console.log('🔍 Applying search filter:', searchTerm);
-        
-        const usersBeforeSearch = users.length;
-        users = users.filter(user =>
-          user.nombre.toLowerCase().includes(searchTerm) ||
-          user.email.toLowerCase().includes(searchTerm) ||
-          (user.dni && user.dni.toLowerCase().includes(searchTerm)) ||
-          (user.telefono && user.telefono.includes(searchTerm))
-        );
-        console.log(`🔍 Search filtered: ${usersBeforeSearch} -> ${users.length} users`);
-      }
-
-      console.log(`✅ Final result: ${users.length} users found`);
-
-      return {
-        users,
-        total: users.length,
-        hasMore: hasMore && users.length === pageSize
-      };
+      return users;
     } catch (error) {
-      console.error('❌ Error in searchRegisteredUsers:', error);
-      handleError(error, 'Search Registered Users');
-      return {
-        users: [],
-        total: 0,
-        hasMore: false
-      };
+      console.error('❌ Error searching in users collection:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Search in socios collection
+   */
+  private async searchInSociosCollection(
+    filters: UserSearchFilters,
+    pageSize: number
+  ): Promise<RegisteredUser[]> {
+    try {
+      // Build query for socios collection
+      let q = query(
+        collection(db, this.sociosCollection),
+        where('estado', '==', 'activo'),
+        orderBy('nombre', 'asc'),
+        limit(pageSize * 2) // Get more to account for filtering
+      );
+
+      console.log('🔍 Executing Firestore query on socios collection...');
+      
+      // Execute query
+      const snapshot = await getDocs(q);
+      const docs = snapshot.docs;
+      
+      console.log(`📊 Found ${docs.length} users in socios collection`);
+
+      const users = docs.map(doc => {
+        const data = doc.data();
+        
+        return {
+          id: doc.id,
+          uid: data.uid || doc.id,
+          nombre: data.nombre || '',
+          email: data.email || '',
+          telefono: data.telefono,
+          dni: data.dni,
+          role: 'socio', // All users in socios collection are socios
+          estado: data.estado || 'activo',
+          creadoEn: data.creadoEn?.toDate() || new Date(),
+          ultimoAcceso: data.ultimoAcceso?.toDate(),
+          avatar: data.avatar,
+          metadata: data.metadata,
+        } as RegisteredUser;
+      });
+
+      return users;
+    } catch (error) {
+      console.error('❌ Error searching in socios collection:', error);
+      return [];
     }
   }
 
