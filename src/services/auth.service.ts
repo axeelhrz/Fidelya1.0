@@ -74,7 +74,7 @@ class AuthService {
    * Get email verification action code settings
    */
   private getEmailActionCodeSettings(): ActionCodeSettings {
-    const baseUrl = configService.getAppUrl();
+    const baseUrl = configService.getAuthUrl();
     return {
       url: `${baseUrl}/auth/login?verified=true`,
       handleCodeInApp: false,
