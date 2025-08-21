@@ -381,10 +381,12 @@ class ValidacionesService {
           actualizadoEn: serverTimestamp(),
         });
 
+        // CORREGIDO: Actualizar métricas del comercio correctamente
         transaction.update(comercioRef, {
           validacionesRealizadas: (comercioData.validacionesRealizadas || 0) + 1,
           clientesAtendidos: (comercioData.clientesAtendidos || 0) + 1,
-          ingresosPorBeneficios: (comercioData.ingresosPorBeneficios || 0) + montoDescuento,
+          // CORREGIDO: Usar ingresosMensuales en lugar de ingresosPorBeneficios para consistencia
+          ingresosMensuales: (comercioData.ingresosMensuales || 0) + montoDescuento,
           ultimaValidacion: serverTimestamp(),
           actualizadoEn: serverTimestamp(),
         });
