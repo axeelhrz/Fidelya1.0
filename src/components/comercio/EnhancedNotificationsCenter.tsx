@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useSocios } from '@/hooks/useSocios';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'react-hot-toast';
 
 // Interfaces
