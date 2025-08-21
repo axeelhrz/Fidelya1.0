@@ -55,23 +55,8 @@ export const uploadImage = async (
     try {
       console.log(`📤 Intento ${attempt} de ${retries} para subir imagen...`);
       
-      // Strategy 1: Try simple upload first (more reliable for CORS)
-      if (attempt === 1) {
-        return await uploadWithSimple(finalPath, processedFile, onProgress);
-      }
-      
-      // Strategy 2: Try with different path structure
-      if (attempt === 2) {
-        const fallbackPath = `uploads/${timestamp}_${randomId}.${extension}`;
-        console.log('📤 Intentando con ruta alternativa:', fallbackPath);
-        return await uploadWithSimple(fallbackPath, processedFile, onProgress);
-      }
-      
-      // Strategy 3: Try resumable upload as last resort
-      if (attempt === 3) {
-        console.log('📤 Intentando upload resumable como último recurso...');
-        return await uploadWithResumable(finalPath, processedFile, onProgress);
-      }
+      // Always use resumable upload for better progress tracking
+      return await uploadWithResumable(finalPath, processedFile, onProgress);
       
     } catch (error) {
       console.error(`❌ Error en intento ${attempt}:`, error);
@@ -87,12 +72,12 @@ export const uploadImage = async (
       if (isCorsError) {
         console.warn('🚫 Error CORS detectado, intentando estrategia alternativa...');
         
-        // For CORS errors, try a different approach immediately
+        // For CORS errors, try simple upload as fallback
         if (attempt < retries) {
           try {
             const corsWorkaroundPath = `temp/${timestamp}_${randomId}.${extension}`;
-            console.log('📤 Intentando workaround CORS con ruta temporal:', corsWorkaroundPath);
-            return await uploadWithCorsWorkaround(corsWorkaroundPath, processedFile, onProgress);
+            console.log('📤 Intentando workaround CORS con upload simple:', corsWorkaroundPath);
+            return await uploadWithSimple(corsWorkaroundPath, processedFile, onProgress);
           } catch (workaroundError) {
             console.error('❌ Workaround CORS también falló:', workaroundError);
           }
@@ -118,47 +103,13 @@ export const uploadImage = async (
   throw new Error('No se pudo subir la imagen después de todos los intentos');
 };
 
-// Simple upload strategy (most reliable for CORS issues)
-const uploadWithSimple = async (
-  path: string,
-  file: File,
-  onProgress?: (progress: number) => void
-): Promise<string> => {
-  console.log('📤 Usando estrategia de upload simple...');
-  const storageRef = ref(storage, path);
-  
-  onProgress?.(10);
-  
-  const metadata = {
-    contentType: file.type,
-    customMetadata: {
-      originalName: file.name,
-      uploadedAt: new Date().toISOString(),
-      method: 'simple'
-    }
-  };
-  
-  onProgress?.(30);
-  
-  const snapshot = await uploadBytes(storageRef, file, metadata);
-  
-  onProgress?.(80);
-  
-  const downloadURL = await getDownloadURL(snapshot.ref);
-  
-  onProgress?.(100);
-  
-  console.log('✅ Upload simple exitoso:', downloadURL);
-  return downloadURL;
-};
-
-// Resumable upload strategy
+// Resumable upload strategy with real progress tracking
 const uploadWithResumable = async (
   path: string,
   file: File,
   onProgress?: (progress: number) => void
 ): Promise<string> => {
-  console.log('📤 Usando estrategia de upload resumable...');
+  console.log('📤 Usando estrategia de upload resumable con progreso real...');
   const storageRef = ref(storage, path);
   
   const uploadTask = uploadBytesResumable(storageRef, file, {
@@ -172,11 +123,11 @@ const uploadWithResumable = async (
 
   return new Promise<string>((resolve, reject) => {
     uploadTask.on('state_changed',
-      // Progress callback
+      // Progress callback - this provides REAL progress
       (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
         onProgress?.(progress);
-        console.log(`📊 Progreso de subida: ${progress.toFixed(1)}%`);
+        console.log(`📊 Progreso real de subida: ${progress}% (${snapshot.bytesTransferred}/${snapshot.totalBytes} bytes)`);
       },
       // Error callback
       (error) => {
@@ -188,6 +139,7 @@ const uploadWithResumable = async (
         try {
           const url = await getDownloadURL(uploadTask.snapshot.ref);
           console.log('✅ Upload resumable exitoso:', url);
+          onProgress?.(100); // Ensure we reach 100%
           resolve(url);
         } catch (urlError) {
           console.error('❌ Error obteniendo URL:', urlError);
@@ -198,6 +150,44 @@ const uploadWithResumable = async (
   });
 };
 
+// Simple upload strategy (fallback for CORS issues)
+const uploadWithSimple = async (
+  path: string,
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<string> => {
+  console.log('📤 Usando estrategia de upload simple (fallback)...');
+  const storageRef = ref(storage, path);
+  
+  // Simulate more realistic progress for simple upload
+  onProgress?.(10);
+  
+  const metadata = {
+    contentType: file.type,
+    customMetadata: {
+      originalName: file.name,
+      uploadedAt: new Date().toISOString(),
+      method: 'simple'
+    }
+  };
+  
+  onProgress?.(25);
+  
+  try {
+    const snapshot = await uploadBytes(storageRef, file, metadata);
+    onProgress?.(75);
+    
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    onProgress?.(100);
+    
+    console.log('✅ Upload simple exitoso:', downloadURL);
+    return downloadURL;
+  } catch (error) {
+    console.error('❌ Error en upload simple:', error);
+    throw error;
+  }
+};
+
 // CORS workaround strategy
 const uploadWithCorsWorkaround = async (
   path: string,
@@ -206,11 +196,13 @@ const uploadWithCorsWorkaround = async (
 ): Promise<string> => {
   console.log('📤 Usando workaround para CORS...');
   
+  onProgress?.(10);
+  
   // Convert file to base64 and use a different approach
   const base64Data = await fileToBase64(file);
   const storageRef = ref(storage, path);
   
-  onProgress?.(20);
+  onProgress?.(30);
   
   // Create a blob from base64
   const response = await fetch(base64Data);
