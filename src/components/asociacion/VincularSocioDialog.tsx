@@ -72,19 +72,37 @@ export const VincularSocioDialog: React.FC<VincularSocioDialogProps> = ({
       console.log('🔍 Starting search with term:', searchTerm);
       console.log('👤 Current user:', { uid: user.uid, role: user.role });
 
-      // Buscar usuarios que no estén ya vinculados a la asociación
-      const result = await userSearchService.searchRegisteredUsers({
-        search: searchTerm,
-        role: 'socio', // Buscar específicamente usuarios con role 'socio'
-        estado: 'activo',
-        excludeAsociacionId: user.uid
-      });
+      const trimmedSearchTerm = searchTerm.trim();
+      let result: { users: RegisteredUser[] };
+
+      // Detectar si el término de búsqueda es un DNI (solo números)
+      const isDniSearch = /^\d+$/.test(trimmedSearchTerm);
+      
+      if (isDniSearch) {
+        console.log('🔍 Detected DNI search, using specific DNI search function');
+        const dniResults = await userSearchService.searchByDni(trimmedSearchTerm, user.uid);
+        result = { users: dniResults };
+      } else if (trimmedSearchTerm.includes('@')) {
+        console.log('🔍 Detected email search, using specific email search function');
+        const emailResults = await userSearchService.searchByEmail(trimmedSearchTerm, user.uid);
+        result = { users: emailResults };
+      } else {
+        console.log('🔍 Using general search function');
+        // Buscar usuarios que no estén ya vinculados a la asociación
+        result = await userSearchService.searchRegisteredUsers({
+          search: trimmedSearchTerm,
+          role: 'socio', // Buscar específicamente usuarios con role 'socio'
+          estado: 'activo',
+          excludeAsociacionId: user.uid
+        });
+      }
 
       console.log('📊 Search result:', result);
       setUsers(result.users);
 
       if (result.users.length === 0) {
-        const errorMsg = 'No se encontraron usuarios con role "socio" que coincidan con la búsqueda';
+        const searchType = isDniSearch ? 'DNI' : trimmedSearchTerm.includes('@') ? 'email' : 'término de búsqueda';
+        const errorMsg = `No se encontraron usuarios con role "socio" que coincidan con el ${searchType} "${trimmedSearchTerm}"`;
         setError(errorMsg);
         console.log('❌', errorMsg);
       } else {
