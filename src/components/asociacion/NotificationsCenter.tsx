@@ -96,8 +96,6 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
     {
       title: 'Total Enviadas',
       value: stats.total,
-      change: '+12%',
-      trend: 'up',
       icon: Bell,
       color: 'blue',
       gradient: 'from-blue-500 to-blue-600'
@@ -105,8 +103,6 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
     {
       title: 'Exitosas',
       value: stats.sent,
-      change: '+8%',
-      trend: 'up',
       icon: CheckCircle,
       color: 'emerald',
       gradient: 'from-emerald-500 to-emerald-600'
@@ -114,8 +110,6 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
     {
       title: 'Tasa de Éxito',
       value: `${stats.successRate}%`,
-      change: '+2%',
-      trend: 'up',
       icon: Target,
       color: 'purple',
       gradient: 'from-purple-500 to-purple-600'
@@ -123,8 +117,6 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
     {
       title: 'Esta Semana',
       value: stats.weekCount,
-      change: '+15%',
-      trend: 'up',
       icon: Calendar,
       color: 'orange',
       gradient: 'from-orange-500 to-orange-600'
@@ -163,7 +155,7 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - SIN PORCENTAJES */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, index) => (
           <motion.div
@@ -177,12 +169,6 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
               <div className={`w-12 h-12 bg-gradient-to-r ${stat.gradient} rounded-xl flex items-center justify-center`}>
                 <stat.icon className="w-6 h-6 text-white" />
               </div>
-              <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                stat.trend === 'up' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-              }`}>
-                {stat.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                {stat.change}
-              </div>
             </div>
             
             <div>
@@ -194,7 +180,7 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
         {/* Channel Distribution */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -220,37 +206,6 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
                     />
                   </div>
                   <span className="text-sm font-semibold text-slate-900 w-8">{channel.count}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Activity Timeline */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100"
-        >
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Actividad Reciente</h3>
-          <div className="space-y-4">
-            {[
-              { time: '10:30', action: 'WhatsApp enviado', count: 45, status: 'success' },
-              { time: '09:15', action: 'Email programado', count: 120, status: 'pending' },
-              { time: '08:45', action: 'Template actualizado', count: 1, status: 'info' },
-              { time: '08:20', action: 'Error en envío', count: 3, status: 'error' }
-            ].map((activity, index) => (
-              <div key={index} className="flex items-center gap-4">
-                <div className="text-sm text-slate-500 w-12">{activity.time}</div>
-                <div className={`w-2 h-2 rounded-full ${
-                  activity.status === 'success' ? 'bg-emerald-500' :
-                  activity.status === 'pending' ? 'bg-orange-500' :
-                  activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
-                }`} />
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-slate-700">{activity.action}</div>
-                  <div className="text-xs text-slate-500">{activity.count} destinatarios</div>
                 </div>
               </div>
             ))}
