@@ -315,32 +315,28 @@ export const ValidacionesHistory: React.FC = () => {
               value: stats.totalValidaciones,
               icon: Activity,
               color: 'from-blue-500 to-blue-600',
-              bgColor: 'from-blue-50 to-blue-100',
-              change: '+12'
+              bgColor: 'from-blue-50 to-blue-100'
             },
             {
               title: 'Validaciones Exitosas',
               value: stats.validacionesExitosas,
               icon: CheckCircle,
               color: 'from-green-500 to-green-600',
-              bgColor: 'from-green-50 to-green-100',
-              change: '+8'
+              bgColor: 'from-green-50 to-green-100'
             },
             {
               title: 'Clientes Únicos',
               value: stats.clientesUnicos || 0,
               icon: Users,
               color: 'from-purple-500 to-purple-600',
-              bgColor: 'from-purple-50 to-purple-100',
-              change: '+15'
+              bgColor: 'from-purple-50 to-purple-100'
             },
             {
               title: 'Tasa de Éxito',
               value: stats.totalValidaciones > 0 ? Math.round((stats.validacionesExitosas / stats.totalValidaciones) * 100) : 0,
               icon: Target,
               color: 'from-orange-500 to-orange-600',
-              bgColor: 'from-orange-50 to-orange-100',
-              change: '+2'
+              bgColor: 'from-orange-50 to-orange-100'
             }
           ].map((stat, index) => (
             <motion.div
@@ -355,9 +351,6 @@ export const ValidacionesHistory: React.FC = () => {
                 <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-2xl flex items-center justify-center shadow-lg`}>
                   <stat.icon className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-sm font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full">
-                  {stat.change}
-                </span>
               </div>
               <div>
                 <p className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</p>
