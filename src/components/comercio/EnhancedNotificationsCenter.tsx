@@ -64,7 +64,6 @@ interface Recipient {
 type NotificationType = 'info' | 'success' | 'warning' | 'error' | 'benefit';
 type PriorityType = 'low' | 'normal' | 'high' | 'urgent';
 
-
 // Tab configurations
 const tabs: TabConfig[] = [
   {
@@ -92,6 +91,8 @@ const tabs: TabConfig[] = [
 
 // Dashboard Component
 const Dashboard = ({ stats }: { stats: NotificationStats }) => {
+  const { allNotifications } = useNotifications();
+  const { user } = useAuth();
   const [timeRange, setTimeRange] = useState('7d');
   
   const statCards = [
@@ -137,6 +138,97 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
     { name: 'WhatsApp', count: Math.floor(stats.sent * 0.7), color: 'emerald', icon: MessageSquare },
     { name: 'Email', count: Math.floor(stats.sent * 0.3), color: 'blue', icon: Mail }
   ];
+
+  // Obtener actividad reciente real del comercio actual
+  const getRecentActivity = () => {
+    if (!user || !allNotifications.length) {
+      return [
+        {
+          time: '--:--',
+          action: 'No hay actividad reciente',
+          count: 0,
+          status: 'info',
+          notification: null
+        }
+      ];
+    }
+
+    // Filtrar notificaciones del comercio actual y ordenar por fecha
+    const userNotifications = allNotifications
+      .filter(notification => notification.senderId === user.uid)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5); // Últimas 5 actividades
+
+    if (userNotifications.length === 0) {
+      return [
+        {
+          time: '--:--',
+          action: 'Aún no has enviado notificaciones',
+          count: 0,
+          status: 'info',
+          notification: null
+        }
+      ];
+    }
+
+    return userNotifications.map(notification => {
+      const date = new Date(notification.createdAt);
+      const time = date.toLocaleTimeString('es-ES', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+
+      // Determinar el tipo de acción basado en el tipo de notificación
+      let action = '';
+      switch (notification.type) {
+        case 'benefit':
+          action = 'Promoción enviada';
+          break;
+        case 'info':
+          action = 'Información enviada';
+          break;
+        case 'success':
+          action = 'Confirmación enviada';
+          break;
+        case 'warning':
+          action = 'Advertencia enviada';
+          break;
+        case 'error':
+          action = 'Alerta enviada';
+          break;
+        default:
+          action = 'Notificación enviada';
+      }
+
+      // Si el título contiene palabras clave, personalizar la acción
+      const title = notification.title.toLowerCase();
+      if (title.includes('promoción') || title.includes('oferta') || title.includes('descuento')) {
+        action = 'Promoción enviada';
+      } else if (title.includes('recordatorio')) {
+        action = 'Recordatorio enviado';
+      } else if (title.includes('bienvenida') || title.includes('bienvenido')) {
+        action = 'Mensaje de bienvenida';
+      } else if (title.includes('evento')) {
+        action = 'Invitación a evento';
+      }
+
+      return {
+        time,
+        action,
+        count: notification.recipientCount || 1,
+        status: notification.status === 'sent' ? 'success' : 
+                notification.status === 'failed' ? 'error' : 'pending',
+        notification,
+        title: notification.title,
+        date: date.toLocaleDateString('es-ES', { 
+          day: '2-digit', 
+          month: '2-digit' 
+        })
+      };
+    });
+  };
+
+  const recentActivity = getRecentActivity();
 
   return (
     <div className="space-y-6">
@@ -228,35 +320,117 @@ const Dashboard = ({ stats }: { stats: NotificationStats }) => {
           </div>
         </motion.div>
 
-        {/* Activity Timeline */}
+        {/* Activity Timeline - MEJORADO */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5 }}
           className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100"
         >
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Actividad Reciente</h3>
-          <div className="space-y-4">
-            {[
-              { time: '10:30', action: 'Promoción enviada', count: 25, status: 'success' },
-              { time: '09:15', action: 'Recordatorio programado', count: 50, status: 'pending' },
-              { time: '08:45', action: 'Oferta especial', count: 15, status: 'success' },
-              { time: '08:20', action: 'Error en envío', count: 2, status: 'error' }
-            ].map((activity, index) => (
-              <div key={index} className="flex items-center gap-4">
-                <div className="text-sm text-slate-500 w-12">{activity.time}</div>
-                <div className={`w-2 h-2 rounded-full ${
-                  activity.status === 'success' ? 'bg-emerald-500' :
-                  activity.status === 'pending' ? 'bg-orange-500' :
-                  'bg-red-500'
-                }`} />
-                <div className="flex-1 text-slate-700">{activity.action}</div>
-                <div className="text-sm text-slate-500">
-                  {activity.count} destinatario{activity.count !== 1 ? 's' : ''}
-                </div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-slate-900">Tu Actividad Reciente</h3>
+            {user && (
+              <div className="text-xs text-slate-500 bg-slate-50 px-2 py-1 rounded-full">
+                {user.nombre || user.email}
               </div>
-            ))}
+            )}
           </div>
+          
+          <div className="space-y-4">
+            {recentActivity.length === 0 || recentActivity[0].notification === null ? (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Bell className="w-6 h-6 text-slate-400" />
+                </div>
+                <p className="text-slate-500 text-sm">
+                  {stats.total === 0 
+                    ? 'Aún no has enviado notificaciones'
+                    : 'No hay actividad reciente'
+                  }
+                </p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Comienza enviando tu primera notificación
+                </p>
+              </div>
+            ) : (
+              recentActivity.map((activity, index) => (
+                <div key={index} className="flex items-start gap-4 group hover:bg-slate-50 -mx-2 px-2 py-2 rounded-lg transition-colors">
+                  <div className="flex flex-col items-center">
+                    <div className="text-xs text-slate-500 font-medium mb-1">{activity.time}</div>
+                    <div className={`w-2 h-2 rounded-full ${
+                      activity.status === 'success' ? 'bg-emerald-500' :
+                      activity.status === 'error' ? 'bg-red-500' :
+                      activity.status === 'pending' ? 'bg-orange-500' :
+                      'bg-slate-400'
+                    }`} />
+                    {activity.date && (
+                      <div className="text-xs text-slate-400 mt-1">{activity.date}</div>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-medium text-slate-700 truncate">
+                        {activity.action}
+                      </span>
+                      <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        activity.status === 'success' ? 'bg-emerald-100 text-emerald-700' :
+                        activity.status === 'error' ? 'bg-red-100 text-red-700' :
+                        activity.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                        'bg-slate-100 text-slate-700'
+                      }`}>
+                        {activity.status === 'success' ? 'Enviado' :
+                         activity.status === 'error' ? 'Falló' :
+                         activity.status === 'pending' ? 'Pendiente' :
+                         'Info'}
+                      </div>
+                    </div>
+                    
+                    {activity.title && (
+                      <div className="text-xs text-slate-500 truncate mb-1">
+                        "{activity.title}"
+                      </div>
+                    )}
+                    
+                    <div className="text-xs text-slate-400">
+                      {activity.count > 0 ? (
+                        `${activity.count} destinatario${activity.count !== 1 ? 's' : ''}`
+                      ) : (
+                        'Sin destinatarios'
+                      )}
+                    </div>
+                  </div>
+
+                  {activity.notification && (
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                        title="Ver detalles"
+                      >
+                        <Eye className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Botón para ver más actividad */}
+          {recentActivity.length > 0 && recentActivity[0].notification !== null && (
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <button 
+                onClick={() => {
+                  // Cambiar a la pestaña de historial
+                  const event = new CustomEvent('changeTab', { detail: 'historial' });
+                  window.dispatchEvent(event);
+                }}
+                className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium py-2 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                Ver historial completo →
+              </button>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>
