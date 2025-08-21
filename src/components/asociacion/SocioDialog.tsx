@@ -37,17 +37,10 @@ const createSocioSchema = z.object({
   dni: z.string().optional(),
   direccion: z.string().optional(),
   fechaNacimiento: z.string().optional(),
-  password: z.string().optional(),
-  confirmPassword: z.string().optional(),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  confirmPassword: z.string().min(1, 'Confirma la contraseña'),
 }).refine((data) => {
-  // Solo validar coincidencia si se proporciona contraseña
-  if (data.password && data.password.length > 0) {
-    if (!data.confirmPassword) {
-      return false;
-    }
-    return data.password === data.confirmPassword;
-  }
-  return true;
+  return data.password === data.confirmPassword;
 }, {
   message: 'Las contraseñas no coinciden',
   path: ['confirmPassword'],
