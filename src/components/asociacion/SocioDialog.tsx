@@ -561,14 +561,14 @@ export const SocioDialog: React.FC<SocioDialogProps> = ({
                 <div key={currentStep} className="space-y-6">
                   {/* Información especial para el paso de contraseña */}
                   {currentStep === 2 && !isEditing && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
                       <div className="flex items-start space-x-3">
-                        <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
+                        <Shield className="w-5 h-5 text-orange-600 mt-0.5" />
                         <div>
-                          <h4 className="text-sm font-medium text-blue-900">Credenciales de Acceso (Opcional)</h4>
-                          <p className="text-sm text-blue-700 mt-1">
-                            Puedes crear el socio sin contraseña. Si no proporcionas una contraseña, 
-                            el socio podrá solicitar acceso más tarde o se puede crear su cuenta posteriormente.
+                          <h4 className="text-sm font-medium text-orange-900">Credenciales de Acceso (Obligatorio)</h4>
+                          <p className="text-sm text-orange-700 mt-1">
+                            Se requiere una contraseña para crear la cuenta del socio. Esto permitirá que el socio 
+                            pueda iniciar sesión en la aplicación con su email y contraseña para acceder a sus beneficios.
                           </p>
                         </div>
                       </div>
