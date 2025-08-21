@@ -128,12 +128,17 @@ export const ImageUploader: React.FC = () => {
       // Generate path for the image
       const imagePath = generateImagePath(comercio.id, type === 'imagen' ? 'portada' : type);
       
+      console.log(`🚀 Iniciando subida de ${type} para comercio ${comercio.id}`);
+      
       // Upload image with progress tracking
       const downloadURL = await uploadImage(file, imagePath, {
         onProgress: (progress) => {
+          console.log(`📊 Progreso de subida ${type}: ${progress}%`);
           setUploadProgress(prev => ({ ...prev, progress }));
         }
       });
+
+      console.log(`✅ Subida de ${type} completada:`, downloadURL);
 
       // Update comercio document with new image URL
       const fieldName = type === 'logo' ? 'logo' : 'banner';
@@ -142,9 +147,20 @@ export const ImageUploader: React.FC = () => {
         actualizadoEn: serverTimestamp(),
       });
 
+      console.log(`✅ Documento de comercio actualizado con nuevo ${type}`);
+
       // Complete upload
       setUploadProgress(prev => ({ ...prev, progress: 100 }));
-      toast.success(`${type === 'logo' ? 'Logo' : 'Imagen de portada'} subida exitosamente`);
+      toast.success(`${type === 'logo' ? 'Logo' : 'Imagen de portada'} subida exitosamente`, {
+        duration: 4000,
+        style: {
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          color: 'white',
+          fontWeight: '600',
+          borderRadius: '12px',
+          padding: '16px 20px',
+        },
+      });
       
       // Clear preview after successful upload
       setTimeout(() => {
@@ -157,10 +173,20 @@ export const ImageUploader: React.FC = () => {
       }, 2000);
 
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error(`❌ Error uploading ${type}:`, error);
       const errorMessage = error instanceof Error ? error.message : 'Error al subir la imagen';
       setState(prev => ({ ...prev, preview: null, error: errorMessage }));
-      toast.error(errorMessage);
+      
+      toast.error(`Error al subir ${type === 'logo' ? 'el logo' : 'la imagen de portada'}: ${errorMessage}`, {
+        duration: 6000,
+        style: {
+          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+          color: 'white',
+          fontWeight: '600',
+          borderRadius: '12px',
+          padding: '16px 20px',
+        },
+      });
       
       setUploadProgress({
         uploading: false,
@@ -173,6 +199,7 @@ export const ImageUploader: React.FC = () => {
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'imagen') => {
     const file = event.target.files?.[0];
     if (file) {
+      console.log(`📁 Archivo seleccionado para ${type}:`, file.name, `(${(file.size / 1024 / 1024).toFixed(2)}MB)`);
       handleImageUpload(file, type);
     }
     // Reset input value to allow selecting the same file again
@@ -188,6 +215,7 @@ export const ImageUploader: React.FC = () => {
     const imageFile = files.find(file => file.type.startsWith('image/'));
     
     if (imageFile) {
+      console.log(`🎯 Archivo arrastrado para ${type}:`, imageFile.name, `(${(imageFile.size / 1024 / 1024).toFixed(2)}MB)`);
       handleImageUpload(imageFile, type);
     } else {
       toast.error('Por favor arrastra un archivo de imagen válido');
@@ -446,7 +474,7 @@ export const ImageUploader: React.FC = () => {
                     />
                   </Box>
                   <Typography variant="body2" sx={{ color, fontWeight: 600 }}>
-                    {uploadProgress.progress === 100 ? 'Completado!' : `Subiendo... ${uploadProgress.progress}%`}
+                    {uploadProgress.progress === 100 ? '¡Completado!' : `Subiendo... ${uploadProgress.progress}%`}
                   </Typography>
                 </motion.div>
               ) : state.error ? (
