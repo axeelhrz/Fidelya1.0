@@ -29,6 +29,7 @@ import {
   CheckCircle,
   Refresh,
   Delete,
+  Warning,
 } from '@mui/icons-material';
 import { useComercio } from '@/hooks/useComercio';
 import { uploadImage, generateImagePath, validateImageFile } from '@/utils/storage/uploadImage';
@@ -46,6 +47,7 @@ interface UploadProgress {
   uploading: boolean;
   progress: number;
   type: 'logo' | 'imagen' | null;
+  stage: 'validating' | 'compressing' | 'uploading' | 'finalizing' | 'complete';
 }
 
 export const ImageUploader: React.FC = () => {
@@ -66,7 +68,8 @@ export const ImageUploader: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({
     uploading: false,
     progress: 0,
-    type: null
+    type: null,
+    stage: 'validating'
   });
   
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -94,6 +97,23 @@ export const ImageUploader: React.FC = () => {
     }
   }, []);
 
+  const getStageMessage = (stage: string, progress: number): string => {
+    switch (stage) {
+      case 'validating':
+        return 'Validando archivo...';
+      case 'compressing':
+        return 'Optimizando imagen...';
+      case 'uploading':
+        return `Subiendo... ${progress}%`;
+      case 'finalizing':
+        return 'Finalizando...';
+      case 'complete':
+        return '¡Completado!';
+      default:
+        return `Procesando... ${progress}%`;
+    }
+  };
+
   const handleImageUpload = useCallback(async (file: File, type: 'logo' | 'imagen') => {
     if (!comercio?.id) {
       toast.error('No se pudo identificar el comercio');
@@ -106,52 +126,61 @@ export const ImageUploader: React.FC = () => {
     clearError();
     setState(prev => ({ ...prev, error: null }));
 
-    // Validate and preview file
-    const validation = await validateAndPreviewFile(file);
-    if (!validation.valid) {
-      setState(prev => ({ ...prev, error: validation.error || 'Error de validación' }));
-      toast.error(validation.error || 'Error de validación');
-      return;
-    }
-
-    // Set preview
-    setState(prev => ({ ...prev, preview: validation.preview || null, error: null }));
-
-    // Set upload progress
+    // Set initial upload state
     setUploadProgress({
       uploading: true,
       progress: 0,
-      type
+      type,
+      stage: 'validating'
     });
 
     try {
-      // Generate path for the image
+      // Stage 1: Validate and preview file
+      const validation = await validateAndPreviewFile(file);
+      if (!validation.valid) {
+        setState(prev => ({ ...prev, error: validation.error || 'Error de validación' }));
+        toast.error(validation.error || 'Error de validación');
+        setUploadProgress({ uploading: false, progress: 0, type: null, stage: 'validating' });
+        return;
+      }
+
+      // Set preview
+      setState(prev => ({ ...prev, preview: validation.preview || null, error: null }));
+      
+      setUploadProgress(prev => ({ ...prev, progress: 5, stage: 'compressing' }));
+
+      // Stage 2: Generate path for the image
       const imagePath = generateImagePath(comercio.id, type === 'imagen' ? 'portada' : type);
       
-      console.log(`🚀 Iniciando subida de ${type} para comercio ${comercio.id}`);
-      
-      // Upload image with progress tracking
+      setUploadProgress(prev => ({ ...prev, progress: 10, stage: 'uploading' }));
+
+      // Stage 3: Upload image with enhanced progress tracking
       const downloadURL = await uploadImage(file, imagePath, {
         onProgress: (progress) => {
-          console.log(`📊 Progreso de subida ${type}: ${progress}%`);
-          setUploadProgress(prev => ({ ...prev, progress }));
+          // Map upload progress to our overall progress (10% to 90%)
+          const mappedProgress = 10 + (progress * 0.8);
+          setUploadProgress(prev => ({ 
+            ...prev, 
+            progress: Math.round(mappedProgress),
+            stage: progress < 100 ? 'uploading' : 'finalizing'
+          }));
         }
       });
 
-      console.log(`✅ Subida de ${type} completada:`, downloadURL);
+      // Stage 4: Update comercio document
+      setUploadProgress(prev => ({ ...prev, progress: 95, stage: 'finalizing' }));
 
-      // Update comercio document with new image URL
       const fieldName = type === 'logo' ? 'logo' : 'banner';
       await updateDoc(doc(db, 'comercios', comercio.id), {
         [fieldName]: downloadURL,
         actualizadoEn: serverTimestamp(),
       });
 
-      console.log(`✅ Documento de comercio actualizado con nuevo ${type}`);
-
-      // Complete upload
-      setUploadProgress(prev => ({ ...prev, progress: 100 }));
-      toast.success(`${type === 'logo' ? 'Logo' : 'Imagen de portada'} subida exitosamente`, {
+      // Stage 5: Complete
+      setUploadProgress(prev => ({ ...prev, progress: 100, stage: 'complete' }));
+      
+      const successMessage = `${type === 'logo' ? 'Logo' : 'Imagen de portada'} subida exitosamente`;
+      toast.success(successMessage, {
         duration: 4000,
         style: {
           background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
@@ -162,23 +191,41 @@ export const ImageUploader: React.FC = () => {
         },
       });
       
-      // Clear preview after successful upload
+      // Clear preview and reset state after successful upload
       setTimeout(() => {
         setState(prev => ({ ...prev, preview: null }));
         setUploadProgress({
           uploading: false,
           progress: 0,
-          type: null
+          type: null,
+          stage: 'validating'
         });
       }, 2000);
 
     } catch (error) {
-      console.error(`❌ Error uploading ${type}:`, error);
-      const errorMessage = error instanceof Error ? error.message : 'Error al subir la imagen';
+      console.error('Error uploading image:', error);
+      
+      let errorMessage = 'Error al subir la imagen';
+      
+      if (error instanceof Error) {
+        // Handle specific error types
+        if (error.message.includes('CORS')) {
+          errorMessage = 'Error de configuración del servidor. Intenta de nuevo más tarde.';
+        } else if (error.message.includes('network')) {
+          errorMessage = 'Error de conexión. Verifica tu internet e intenta de nuevo.';
+        } else if (error.message.includes('permission')) {
+          errorMessage = 'No tienes permisos para subir imágenes. Contacta al administrador.';
+        } else if (error.message.includes('quota')) {
+          errorMessage = 'Límite de almacenamiento alcanzado. Contacta al administrador.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       setState(prev => ({ ...prev, preview: null, error: errorMessage }));
       
-      toast.error(`Error al subir ${type === 'logo' ? 'el logo' : 'la imagen de portada'}: ${errorMessage}`, {
-        duration: 6000,
+      toast.error(errorMessage, {
+        duration: 5000,
         style: {
           background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
           color: 'white',
@@ -191,7 +238,8 @@ export const ImageUploader: React.FC = () => {
       setUploadProgress({
         uploading: false,
         progress: 0,
-        type: null
+        type: null,
+        stage: 'validating'
       });
     }
   }, [comercio?.id, validateAndPreviewFile, clearError]);
@@ -199,7 +247,6 @@ export const ImageUploader: React.FC = () => {
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'imagen') => {
     const file = event.target.files?.[0];
     if (file) {
-      console.log(`📁 Archivo seleccionado para ${type}:`, file.name, `(${(file.size / 1024 / 1024).toFixed(2)}MB)`);
       handleImageUpload(file, type);
     }
     // Reset input value to allow selecting the same file again
@@ -215,7 +262,6 @@ export const ImageUploader: React.FC = () => {
     const imageFile = files.find(file => file.type.startsWith('image/'));
     
     if (imageFile) {
-      console.log(`🎯 Archivo arrastrado para ${type}:`, imageFile.name, `(${(imageFile.size / 1024 / 1024).toFixed(2)}MB)`);
       handleImageUpload(imageFile, type);
     } else {
       toast.error('Por favor arrastra un archivo de imagen válido');
@@ -248,6 +294,12 @@ export const ImageUploader: React.FC = () => {
     const setState = type === 'logo' ? setLogoState : setPortadaState;
     setState(prev => ({ ...prev, preview: null, error: null }));
   }, []);
+
+  const retryUpload = useCallback((type: 'logo' | 'imagen') => {
+    const setState = type === 'logo' ? setLogoState : setPortadaState;
+    setState(prev => ({ ...prev, error: null }));
+    triggerFileInput(type);
+  }, [triggerFileInput]);
 
   const ImageUploadCard: React.FC<{
     type: 'logo' | 'imagen';
@@ -473,8 +525,11 @@ export const ImageUploader: React.FC = () => {
                       }}
                     />
                   </Box>
-                  <Typography variant="body2" sx={{ color, fontWeight: 600 }}>
-                    {uploadProgress.progress === 100 ? '¡Completado!' : `Subiendo... ${uploadProgress.progress}%`}
+                  <Typography variant="body2" sx={{ color, fontWeight: 600, mb: 1 }}>
+                    {getStageMessage(uploadProgress.stage, uploadProgress.progress)}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#64748b' }}>
+                    {uploadProgress.progress}% completado
                   </Typography>
                 </motion.div>
               ) : state.error ? (
@@ -486,17 +541,14 @@ export const ImageUploader: React.FC = () => {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ color: '#ef4444', mb: 2 }}>
                     <ErrorOutline fontSize="small" />
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, textAlign: 'center' }}>
                       {state.error}
                     </Typography>
                   </Stack>
                   <Button
                     size="small"
                     startIcon={<Refresh />}
-                    onClick={() => {
-                      const setState = type === 'logo' ? setLogoState : setPortadaState;
-                      setState(prev => ({ ...prev, error: null }));
-                    }}
+                    onClick={() => retryUpload(type)}
                     sx={{ color: '#ef4444' }}
                   >
                     Reintentar
