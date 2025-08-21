@@ -11,7 +11,6 @@ import { useComercios } from '@/hooks/useComercios';
 import { 
   Store, 
   RefreshCw,
-  User,
   Sparkles
 } from 'lucide-react';
 
