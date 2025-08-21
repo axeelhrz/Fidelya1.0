@@ -61,7 +61,8 @@ export const EnhancedMemberManagement = ({
     createSocio,
     updateSocio,
     deleteSocio,
-    importSocios
+    importSocios,
+    forceReload
   } = useSocios();
 
   const {
@@ -119,7 +120,7 @@ export const EnhancedMemberManagement = ({
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([loadSocios(), loadVinculados()]);
+      await Promise.all([forceReload(), loadVinculados()]);
       toast.success('Datos actualizados');
     } catch {
       toast.error('Error al actualizar los datos');
