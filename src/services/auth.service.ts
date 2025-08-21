@@ -656,10 +656,10 @@ class AuthService {
       const data = userDoc.data();
       
       // For socios, get additional membership information
-      let estadoMembresia: string | undefined;
-      let asociacionNombre: string | undefined;
-      
-      if (data.role === 'socio') {
+            let estadoMembresia: UserData['estadoMembresia'];
+            let asociacionNombre: string | undefined;
+            
+            if (data.role === 'socio') {
         try {
           const socioDoc = await getDoc(doc(db, COLLECTIONS.SOCIOS, uid));
           if (socioDoc.exists()) {
