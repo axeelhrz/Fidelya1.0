@@ -1280,7 +1280,7 @@ export const EnhancedMemberManagement = ({
                   className={`p-2.5 rounded-xl transition-all duration-200 ${
                     viewMode === 'list' 
                       ? 'bg-white shadow-md text-blue-600 scale-105' 
-                      : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-white hover:border-slate-300'
                   }`}
                   title="Vista de lista"
                 >
@@ -1293,7 +1293,7 @@ export const EnhancedMemberManagement = ({
                   className={`p-2.5 rounded-xl transition-all duration-200 ${
                     viewMode === 'grid' 
                       ? 'bg-white shadow-md text-blue-600 scale-105' 
-                      : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-white hover:border-slate-300'
                   }`}
                   title="Vista de cuadrícula"
                 >
@@ -1323,6 +1323,26 @@ export const EnhancedMemberManagement = ({
                     <X className="w-4 h-4" />
                   </motion.div>
                 )}
+              </motion.button>
+
+              {/* Botón de Importación Directo - NUEVO */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => document.getElementById('import-file')?.click()}
+                disabled={importing}
+                className="flex items-center gap-2 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white px-5 py-2.5 rounded-2xl hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl border border-white/20 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Importar socios desde Excel o CSV"
+              >
+                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                {importing ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin relative z-10" />
+                ) : (
+                  <Upload className="w-4 h-4 relative z-10" />
+                )}
+                <span className="hidden sm:inline relative z-10">
+                  {importing ? 'Importando...' : 'Importar'}
+                </span>
               </motion.button>
 
               {/* Add Registered Socio */}
