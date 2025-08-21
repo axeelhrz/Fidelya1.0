@@ -401,14 +401,15 @@ class ValidacionesService {
         const codigoValidacion = this.generateValidationCode();
         const montoDescuento = this.calculateDiscountAmount(beneficioData);
         
+        // FIXED: Add null checks and fallback values for socio data
         const validacionData = {
-          // Basic info
+          // Basic info - with null checks and fallbacks
           socioId: request.socioId,
-          socioNombre: socioData.nombre,
-          socioNumero: socioData.numeroSocio,
-          socioEmail: socioData.email,
+          socioNombre: socioData.nombre || 'Socio sin nombre',
+          socioNumero: socioData.numeroSocio || 'SIN-NUMERO', // FIXED: Fallback value
+          socioEmail: socioData.email || '',
           socioEstado: socioData.estado, // NUEVO: Guardar estado del socio en la validación
-          socioEstadoMembresia: socioData.estadoMembresia, // NUEVO: Guardar estado de membresía
+          socioEstadoMembresia: socioData.estadoMembresia || 'independiente', // NUEVO: Guardar estado de membresía
           
           // Association info
           asociacionId: socioAsociacionId || null,
@@ -416,9 +417,9 @@ class ValidacionesService {
           
           // Commerce info
           comercioId: request.comercioId,
-          comercioNombre: comercioData.nombreComercio,
-          comercioCategoria: comercioData.categoria,
-          comercioDireccion: comercioData.direccion,
+          comercioNombre: comercioData.nombreComercio || 'Comercio sin nombre',
+          comercioCategoria: comercioData.categoria || '',
+          comercioDireccion: comercioData.direccion || '',
           
           // Benefit info
           beneficioId: selectedBeneficio.id,
@@ -438,11 +439,12 @@ class ValidacionesService {
           metadata: {
             userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
             timestamp: Date.now(),
-            version: '2.1', // Incrementar versión por las nuevas validaciones
+            version: '2.2', // Incrementar versión por el fix de socioNumero
             validacionesAdicionales: {
               socioActivo: true,
               membresiaValida: socioAsociacionId ? true : 'no_aplica',
-              fechaVencimientoChecked: socioData.fechaVencimiento ? true : false
+              fechaVencimientoChecked: socioData.fechaVencimiento ? true : false,
+              socioNumeroFallback: !socioData.numeroSocio // Track if we used fallback
             }
           },
           
@@ -512,8 +514,8 @@ class ValidacionesService {
           },
           socio: {
             id: request.socioId,
-            nombre: result.socioData.nombre ?? '',
-            numeroSocio: result.socioData.numeroSocio ?? '',
+            nombre: result.socioData.nombre ?? 'Socio sin nombre',
+            numeroSocio: result.socioData.numeroSocio ?? 'SIN-NUMERO', // FIXED: Fallback value
             estadoMembresia: result.socioData.estadoMembresia || 'independiente',
           },
           validacion: {
