@@ -21,6 +21,7 @@ import {
   where,
   getDocs,
   writeBatch,
+  FieldValue,
 } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { UserData } from '@/types/auth';
@@ -514,7 +515,7 @@ class AuthService {
         const roleCollection = this.getRoleCollection(userData.role);
         if (roleCollection) {
           const roleDocRef = doc(db, roleCollection, user.uid);
-          const updateData: Record<string, unknown> = {
+          const updateData: { [key: string]: FieldValue | string } = {
             estado: USER_STATES.ACTIVO,
             actualizadoEn: serverTimestamp(),
           };
@@ -655,34 +656,31 @@ class AuthService {
       const data = userDoc.data();
       
       // For socios, get additional membership information
-            let estadoMembresia: UserData['estadoMembresia'];
-            let asociacionNombre: string | undefined;
+      let estadoMembresia: string | undefined;
+      let asociacionNombre: string | undefined;
+      
+      if (data.role === 'socio') {
+        try {
+          const socioDoc = await getDoc(doc(db, COLLECTIONS.SOCIOS, uid));
+          if (socioDoc.exists()) {
+            const socioData = socioDoc.data();
+            estadoMembresia = socioData.estadoMembresia;
+            asociacionNombre = socioData.asociacion;
             
-            if (data.role === 'socio') {
-              try {
-                const socioDoc = await getDoc(doc(db, COLLECTIONS.SOCIOS, uid));
-                if (socioDoc.exists()) {
-                  const socioData = socioDoc.data();
-                  const rawEstadoMembresia = socioData.estadoMembresia;
-                  if (['inactivo','suspendido','pendiente','vencido','al_dia'].includes(rawEstadoMembresia)) {
-                    estadoMembresia = rawEstadoMembresia as UserData['estadoMembresia'];
-                  }
-                  asociacionNombre = socioData.asociacion;
-                  
-                  // Sync association ID if different
-                  if (socioData.asociacionId && socioData.asociacionId !== data.asociacionId) {
-                    console.log('🔄 Syncing association ID from socio to user document');
-                    await updateDoc(doc(db, COLLECTIONS.USERS, uid), {
-                      asociacionId: socioData.asociacionId,
-                      actualizadoEn: serverTimestamp(),
-                    });
-                    data.asociacionId = socioData.asociacionId;
-                  }
-                }
-              } catch (socioError) {
-                console.warn('⚠️ Error fetching socio data:', socioError);
-              }
+            // Sync association ID if different
+            if (socioData.asociacionId && socioData.asociacionId !== data.asociacionId) {
+              console.log('🔄 Syncing association ID from socio to user document');
+              await updateDoc(doc(db, COLLECTIONS.USERS, uid), {
+                asociacionId: socioData.asociacionId,
+                actualizadoEn: serverTimestamp(),
+              });
+              data.asociacionId = socioData.asociacionId;
             }
+          }
+        } catch (socioError) {
+          console.warn('⚠️ Error fetching socio data:', socioError);
+        }
+      }
 
       const userData: UserData = {
         uid: userDoc.id,
