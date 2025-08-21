@@ -63,12 +63,28 @@ Route::middleware('auth:sanctum')->group(function () {
     // Leagues
     Route::apiResource('leagues', LeagueController::class);
     
-    // Clubs
+    // Clubs - Extended functionality
     Route::apiResource('clubs', ClubController::class);
     
-    // Club-League management routes
-    Route::post('/clubs/{club}/add-to-league', [ClubController::class, 'addToLeague']);
-    Route::post('/clubs/{club}/remove-from-league', [ClubController::class, 'removeFromLeague']);
+    // Club-specific routes (must be before apiResource to avoid route conflicts)
+    Route::prefix('clubs')->group(function () {
+        // Club management
+        Route::post('/{club}/add-to-league', [ClubController::class, 'addToLeague']);
+        Route::post('/{club}/remove-from-league', [ClubController::class, 'removeFromLeague']);
+        
+        // Club statistics and analytics
+        Route::post('/{club}/update-statistics', [ClubController::class, 'updateStatistics']);
+        Route::get('/{club}/statistics', [ClubController::class, 'getStatistics']);
+        Route::get('/{club}/ranking-history', [ClubController::class, 'getRankingHistory']);
+        Route::post('/{club}/ranking-history', [ClubController::class, 'addRankingHistory']);
+        
+        // Club logo management
+        Route::post('/{club}/upload-logo', [ClubController::class, 'uploadLogo']);
+        
+        // Tournament permissions
+        Route::get('/tournament-creators', [ClubController::class, 'getTournamentCreators']);
+        Route::post('/{club}/toggle-tournament-permission', [ClubController::class, 'toggleTournamentPermission']);
+    });
     
     // Members equipment data (must be before apiResource to avoid route conflicts)
     Route::get('/members/equipment-data', [MemberController::class, 'getEquipmentData']);
