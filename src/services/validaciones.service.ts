@@ -82,6 +82,85 @@ class ValidacionesService {
   private readonly beneficiosCollection = COLLECTIONS.BENEFICIOS;
 
   /**
+   * VALIDACIÓN ESTRICTA DE SOCIO ACTIVO - Reforzada para garantizar que solo socios activos puedan usar beneficios
+   */
+  private async validateActiveSocio(socioData: any): Promise<void> {
+    console.log('🔍 Validando estado del socio:', {
+      estado: socioData.estado,
+      estadoMembresia: socioData.estadoMembresia,
+      asociacionId: socioData.asociacionId,
+      fechaVencimiento: socioData.fechaVencimiento
+    });
+
+    // 1. VALIDACIÓN CRÍTICA: Estado del socio debe ser 'activo'
+    if (socioData.estado !== 'activo') {
+      const estadoMessages = {
+        'inactivo': 'Tu cuenta está inactiva. Contacta al administrador para reactivarla.',
+        'pendiente': 'Tu cuenta está pendiente de activación. Contacta al administrador.',
+        'suspendido': 'Tu cuenta está suspendida. Contacta al administrador para más información.',
+        'vencido': 'Tu cuenta está vencida. Renueva tu membresía para continuar.'
+      };
+      
+      const message = estadoMessages[socioData.estado as keyof typeof estadoMessages] || 
+                     `Tu cuenta está ${socioData.estado}. Contacta al administrador.`;
+      
+      throw new Error(message);
+    }
+
+    // 2. VALIDACIÓN DE MEMBRESÍA: Para socios con asociación
+    if (socioData.asociacionId) {
+      console.log('🔍 Validando membresía de socio asociado...');
+      
+      // Estados de membresía que NO permiten usar beneficios
+      const estadosInvalidos = ['vencido', 'pendiente', 'suspendido', 'inactivo'];
+      
+      if (estadosInvalidos.includes(socioData.estadoMembresia)) {
+        const membershipMessages = {
+          'vencido': 'Tu membresía está vencida. Renueva tu cuota para acceder a beneficios.',
+          'pendiente': 'Tu membresía está pendiente de activación. Contacta a tu asociación.',
+          'suspendido': 'Tu membresía está suspendida. Contacta a tu asociación.',
+          'inactivo': 'Tu membresía está inactiva. Contacta a tu asociación.'
+        };
+        
+        const message = membershipMessages[socioData.estadoMembresia as keyof typeof membershipMessages] || 
+                       `Tu membresía está ${socioData.estadoMembresia}. Contacta a tu asociación.`;
+        
+        throw new Error(message);
+      }
+
+      // 3. VALIDACIÓN DE FECHA DE VENCIMIENTO
+      if (socioData.fechaVencimiento) {
+        const fechaVencimiento = socioData.fechaVencimiento instanceof Timestamp 
+          ? socioData.fechaVencimiento.toDate() 
+          : new Date(socioData.fechaVencimiento);
+        
+        const ahora = new Date();
+        
+        if (fechaVencimiento < ahora) {
+          throw new Error('Tu membresía ha vencido. Renueva tu cuota para acceder a beneficios.');
+        }
+
+        // Advertencia si vence pronto (dentro de 7 días)
+        const diasParaVencer = Math.ceil((fechaVencimiento.getTime() - ahora.getTime()) / (1000 * 60 * 60 * 24));
+        if (diasParaVencer <= 7 && diasParaVencer > 0) {
+          console.warn(`⚠️ Membresía vence en ${diasParaVencer} días`);
+        }
+      }
+    } else {
+      // 4. VALIDACIÓN PARA SOCIOS INDEPENDIENTES
+      console.log('🔍 Validando socio independiente...');
+      
+      // Los socios independientes también deben tener estado activo
+      // y pueden tener restricciones adicionales según la configuración del sistema
+      if (socioData.estadoMembresia && socioData.estadoMembresia !== 'al_dia' && socioData.estadoMembresia !== 'activo') {
+        throw new Error('Tu estado de membresía no permite acceder a beneficios en este momento.');
+      }
+    }
+
+    console.log('✅ Socio validado correctamente como activo');
+  }
+
+  /**
    * Enhanced validation with better error handling and data consistency
    */
   async validarAcceso(request: ValidacionRequest): Promise<ValidacionResponse> {
@@ -99,23 +178,8 @@ class ValidacionesService {
 
         const socioData = socioDoc.data();
         
-        // Enhanced socio validation
-        if (socioData.estado !== 'activo') {
-          throw new Error(`Tu cuenta está ${socioData.estado}. Contacta al administrador.`);
-        }
-
-        // Check membership status for associated socios
-        if (socioData.asociacionId) {
-          if (socioData.estadoMembresia === 'vencido') {
-            throw new Error('Tu membresía está vencida. Renueva tu cuota para acceder a beneficios.');
-          }
-          if (socioData.estadoMembresia === 'pendiente') {
-            throw new Error('Tu membresía está pendiente de activación. Contacta a tu asociación.');
-          }
-          if (socioData.estadoMembresia === 'suspendido') {
-            throw new Error('Tu membresía está suspendida. Contacta a tu asociación.');
-          }
-        }
+        // VALIDACIÓN ESTRICTA DE SOCIO ACTIVO - NUEVA FUNCIÓN
+        await this.validateActiveSocio(socioData);
 
         // 2. Enhanced comercio validation
         const comercioRef = doc(db, this.comerciosCollection, request.comercioId);
@@ -327,6 +391,8 @@ class ValidacionesService {
           socioNombre: socioData.nombre,
           socioNumero: socioData.numeroSocio,
           socioEmail: socioData.email,
+          socioEstado: socioData.estado, // NUEVO: Guardar estado del socio en la validación
+          socioEstadoMembresia: socioData.estadoMembresia, // NUEVO: Guardar estado de membresía
           
           // Association info
           asociacionId: socioAsociacionId || null,
@@ -356,7 +422,12 @@ class ValidacionesService {
           metadata: {
             userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
             timestamp: Date.now(),
-            version: '2.0'
+            version: '2.1', // Incrementar versión por las nuevas validaciones
+            validacionesAdicionales: {
+              socioActivo: true,
+              membresiaValida: socioAsociacionId ? true : 'no_aplica',
+              fechaVencimientoChecked: socioData.fechaVencimiento ? true : false
+            }
           },
           
           // Timestamps
@@ -378,6 +449,7 @@ class ValidacionesService {
           beneficiosUsados: (socioData.beneficiosUsados || 0) + 1,
           ultimaValidacion: serverTimestamp(),
           ahorroTotal: (socioData.ahorroTotal || 0) + montoDescuento,
+          ultimaActividad: serverTimestamp(), // NUEVO: Registrar última actividad
           actualizadoEn: serverTimestamp(),
         });
 
