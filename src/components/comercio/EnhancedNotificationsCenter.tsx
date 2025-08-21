@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
@@ -923,6 +923,19 @@ const NotificationHistory = () => {
 export default function EnhancedNotificationsCenter() {
   const { allNotifications, loading } = useNotifications();
   const [activeTab, setActiveTab] = useState('dashboard');
+
+  // Escuchar evento personalizado para cambiar de pestaña
+  useEffect(() => {
+    const handleChangeTab = (event: CustomEvent) => {
+      setActiveTab(event.detail);
+    };
+
+    window.addEventListener('changeTab', handleChangeTab as EventListener);
+    
+    return () => {
+      window.removeEventListener('changeTab', handleChangeTab as EventListener);
+    };
+  }, []);
 
   // Calculate stats
   const stats: NotificationStats = {
