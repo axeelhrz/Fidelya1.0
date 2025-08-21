@@ -159,14 +159,16 @@ class QRValidationService {
 
         // 4. Create validation record
         const validationCode = this.generateValidationCode();
+        
+        // FIXED: Add null checks and fallback values for socio data
         const validationData = {
           socioId: request.socioId,
-          socioNombre: socioData.nombre,
-          socioNumero: socioData.numeroSocio,
+          socioNombre: socioData.nombre || 'Socio sin nombre',
+          socioNumero: socioData.numeroSocio || 'SIN-NUMERO', // FIXED: Fallback value
           comercioId: comercioId,
-          comercioNombre: comercioData.nombreComercio || comercioData.nombre,
+          comercioNombre: comercioData.nombreComercio || comercioData.nombre || 'Comercio sin nombre',
           asociacionId: socioAsociacionId,
-          asociacionNombre: socioData.asociacionNombre,
+          asociacionNombre: socioData.asociacionNombre || null,
           fechaValidacion: serverTimestamp(),
           codigoValidacion: validationCode,
           estado: 'exitosa',
@@ -181,7 +183,10 @@ class QRValidationService {
           codigoUso: null,
           ubicacion: request.ubicacion || null,
           dispositivo: request.dispositivo || null,
-          metadata: {}
+          metadata: {
+            version: '2.2', // Updated version for socioNumero fix
+            socioNumeroFallback: !socioData.numeroSocio // Track if we used fallback
+          }
         };
 
         const validacionRef = doc(collection(db, this.validacionesCollection));
@@ -207,16 +212,16 @@ class QRValidationService {
           data: {
             comercio: {
               id: comercioId,
-              nombre: comercioData.nombreComercio || comercioData.nombre,
-              categoria: comercioData.categoria,
+              nombre: comercioData.nombreComercio || comercioData.nombre || 'Comercio sin nombre',
+              categoria: comercioData.categoria || '',
               direccion: comercioData.direccion,
               logo: comercioData.logo
             },
             socio: {
               id: request.socioId,
-              nombre: socioData.nombre,
-              numeroSocio: socioData.numeroSocio,
-              estadoMembresia: socioData.estadoMembresia
+              nombre: socioData.nombre || 'Socio sin nombre',
+              numeroSocio: socioData.numeroSocio || 'SIN-NUMERO', // FIXED: Fallback value
+              estadoMembresia: socioData.estadoMembresia || 'independiente'
             },
             validacion: {
               id: validacionRef.id,
@@ -372,7 +377,7 @@ class QRValidationService {
             socio: {
               id: validacionData.socioId,
               nombre: validacionData.socioNombre,
-              numeroSocio: validacionData.socioNumero,
+              numeroSocio: validacionData.socioNumero || 'SIN-NUMERO', // FIXED: Fallback value
               estadoMembresia: ''
             },
             validacion: {
