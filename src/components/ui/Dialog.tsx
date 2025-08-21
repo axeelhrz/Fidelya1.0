@@ -47,14 +47,17 @@ export const Dialog: React.FC<DialogProps> = ({ open, onClose, children, classNa
     if (open) {
       // Prevenir scroll del body cuando el modal está abierto
       document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = '0px'; // Evitar salto de layout
     } else {
       // Restaurar scroll del body cuando el modal se cierra
       document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = 'unset';
     }
 
     // Cleanup al desmontar
     return () => {
       document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = 'unset';
     };
   }, [open]);
 
@@ -65,7 +68,8 @@ export const Dialog: React.FC<DialogProps> = ({ open, onClose, children, classNa
       {open && (
         <div className={cn(
           "fixed inset-0",
-          fullScreen ? "z-[99999]" : "z-[9999] flex items-center justify-center"
+          // Z-index ultra alto para estar por encima de todo
+          fullScreen ? "z-[999999]" : "z-[99999] flex items-center justify-center"
         )}>
           <motion.div
             initial={{ opacity: 0 }}
@@ -73,7 +77,7 @@ export const Dialog: React.FC<DialogProps> = ({ open, onClose, children, classNa
             exit={{ opacity: 0 }}
             className={cn(
               "fixed inset-0",
-              fullScreen ? "bg-black/70 backdrop-blur-md" : "bg-black/50 backdrop-blur-sm"
+              fullScreen ? "bg-black/80 backdrop-blur-lg" : "bg-black/60 backdrop-blur-sm"
             )}
             onClick={onClose}
           />
@@ -106,9 +110,11 @@ export const Dialog: React.FC<DialogProps> = ({ open, onClose, children, classNa
             <button
               onClick={onClose}
               className={cn(
-                "absolute p-3 text-gray-400 hover:text-gray-600 transition-colors z-50 hover:bg-white/90 rounded-full",
+                "absolute p-3 text-gray-400 hover:text-gray-600 transition-colors hover:bg-white/90 rounded-full",
+                // Z-index alto para el botón de cerrar
+                "z-[999999]",
                 fullScreen 
-                  ? "top-8 right-8 bg-white/80 backdrop-blur-sm shadow-lg" 
+                  ? "top-8 right-8 bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white" 
                   : "top-4 right-4 bg-white/80 backdrop-blur-sm"
               )}
             >
