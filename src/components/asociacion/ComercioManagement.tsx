@@ -1311,7 +1311,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                             title="Eliminar"
                           >
                             <Trash2 size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button> */}
+                          </motion.button>
                         </div>
                       </th>
                     </tr>
@@ -1859,8 +1859,8 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                     </p>
                     <div className="mt-3 lg:mt-4 p-3 lg:p-4 bg-red-50 rounded-lg lg:rounded-xl border border-red-200">
                       <p className="text-xs lg:text-sm text-red-800">
-                        <strong>¡Atención!</strong> Esta acción desactivará el comercio permanentemente. 
-                        Todos los beneficios asociados se marcarán como inactivos y no se podrán recuperar. 
+                        <strong>¡Atención!</strong> Esta acción eliminará el comercio permanentemente de la base de datos. 
+                        Todos los beneficios y validaciones asociados también serán eliminados completamente. 
                         Esta acción no se puede deshacer.
                       </p>
                     </div>
