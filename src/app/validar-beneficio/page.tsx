@@ -183,7 +183,7 @@ const ValidarBeneficioContent: React.FC = () => {
             `🎉 ¡Validación exitosa!\n` +
             `💰 Ahorro: $${validacion.montoDescuento.toLocaleString()}\n` +
             `🏪 Comercio: ${comercioData.nombre}\n` +
-            `🎁 Beneficio: ${beneficioData.titulo}`,
+            `🎁 Beneficio: ${beneficioData?.titulo || 'Beneficio'}`,
             { duration: 6000 }
           );
         }
@@ -344,24 +344,73 @@ const ValidarBeneficioContent: React.FC = () => {
           className="max-w-4xl mx-auto mb-8"
         >
           {user ? (
-            <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
-              <div className="flex items-center space-x-3">
-                <User className="w-5 h-5 text-green-600" />
-                <div>
-                  <p className="text-green-800 font-medium">
-                    Conectado como: {user.nombre || user.email}
-                  </p>
-                  <p className="text-green-600 text-sm">
-                    {user.role === 'socio' ? 'Puedes validar beneficios' : 'Solo los socios pueden validar beneficios'}
-                  </p>
-                  {user.asociacionId && (
-                    <p className="text-green-600 text-sm">
-                      Asociación: {user.asociacionNombre || 'Asociado'}
-                    </p>
-                  )}
+            <>
+              {/* VALIDACIÓN DE ESTADO DEL SOCIO */}
+              {user.role === 'socio' && user.estado === 'activo' && 
+               (!user.asociacionId || !user.estadoMembresia || 
+                !['vencido', 'pendiente', 'suspendido', 'inactivo'].includes(user.estadoMembresia)) ? (
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                  <div className="flex items-center space-x-3">
+                    <User className="w-5 h-5 text-green-600" />
+                    <div>
+                      <p className="text-green-800 font-medium">
+                        Conectado como: {user.nombre || user.email}
+                      </p>
+                      <p className="text-green-600 text-sm">
+                        ✅ Puedes validar beneficios
+                      </p>
+                      {user.asociacionId && (
+                        <p className="text-green-600 text-sm">
+                          Asociación: {user.asociacionNombre || 'Asociado'} - Estado: {user.estadoMembresia || 'Activo'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              ) : user.role === 'socio' ? (
+                <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+                  <div className="flex items-center space-x-3">
+                    <AlertCircle className="w-5 h-5 text-red-600" />
+                    <div>
+                      <p className="text-red-800 font-medium">
+                        No puedes validar beneficios
+                      </p>
+                      <p className="text-red-600 text-sm">
+                        {user.estado !== 'activo' 
+                          ? `Tu cuenta está ${user.estado}. Contacta al administrador.`
+                          : user.asociacionId && user.estadoMembresia && ['vencido', 'pendiente', 'suspendido', 'inactivo'].includes(user.estadoMembresia)
+                          ? `Tu membresía está ${user.estadoMembresia}. ${
+                              user.estadoMembresia === 'vencido' 
+                                ? 'Renueva tu cuota para acceder a beneficios.' 
+                                : 'Contacta a tu asociación.'
+                            }`
+                          : 'Estado de cuenta no válido para validar beneficios.'
+                        }
+                      </p>
+                      {user.asociacionId && (
+                        <p className="text-red-600 text-sm">
+                          Asociación: {user.asociacionNombre || 'Asociado'} - Estado: {user.estadoMembresia || 'Desconocido'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                  <div className="flex items-center space-x-3">
+                    <AlertCircle className="w-5 h-5 text-amber-600" />
+                    <div>
+                      <p className="text-amber-800 font-medium">
+                        Solo los socios pueden validar beneficios
+                      </p>
+                      <p className="text-amber-600 text-sm">
+                        Tu rol actual es: {user.role}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
               <div className="flex items-center justify-between">
@@ -417,12 +466,19 @@ const ValidarBeneficioContent: React.FC = () => {
             <div className="space-y-4">
               {beneficios.map((beneficio) => {
                 const isValid = isValidBenefit(beneficio);
+                // VALIDACIÓN ADICIONAL: Verificar que el usuario sea socio activo
+                const canValidate = user && 
+                                   user.role === 'socio' && 
+                                   user.estado === 'activo' && 
+                                   (!user.asociacionId || 
+                                    !user.estadoMembresia || 
+                                    !['vencido', 'pendiente', 'suspendido', 'inactivo'].includes(user.estadoMembresia));
                 
                 return (
                   <div
                     key={beneficio.id}
                     className={`bg-white rounded-2xl p-6 shadow-lg border transition-all duration-200 ${
-                      isValid 
+                      isValid && canValidate
                         ? 'border-gray-100 hover:shadow-xl hover:border-purple-200' 
                         : 'border-gray-200 opacity-60'
                     }`}
@@ -436,6 +492,16 @@ const ValidarBeneficioContent: React.FC = () => {
                           {!isValid && (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                               No disponible
+                            </span>
+                          )}
+                          {!canValidate && user && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                              {user.role !== 'socio' 
+                                ? 'Solo socios' 
+                                : user.estado !== 'activo'
+                                ? 'Cuenta inactiva'
+                                : 'Membresía inválida'
+                              }
                             </span>
                           )}
                         </div>
@@ -463,12 +529,27 @@ const ValidarBeneficioContent: React.FC = () => {
                       <div className="ml-6">
                         <button
                           onClick={() => handleValidateBenefit(beneficio)}
-                          disabled={!user || user.role !== 'socio' || !isValid || validating}
+                          disabled={!canValidate || !isValid || validating}
                           className={`inline-flex items-center px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
-                            isValid && user?.role === 'socio'
+                            isValid && canValidate
                               ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl'
                               : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                           }`}
+                          title={
+                            !canValidate 
+                              ? (user 
+                                  ? (user.role !== 'socio' 
+                                      ? 'Solo los socios pueden validar beneficios' 
+                                      : user.estado !== 'activo'
+                                      ? `Tu cuenta está ${user.estado}`
+                                      : 'Tu estado de membresía no permite validar beneficios'
+                                    )
+                                  : 'Debes iniciar sesión como socio'
+                                )
+                              : !isValid 
+                              ? 'Este beneficio no está disponible'
+                              : 'Validar beneficio'
+                          }
                         >
                           {validating ? (
                             <>
