@@ -304,21 +304,68 @@ class ComercioService {
   }
 
   /**
-   * Delete comercio (logical delete)
+   * Delete comercio (complete deletion)
    */
   async deleteComercio(id: string): Promise<boolean> {
     try {
-      await updateDoc(doc(db, this.collection, id), {
-        estado: 'inactivo',
-        visible: false,
-        actualizadoEn: serverTimestamp(),
-      });
+      // Get comercio data first to check if it exists
+      const comercioDoc = await getDoc(doc(db, this.collection, id));
+      
+      if (!comercioDoc.exists()) {
+        throw new Error('Comercio no encontrado');
+      }
 
-      console.log('✅ Comercio deleted successfully:', id);
+      // Delete the comercio document completely from Firestore
+      await deleteDoc(doc(db, this.collection, id));
+
+      // Also delete related data (beneficios, validaciones, etc.)
+      await this.deleteRelatedData(id);
+
+      console.log('✅ Comercio deleted completely:', id);
       return true;
     } catch (error) {
       handleError(error, 'Delete Comercio');
       return false;
+    }
+  }
+
+  /**
+   * Delete all related data when a comercio is deleted
+   */
+  private async deleteRelatedData(comercioId: string): Promise<void> {
+    try {
+      // Delete all beneficios related to this comercio
+      const beneficiosQuery = query(
+        collection(db, this.beneficiosCollection),
+        where('comercioId', '==', comercioId)
+      );
+      const beneficiosSnapshot = await getDocs(beneficiosQuery);
+      
+      const beneficioDeletePromises = beneficiosSnapshot.docs.map(doc => 
+        deleteDoc(doc.ref)
+      );
+
+      // Delete all validaciones related to this comercio
+      const validacionesQuery = query(
+        collection(db, this.validacionesCollection),
+        where('comercioId', '==', comercioId)
+      );
+      const validacionesSnapshot = await getDocs(validacionesQuery);
+      
+      const validacionDeletePromises = validacionesSnapshot.docs.map(doc => 
+        deleteDoc(doc.ref)
+      );
+
+      // Execute all deletions in parallel
+      await Promise.all([
+        ...beneficioDeletePromises,
+        ...validacionDeletePromises
+      ]);
+
+      console.log('✅ Related data deleted successfully for comercio:', comercioId);
+    } catch (error) {
+      console.warn('⚠️ Error deleting related data:', error);
+      // Don't throw error here as the main comercio deletion was successful
     }
   }
 
