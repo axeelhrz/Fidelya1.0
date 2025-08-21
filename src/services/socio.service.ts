@@ -178,10 +178,15 @@ class SocioService {
   }
 
   /**
-   * Create new socio without Firebase Authentication (simplified approach)
+   * Create new socio with Firebase Authentication account
    */
   async createSocio(asociacionId: string, data: SocioFormData): Promise<string | null> {
     try {
+      // Validar que se proporcione una contraseña
+      if (!data.password || data.password.length < 6) {
+        throw new Error('Se requiere una contraseña de al menos 6 caracteres para crear la cuenta del socio');
+      }
+
       // Check if DNI already exists
       if (data.dni) {
         const existingDni = await this.checkDniExists(data.dni);
@@ -208,64 +213,23 @@ class SocioService {
         }
       }
 
-      // Generate a unique ID for the socio document
-      const socioId = doc(collection(db, this.collection)).id;
+      // Usar el nuevo servicio de autenticación para crear la cuenta completa
+      const { socioAuthService } = await import('./socio-auth.service');
       
-      // Clean data to remove undefined values and password fields
-      const socioData: Record<string, unknown> = {
-        nombre: data.nombre,
-        email: data.email.toLowerCase(),
-        dni: data.dni || '',
-        asociacionId,
-        numeroSocio,
-        estado: data.estado || 'activo',
-        estadoMembresia: data.fechaVencimiento && data.fechaVencimiento > new Date() ? 'al_dia' : 'pendiente',
-        fechaIngreso: serverTimestamp(),
-        beneficiosUsados: 0,
-        validacionesRealizadas: 0,
-        creadoEn: serverTimestamp(),
-        actualizadoEn: serverTimestamp(),
-        // Store password temporarily for later account creation if needed
-        tempPassword: data.password || this.generateRandomPassword(),
-        requiresAccountCreation: true, // Flag to indicate account needs to be created
+      // Preparar los datos del socio con el número generado
+      const socioDataWithNumber: SocioFormData = {
+        ...data,
+        numeroSocio
       };
 
-      // Only add optional fields if they have values
-      if (data.telefono) {
-        socioData.telefono = data.telefono;
+      const result = await socioAuthService.createSocioAuthAccount(socioDataWithNumber, asociacionId);
+      
+      if (result.success && result.uid) {
+        console.log('✅ Socio created successfully with auth account:', result.uid);
+        return result.uid;
+      } else {
+        throw new Error(result.error || 'Error al crear la cuenta del socio');
       }
-
-      if (data.direccion) {
-        socioData.direccion = data.direccion;
-      }
-
-      if (data.montoCuota !== undefined) {
-        socioData.montoCuota = data.montoCuota;
-      }
-
-      // Handle fechaNacimiento
-      if (data.fechaNacimiento) {
-        socioData.fechaNacimiento = Timestamp.fromDate(
-          data.fechaNacimiento instanceof Date
-            ? data.fechaNacimiento
-            : data.fechaNacimiento.toDate()
-        );
-      }
-
-      // Handle fechaVencimiento
-      if (data.fechaVencimiento) {
-        socioData.fechaVencimiento = Timestamp.fromDate(
-          data.fechaVencimiento instanceof Date
-            ? data.fechaVencimiento
-            : data.fechaVencimiento.toDate()
-        );
-      }
-
-      // Create socio document in Firestore
-      await setDoc(doc(db, this.collection, socioId), socioData);
-
-      console.log('✅ Socio created successfully (without auth account):', socioId);
-      return socioId;
     } catch (error) {
       handleError(error, 'Create Socio');
       return null;
