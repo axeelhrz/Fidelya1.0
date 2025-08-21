@@ -19,7 +19,7 @@ import {
   Target,
   Award
 } from 'lucide-react';
-import { QRScannerButton } from '@/components/socio/QRScannerButton';
+import { OptimizedQRScanner } from '@/components/socio/OptimizedQRScanner';
 import { ValidationResultModal } from '@/components/socio/ValidationResultModal';
 import { useAuth } from '@/hooks/useAuth';
 import { validacionesService } from '@/services/validaciones.service';
@@ -285,9 +285,9 @@ export const SocioValidar: React.FC = () => {
                 Apunta tu cámara al código QR del comercio para validar y acceder a tus beneficios exclusivos de forma instantánea y segura
               </p>
 
-              {/* Scanner Button */}
+              {/* Scanner Button - Usando el nuevo componente optimizado */}
               <div className="max-w-md mx-auto mb-12">
-                <QRScannerButton
+                <OptimizedQRScanner
                   onScan={handleQRScan}
                   loading={scannerLoading}
                 />
