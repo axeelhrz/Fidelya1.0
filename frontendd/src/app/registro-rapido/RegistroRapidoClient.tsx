@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import authTheme from '@/theme/authTheme';
 import AuthLayout from '@/components/auth/AuthLayout';
 import AuthHeader from '@/components/auth/AuthHeader';
+import CustomBrandHelper from '@/components/ui/CustomBrandHelper';
 import axios from '@/lib/axios';
 
 const registroRapidoSchema = z.object({
@@ -116,6 +117,142 @@ const RUBBER_TYPES = [
 ];
 const SPONGE_THICKNESSES = ['0.5', '0.7', '1.5', '1.6', '1.8', '1.9', '2', '2.1', '2.2', 'sin esponja'];
 const HARDNESS_LEVELS = ['h42', 'h44', 'h46', 'h48', 'h50'];
+
+// Componente para campos personalizados mejorado
+const CustomBrandFields: React.FC<{
+  show: boolean;
+  brandFieldName: string;
+  modelFieldName: string;
+  register: any;
+  brandLabel?: string;
+  modelLabel?: string;
+  brandPlaceholder?: string;
+  modelPlaceholder?: string;
+  type?: 'racket' | 'rubber';
+}> = ({ 
+  show, 
+  brandFieldName, 
+  modelFieldName, 
+  register, 
+  brandLabel = "Marca Personalizada",
+  modelLabel = "Modelo Personalizado",
+  brandPlaceholder = "Ej: Tibhar, Andro, Gewo",
+  modelPlaceholder = "Ej: Evolution MX-P, Hexer",
+  type = 'rubber'
+}) => {
+  if (!show) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.3 }}
+      className="col-span-full"
+    >
+      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300 rounded-xl p-4 space-y-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <h4 className="text-amber-800 font-bold text-sm">✨ Marca Personalizada</h4>
+          </div>
+          <CustomBrandHelper type={type} />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-amber-800">
+              {brandLabel} <span className="text-red-600">*</span>
+            </label>
+            <input
+              {...register(brandFieldName)}
+              type="text"
+              placeholder={brandPlaceholder}
+              className="w-full px-4 py-3 rounded-xl border-2 border-amber-400 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 hover:border-amber-500 text-gray-900 font-semibold placeholder-amber-600"
+            />
+            <p className="text-xs text-amber-700 font-medium">
+              💡 Ingresa cualquier marca que no esté en la lista
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-amber-800">
+              {modelLabel}
+            </label>
+            <input
+              {...register(modelFieldName)}
+              type="text"
+              placeholder={modelPlaceholder}
+              className="w-full px-4 py-3 rounded-xl border-2 border-amber-400 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 hover:border-amber-500 text-gray-900 font-semibold placeholder-amber-600"
+            />
+            <p className="text-xs text-amber-700 font-medium">
+              📝 Modelo específico (opcional)
+            </p>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Componente mejorado para selectores de marca
+const BrandSelector: React.FC<{
+  label: string;
+  fieldName: string;
+  register: any;
+  setValue: any;
+  onCustomChange: (isCustom: boolean) => void;
+  placeholder?: string;
+  helpText?: string;
+}> = ({ 
+  label, 
+  fieldName, 
+  register, 
+  setValue, 
+  onCustomChange, 
+  placeholder = "Seleccionar marca",
+  helpText
+}) => {
+  return (
+    <div className="space-y-2">
+      <label className={`block text-sm font-bold text-gray-800 mb-1`}>
+        {label}
+      </label>
+      <select
+        {...register(fieldName)}
+        onChange={(e) => {
+          const isCustom = e.target.value === 'custom';
+          onCustomChange(isCustom);
+          if (!isCustom) {
+            setValue(fieldName.replace('_brand', '_custom_brand'), '');
+            setValue(fieldName.replace('_brand', '_custom_model'), '');
+          }
+        }}
+        className="w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-900 font-semibold placeholder-gray-600 bg-white hover:border-gray-400 border-gray-300"
+      >
+        <option value="">{placeholder}</option>
+        {POPULAR_BRANDS.map((brand) => (
+          <option key={brand} value={brand}>
+            {brand}
+          </option>
+        ))}
+        <option value="custom" className="bg-amber-50 text-amber-800 font-bold">
+          🎯 ¿Tu marca no está aquí? ¡Agrégala!
+        </option>
+      </select>
+      {helpText && (
+        <p className="text-xs text-gray-600 font-medium flex items-center gap-1">
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {helpText}
+        </p>
+      )}
+    </div>
+  );
+};
 
 const RegistroRapidoClient: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -625,29 +762,32 @@ const RegistroRapidoClient: React.FC = () => {
                     Raqueta - Palo
                   </h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label htmlFor="racket_brand" className={labelStyles}>Marca</label>
-                      <select
-                        {...register('racket_brand')}
-                        id="racket_brand"
-                        onChange={(e) => {
-                          setShowCustomRacketBrand(e.target.value === 'custom');
-                          if (e.target.value !== 'custom') {
-                            setValue('racket_custom_brand', '');
-                          }
-                        }}
-                        className={`${inputStyles} ${inputNormalStyles}`}
-                      >
-                        <option value="">Seleccionar marca</option>
-                        {POPULAR_BRANDS.map((brand) => (
-                          <option key={brand} value={brand}>
-                            {brand}
-                          </option>
-                        ))}
-                        <option value="custom">Otra marca (personalizada)</option>
-                      </select>
+                  {/* Banner informativo sobre marcas personalizadas */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-blue-100 rounded-full p-2">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="text-blue-900 font-bold text-sm">💡 ¿No encuentras tu marca?</h4>
+                        <p className="text-blue-800 text-xs font-medium">
+                          Selecciona "¿Tu marca no está aquí? ¡Agrégala!" para ingresar cualquier marca personalizada
+                        </p>
+                      </div>
                     </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <BrandSelector
+                      label="Marca"
+                      fieldName="racket_brand"
+                      register={register}
+                      setValue={setValue}
+                      onCustomChange={setShowCustomRacketBrand}
+                      helpText="Marcas populares de raquetas de tenis de mesa"
+                    />
 
                     <div className="space-y-2">
                       <label htmlFor="racket_model" className={labelStyles}>Modelo</label>
@@ -660,31 +800,17 @@ const RegistroRapidoClient: React.FC = () => {
                       />
                     </div>
 
-                    {showCustomRacketBrand && (
-                      <>
-                        <div className="space-y-2">
-                          <label htmlFor="racket_custom_brand" className={labelStyles}>Marca Personalizada</label>
-                          <input
-                            {...register('racket_custom_brand')}
-                            type="text"
-                            id="racket_custom_brand"
-                            placeholder="Ingresa la marca"
-                            className="w-full px-4 py-3 rounded-xl border border-yellow-400 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-500 text-gray-900 font-semibold placeholder-yellow-700"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label htmlFor="racket_custom_model" className={labelStyles}>Modelo Personalizado</label>
-                          <input
-                            {...register('racket_custom_model')}
-                            type="text"
-                            id="racket_custom_model"
-                            placeholder="Ingresa el modelo"
-                            className="w-full px-4 py-3 rounded-xl border border-yellow-400 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-500 text-gray-900 font-semibold placeholder-yellow-700"
-                          />
-                        </div>
-                      </>
-                    )}
+                    <CustomBrandFields
+                      show={showCustomRacketBrand}
+                      brandFieldName="racket_custom_brand"
+                      modelFieldName="racket_custom_model"
+                      register={register}
+                      brandLabel="Marca de Raqueta"
+                      modelLabel="Modelo de Raqueta"
+                      brandPlaceholder="Ej: Tibhar, Andro, Gewo, Donic"
+                      modelPlaceholder="Ej: Stratus PowerWood, Ligna CO"
+                      type="racket"
+                    />
                   </div>
                 </div>
 
@@ -695,28 +821,14 @@ const RegistroRapidoClient: React.FC = () => {
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <label htmlFor="drive_rubber_brand" className={labelStyles}>Marca</label>
-                      <select
-                        {...register('drive_rubber_brand')}
-                        id="drive_rubber_brand"
-                        onChange={(e) => {
-                          setShowCustomDriveRubber(e.target.value === 'custom');
-                          if (e.target.value !== 'custom') {
-                            setValue('drive_rubber_custom_brand', '');
-                          }
-                        }}
-                        className={`${inputStyles} ${inputNormalStyles}`}
-                      >
-                        <option value="">Seleccionar marca</option>
-                        {POPULAR_BRANDS.map((brand) => (
-                          <option key={brand} value={brand}>
-                            {brand}
-                          </option>
-                        ))}
-                        <option value="custom">Otra marca (personalizada)</option>
-                      </select>
-                    </div>
+                    <BrandSelector
+                      label="Marca"
+                      fieldName="drive_rubber_brand"
+                      register={register}
+                      setValue={setValue}
+                      onCustomChange={setShowCustomDriveRubber}
+                      helpText="Marcas de cauchos más utilizadas"
+                    />
 
                     <div className="space-y-2">
                       <label htmlFor="drive_rubber_model" className={labelStyles}>Modelo</label>
@@ -793,31 +905,17 @@ const RegistroRapidoClient: React.FC = () => {
                       </select>
                     </div>
 
-                    {showCustomDriveRubber && (
-                      <>
-                        <div className="space-y-2">
-                          <label htmlFor="drive_rubber_custom_brand" className={labelStyles}>Marca Personalizada</label>
-                          <input
-                            {...register('drive_rubber_custom_brand')}
-                            type="text"
-                            id="drive_rubber_custom_brand"
-                            placeholder="Ingresa la marca"
-                            className="w-full px-4 py-3 rounded-xl border border-yellow-400 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-500 text-gray-900 font-semibold placeholder-yellow-700"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label htmlFor="drive_rubber_custom_model" className={labelStyles}>Modelo Personalizado</label>
-                          <input
-                            {...register('drive_rubber_custom_model')}
-                            type="text"
-                            id="drive_rubber_custom_model"
-                            placeholder="Ingresa el modelo"
-                            className="w-full px-4 py-3 rounded-xl border border-yellow-400 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-500 text-gray-900 font-semibold placeholder-yellow-700"
-                          />
-                        </div>
-                      </>
-                    )}
+                    <CustomBrandFields
+                      show={showCustomDriveRubber}
+                      brandFieldName="drive_rubber_custom_brand"
+                      modelFieldName="drive_rubber_custom_model"
+                      register={register}
+                      brandLabel="Marca de Caucho Drive"
+                      modelLabel="Modelo de Caucho Drive"
+                      brandPlaceholder="Ej: Tibhar, Andro, Gewo, Donic"
+                      modelPlaceholder="Ej: Evolution MX-P, Hexer"
+                      type="rubber"
+                    />
                   </div>
                 </div>
 
@@ -828,28 +926,14 @@ const RegistroRapidoClient: React.FC = () => {
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <label htmlFor="backhand_rubber_brand" className={labelStyles}>Marca</label>
-                      <select
-                        {...register('backhand_rubber_brand')}
-                        id="backhand_rubber_brand"
-                        onChange={(e) => {
-                          setShowCustomBackhandRubber(e.target.value === 'custom');
-                          if (e.target.value !== 'custom') {
-                            setValue('backhand_rubber_custom_brand', '');
-                          }
-                        }}
-                        className={`${inputStyles} ${inputNormalStyles}`}
-                      >
-                        <option value="">Seleccionar marca</option>
-                        {POPULAR_BRANDS.map((brand) => (
-                          <option key={brand} value={brand}>
-                            {brand}
-                          </option>
-                        ))}
-                        <option value="custom">Otra marca (personalizada)</option>
-                      </select>
-                    </div>
+                    <BrandSelector
+                      label="Marca"
+                      fieldName="backhand_rubber_brand"
+                      register={register}
+                      setValue={setValue}
+                      onCustomChange={setShowCustomBackhandRubber}
+                      helpText="Marcas de cauchos para revés"
+                    />
 
                     <div className="space-y-2">
                       <label htmlFor="backhand_rubber_model" className={labelStyles}>Modelo</label>
@@ -857,7 +941,7 @@ const RegistroRapidoClient: React.FC = () => {
                         {...register('backhand_rubber_model')}
                         type="text"
                         id="backhand_rubber_model"
-                        placeholder="Vpupo"
+                        placeholder="Cross 729"
                         className={`${inputStyles} ${inputNormalStyles}`}
                       />
                     </div>
@@ -926,106 +1010,18 @@ const RegistroRapidoClient: React.FC = () => {
                       </select>
                     </div>
 
-                    {showCustomBackhandRubber && (
-                      <>
-                        <div className="space-y-2">
-                          <label htmlFor="backhand_rubber_custom_brand" className={labelStyles}>Marca Personalizada</label>
-                          <input
-                            {...register('backhand_rubber_custom_brand')}
-                            type="text"
-                            id="backhand_rubber_custom_brand"
-                            placeholder="Ingresa la marca"
-                            className="w-full px-4 py-3 rounded-xl border border-yellow-400 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-500 text-gray-900 font-semibold placeholder-yellow-700"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label htmlFor="backhand_rubber_custom_model" className={labelStyles}>Modelo Personalizado</label>
-                          <input
-                            {...register('backhand_rubber_custom_model')}
-                            type="text"
-                            id="backhand_rubber_custom_model"
-                            placeholder="Ingresa el modelo"
-                            className="w-full px-4 py-3 rounded-xl border border-yellow-400 bg-yellow-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 hover:border-yellow-500 text-gray-900 font-semibold placeholder-yellow-700"
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Información Adicional */}
-                <div className="space-y-6">
-                  <h3 className={sectionTitleStyles}>
-                    Información Adicional
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    <label htmlFor="notes" className={labelStyles}>
-                      Comentarios Adicionales
-                    </label>
-                    <textarea
-                      {...register('notes')}
-                      id="notes"
-                      rows={4}
-                      placeholder="Información adicional sobre tu juego, logros, observaciones..."
-                      className={`${inputStyles} ${inputNormalStyles} resize-none`}
+                    <CustomBrandFields
+                      show={showCustomBackhandRubber}
+                      brandFieldName="backhand_rubber_custom_brand"
+                      modelFieldName="backhand_rubber_custom_model"
+                      register={register}
+                      brandLabel="Marca de Caucho Back"
+                      modelLabel="Modelo de Caucho Back"
+                      brandPlaceholder="Ej: Tibhar, Andro, Gewo, Donic"
+                      modelPlaceholder="Ej: Grass D.TecS, Plaxon"
+                      type="rubber"
                     />
                   </div>
-                </div>
-
-                {/* Información del Censo */}
-                <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6">
-                  <h4 className="text-lg font-bold text-blue-900 mb-3">Información del Censo</h4>
-                  <div className="text-sm text-blue-800 font-medium space-y-2">
-                    <p><strong>593 Liga Amateur de Tenis de Mesa (LATEM)</strong></p>
-                    <p>Este censo nos ayuda a conocer mejor a la comunidad de tenis de mesa en Ecuador.</p>
-                    <p>Tu código de registro será generado automáticamente al completar el formulario.</p>
-                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs font-semibold">
-                      <div><strong>Marcas:</strong> Butterfly, DHS, Sanwei, Nittaku, Yasaka, Stiga, Victas, Joola, Xiom, Saviga, Friendship, Dr. Neubauer, Double Fish</div>
-                      <div><strong>Colores:</strong> Negro, Rojo, Verde, Azul, Amarillo, Morado, Fucsia</div>
-                      <div><strong>Esponja:</strong> 0.5, 0.7, 1.5, 1.6, 1.8, 1.9, 2, 2.1, 2.2 mm, sin esponja</div>
-                      <div><strong>Hardness:</strong> h42, h44, h46, h48, h50</div>
-                    </div>
-                    <div className="mt-4 text-xs font-semibold">
-                      <p><strong>Tipos de Cauchos:</strong> Liso, Pupo Largo, Pupo Corto, Antitopspin</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Submit Button */}
-                <div className="pt-6">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 px-6 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 flex items-center justify-center gap-3 text-lg font-bold shadow-lg"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Registrando en el Censo...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Completar Registro en el Censo
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {/* Footer Info */}
-                <div className="text-center pt-4 border-t-2 border-gray-200">
-                  <p className="text-sm text-gray-700 font-semibold">
-                    Al registrarte, formas parte del censo oficial de tenis de mesa de Ecuador.
-                    <br />
-                    <span className="text-blue-600 font-bold">Sin contraseña</span> • <span className="font-bold">Proceso simplificado</span> • <span className="font-bold">Código automático</span>
-                  </p>
                 </div>
               </form>
             </motion.div>
