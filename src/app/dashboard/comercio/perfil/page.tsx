@@ -1,22 +1,18 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ComercioSidebar } from '@/components/layout/ComercioSidebar';
 import { ProfileForm } from '@/components/comercio/perfil/ProfileForm';
-import { QRSection } from '@/components/comercio/perfil/QRSection';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercios } from '@/hooks/useComercios';
 import { 
   Store, 
   RefreshCw,
-  QrCode,
   User,
-  Sparkles,
-  ChevronRight
+  Sparkles
 } from 'lucide-react';
 
 // Sidebar personalizado que maneja el logout
@@ -66,8 +62,6 @@ const LoadingState = () => (
 const ComercioPerfilContent: React.FC = () => {
   const { signOut } = useAuth();
   const { loading } = useComercios();
-  const searchParams = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'datos';
 
   const handleLogout = async () => {
     try {
@@ -75,30 +69,6 @@ const ComercioPerfilContent: React.FC = () => {
     } catch (error) {
       console.error('Error during logout:', error);
     }
-  };
-
-  const tabs = [
-    {
-      id: 'datos',
-      label: 'Información General',
-      icon: User,
-      description: 'Datos básicos y contacto del comercio',
-      color: 'from-blue-500 to-cyan-500'
-    },
-    {
-      id: 'qr',
-      label: 'Códigos QR',
-      icon: QrCode,
-      description: 'Gestión y descarga de códigos QR',
-      color: 'from-purple-500 to-pink-500'
-    }
-  ];
-
-  const handleTabChange = (tabId: string) => {
-    const url = new URL(window.location.href);
-    url.searchParams.set('tab', tabId);
-    window.history.pushState({}, '', url.toString());
-    window.location.reload();
   };
 
   if (loading) {
@@ -181,119 +151,17 @@ const ComercioPerfilContent: React.FC = () => {
                 </Button>
               </motion.div>
             </div>
-
-            {/* Modern Tab Navigation */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="relative"
-            >
-              <div className="flex flex-col sm:flex-row gap-3 p-2 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-lg">
-                {tabs.map((tab, index) => {
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <motion.button
-                      key={tab.id}
-                      onClick={() => handleTabChange(tab.id)}
-                      className={`relative flex-1 group transition-all duration-300 ${
-                        isActive ? 'z-10' : 'z-0'
-                      }`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 * index }}
-                    >
-                      <div className={`
-                        relative p-4 sm:p-5 rounded-xl transition-all duration-300
-                        ${isActive 
-                          ? `bg-gradient-to-r ${tab.color} text-white shadow-lg shadow-blue-500/25` 
-                          : 'bg-transparent text-gray-600 hover:bg-white/50 hover:text-gray-900'
-                        }
-                      `}>
-                        <div className="flex items-center justify-center sm:justify-start gap-3">
-                          <div className={`
-                            p-2 rounded-lg transition-all duration-300
-                            ${isActive 
-                              ? 'bg-white/20' 
-                              : 'bg-gray-100 group-hover:bg-gray-200'
-                            }
-                          `}>
-                            <tab.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-600'}`} />
-                          </div>
-                          <div className="text-left hidden sm:block">
-                            <div className={`font-bold text-sm ${isActive ? 'text-white' : 'text-gray-900'}`}>
-                              {tab.label}
-                            </div>
-                            <div className={`text-xs ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
-                              {tab.description}
-                            </div>
-                          </div>
-                          <ChevronRight className={`w-4 h-4 ml-auto transition-transform duration-300 ${
-                            isActive ? 'rotate-90 text-white' : 'text-gray-400 group-hover:translate-x-1'
-                          } hidden sm:block`} />
-                        </div>
-                        
-                        {/* Mobile label */}
-                        <div className="sm:hidden mt-2">
-                          <div className={`font-bold text-xs ${isActive ? 'text-white' : 'text-gray-900'}`}>
-                            {tab.label}
-                          </div>
-                        </div>
-
-                        {/* Active indicator */}
-                        {isActive && (
-                          <motion.div
-                            layoutId="activeTab"
-                            className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl -z-10"
-                            initial={false}
-                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                          />
-                        )}
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </motion.div>
           </motion.div>
 
-          {/* Tab Content */}
+          {/* Profile Form Content */}
           <motion.div
-            key={activeTab}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
             className="relative"
           >
             <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
-              <AnimatePresence mode="wait">
-                {activeTab === 'datos' && (
-                  <motion.div
-                    key="datos"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <ProfileForm />
-                  </motion.div>
-                )}
-
-                {activeTab === 'qr' && (
-                  <motion.div
-                    key="qr"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <QRSection />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <ProfileForm />
             </div>
           </motion.div>
 
