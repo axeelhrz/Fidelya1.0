@@ -371,7 +371,76 @@ class SocioService {
   }
 
   /**
-   * Delete socio (soft delete)
+   * Delete socio completely (hard delete)
+   */
+  async deleteSocioCompletely(id: string): Promise<boolean> {
+    try {
+      const { deleteDoc } = await import('firebase/firestore');
+      
+      // First, delete related data
+      await this.deleteRelatedSocioData(id);
+      
+      // Then delete the socio document
+      await deleteDoc(doc(db, this.collection, id));
+      
+      // Also delete from users collection if exists
+      try {
+        await deleteDoc(doc(db, COLLECTIONS.USERS, id));
+      } catch (error) {
+        console.warn('User document not found or already deleted:', error);
+      }
+
+      console.log('✅ Socio deleted completely:', id);
+      return true;
+    } catch (error) {
+      handleError(error, 'Delete Socio Completely');
+      return false;
+    }
+  }
+
+  /**
+   * Delete related socio data (validaciones, activities, etc.)
+   */
+  private async deleteRelatedSocioData(socioId: string): Promise<void> {
+    try {
+      const batch = writeBatch(db);
+      
+      // Delete validaciones
+      const validacionesQuery = query(
+        collection(db, COLLECTIONS.VALIDACIONES),
+        where('socioId', '==', socioId)
+      );
+      const validacionesSnapshot = await getDocs(validacionesQuery);
+      validacionesSnapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      
+      // Delete activities
+      const activitiesQuery = query(
+        collection(db, COLLECTIONS.ACTIVITIES),
+        where('socioId', '==', socioId)
+      );
+      const activitiesSnapshot = await getDocs(activitiesQuery);
+      activitiesSnapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      
+      // Commit all deletions
+      if (validacionesSnapshot.docs.length > 0 || activitiesSnapshot.docs.length > 0) {
+        await batch.commit();
+        console.log('✅ Related socio data deleted:', {
+          validaciones: validacionesSnapshot.docs.length,
+          activities: activitiesSnapshot.docs.length
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting related socio data:', error);
+      // Don't throw error here, as we still want to delete the main socio document
+    }
+  }
+
+  /**
+   * Delete socio (soft delete) - keeping for backward compatibility
    */
   async deleteSocio(id: string): Promise<boolean> {
     try {
