@@ -658,123 +658,134 @@ class ComercioService {
     }
   }
 
-  /**
-   * Get comercio statistics - CORREGIDO para leer validaciones reales
-   */
-  async getComercioStats(comercioId: string): Promise<ComercioStats> {
-    try {
-      const comercio = await this.getComercioById(comercioId);
-      if (!comercio) {
-        throw new Error('Comercio no encontrado');
-      }
-
-      // Get validations for this month - CORREGIDO: usar la estructura real de validaciones
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-      console.log('🔍 Buscando validaciones para comercio:', comercioId);
-
-      const validacionesQuery = query(
-        collection(db, this.validacionesCollection),
-        where('comercioId', '==', comercioId),
-        where('fechaValidacion', '>=', Timestamp.fromDate(startOfMonth))
-      );
-
-      const validacionesSnapshot = await getDocs(validacionesQuery);
-      console.log('📊 Validaciones encontradas:', validacionesSnapshot.size);
-
-      const validaciones = validacionesSnapshot.docs.map(doc => {
-        const data = doc.data();
-        console.log('📝 Validación data:', data);
-        return {
-          id: doc.id,
-          socioId: data.socioId,
-          fechaValidacion: data.fechaValidacion?.toDate() || new Date(),
-          montoDescuento: data.montoDescuento ?? 0,
-          estado: data.estado || 'exitosa', // Por defecto exitosa si no está especificado
-          beneficioUsado: data.beneficioUsado,
-          montoCompra: data.montoCompra ?? 0,
-        };
-      });
-
-      // Calculate stats - CORREGIDO: usar solo validaciones exitosas
-      const validacionesExitosas = validaciones.filter(v => v.estado === 'exitosa');
-      
-      const validacionesHoy = validacionesExitosas.filter(v => 
-        v.fechaValidacion >= startOfDay
-      ).length;
-
-      const validacionesMes = validacionesExitosas.length;
-
-      const clientesUnicos = new Set(validacionesExitosas.map(v => v.socioId)).size;
-
-      // CORREGIDO: calcular ingresos basándose en montoDescuento (ahorro generado por beneficios)
-      // En lugar de montoCompra que puede no estar presente
-      const ingresosMensuales = validacionesExitosas.reduce((total, v) => 
-        total + (v.montoDescuento || 0), 0
-      );
-
-      // Calculate daily average
-      const daysInMonth = now.getDate();
-      const promedioValidacionesDiarias = daysInMonth > 0 ? validacionesMes / daysInMonth : 0;
-
-      // Get previous month for growth calculation
-      const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-
-      const prevMonthQuery = query(
-        collection(db, this.validacionesCollection),
-        where('comercioId', '==', comercioId),
-        where('fechaValidacion', '>=', Timestamp.fromDate(startOfPrevMonth)),
-        where('fechaValidacion', '<=', Timestamp.fromDate(endOfPrevMonth))
-      );
-
-      const prevMonthSnapshot = await getDocs(prevMonthQuery);
-      const validacionesPrevMes = prevMonthSnapshot.size;
-
-      const crecimientoMensual = validacionesPrevMes > 0 
-        ? ((validacionesMes - validacionesPrevMes) / validacionesPrevMes) * 100 
-        : validacionesMes > 0 ? 100 : 0;
-
-      // CORREGIDO: obtener beneficios activos reales
-      const beneficiosQuery = query(
-        collection(db, this.beneficiosCollection),
-        where('comercioId', '==', comercioId),
-        where('estado', '==', 'activo')
-      );
-      const beneficiosSnapshot = await getDocs(beneficiosQuery);
-      const beneficiosActivos = beneficiosSnapshot.size;
-
-      const stats = {
-        totalBeneficios: beneficiosActivos,
-        beneficiosActivos,
-        validacionesHoy,
-        validacionesMes,
-        clientesUnicos,
-        ingresosMensuales,
-        promedioValidacionesDiarias,
-        crecimientoMensual,
-      };
-
-      console.log('📈 Stats calculadas:', stats);
-      return stats;
-    } catch (error) {
-      console.error('❌ Error calculando stats:', error);
-      handleError(error, 'Get Comercio Stats');
-      return {
-        totalBeneficios: 0,
-        beneficiosActivos: 0,
-        validacionesHoy: 0,
-        validacionesMes: 0,
-        clientesUnicos: 0,
-        ingresosMensuales: 0,
-        promedioValidacionesDiarias: 0,
-        crecimientoMensual: 0,
-      };
+/**
+ * Get comercio statistics - CORREGIDO para leer socios reales
+ */
+async getComercioStats(comercioId: string): Promise<ComercioStats> {
+  try {
+    console.log('📊 Calculando estadísticas para comercio:', comercioId);
+    
+    const comercio = await this.getComercioById(comercioId);
+    if (!comercio) {
+      throw new Error('Comercio no encontrado');
     }
-  }
 
+    // CRÍTICO: Obtener socios del comercio desde la colección correcta
+    const sociosQuery = query(
+      collection(db, 'clientes'), // Asegurarse de usar la colección correcta
+      where('comercioId', '==', comercioId)
+    );
+    
+    const sociosSnapshot = await getDocs(sociosQuery);
+    const sociosUnicos = sociosSnapshot.size;
+    
+    console.log('👥 Socios únicos encontrados:', sociosUnicos);
+
+    // Get validations for this month
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    console.log('🔍 Buscando validaciones para comercio:', comercioId);
+
+    const validacionesQuery = query(
+      collection(db, this.validacionesCollection),
+      where('comercioId', '==', comercioId),
+      where('fechaValidacion', '>=', Timestamp.fromDate(startOfMonth))
+    );
+
+    const validacionesSnapshot = await getDocs(validacionesQuery);
+    console.log('📊 Validaciones encontradas:', validacionesSnapshot.size);
+
+    const validaciones = validacionesSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        socioId: data.socioId,
+        fechaValidacion: data.fechaValidacion?.toDate() || new Date(),
+        montoDescuento: data.montoDescuento ?? 0,
+        estado: data.estado || 'exitosa',
+        beneficioUsado: data.beneficioUsado,
+        montoCompra: data.montoCompra ?? 0,
+      };
+    });
+
+    // Calculate stats - usar solo validaciones exitosas
+    const validacionesExitosas = validaciones.filter(v => v.estado === 'exitosa');
+    
+    const validacionesHoy = validacionesExitosas.filter(v => 
+      v.fechaValidacion >= startOfDay
+    ).length;
+
+    const validacionesMes = validacionesExitosas.length;
+
+    // CRÍTICO: Usar el conteo real de socios
+    const clientesUnicos = sociosUnicos;
+
+    // Calcular ingresos basándose en montoDescuento
+    const ingresosMensuales = validacionesExitosas.reduce((total, v) => 
+      total + (v.montoDescuento || 0), 0
+    );
+
+    // Calculate daily average
+    const daysInMonth = now.getDate();
+    const promedioValidacionesDiarias = daysInMonth > 0 ? validacionesMes / daysInMonth : 0;
+
+    // Get previous month for growth calculation
+    const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    const prevMonthQuery = query(
+      collection(db, this.validacionesCollection),
+      where('comercioId', '==', comercioId),
+      where('fechaValidacion', '>=', Timestamp.fromDate(startOfPrevMonth)),
+      where('fechaValidacion', '<=', Timestamp.fromDate(endOfPrevMonth))
+    );
+
+    const prevMonthSnapshot = await getDocs(prevMonthQuery);
+    const validacionesPrevMes = prevMonthSnapshot.size;
+
+    const crecimientoMensual = validacionesPrevMes > 0 
+      ? ((validacionesMes - validacionesPrevMes) / validacionesPrevMes) * 100 
+      : validacionesMes > 0 ? 100 : 0;
+
+    // Obtener beneficios activos reales
+    const beneficiosQuery = query(
+      collection(db, this.beneficiosCollection),
+      where('comercioId', '==', comercioId),
+      where('estado', '==', 'activo')
+    );
+    const beneficiosSnapshot = await getDocs(beneficiosQuery);
+    const beneficiosActivos = beneficiosSnapshot.size;
+
+    const stats = {
+      totalBeneficios: beneficiosActivos,
+      beneficiosActivos,
+      validacionesHoy,
+      validacionesMes,
+      clientesUnicos, // Esta es la métrica crítica que se actualiza
+      ingresosMensuales,
+      promedioValidacionesDiarias,
+      crecimientoMensual,
+    };
+
+    console.log('📈 Stats calculadas:', stats);
+    return stats;
+  } catch (error) {
+    console.error('❌ Error calculando stats:', error);
+    handleError(error, 'Get Comercio Stats');
+    return {
+      totalBeneficios: 0,
+      beneficiosActivos: 0,
+      validacionesHoy: 0,
+      validacionesMes: 0,
+      clientesUnicos: 0,
+      ingresosMensuales: 0,
+      promedioValidacionesDiarias: 0,
+      crecimientoMensual: 0,
+    };
+  }
+}
   /**
    * Get recent validations
    */

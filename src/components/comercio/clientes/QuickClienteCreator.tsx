@@ -52,7 +52,7 @@ export const QuickClienteCreator: React.FC<QuickClienteCreatorProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Crear cliente rápido
+  // Crear socio rápido
   const handleQuickCreate = async () => {
     if (!validateQuickForm()) return;
 
@@ -74,15 +74,17 @@ export const QuickClienteCreator: React.FC<QuickClienteCreatorProps> = ({
     };
 
     try {
+      console.log('🚀 Creando socio rápido...');
       const clienteId = await onCreateCliente(clienteData);
       if (clienteId) {
-        toast.success('Cliente creado exitosamente');
+        toast.success('Socio creado exitosamente');
         resetForm();
         setIsOpen(false);
+        console.log('✅ Socio rápido creado correctamente');
       }
     } catch (error) {
-      console.error('Error creating cliente:', error);
-      toast.error('Error al crear cliente');
+      console.error('❌ Error creating socio:', error);
+      toast.error('Error al crear socio');
     }
   };
 
@@ -150,7 +152,7 @@ export const QuickClienteCreator: React.FC<QuickClienteCreatorProps> = ({
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold flex items-center gap-2">
-                      Crear Cliente Rápido
+                      Crear Socio Rápido
                       <Sparkles size={20} className="text-yellow-300" />
                     </h3>
                     <p className="text-purple-100 text-sm">Solo datos esenciales</p>
@@ -277,7 +279,7 @@ export const QuickClienteCreator: React.FC<QuickClienteCreatorProps> = ({
                   className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white px-6 py-2 shadow-lg shadow-purple-500/30"
                 >
                   <UserPlus size={16} className="mr-2" />
-                  Crear Cliente
+                  Crear Socio
                 </Button>
               </div>
             </div>
@@ -308,7 +310,7 @@ export const QuickClienteCreator: React.FC<QuickClienteCreatorProps> = ({
         <div className="absolute right-full mr-4 px-4 py-3 bg-slate-900 text-white text-sm rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap shadow-lg">
           <div className="flex items-center gap-2">
             <Zap size={14} className="text-yellow-400" />
-            Crear cliente rápido
+            Crear socio rápido
           </div>
           <div className="absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-slate-900"></div>
         </div>

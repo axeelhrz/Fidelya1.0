@@ -84,17 +84,19 @@ export const useClientes = (): UseClientesReturn => {
   }, [user]);
 
   /**
-   * Refrescar estadísticas
+   * Refrescar estadísticas - CORREGIDO
    */
   const refreshStats = useCallback(async () => {
     if (!comercioId) return;
 
     try {
+      console.log('🔄 Refrescando estadísticas de socios...');
       setLoadingStats(true);
       const newStats = await ClienteService.getClienteStats(comercioId);
       setStats(newStats);
+      console.log('✅ Estadísticas de socios actualizadas:', newStats);
     } catch (error) {
-      console.error('Error refreshing stats:', error);
+      console.error('❌ Error refreshing stats:', error);
       toast.error('Error al cargar estadísticas');
     } finally {
       setLoadingStats(false);
@@ -102,12 +104,13 @@ export const useClientes = (): UseClientesReturn => {
   }, [comercioId]);
 
   /**
-   * Cargar clientes con filtros
+   * Cargar clientes con filtros - CORREGIDO
    */
   const loadClientes = useCallback(async (nuevosFiltros?: ClienteFilter) => {
     if (!comercioId) return;
 
     try {
+      console.log('🔄 Cargando lista de socios...');
       setLoading(true);
       setError(null);
 
@@ -117,9 +120,11 @@ export const useClientes = (): UseClientesReturn => {
       setClientes(resultado.clientes);
       setTotal(resultado.total);
       setHasMore(resultado.hasMore);
+      
+      console.log('✅ Socios cargados:', resultado.clientes.length, 'de', resultado.total);
     } catch (error) {
-      console.error('Error loading clientes:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error al cargar clientes';
+      console.error('❌ Error loading clientes:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al cargar socios';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -147,7 +152,7 @@ export const useClientes = (): UseClientesReturn => {
       setHasMore(resultado.hasMore);
     } catch (error) {
       console.error('Error loading more clientes:', error);
-      toast.error('Error al cargar más clientes');
+      toast.error('Error al cargar más socios');
     } finally {
       setLoading(false);
     }
@@ -204,14 +209,14 @@ export const useClientes = (): UseClientesReturn => {
       }
     } catch (error) {
       console.error('Error selecting cliente:', error);
-      toast.error('Error al cargar detalles del cliente');
+      toast.error('Error al cargar detalles del socio');
     } finally {
       setLoading(false);
     }
   }, [loadClienteActivities]);
 
   /**
-   * Crear nuevo cliente
+   * Crear nuevo cliente - CORREGIDO PARA ACTUALIZACIÓN INMEDIATA
    */
   const createCliente = useCallback(async (clienteData: ClienteFormData): Promise<string | null> => {
     if (!comercioId) {
@@ -220,37 +225,51 @@ export const useClientes = (): UseClientesReturn => {
     }
 
     try {
+      console.log('🚀 Creando nuevo socio...');
       setLoading(true);
+      
       const clienteId = await ClienteService.createCliente(comercioId, clienteData);
+      console.log('📝 Socio creado con ID:', clienteId);
       
-      toast.success('Cliente creado exitosamente');
+      if (clienteId) {
+        toast.success('Socio creado exitosamente');
+        
+        console.log('🔄 Actualizando datos después de crear socio...');
+        
+        // CRÍTICO: Recargar datos en secuencia para asegurar consistencia
+        await loadClientes();
+        console.log('✅ Lista de socios recargada');
+        
+        await refreshStats();
+        console.log('✅ Estadísticas actualizadas');
+        
+        return clienteId;
+      }
       
-      // Recargar lista de clientes
-      await loadClientes();
-      
-      return clienteId;
+      return null;
     } catch (error) {
-      console.error('Error creating cliente:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error al crear cliente';
+      console.error('❌ Error creating cliente:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al crear socio';
       toast.error(errorMessage);
       return null;
     } finally {
       setLoading(false);
     }
-  }, [comercioId, loadClientes]);
+  }, [comercioId, loadClientes, refreshStats]);
 
   /**
-   * Actualizar cliente
+   * Actualizar cliente - CORREGIDO
    */
   const updateCliente = useCallback(async (
     clienteId: string, 
     clienteData: Partial<ClienteFormData>
   ): Promise<boolean> => {
     try {
+      console.log('🔄 Actualizando socio:', clienteId);
       setLoading(true);
-      await ClienteService.updateCliente(clienteId, clienteData);
       
-      toast.success('Cliente actualizado exitosamente');
+      await ClienteService.updateCliente(clienteId, clienteData);
+      toast.success('Socio actualizado exitosamente');
       
       // Actualizar cliente seleccionado si es el mismo
       if (clienteSeleccionado?.id === clienteId) {
@@ -258,24 +277,26 @@ export const useClientes = (): UseClientesReturn => {
         setClienteSeleccionado(clienteActualizado);
       }
       
-      // Recargar lista
+      // CRÍTICO: Recargar datos
       await loadClientes();
+      await refreshStats();
       
       // Recargar pendientes si el cliente estaba en esa lista
       if (clientesPendientes.some(c => c.id === clienteId)) {
         await loadClientesPendientes();
       }
       
+      console.log('✅ Socio actualizado correctamente');
       return true;
     } catch (error) {
-      console.error('Error updating cliente:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar cliente';
+      console.error('❌ Error updating cliente:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar socio';
       toast.error(errorMessage);
       return false;
     } finally {
       setLoading(false);
     }
-  }, [clienteSeleccionado, loadClientes, clientesPendientes, loadClientesPendientes]);
+  }, [clienteSeleccionado, loadClientes, refreshStats, clientesPendientes, loadClientesPendientes]);
 
   /**
    * Completar datos de cliente creado automáticamente
@@ -288,7 +309,7 @@ export const useClientes = (): UseClientesReturn => {
       setLoading(true);
       await ClienteService.completarDatosCliente(clienteId, datosCompletos);
       
-      toast.success('Datos del cliente completados exitosamente');
+      toast.success('Datos del socio completados exitosamente');
       
       // Actualizar cliente seleccionado si es el mismo
       if (clienteSeleccionado?.id === clienteId) {
@@ -304,7 +325,7 @@ export const useClientes = (): UseClientesReturn => {
       return true;
     } catch (error) {
       console.error('Error completing cliente data:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error al completar datos del cliente';
+      const errorMessage = error instanceof Error ? error.message : 'Error al completar datos del socio';
       toast.error(errorMessage);
       return false;
     } finally {
@@ -313,29 +334,31 @@ export const useClientes = (): UseClientesReturn => {
   }, [clienteSeleccionado, loadClientes, loadClientesPendientes, refreshStats]);
 
   /**
-   * Eliminar cliente
+   * Eliminar cliente - CORREGIDO
    */
   const deleteCliente = useCallback(async (clienteId: string): Promise<boolean> => {
     try {
+      console.log('🗑️ Eliminando socio:', clienteId);
       setLoading(true);
-      await ClienteService.deleteCliente(clienteId);
       
-      toast.success('Cliente eliminado exitosamente');
+      await ClienteService.deleteCliente(clienteId);
+      toast.success('Socio eliminado exitosamente');
       
       // Limpiar selección si era el cliente eliminado
       if (clienteSeleccionado?.id === clienteId) {
         setClienteSeleccionado(null);
       }
       
-      // Recargar listas
+      // CRÍTICO: Recargar datos
       await loadClientes();
       await loadClientesPendientes();
       await refreshStats();
       
+      console.log('✅ Socio eliminado correctamente');
       return true;
     } catch (error) {
-      console.error('Error deleting cliente:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error al eliminar cliente';
+      console.error('❌ Error deleting cliente:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al eliminar socio';
       toast.error(errorMessage);
       return false;
     } finally {
@@ -344,23 +367,24 @@ export const useClientes = (): UseClientesReturn => {
   }, [clienteSeleccionado, loadClientes, loadClientesPendientes, refreshStats]);
 
   /**
-   * Actualizar estado del cliente
+   * Actualizar estado del cliente - CORREGIDO
    */
   const updateEstadoCliente = useCallback(async (
     clienteId: string, 
     estado: 'activo' | 'inactivo' | 'suspendido'
   ): Promise<boolean> => {
     try {
-      await ClienteService.updateEstadoCliente(clienteId, estado);
+      console.log('🔄 Cambiando estado del socio:', clienteId, 'a', estado);
       
-      toast.success(`Cliente ${estado} exitosamente`);
+      await ClienteService.updateEstadoCliente(clienteId, estado);
+      toast.success(`Socio ${estado} exitosamente`);
       
       // Actualizar cliente seleccionado si es el mismo
       if (clienteSeleccionado?.id === clienteId) {
         setClienteSeleccionado(prev => prev ? { ...prev, estado } : null);
       }
       
-      // Actualizar en la lista
+      // CRÍTICO: Actualizar en la lista local inmediatamente
       setClientes(prev => prev.map(cliente => 
         cliente.id === clienteId ? { ...cliente, estado } : cliente
       ));
@@ -370,14 +394,18 @@ export const useClientes = (): UseClientesReturn => {
         cliente.id === clienteId ? { ...cliente, estado } : cliente
       ));
       
+      // Actualizar estadísticas
+      await refreshStats();
+      
+      console.log('✅ Estado del socio actualizado');
       return true;
     } catch (error) {
-      console.error('Error updating cliente estado:', error);
+      console.error('❌ Error updating cliente estado:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error al actualizar estado';
       toast.error(errorMessage);
       return false;
     }
-  }, [clienteSeleccionado]);
+  }, [clienteSeleccionado, refreshStats]);
 
   /**
    * Subir imagen del cliente
@@ -444,7 +472,7 @@ export const useClientes = (): UseClientesReturn => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `clientes-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `socios-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -501,6 +529,7 @@ export const useClientes = (): UseClientesReturn => {
   // Cargar datos iniciales
   useEffect(() => {
     if (comercioId) {
+      console.log('🚀 Cargando datos iniciales de socios...');
       loadClientes();
       refreshStats();
       loadClientesPendientes();
