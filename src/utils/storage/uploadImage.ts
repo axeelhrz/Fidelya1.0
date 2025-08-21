@@ -50,116 +50,75 @@ export const uploadImage = async (
   
   console.log('📤 Subiendo imagen a:', finalPath);
 
-  // Try different upload strategies with better error handling
+  // Enhanced upload strategy with better CORS handling
+  const uploadStrategies = [
+    { name: 'Simple Upload', method: uploadWithSimple },
+    { name: 'Resumable Upload', method: uploadWithResumable },
+    { name: 'CORS Workaround', method: uploadWithCorsWorkaround }
+  ];
+
+  let lastError: Error | null = null;
+
   for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      console.log(`📤 Intento ${attempt} de ${retries} para subir imagen...`);
-      
-      // Always use resumable upload for better progress tracking
-      return await uploadWithResumable(finalPath, processedFile, onProgress);
-      
-    } catch (error) {
-      console.error(`❌ Error en intento ${attempt}:`, error);
-      
-      // Check if it's a CORS error
-      const isCorsError = error instanceof Error && (
-        error.message.includes('CORS') ||
-        error.message.includes('cors') ||
-        error.message.includes('preflight') ||
-        error.message.includes('Access-Control-Allow-Origin')
-      );
-      
-      if (isCorsError) {
-        console.warn('🚫 Error CORS detectado, intentando estrategia alternativa...');
+    for (const strategy of uploadStrategies) {
+      try {
+        console.log(`📤 Intento ${attempt}/${retries} - Estrategia: ${strategy.name}`);
         
-        // For CORS errors, try simple upload as fallback
-        if (attempt < retries) {
-          try {
-            const corsWorkaroundPath = `temp/${timestamp}_${randomId}.${extension}`;
-            console.log('📤 Intentando workaround CORS con upload simple:', corsWorkaroundPath);
-            return await uploadWithSimple(corsWorkaroundPath, processedFile, onProgress);
-          } catch (workaroundError) {
-            console.error('❌ Workaround CORS también falló:', workaroundError);
-          }
-        }
-      }
-      
-      // If it's the last attempt, throw the error
-      if (attempt === retries) {
-        // Provide more helpful error messages
+        // Use different path for each strategy to avoid conflicts
+        const strategyPath = attempt === 1 ? finalPath : `${path}_${attempt}_${randomId}.${extension}`;
+        
+        const result = await strategy.method(strategyPath, processedFile, onProgress);
+        console.log(`✅ Upload exitoso con ${strategy.name}:`, result);
+        return result;
+        
+      } catch (error) {
+        console.error(`❌ Error con ${strategy.name} (intento ${attempt}):`, error);
+        lastError = error as Error;
+        
+        // Check if it's a CORS error
+        const isCorsError = error instanceof Error && (
+          error.message.includes('CORS') ||
+          error.message.includes('cors') ||
+          error.message.includes('preflight') ||
+          error.message.includes('Access-Control-Allow-Origin') ||
+          error.message.includes('ERR_FAILED')
+        );
+        
         if (isCorsError) {
-          throw new Error('Error de configuración CORS. Por favor, contacta al administrador del sistema.');
+          console.warn(`🚫 Error CORS detectado con ${strategy.name}, probando siguiente estrategia...`);
+          continue; // Try next strategy
         }
-        throw error;
+        
+        // For non-CORS errors, wait before retry
+        if (attempt < retries) {
+          const delay = Math.min(Math.pow(2, attempt) * 1000, 3000);
+          console.log(`⏳ Esperando ${delay}ms antes del siguiente intento...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          break; // Break strategy loop to retry with same strategy
+        }
       }
-      
-      // Wait before retry with exponential backoff
-      const delay = Math.min(Math.pow(2, attempt) * 1000, 5000);
-      console.log(`⏳ Esperando ${delay}ms antes del siguiente intento...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
     }
+  }
+
+  // If all strategies failed, provide helpful error message
+  if (lastError) {
+    const errorMessage = handleStorageError(lastError);
+    throw new Error(errorMessage);
   }
 
   throw new Error('No se pudo subir la imagen después de todos los intentos');
 };
 
-// Resumable upload strategy with real progress tracking
-const uploadWithResumable = async (
-  path: string,
-  file: File,
-  onProgress?: (progress: number) => void
-): Promise<string> => {
-  console.log('📤 Usando estrategia de upload resumable con progreso real...');
-  const storageRef = ref(storage, path);
-  
-  const uploadTask = uploadBytesResumable(storageRef, file, {
-    contentType: file.type,
-    customMetadata: {
-      originalName: file.name,
-      uploadedAt: new Date().toISOString(),
-      method: 'resumable'
-    }
-  });
-
-  return new Promise<string>((resolve, reject) => {
-    uploadTask.on('state_changed',
-      // Progress callback - this provides REAL progress
-      (snapshot) => {
-        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-        onProgress?.(progress);
-        console.log(`📊 Progreso real de subida: ${progress}% (${snapshot.bytesTransferred}/${snapshot.totalBytes} bytes)`);
-      },
-      // Error callback
-      (error) => {
-        console.error('❌ Error en upload resumable:', error);
-        reject(error);
-      },
-      // Success callback
-      async () => {
-        try {
-          const url = await getDownloadURL(uploadTask.snapshot.ref);
-          console.log('✅ Upload resumable exitoso:', url);
-          onProgress?.(100); // Ensure we reach 100%
-          resolve(url);
-        } catch (urlError) {
-          console.error('❌ Error obteniendo URL:', urlError);
-          reject(urlError);
-        }
-      }
-    );
-  });
-};
-
-// Simple upload strategy (fallback for CORS issues)
+// Simple upload strategy (most reliable for CORS)
 const uploadWithSimple = async (
   path: string,
   file: File,
   onProgress?: (progress: number) => void
 ): Promise<string> => {
-  console.log('📤 Usando estrategia de upload simple (fallback)...');
+  console.log('📤 Usando estrategia de upload simple...');
   const storageRef = ref(storage, path);
   
-  // Simulate more realistic progress for simple upload
+  // Simulate progress for better UX
   onProgress?.(10);
   
   const metadata = {
@@ -167,15 +126,16 @@ const uploadWithSimple = async (
     customMetadata: {
       originalName: file.name,
       uploadedAt: new Date().toISOString(),
-      method: 'simple'
+      method: 'simple',
+      size: file.size.toString()
     }
   };
   
-  onProgress?.(25);
+  onProgress?.(30);
   
   try {
     const snapshot = await uploadBytes(storageRef, file, metadata);
-    onProgress?.(75);
+    onProgress?.(80);
     
     const downloadURL = await getDownloadURL(snapshot.ref);
     onProgress?.(100);
@@ -188,47 +148,138 @@ const uploadWithSimple = async (
   }
 };
 
-// CORS workaround strategy
+// Resumable upload strategy with real progress tracking
+const uploadWithResumable = async (
+  path: string,
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<string> => {
+  console.log('📤 Usando estrategia de upload resumable...');
+  const storageRef = ref(storage, path);
+  
+  const uploadTask = uploadBytesResumable(storageRef, file, {
+    contentType: file.type,
+    customMetadata: {
+      originalName: file.name,
+      uploadedAt: new Date().toISOString(),
+      method: 'resumable',
+      size: file.size.toString()
+    }
+  });
+
+  return new Promise<string>((resolve, reject) => {
+    uploadTask.on('state_changed',
+      // Progress callback
+      (snapshot) => {
+        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        onProgress?.(progress);
+        console.log(`📊 Progreso resumable: ${progress}% (${snapshot.bytesTransferred}/${snapshot.totalBytes} bytes)`);
+      },
+      // Error callback
+      (error) => {
+        console.error('❌ Error en upload resumable:', error);
+        reject(error);
+      },
+      // Success callback
+      async () => {
+        try {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          console.log('✅ Upload resumable exitoso:', url);
+          onProgress?.(100);
+          resolve(url);
+        } catch (urlError) {
+          console.error('❌ Error obteniendo URL:', urlError);
+          reject(urlError);
+        }
+      }
+    );
+  });
+};
+
+// Enhanced CORS workaround strategy
 const uploadWithCorsWorkaround = async (
   path: string,
   file: File,
   onProgress?: (progress: number) => void
 ): Promise<string> => {
-  console.log('📤 Usando workaround para CORS...');
+  console.log('📤 Usando workaround avanzado para CORS...');
   
-  onProgress?.(10);
+  onProgress?.(5);
   
-  // Convert file to base64 and use a different approach
-  const base64Data = await fileToBase64(file);
-  const storageRef = ref(storage, path);
-  
-  onProgress?.(30);
-  
-  // Create a blob from base64
-  const response = await fetch(base64Data);
-  const blob = await response.blob();
-  
-  onProgress?.(50);
-  
-  const metadata = {
-    contentType: file.type,
-    customMetadata: {
-      originalName: file.name,
-      uploadedAt: new Date().toISOString(),
-      method: 'cors-workaround'
+  try {
+    // Method 1: Try with different content type
+    const storageRef = ref(storage, path);
+    
+    onProgress?.(15);
+    
+    // Create a new blob with explicit content type
+    const blob = new Blob([file], { type: 'application/octet-stream' });
+    
+    onProgress?.(25);
+    
+    const metadata = {
+      contentType: file.type, // Keep original type in metadata
+      customMetadata: {
+        originalName: file.name,
+        originalType: file.type,
+        uploadedAt: new Date().toISOString(),
+        method: 'cors-workaround',
+        size: file.size.toString()
+      }
+    };
+    
+    onProgress?.(40);
+    
+    const snapshot = await uploadBytes(storageRef, blob, metadata);
+    
+    onProgress?.(80);
+    
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    onProgress?.(100);
+    
+    console.log('✅ Upload con workaround CORS exitoso:', downloadURL);
+    return downloadURL;
+    
+  } catch (error) {
+    console.error('❌ Error en workaround CORS:', error);
+    
+    // Method 2: Try with base64 conversion
+    try {
+      console.log('📤 Intentando método base64...');
+      onProgress?.(20);
+      
+      const base64Data = await fileToBase64(file);
+      onProgress?.(40);
+      
+      const response = await fetch(base64Data);
+      const blob = await response.blob();
+      onProgress?.(60);
+      
+      const storageRef = ref(storage, `base64_${path}`);
+      const snapshot = await uploadBytes(storageRef, blob, {
+        contentType: file.type,
+        customMetadata: {
+          originalName: file.name,
+          uploadedAt: new Date().toISOString(),
+          method: 'base64-workaround',
+          size: file.size.toString()
+        }
+      });
+      
+      onProgress?.(90);
+      
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      onProgress?.(100);
+      
+      console.log('✅ Upload base64 exitoso:', downloadURL);
+      return downloadURL;
+      
+    } catch (base64Error) {
+      console.error('❌ Error en método base64:', base64Error);
+      throw error; // Throw original error
     }
-  };
-  
-  const snapshot = await uploadBytes(storageRef, blob, metadata);
-  
-  onProgress?.(90);
-  
-  const downloadURL = await getDownloadURL(snapshot.ref);
-  
-  onProgress?.(100);
-  
-  console.log('✅ Upload con workaround CORS exitoso:', downloadURL);
-  return downloadURL;
+  }
 };
 
 // Helper function to convert file to base64
@@ -366,52 +417,100 @@ export const validateImageFile = (file: File): { valid: boolean; error?: string 
   return { valid: true };
 };
 
-// Check storage connection and permissions
+// Enhanced connection check with multiple test methods
 export const checkStorageConnection = async (): Promise<{
   connected: boolean;
   canUpload: boolean;
+  corsConfigured: boolean;
   error?: string;
+  details?: string;
 }> => {
   try {
-    // Create a small test file
-    const testFile = new File(['test'], 'connection-test.txt', { type: 'text/plain' });
-    const testPath = `test/${Date.now()}_connection_test.txt`;
+    console.log('🔍 Verificando conexión a Firebase Storage...');
+    
+    // Create a minimal test file
+    const testContent = new Blob(['test-connection'], { type: 'text/plain' });
+    const testFile = new File([testContent], 'connection-test.txt', { type: 'text/plain' });
+    const testPath = `connection-tests/${Date.now()}_test.txt`;
     const testRef = ref(storage, testPath);
     
-    // Try to upload using simple method first
-    await uploadBytes(testRef, testFile);
-    
-    // Try to get download URL
-    await getDownloadURL(testRef);
-    
-    // Clean up
-    await deleteObject(testRef);
-    
-    console.log('✅ Conexión a Firebase Storage exitosa');
-    return { connected: true, canUpload: true };
-    
-  } catch (error) {
-    console.error('❌ Error de conexión a Firebase Storage:', error);
-    
-    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-    
-    // Check if it's a CORS error
-    const isCorsError = errorMessage.includes('CORS') || 
-                       errorMessage.includes('cors') || 
-                       errorMessage.includes('preflight');
-    
-    if (isCorsError) {
+    // Test 1: Try simple upload
+    try {
+      console.log('🧪 Test 1: Upload simple...');
+      await uploadBytes(testRef, testFile);
+      
+      // Test 2: Try to get download URL
+      console.log('🧪 Test 2: Obtener URL de descarga...');
+      await getDownloadURL(testRef);
+      
+      // Test 3: Clean up
+      console.log('🧪 Test 3: Limpiar archivo de prueba...');
+      await deleteObject(testRef);
+      
+      console.log('✅ Todas las pruebas de conexión exitosas');
+      return { 
+        connected: true, 
+        canUpload: true, 
+        corsConfigured: true,
+        details: 'Conexión completa verificada'
+      };
+      
+    } catch (uploadError) {
+      console.error('❌ Error en pruebas de upload:', uploadError);
+      
+      const errorMessage = uploadError instanceof Error ? uploadError.message : 'Error desconocido';
+      
+      // Check if it's a CORS error
+      const isCorsError = errorMessage.includes('CORS') || 
+                         errorMessage.includes('cors') || 
+                         errorMessage.includes('preflight') ||
+                         errorMessage.includes('ERR_FAILED');
+      
+      if (isCorsError) {
+        return {
+          connected: true,
+          canUpload: false,
+          corsConfigured: false,
+          error: 'Error de configuración CORS detectado',
+          details: 'Firebase Storage no está configurado para permitir solicitudes desde localhost:3001. Ejecuta el script de configuración CORS.'
+        };
+      }
+      
+      // Check for permission errors
+      const isPermissionError = errorMessage.includes('permission') || 
+                               errorMessage.includes('unauthorized') ||
+                               errorMessage.includes('403');
+      
+      if (isPermissionError) {
+        return {
+          connected: true,
+          canUpload: false,
+          corsConfigured: true,
+          error: 'Error de permisos',
+          details: 'No tienes permisos para subir archivos a Firebase Storage.'
+        };
+      }
+      
       return {
         connected: false,
         canUpload: false,
-        error: 'Error de configuración CORS. Contacta al administrador del sistema.'
+        corsConfigured: false,
+        error: errorMessage,
+        details: 'Error de conexión general con Firebase Storage'
       };
     }
+    
+  } catch (error) {
+    console.error('❌ Error crítico en verificación de conexión:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
     
     return {
       connected: false,
       canUpload: false,
-      error: errorMessage
+      corsConfigured: false,
+      error: errorMessage,
+      details: 'No se pudo establecer conexión con Firebase Storage'
     };
   }
 };
@@ -425,35 +524,68 @@ export const handleStorageError = (error: unknown): string => {
       ? (error as { message: string }).message
       : String(error);
   
-  // CORS errors
-  if (errorMessage.includes('CORS') || errorMessage.includes('cors') || errorMessage.includes('preflight')) {
-    return 'Error de configuración del servidor. Por favor, intenta de nuevo más tarde o contacta al soporte técnico.';
+  console.error('🔍 Analizando error de storage:', errorMessage);
+  
+  // CORS errors (most common in development)
+  if (errorMessage.includes('CORS') || 
+      errorMessage.includes('cors') || 
+      errorMessage.includes('preflight') ||
+      errorMessage.includes('ERR_FAILED') ||
+      errorMessage.includes('Access-Control-Allow-Origin')) {
+    return 'Error de configuración CORS. Firebase Storage no está configurado para tu dominio local. Por favor, ejecuta el comando "npm run setup-cors" o contacta al administrador.';
   }
   
   // Network errors
-  if (errorMessage.includes('network') || errorMessage.includes('ERR_NETWORK')) {
-    return 'Error de conexión. Verifica tu conexión a internet e intenta de nuevo.';
+  if (errorMessage.includes('network') || 
+      errorMessage.includes('ERR_NETWORK') ||
+      errorMessage.includes('ERR_INTERNET_DISCONNECTED')) {
+    return 'Error de conexión a internet. Verifica tu conexión e intenta de nuevo.';
   }
   
   // Permission errors
-  if (errorMessage.includes('permission') || errorMessage.includes('unauthorized')) {
-    return 'No tienes permisos para realizar esta acción. Contacta al administrador.';
+  if (errorMessage.includes('permission') || 
+      errorMessage.includes('unauthorized') ||
+      errorMessage.includes('403') ||
+      errorMessage.includes('Forbidden')) {
+    return 'No tienes permisos para realizar esta acción. Contacta al administrador del sistema.';
   }
   
   // File size errors
-  if (errorMessage.includes('size') || errorMessage.includes('large')) {
-    return 'El archivo es demasiado grande. Reduce el tamaño e intenta de nuevo.';
+  if (errorMessage.includes('size') || 
+      errorMessage.includes('large') ||
+      errorMessage.includes('413') ||
+      errorMessage.includes('too big')) {
+    return 'El archivo es demasiado grande. Reduce el tamaño de la imagen e intenta de nuevo.';
   }
   
   // Quota errors
-  if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
-    return 'Se ha alcanzado el límite de almacenamiento. Contacta al administrador.';
+  if (errorMessage.includes('quota') || 
+      errorMessage.includes('limit') ||
+      errorMessage.includes('exceeded') ||
+      errorMessage.includes('429')) {
+    return 'Se ha alcanzado el límite de almacenamiento o solicitudes. Contacta al administrador.';
+  }
+  
+  // Authentication errors
+  if (errorMessage.includes('auth') || 
+      errorMessage.includes('token') ||
+      errorMessage.includes('401') ||
+      errorMessage.includes('Unauthorized')) {
+    return 'Error de autenticación. Por favor, inicia sesión nuevamente.';
   }
   
   // Generic Firebase errors
-  if (errorMessage.includes('firebase') || errorMessage.includes('storage')) {
-    return 'Error del servicio de almacenamiento. Intenta de nuevo más tarde.';
+  if (errorMessage.includes('firebase') || 
+      errorMessage.includes('storage') ||
+      errorMessage.includes('firebasestorage')) {
+    return 'Error del servicio de almacenamiento. Intenta de nuevo en unos momentos.';
   }
   
-  return 'Error al subir la imagen. Intenta de nuevo más tarde.';
+  // Timeout errors
+  if (errorMessage.includes('timeout') || 
+      errorMessage.includes('TIMEOUT')) {
+    return 'La operación tardó demasiado tiempo. Verifica tu conexión e intenta con una imagen más pequeña.';
+  }
+  
+  return `Error al procesar la imagen: ${errorMessage}. Si el problema persiste, contacta al soporte técnico.`;
 };
