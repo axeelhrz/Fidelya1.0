@@ -37,10 +37,14 @@ const createSocioSchema = z.object({
   dni: z.string().optional(),
   direccion: z.string().optional(),
   fechaNacimiento: z.string().optional(),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional(),
+  password: z.string().optional(),
   confirmPassword: z.string().optional(),
 }).refine((data) => {
-  if (data.password && data.confirmPassword) {
+  // Solo validar coincidencia si se proporciona contraseña
+  if (data.password && data.password.length > 0) {
+    if (!data.confirmPassword) {
+      return false;
+    }
     return data.password === data.confirmPassword;
   }
   return true;
