@@ -123,22 +123,22 @@ export const useComercios = () => {
     }
   }, [loadComercios]);
 
-  // Delete comercio (logical delete)
+  // Delete comercio (complete deletion)
   const deleteComercio = useCallback(async (id: string): Promise<boolean> => {
     setLoading(true);
     try {
       const success = await comercioService.deleteComercio(id);
       
       if (success) {
-        toast.success('Comercio desactivado exitosamente');
+        toast.success('Comercio eliminado completamente');
         await loadComercios(); // Reload the list
         return true;
       } else {
-        toast.error('Error al desactivar el comercio');
+        toast.error('Error al eliminar el comercio');
         return false;
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al desactivar comercio';
+      const errorMessage = err instanceof Error ? err.message : 'Error al eliminar comercio';
       setError(errorMessage);
       toast.error(errorMessage);
       return false;
