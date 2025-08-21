@@ -371,11 +371,6 @@ export const getDynamicBaseUrl = (): string => {
 };
 
 // Función para obtener la URL de producción (para reseteo de contraseña y verificación de email)
-export const getProductionUrl = (): string => {
-  return getProductionUrl();
-};
-
-// Función para obtener la URL de producción (para reseteo de contraseña y verificación de email)
 export const getProductionUrlForAuth = (): string => {
   // En producción, siempre usar el dominio de la plataforma
   if (process.env.NODE_ENV === 'production') {
