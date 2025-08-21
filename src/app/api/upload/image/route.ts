@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,11 +53,14 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Check if Firebase Storage is available
-    if (!storage) {
-      console.error('❌ API: Firebase Storage no está disponible');
+    // Get Firebase configuration
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+    
+    if (!projectId || !storageBucket) {
+      console.error('❌ API: Configuración de Firebase incompleta');
       return NextResponse.json(
-        { error: 'Servicio de almacenamiento no disponible' },
+        { error: 'Configuración del servidor incompleta' },
         { status: 503 }
       );
     }
@@ -71,39 +72,56 @@ export async function POST(request: NextRequest) {
     
     console.log('📤 API: Buffer creado exitosamente, tamaño:', buffer.length);
     
-    // Create storage reference
+    // Create unique file path
     const timestamp = Date.now();
     const randomId = Math.random().toString(36).substring(2, 15);
     const extension = file.name.split('.').pop() || 'jpg';
     const finalPath = `${path}_${timestamp}_${randomId}.${extension}`;
     
-    console.log('📤 API: Creando referencia de storage:', finalPath);
-    const storageRef = ref(storage, finalPath);
+    console.log('📤 API: Ruta final del archivo:', finalPath);
     
-    // Upload to Firebase Storage (server-side, no CORS issues)
-    const metadata = {
-      contentType: file.type,
-      customMetadata: {
-        originalName: file.name,
-        uploadedAt: new Date().toISOString(),
-        method: 'server-side-api',
-        size: file.size.toString(),
-        uploadedFrom: 'api-route'
+    // Upload using Firebase Storage REST API
+    const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o?name=${encodeURIComponent(finalPath)}`;
+    
+    console.log('📤 API: Subiendo a Firebase Storage via REST API...');
+    
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': file.type,
+        'Content-Length': buffer.length.toString(),
+      },
+      body: buffer,
+    });
+    
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      console.error('❌ API: Error en upload a Firebase:', uploadResponse.status, errorText);
+      
+      // Check if it's a CORS issue on the server side (shouldn't happen but just in case)
+      if (uploadResponse.status === 0 || errorText.includes('CORS')) {
+        return NextResponse.json(
+          { error: 'Error de configuración del servidor de almacenamiento' },
+          { status: 503 }
+        );
       }
-    };
+      
+      return NextResponse.json(
+        { error: 'Error al subir archivo al almacenamiento' },
+        { status: uploadResponse.status }
+      );
+    }
     
-    console.log('📤 API: Iniciando upload a Firebase Storage...');
-    const snapshot = await uploadBytes(storageRef, buffer, metadata);
-    console.log('✅ API: Upload a Firebase Storage completado');
+    const uploadResult = await uploadResponse.json();
+    console.log('✅ API: Upload exitoso:', uploadResult);
     
     // Get download URL
     console.log('📤 API: Obteniendo URL de descarga...');
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    console.log('✅ API: URL de descarga obtenida:', downloadURL);
+    const downloadUrl = `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/${encodeURIComponent(finalPath)}?alt=media`;
     
     const response = {
       success: true,
-      url: downloadURL,
+      url: downloadUrl,
       path: finalPath,
       metadata: {
         originalName: file.name,
@@ -127,19 +145,16 @@ export async function POST(request: NextRequest) {
     
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
     
-    // Check for specific Firebase errors
+    // Check for specific errors
     let statusCode = 500;
     let userMessage = 'Error interno del servidor al subir imagen';
     
-    if (errorMessage.includes('Firebase')) {
-      userMessage = 'Error de configuración de Firebase';
+    if (errorMessage.includes('fetch')) {
+      userMessage = 'Error de conexión con el servicio de almacenamiento';
       statusCode = 503;
-    } else if (errorMessage.includes('permission') || errorMessage.includes('unauthorized')) {
-      userMessage = 'Error de permisos de Firebase';
-      statusCode = 403;
-    } else if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
-      userMessage = 'Límite de almacenamiento alcanzado';
-      statusCode = 429;
+    } else if (errorMessage.includes('network')) {
+      userMessage = 'Error de red';
+      statusCode = 503;
     }
     
     return NextResponse.json(
