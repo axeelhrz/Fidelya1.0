@@ -128,6 +128,25 @@ class ConfigService {
     return this.config.app.url;
   }
 
+  public getAuthUrl(): string {
+    // Para autenticación, siempre usar el dominio de producción correcto
+    if (this.config.app.environment === 'production') {
+      // Priorizar la URL configurada en variables de entorno
+      if (process.env.NEXT_PUBLIC_APP_URL) {
+        return process.env.NEXT_PUBLIC_APP_URL;
+      }
+      // Si está en Vercel, usar la URL de Vercel
+      if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+        return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+      }
+      // Fallback al dominio principal de la plataforma
+      return 'https://fidelya.vercel.app';
+    }
+    
+    // En desarrollo, usar localhost solo si no hay URL configurada
+    return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
+  }
+
   public isDevelopment(): boolean {
     return this.config.app.environment === 'development';
   }
