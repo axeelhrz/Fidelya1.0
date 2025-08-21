@@ -1896,9 +1896,9 @@ export const EnhancedMemberManagement = ({
             open={deleteDialogOpen}
             onClose={handleDeleteCancel}
             onConfirm={handleDeleteConfirm}
-            title="Eliminar Socio"
-            message={`¿Estás seguro de que deseas eliminar al socio "${socioToDelete?.nombre}"? Esta acción eliminará permanentemente todos los datos del socio, incluyendo su historial de beneficios y validaciones.`}
-            confirmText="Eliminar Socio"
+            title="Eliminar Socio Completamente"
+            message={`¿Estás seguro de que deseas eliminar completamente al socio "${socioToDelete?.nombre}"? Esta acción eliminará permanentemente todos los datos del socio de la base de datos, incluyendo su historial de beneficios, validaciones y actividades. Esta acción NO se puede deshacer.`}
+            confirmText="Eliminar Completamente"
             cancelText="Cancelar"
             loading={deleting}
           />
