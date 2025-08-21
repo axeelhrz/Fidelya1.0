@@ -709,9 +709,10 @@ class ComercioService {
 
       const clientesUnicos = new Set(validacionesExitosas.map(v => v.socioId)).size;
 
-      // CORREGIDO: calcular ingresos basándose en montoCompra, no montoDescuento
+      // CORREGIDO: calcular ingresos basándose en montoDescuento (ahorro generado por beneficios)
+      // En lugar de montoCompra que puede no estar presente
       const ingresosMensuales = validacionesExitosas.reduce((total, v) => 
-        total + (v.montoCompra || 0), 0
+        total + (v.montoDescuento || 0), 0
       );
 
       // Calculate daily average
