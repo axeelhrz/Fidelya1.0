@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -35,7 +35,6 @@ import {
   Play,
   List,
   Grid,
-  Zap,
   User,
   ShoppingBag,
   Gift,
@@ -428,19 +427,25 @@ export function SocioAnalytics() {
     },
   });
 
-  // Función para actualizar las estadísticas del dashboard principal
-  const updateDashboardStats = async () => {
+  // Función para actualizar las estadísticas del dashboard principal - CORREGIDA
+  const updateDashboardStats = useCallback(async () => {
     try {
-      await Promise.all([
-        refreshStats(),
-        loadComercioStats()
-      ]);
+      console.log('🔄 Actualizando estadísticas del dashboard...');
+      
+      // Actualizar en secuencia para asegurar consistencia
+      await refreshStats();
+      console.log('✅ Stats de socios actualizadas');
+      
+      await loadComercioStats();
+      console.log('✅ Stats de comercio actualizadas');
+      
+      console.log('✅ Todas las estadísticas actualizadas correctamente');
     } catch (error) {
-      console.error('Error updating dashboard stats:', error);
+      console.error('❌ Error updating dashboard stats:', error);
     }
-  };
+  }, [refreshStats, loadComercioStats]);
 
-  // Funciones para gestión de socios
+  // Funciones para gestión de socios - CORREGIDAS
   const resetForm = () => {
     setFormData({
       nombre: '',
@@ -484,66 +489,82 @@ export function SocioAnalytics() {
     setShowSearchResults(false);
   };
 
-  const handleCreateCliente = async () => {
+  // FUNCIÓN CORREGIDA - handleCreateSocio
+  const handleCreateSocio = async () => {
     try {
-      const clienteId = await createCliente(formData);
-      if (clienteId) {
+      console.log('🚀 Creando nuevo socio con datos:', formData);
+      
+      const socioId = await createCliente(formData);
+      console.log('📝 Socio creado con ID:', socioId);
+      
+      if (socioId) {
         setShowCreateModal(false);
         resetForm();
         toast.success('Socio creado exitosamente');
         
-        // Actualizar estadísticas del dashboard principal
-        await updateDashboardStats();
+        console.log('🔄 Iniciando actualización completa...');
         
-        // Recargar lista de clientes
+        // CRÍTICO: Forzar recarga completa en secuencia
         await loadClientes();
+        console.log('✅ Lista de socios recargada');
+        
+        await updateDashboardStats();
+        console.log('✅ Dashboard actualizado');
+        
+        console.log('✅ Proceso de creación completado');
       }
     } catch (error) {
-      console.error('Error creating socio:', error);
+      console.error('❌ Error creating socio:', error);
       toast.error('Error al crear el socio. Inténtalo de nuevo.');
     }
   };
 
-  const handleEditCliente = async () => {
+  // FUNCIÓN CORREGIDA - handleEditSocio
+  const handleEditSocio = async () => {
     if (!selectedCliente) return;
 
     try {
+      console.log('🔄 Actualizando socio:', selectedCliente.id);
+      
       const success = await updateCliente(selectedCliente.id, formData);
       if (success) {
         setShowEditModal(false);
         resetForm();
         toast.success('Socio actualizado exitosamente');
         
-        // Actualizar estadísticas del dashboard principal
+        // CRÍTICO: Actualizar todo en secuencia
+        await loadClientes();
         await updateDashboardStats();
         
-        // Recargar lista de clientes
-        await loadClientes();
+        console.log('✅ Socio actualizado correctamente');
       }
     } catch (error) {
-      console.error('Error updating socio:', error);
+      console.error('❌ Error updating socio:', error);
       toast.error('Error al actualizar el socio. Inténtalo de nuevo.');
     }
   };
 
-  const handleDeleteCliente = async () => {
+  // FUNCIÓN CORREGIDA - handleDeleteSocio
+  const handleDeleteSocio = async () => {
     if (!selectedCliente) return;
 
     try {
+      console.log('🗑️ Eliminando socio:', selectedCliente.id);
+      
       const success = await deleteCliente(selectedCliente.id);
       if (success) {
         setShowDeleteModal(false);
         setSelectedCliente(null);
         toast.success('Socio eliminado exitosamente');
         
-        // Actualizar estadísticas del dashboard principal
+        // CRÍTICO: Actualizar todo en secuencia
+        await loadClientes();
         await updateDashboardStats();
         
-        // Recargar lista de clientes
-        await loadClientes();
+        console.log('✅ Socio eliminado correctamente');
       }
     } catch (error) {
-      console.error('Error deleting socio:', error);
+      console.error('❌ Error deleting socio:', error);
       toast.error('Error al eliminar el socio. Inténtalo de nuevo.');
     }
   };
@@ -551,16 +572,18 @@ export function SocioAnalytics() {
   const handleToggleEstado = async (cliente: Cliente) => {
     const nuevoEstado = cliente.estado === 'activo' ? 'inactivo' : 'activo';
     try {
+      console.log('🔄 Cambiando estado del socio:', cliente.id, 'a', nuevoEstado);
+      
       await updateEstadoCliente(cliente.id, nuevoEstado);
       toast.success(`Socio ${nuevoEstado === 'activo' ? 'activado' : 'desactivado'} exitosamente`);
       
-      // Actualizar estadísticas del dashboard principal
+      // CRÍTICO: Actualizar todo en secuencia
+      await loadClientes();
       await updateDashboardStats();
       
-      // Recargar lista de clientes
-      await loadClientes();
+      console.log('✅ Estado del socio actualizado');
     } catch (error) {
-      console.error('Error updating estado:', error);
+      console.error('❌ Error updating estado:', error);
       toast.error('Error al cambiar el estado del socio. Inténtalo de nuevo.');
     }
   };
@@ -597,11 +620,6 @@ export function SocioAnalytics() {
         default: return subDays(now, 30);
       }
     })();
-
-    // Filtrar clientes en el rango de tiempo
-    const sociosEnRango = clientes.filter(cliente => 
-      cliente.creadoEn.toDate() >= startDate
-    );
 
     // Usar estadísticas reales del servicio
     const totalSocios = clienteStats.totalClientes;
@@ -646,8 +664,9 @@ export function SocioAnalytics() {
 
   // Actualizar estadísticas cuando se monta el componente
   useEffect(() => {
+    console.log('🚀 Componente montado, cargando datos iniciales...');
     updateDashboardStats();
-  }, []);
+  }, [updateDashboardStats]);
 
   if (loading && clientes.length === 0) {
     return (
@@ -1183,7 +1202,7 @@ export function SocioAnalytics() {
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-600">Valor Vida Cliente</span>
+                    <span className="text-slate-600">Valor Vida Socio</span>
                     <span className="text-xl font-semibold text-purple-600">
                       ${advancedMetrics.clv.toLocaleString()}
                     </span>
@@ -1204,7 +1223,6 @@ export function SocioAnalytics() {
         </>
       )}
 
-      {/* Todos los modales con la misma estructura pero mejorados */}
       {/* Modal de crear socio - PANTALLA COMPLETA CON PORTAL */}
       <Dialog open={showCreateModal} onClose={() => setShowCreateModal(false)} fullScreen>
         <DialogContent fullScreen>
@@ -1397,7 +1415,7 @@ export function SocioAnalytics() {
               Cancelar
             </Button>
             <Button
-              onClick={handleCreateCliente}
+              onClick={handleCreateSocio}
               loading={loading}
               disabled={!formData.nombre || !formData.email}
               className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white px-10 py-4 text-xl shadow-lg shadow-purple-500/30"
@@ -1409,7 +1427,7 @@ export function SocioAnalytics() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de editar socio - Similar estructura pero con colores emerald */}
+      {/* Modal de editar socio */}
       <Dialog open={showEditModal} onClose={() => setShowEditModal(false)} fullScreen>
         <DialogContent fullScreen>
           <DialogHeader>
@@ -1424,10 +1442,8 @@ export function SocioAnalytics() {
             </p>
           </DialogHeader>
 
-          {/* Contenido similar al modal de crear pero con datos pre-llenados */}
           <div className="max-w-6xl mx-auto">
             <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-10 mb-10">
-              {/* Mismo formulario que crear pero con formData pre-llenado */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div className="space-y-8">
                   <div className="flex items-center gap-4 mb-8">
@@ -1600,7 +1616,7 @@ export function SocioAnalytics() {
               Cancelar
             </Button>
             <Button
-              onClick={handleEditCliente}
+              onClick={handleEditSocio}
               loading={loading}
               disabled={!formData.nombre || !formData.email}
               className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-10 py-4 text-xl shadow-lg shadow-emerald-500/30"
@@ -1699,7 +1715,7 @@ export function SocioAnalytics() {
               Cancelar
             </Button>
             <Button
-              onClick={handleDeleteCliente}
+              onClick={handleDeleteSocio}
               loading={loading}
               className="bg-red-600 hover:bg-red-700 text-white px-10 py-4 text-xl shadow-lg shadow-red-500/30"
             >
@@ -1917,9 +1933,12 @@ export function SocioAnalytics() {
       {/* Componente de creación rápida flotante mejorado */}
       <QuickClienteCreator
         onCreateCliente={async (clienteData) => {
+          console.log('🚀 Creando socio desde QuickCreator...');
           const result = await createCliente(clienteData);
           if (result) {
+            console.log('✅ Socio creado desde QuickCreator, actualizando...');
             // Actualizar estadísticas del dashboard principal
+            await loadClientes();
             await updateDashboardStats();
           }
           return result;
@@ -1931,3 +1950,4 @@ export function SocioAnalytics() {
 }
 
 export default SocioAnalytics;
+
