@@ -42,17 +42,17 @@ export const uploadImage = async (
   // Compress image if needed
   const processedFile = await compressImage(file, quality);
 
-  // Create storage reference with timestamp to avoid conflicts
-  const timestamp = Date.now();
-  const randomId = Math.random().toString(36).substring(2, 15);
-  const extension = processedFile.name.split('.').pop() || 'jpg';
-  const finalPath = `${path}.${extension}`;
-  
-  console.log('📤 Subiendo imagen a:', finalPath);
+  console.log('📤 Subiendo imagen:', {
+    originalName: file.name,
+    size: processedFile.size,
+    type: processedFile.type,
+    path: path
+  });
 
-  // Enhanced upload strategy with CORS-first approach
+  // Enhanced upload strategy with server-side API as primary method
   const uploadStrategies = [
-    { name: 'CORS Workaround (Primary)', method: uploadWithCorsWorkaround },
+    { name: 'Server-side API (Primary)', method: uploadViaAPI },
+    { name: 'CORS Workaround', method: uploadWithCorsWorkaround },
     { name: 'Simple Upload', method: uploadWithSimple },
     { name: 'Resumable Upload', method: uploadWithResumable }
   ];
@@ -64,10 +64,7 @@ export const uploadImage = async (
       try {
         console.log(`📤 Intento ${attempt}/${retries} - Estrategia: ${strategy.name}`);
         
-        // Use different path for each strategy to avoid conflicts
-        const strategyPath = attempt === 1 ? finalPath : `${path}_${attempt}_${randomId}.${extension}`;
-        
-        const result = await strategy.method(strategyPath, processedFile, onProgress);
+        const result = await strategy.method(path, processedFile, onProgress);
         console.log(`✅ Upload exitoso con ${strategy.name}:`, result);
         return result;
         
@@ -90,8 +87,8 @@ export const uploadImage = async (
         }
         
         // For non-CORS errors, wait before retry
-        if (attempt < retries) {
-          const delay = Math.min(Math.pow(2, attempt) * 500, 2000); // Reduced delay
+        if (attempt < retries && strategy.name === 'Server-side API (Primary)') {
+          const delay = Math.min(Math.pow(2, attempt) * 500, 2000);
           console.log(`⏳ Esperando ${delay}ms antes del siguiente intento...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           break; // Break strategy loop to retry with same strategy
@@ -109,13 +106,65 @@ export const uploadImage = async (
   throw new Error('No se pudo subir la imagen después de todos los intentos');
 };
 
-// Enhanced CORS workaround strategy (now primary)
+// Server-side API upload (primary method - no CORS issues)
+const uploadViaAPI = async (
+  path: string,
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<string> => {
+  console.log('📤 Usando API del servidor (método principal - sin CORS)...');
+  
+  onProgress?.(10);
+  
+  try {
+    // Create FormData for the API request
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('path', path);
+    
+    onProgress?.(20);
+    
+    console.log('📤 API: Enviando archivo al servidor...');
+    
+    // Make request to our API route
+    const response = await fetch('/api/upload/image', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    onProgress?.(60);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Error del servidor: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    onProgress?.(90);
+    
+    if (!result.success || !result.url) {
+      throw new Error('Respuesta inválida del servidor');
+    }
+    
+    onProgress?.(100);
+    
+    console.log('✅ Upload vía API exitoso:', result.url);
+    return result.url;
+    
+  } catch (error) {
+    console.error('❌ Error en upload vía API:', error);
+    throw error;
+  }
+};
+
+// Enhanced CORS workaround strategy (fallback)
 const uploadWithCorsWorkaround = async (
   path: string,
   file: File,
   onProgress?: (progress: number) => void
 ): Promise<string> => {
-  console.log('📤 Usando workaround avanzado para CORS (método principal)...');
+  console.log('📤 Usando workaround para CORS (fallback)...');
   
   onProgress?.(5);
   
@@ -132,7 +181,12 @@ const uploadWithCorsWorkaround = async (
     
     onProgress?.(25);
     
-    const storageRef = ref(storage, path);
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(2, 15);
+    const extension = file.name.split('.').pop() || 'jpg';
+    const finalPath = `${path}_${timestamp}_${randomId}.${extension}`;
+    
+    const storageRef = ref(storage, finalPath);
     
     // Use minimal metadata to avoid CORS preflight triggers
     const metadata = {
@@ -141,7 +195,7 @@ const uploadWithCorsWorkaround = async (
         originalName: file.name,
         originalType: file.type,
         uploadedAt: new Date().toISOString(),
-        method: 'cors-workaround-primary',
+        method: 'cors-workaround',
         size: file.size.toString()
       }
     };
@@ -161,7 +215,7 @@ const uploadWithCorsWorkaround = async (
     return downloadURL;
     
   } catch (error) {
-    console.error('❌ Error en workaround CORS primario:', error);
+    console.error('❌ Error en workaround CORS:', error);
     
     // Method 2: Try with base64 conversion as fallback
     try {
@@ -176,7 +230,12 @@ const uploadWithCorsWorkaround = async (
       const base64Blob = await base64Response.blob();
       onProgress?.(60);
       
-      const storageRef = ref(storage, `base64_${path}`);
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2, 15);
+      const extension = file.name.split('.').pop() || 'jpg';
+      const finalPath = `base64_${path}_${timestamp}_${randomId}.${extension}`;
+      
+      const storageRef = ref(storage, finalPath);
       const snapshot = await uploadBytes(storageRef, base64Blob, {
         contentType: file.type,
         customMetadata: {
@@ -209,7 +268,13 @@ const uploadWithSimple = async (
   onProgress?: (progress: number) => void
 ): Promise<string> => {
   console.log('📤 Usando estrategia de upload simple...');
-  const storageRef = ref(storage, path);
+  
+  const timestamp = Date.now();
+  const randomId = Math.random().toString(36).substring(2, 15);
+  const extension = file.name.split('.').pop() || 'jpg';
+  const finalPath = `${path}_${timestamp}_${randomId}.${extension}`;
+  
+  const storageRef = ref(storage, finalPath);
   
   // Simulate progress for better UX
   onProgress?.(10);
@@ -248,7 +313,13 @@ const uploadWithResumable = async (
   onProgress?: (progress: number) => void
 ): Promise<string> => {
   console.log('📤 Usando estrategia de upload resumable...');
-  const storageRef = ref(storage, path);
+  
+  const timestamp = Date.now();
+  const randomId = Math.random().toString(36).substring(2, 15);
+  const extension = file.name.split('.').pop() || 'jpg';
+  const finalPath = `${path}_${timestamp}_${randomId}.${extension}`;
+  
+  const storageRef = ref(storage, finalPath);
   
   const uploadTask = uploadBytesResumable(storageRef, file, {
     contentType: file.type,
@@ -424,96 +495,104 @@ export const validateImageFile = (file: File): { valid: boolean; error?: string 
   return { valid: true };
 };
 
-// Enhanced connection check with multiple test methods
+// Enhanced connection check with API test
 export const checkStorageConnection = async (): Promise<{
   connected: boolean;
   canUpload: boolean;
   corsConfigured: boolean;
+  apiWorking: boolean;
   error?: string;
   details?: string;
 }> => {
   try {
     console.log('🔍 Verificando conexión a Firebase Storage...');
     
-    // Create a minimal test file
-    const testContent = new Blob(['test-connection'], { type: 'text/plain' });
-    const testFile = new File([testContent], 'connection-test.txt', { type: 'text/plain' });
-    const testPath = `connection-tests/${Date.now()}_test.txt`;
-    const testRef = ref(storage, testPath);
-    
-    // Test 1: Try CORS workaround first
+    // Test 1: Check if API is working
     try {
-      console.log('🧪 Test 1: CORS workaround...');
-      const arrayBuffer = await testFile.arrayBuffer();
-      const corsBlob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+      console.log('🧪 Test 1: Verificando API del servidor...');
       
-      await uploadBytes(testRef, corsBlob, {
-        contentType: testFile.type,
-        customMetadata: {
-          originalName: testFile.name,
-          method: 'cors-test'
-        }
+      // Create a minimal test file
+      const testContent = new Blob(['test-connection'], { type: 'text/plain' });
+      const testFile = new File([testContent], 'connection-test.txt', { type: 'text/plain' });
+      
+      const formData = new FormData();
+      formData.append('file', testFile);
+      formData.append('path', `connection-tests/api-test-${Date.now()}`);
+      
+      const response = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
       });
       
-      // Test 2: Try to get download URL
-      console.log('🧪 Test 2: Obtener URL de descarga...');
-      await getDownloadURL(testRef);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.url) {
+          console.log('✅ API del servidor funcionando correctamente');
+          return {
+            connected: true,
+            canUpload: true,
+            corsConfigured: true, // API bypasses CORS
+            apiWorking: true,
+            details: 'Conexión exitosa usando API del servidor. No hay problemas de CORS.'
+          };
+        }
+      }
       
-      // Test 3: Clean up
-      console.log('🧪 Test 3: Limpiar archivo de prueba...');
-      await deleteObject(testRef);
+      throw new Error(`API response not ok: ${response.status}`);
       
-      console.log('✅ Todas las pruebas de conexión exitosas (con workaround CORS)');
-      return { 
-        connected: true, 
-        canUpload: true, 
-        corsConfigured: false, // CORS not properly configured, but workaround works
-        details: 'Conexión exitosa usando workaround para CORS. Recomendamos configurar CORS correctamente.'
-      };
+    } catch (apiError) {
+      console.error('❌ Error en API del servidor:', apiError);
       
-    } catch (uploadError) {
-      console.error('❌ Error en pruebas de upload:', uploadError);
-      
-      const errorMessage = uploadError instanceof Error ? uploadError.message : 'Error desconocido';
-      
-      // Check if it's a CORS error
-      const isCorsError = errorMessage.includes('CORS') || 
-                         errorMessage.includes('cors') || 
-                         errorMessage.includes('preflight') ||
-                         errorMessage.includes('ERR_FAILED');
-      
-      if (isCorsError) {
+      // Test 2: Try direct Firebase Storage (will likely fail with CORS)
+      try {
+        console.log('🧪 Test 2: Probando conexión directa a Firebase Storage...');
+        
+        const testContent = new Blob(['test-connection'], { type: 'text/plain' });
+        const testFile = new File([testContent], 'connection-test.txt', { type: 'text/plain' });
+        const testPath = `connection-tests/${Date.now()}_direct_test.txt`;
+        const testRef = ref(storage, testPath);
+        
+        const arrayBuffer = await testFile.arrayBuffer();
+        const corsBlob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+        
+        await uploadBytes(testRef, corsBlob, {
+          contentType: testFile.type,
+          customMetadata: {
+            originalName: testFile.name,
+            method: 'direct-test'
+          }
+        });
+        
+        await getDownloadURL(testRef);
+        await deleteObject(testRef);
+        
+        console.log('✅ Conexión directa exitosa (workaround CORS funciona)');
+        return {
+          connected: true,
+          canUpload: true,
+          corsConfigured: false,
+          apiWorking: false,
+          details: 'API del servidor no disponible, pero workaround CORS funciona.'
+        };
+        
+      } catch (directError) {
+        console.error('❌ Error en conexión directa:', directError);
+        
+        const errorMessage = directError instanceof Error ? directError.message : 'Error desconocido';
+        const isCorsError = errorMessage.includes('CORS') || 
+                           errorMessage.includes('cors') || 
+                           errorMessage.includes('preflight') ||
+                           errorMessage.includes('ERR_FAILED');
+        
         return {
           connected: true,
           canUpload: false,
           corsConfigured: false,
-          error: 'Error de configuración CORS detectado',
-          details: 'Firebase Storage no está configurado para permitir solicitudes desde localhost:3001. Ejecuta: npm run setup-cors'
+          apiWorking: false,
+          error: isCorsError ? 'Error de configuración CORS' : errorMessage,
+          details: 'Tanto la API del servidor como la conexión directa fallaron. Ejecuta: npm run setup-cors'
         };
       }
-      
-      // Check for permission errors
-      const isPermissionError = errorMessage.includes('permission') || 
-                               errorMessage.includes('unauthorized') ||
-                               errorMessage.includes('403');
-      
-      if (isPermissionError) {
-        return {
-          connected: true,
-          canUpload: false,
-          corsConfigured: true,
-          error: 'Error de permisos',
-          details: 'No tienes permisos para subir archivos a Firebase Storage.'
-        };
-      }
-      
-      return {
-        connected: false,
-        canUpload: false,
-        corsConfigured: false,
-        error: errorMessage,
-        details: 'Error de conexión general con Firebase Storage'
-      };
     }
     
   } catch (error) {
@@ -525,6 +604,7 @@ export const checkStorageConnection = async (): Promise<{
       connected: false,
       canUpload: false,
       corsConfigured: false,
+      apiWorking: false,
       error: errorMessage,
       details: 'No se pudo establecer conexión con Firebase Storage'
     };
@@ -542,13 +622,18 @@ export const handleStorageError = (error: unknown): string => {
   
   console.error('🔍 Analizando error de storage:', errorMessage);
   
-  // CORS errors (most common in development)
+  // API errors
+  if (errorMessage.includes('API') || errorMessage.includes('servidor')) {
+    return 'Error en la API del servidor. El sistema intentará métodos alternativos de subida.';
+  }
+  
+  // CORS errors (less common now with API)
   if (errorMessage.includes('CORS') || 
       errorMessage.includes('cors') || 
       errorMessage.includes('preflight') ||
       errorMessage.includes('ERR_FAILED') ||
       errorMessage.includes('Access-Control-Allow-Origin')) {
-    return 'Error de configuración CORS detectado. El sistema intentará usar métodos alternativos de subida. Para una solución permanente, ejecuta: npm run setup-cors';
+    return 'Error de configuración CORS detectado. El sistema está usando la API del servidor para evitar este problema.';
   }
   
   // Network errors
