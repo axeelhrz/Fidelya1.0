@@ -35,13 +35,14 @@ import {
   Play,
   List,
   Grid,
-  Zap,
   User,
   ShoppingBag,
   Gift,
   Bell,
   Mail,
-  MessageSquare
+  MessageSquare,
+  Sparkles,
+  Plus
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -53,8 +54,6 @@ import { Input } from '@/components/ui/Input';
 import { QuickClienteCreator } from '../clientes/QuickClienteCreator';
 import { subDays } from 'date-fns';
 import { toast } from 'react-hot-toast';
-
-// ... (mantener todos los componentes AdvancedMetricCard y SocioCard igual que antes)
 
 // Componente de métrica avanzada
 const AdvancedMetricCard: React.FC<{
@@ -139,7 +138,7 @@ const AdvancedMetricCard: React.FC<{
   );
 };
 
-// Componente de tarjeta de socio
+// Componente de tarjeta de socio mejorado
 const SocioCard: React.FC<{
   cliente: Cliente;
   onSelect: (cliente: Cliente) => void;
@@ -174,7 +173,7 @@ const SocioCard: React.FC<{
       whileHover={{ y: -2, boxShadow: '0 8px 30px rgba(0,0,0,0.1)' }}
       className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm transition-all duration-200 relative"
     >
-      {/* Menú de acciones */}
+      {/* Menú de acciones mejorado */}
       <div className="absolute top-4 right-4">
         <div className="relative">
           <button
@@ -187,17 +186,17 @@ const SocioCard: React.FC<{
           <AnimatePresence>
             {showActions && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-10"
+                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-[999999] overflow-hidden"
               >
                 <button
                   onClick={() => {
                     onSelect(cliente);
                     setShowActions(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors"
                 >
                   <Eye size={14} />
                   Ver detalles
@@ -207,7 +206,7 @@ const SocioCard: React.FC<{
                     onEdit(cliente);
                     setShowActions(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors"
                 >
                   <Edit3 size={14} />
                   Editar
@@ -217,7 +216,7 @@ const SocioCard: React.FC<{
                     onToggleEstado(cliente);
                     setShowActions(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors"
                 >
                   {cliente.estado === 'activo' ? <Pause size={14} /> : <Play size={14} />}
                   {cliente.estado === 'activo' ? 'Desactivar' : 'Activar'}
@@ -228,7 +227,7 @@ const SocioCard: React.FC<{
                     onDelete(cliente);
                     setShowActions(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
                 >
                   <Trash2 size={14} />
                   Eliminar
@@ -346,7 +345,7 @@ const SocioCard: React.FC<{
   );
 };
 
-// Componente principal de analíticas con gestión de socios
+// Componente principal mejorado
 export function SocioAnalytics() {
   const {
     clientes,
@@ -372,7 +371,7 @@ export function SocioAnalytics() {
   // Estados para analíticas
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'socios'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'socios'>('socios'); // Cambiar default a socios
 
   // Estados para gestión de socios
   const [searchTerm, setSearchTerm] = useState('');
@@ -454,14 +453,8 @@ export function SocioAnalytics() {
       if (clienteId) {
         setShowCreateModal(false);
         resetForm();
-        
-        // Mostrar mensaje de éxito
         toast.success('Socio creado exitosamente');
-        
-        // Recargar la lista de clientes para mostrar el nuevo socio
         await loadClientes();
-        
-        // Actualizar las estadísticas
         await refreshStats();
       }
     } catch (error) {
@@ -478,14 +471,8 @@ export function SocioAnalytics() {
       if (success) {
         setShowEditModal(false);
         resetForm();
-        
-        // Mostrar mensaje de éxito
         toast.success('Socio actualizado exitosamente');
-        
-        // Recargar la lista para mostrar los cambios
         await loadClientes();
-        
-        // Actualizar las estadísticas
         await refreshStats();
       }
     } catch (error) {
@@ -502,14 +489,8 @@ export function SocioAnalytics() {
       if (success) {
         setShowDeleteModal(false);
         setSelectedCliente(null);
-        
-        // Mostrar mensaje de éxito
         toast.success('Socio eliminado exitosamente');
-        
-        // Recargar la lista para reflejar la eliminación
         await loadClientes();
-        
-        // Actualizar las estadísticas
         await refreshStats();
       }
     } catch (error) {
@@ -522,14 +503,8 @@ export function SocioAnalytics() {
     const nuevoEstado = cliente.estado === 'activo' ? 'inactivo' : 'activo';
     try {
       await updateEstadoCliente(cliente.id, nuevoEstado);
-      
-      // Mostrar mensaje de éxito
       toast.success(`Socio ${nuevoEstado === 'activo' ? 'activado' : 'desactivado'} exitosamente`);
-      
-      // Recargar la lista para mostrar el cambio de estado
       await loadClientes();
-      
-      // Actualizar las estadísticas
       await refreshStats();
     } catch (error) {
       console.error('Error updating estado:', error);
@@ -630,35 +605,24 @@ export function SocioAnalytics() {
 
   return (
     <div className="space-y-8">
-      {/* Header con tabs */}
+      {/* Header mejorado con tabs */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <BarChart3 className="text-blue-600" size={28} />
-            Analíticas y Gestión de Socios
+            <Users className="text-purple-600" size={28} />
+            Gestión de Socios
           </h2>
           <p className="text-gray-600 mt-1">
-            Análisis detallado y gestión completa de tus socios
+            Gestiona y analiza a tus socios de manera eficiente
           </p>
         </div>
         
         <div className="flex items-center gap-3">
-          {/* Tabs */}
-          <div className="flex items-center bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === 'analytics'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <BarChart3 size={16} className="inline mr-2" />
-              Analíticas
-            </button>
+          {/* Tabs mejorados */}
+          <div className="flex items-center bg-gray-100 rounded-xl p-1">
             <button
               onClick={() => setActiveTab('socios')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-6 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                 activeTab === 'socios'
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
@@ -667,6 +631,17 @@ export function SocioAnalytics() {
               <Users size={16} className="inline mr-2" />
               Socios ({clientes.length})
             </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`px-6 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                activeTab === 'analytics'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <BarChart3 size={16} className="inline mr-2" />
+              Analíticas
+            </button>
           </div>
 
           <Button
@@ -674,6 +649,7 @@ export function SocioAnalytics() {
             leftIcon={<RefreshCw size={16} />}
             onClick={refreshStats}
             loading={loading}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50"
           >
             Actualizar
           </Button>
@@ -681,6 +657,279 @@ export function SocioAnalytics() {
       </div>
 
       {/* Contenido según tab activo */}
+      {activeTab === 'socios' && (
+        <>
+          {/* Barra de búsqueda y filtros mejorada */}
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6">
+              {/* Search mejorado */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Buscar socios por nombre, email, teléfono..."
+                  value={searchTerm}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-lg"
+                />
+
+                {/* Resultados de búsqueda mejorados */}
+                <AnimatePresence>
+                  {showSearchResults && searchResults.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-200 max-h-80 overflow-y-auto z-[99999]"
+                    >
+                      {searchResults.map((cliente) => (
+                        <div
+                          key={cliente.id}
+                          onClick={() => handleSelectCliente(cliente)}
+                          className="p-4 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0 transition-colors"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
+                              {cliente.avatar ? (
+                                <Image
+                                  src={cliente.avatar}
+                                  alt={cliente.nombre}
+                                  className="w-full h-full object-cover rounded-full"
+                                  width={40}
+                                  height={40}
+                                />
+                              ) : (
+                                <User size={18} className="text-slate-400" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-semibold text-slate-900">{cliente.nombre}</p>
+                              <p className="text-sm text-slate-500">{cliente.email}</p>
+                            </div>
+                            <div className="text-sm text-slate-400">
+                              ${cliente.montoTotalGastado.toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Action Buttons mejorados */}
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center gap-2 px-6 py-4 rounded-2xl border transition-all ${
+                    showFilters 
+                      ? 'bg-purple-50 border-purple-200 text-purple-700' 
+                      : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Filter className="w-4 h-4" />
+                  Filtros
+                </button>
+                
+                <button
+                  onClick={exportData}
+                  className="flex items-center gap-2 bg-emerald-500 text-white px-6 py-4 rounded-2xl hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30"
+                >
+                  <Download className="w-4 h-4" />
+                  Exportar
+                </button>
+
+                {/* Botón principal de crear socio mejorado */}
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-violet-600 text-white px-6 py-4 rounded-2xl hover:from-purple-700 hover:to-violet-700 transition-all shadow-lg shadow-purple-500/30 group"
+                >
+                  <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
+                  Nuevo Socio
+                  <Sparkles size={14} className="text-yellow-300" />
+                </button>
+
+                <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-3 rounded-xl transition-colors ${
+                      viewMode === 'grid' 
+                        ? 'bg-white text-slate-900 shadow-sm' 
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Grid size={16} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-3 rounded-xl transition-colors ${
+                      viewMode === 'list' 
+                        ? 'bg-white text-slate-900 shadow-sm' 
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <List size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Panel de filtros */}
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="border-t border-slate-200 pt-6"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Estado
+                      </label>
+                      <select
+                        value={filtros.estado || ''}
+                        onChange={(e) => setFiltros({
+                          ...filtros,
+                          estado: e.target.value as 'activo' | 'inactivo' | 'suspendido' | undefined
+                        })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      >
+                        <option value="">Todos los estados</option>
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                        <option value="suspendido">Suspendido</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Fecha desde
+                      </label>
+                      <input
+                        type="date"
+                        value={filtros.fechaDesde ? format(filtros.fechaDesde, 'yyyy-MM-dd') : ''}
+                        onChange={(e) => setFiltros({
+                          ...filtros,
+                          fechaDesde: e.target.value ? new Date(e.target.value) : undefined
+                        })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Fecha hasta
+                      </label>
+                      <input
+                        type="date"
+                        value={filtros.fechaHasta ? format(filtros.fechaHasta, 'yyyy-MM-dd') : ''}
+                        onChange={(e) => setFiltros({
+                          ...filtros,
+                          fechaHasta: e.target.value ? new Date(e.target.value) : undefined
+                        })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div className="flex items-end">
+                      <button
+                        onClick={clearFiltros}
+                        className="w-full px-4 py-2 text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                      >
+                        Limpiar filtros
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 text-center">
+                    <span className="text-sm text-slate-600">
+                      {clientes.length} socio{clientes.length !== 1 ? 's' : ''} encontrado{clientes.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Lista de socios mejorada */}
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+            {error && (
+              <div className="p-6 bg-red-50 border-b border-red-200 flex items-center gap-3">
+                <AlertCircle className="text-red-500" size={20} />
+                <div>
+                  <h3 className="font-medium text-red-800">Error al cargar socios</h3>
+                  <p className="text-red-600">{error}</p>
+                </div>
+              </div>
+            )}
+
+            {clientes.length === 0 && !loading ? (
+              <div className="text-center py-16">
+                <div className="w-20 h-20 mx-auto mb-8 bg-gradient-to-br from-purple-100 to-violet-200 rounded-3xl flex items-center justify-center">
+                  <Users className="w-10 h-10 text-purple-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-3">
+                  No hay socios registrados
+                </h3>
+                <p className="text-slate-600 mb-8 max-w-md mx-auto">
+                  Comienza agregando tu primer socio para gestionar sus perfiles y analizar su comportamiento
+                </p>
+                <Button
+                  leftIcon={<UserPlus size={16} />}
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white shadow-lg shadow-purple-500/30"
+                >
+                  Agregar Primer Socio
+                </Button>
+              </div>
+            ) : (
+              <div className="p-8">
+                <div className={`grid gap-8 ${
+                  viewMode === 'grid' 
+                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                    : 'grid-cols-1'
+                }`}>
+                  {clientes.map((cliente) => (
+                    <SocioCard
+                      key={cliente.id}
+                      cliente={cliente}
+                      onSelect={handleSelectCliente}
+                      onEdit={openEditModal}
+                      onDelete={(cliente) => {
+                        setSelectedCliente(cliente);
+                        setShowDeleteModal(true);
+                      }}
+                      onToggleEstado={handleToggleEstado}
+                    />
+                  ))}
+                </div>
+
+                {/* Load More Button */}
+                {hasMore && (
+                  <div className="text-center mt-10">
+                    <Button
+                      variant="outline"
+                      onClick={loadMoreClientes}
+                      loading={loading}
+                      className="px-8 border-slate-300 text-slate-700 hover:bg-slate-50"
+                    >
+                      Cargar más socios
+                    </Button>
+                  </div>
+                )}
+
+                {/* Pagination Info */}
+                <div className="text-center text-sm text-slate-500 mt-6">
+                  Mostrando {clientes.length} de {total} socios
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
       {activeTab === 'analytics' && (
         <>
           {/* Controles de analíticas */}
@@ -788,306 +1037,7 @@ export function SocioAnalytics() {
         </>
       )}
 
-      {activeTab === 'socios' && (
-        <>
-          {/* Barra de búsqueda y filtros para socios */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
-              {/* Search */}
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Buscar socios por nombre, email, teléfono..."
-                  value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                />
-
-                {/* Resultados de búsqueda */}
-                <AnimatePresence>
-                  {showSearchResults && searchResults.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-slate-200 max-h-64 overflow-y-auto z-50"
-                    >
-                      {searchResults.map((cliente) => (
-                        <div
-                          key={cliente.id}
-                          onClick={() => handleSelectCliente(cliente)}
-                          className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
-                              {cliente.avatar ? (
-                                <Image
-                                  src={cliente.avatar}
-                                  alt={cliente.nombre}
-                                  className="w-full h-full object-cover rounded-full"
-                                  width={32}
-                                  height={32}
-                                />
-                              ) : (
-                                <User size={16} className="text-slate-400" />
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-medium text-slate-900">{cliente.nombre}</p>
-                              <p className="text-sm text-slate-500">{cliente.email}</p>
-                            </div>
-                            <div className="text-sm text-slate-400">
-                              ${cliente.montoTotalGastado.toLocaleString()}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
-                    showFilters 
-                      ? 'bg-purple-50 border-purple-200 text-purple-700' 
-                      : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <Filter className="w-4 h-4" />
-                  Filtros
-                </button>
-                
-                <button
-                  onClick={exportData}
-                  className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-3 rounded-xl hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30"
-                >
-                  <Download className="w-4 h-4" />
-                  Exportar
-                </button>
-
-                {/* Dropdown para crear socio */}
-                <div className="relative group">
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2 bg-purple-500 text-white px-4 py-3 rounded-xl hover:bg-purple-600 transition-colors shadow-lg shadow-purple-500/30"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    Nuevo Socio
-                    <div className="w-1 h-1 bg-white rounded-full ml-1"></div>
-                  </button>
-
-                  {/* Dropdown menu */}
-                  <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                    <button
-                      onClick={() => {
-                        setShowCreateModal(true);
-                        resetForm();
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                    >
-                      <UserPlus size={14} />
-                      Formulario básico
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowCreateModal(true);
-                        resetForm();
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                    >
-                      <Zap size={14} />
-                      Formulario completo
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded-lg transition-colors ${
-                      viewMode === 'grid' 
-                        ? 'bg-white text-slate-900 shadow-sm' 
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <Grid size={16} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-lg transition-colors ${
-                      viewMode === 'list' 
-                        ? 'bg-white text-slate-900 shadow-sm' 
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <List size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Panel de filtros */}
-            <AnimatePresence>
-              {showFilters && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="border-t border-slate-200 pt-4"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Estado
-                      </label>
-                      <select
-                        value={filtros.estado || ''}
-                        onChange={(e) => setFiltros({
-                          ...filtros,
-                          estado: e.target.value as 'activo' | 'inactivo' | 'suspendido' | undefined
-                        })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      >
-                        <option value="">Todos los estados</option>
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
-                        <option value="suspendido">Suspendido</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Fecha desde
-                      </label>
-                      <input
-                        type="date"
-                        value={filtros.fechaDesde ? format(filtros.fechaDesde, 'yyyy-MM-dd') : ''}
-                        onChange={(e) => setFiltros({
-                          ...filtros,
-                          fechaDesde: e.target.value ? new Date(e.target.value) : undefined
-                        })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Fecha hasta
-                      </label>
-                      <input
-                        type="date"
-                        value={filtros.fechaHasta ? format(filtros.fechaHasta, 'yyyy-MM-dd') : ''}
-                        onChange={(e) => setFiltros({
-                          ...filtros,
-                          fechaHasta: e.target.value ? new Date(e.target.value) : undefined
-                        })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      />
-                    </div>
-                    
-                    <div className="flex items-end">
-                      <button
-                        onClick={clearFiltros}
-                        className="w-full px-4 py-2 text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-                      >
-                        Limpiar filtros
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 text-center">
-                    <span className="text-sm text-slate-600">
-                      {clientes.length} socio{clientes.length !== 1 ? 's' : ''} encontrado{clientes.length !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Lista de socios */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            {error && (
-              <div className="p-6 bg-red-50 border-b border-red-200 flex items-center gap-3">
-                <AlertCircle className="text-red-500" size={20} />
-                <div>
-                  <h3 className="font-medium text-red-800">Error al cargar socios</h3>
-                  <p className="text-red-600">{error}</p>
-                </div>
-              </div>
-            )}
-
-            {clientes.length === 0 && !loading ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center">
-                  <Users className="w-8 h-8 text-slate-400" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">
-                  No hay socios registrados
-                </h3>
-                <p className="text-slate-600 mb-6">
-                  Comienza agregando tu primer socio para gestionar sus perfiles
-                </p>
-                <Button
-                  leftIcon={<UserPlus size={16} />}
-                  onClick={() => setShowCreateModal(true)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
-                >
-                  Agregar Primer Socio
-                </Button>
-              </div>
-            ) : (
-              <div className="p-6">
-                <div className={`grid gap-6 ${
-                  viewMode === 'grid' 
-                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                    : 'grid-cols-1'
-                }`}>
-                  {clientes.map((cliente) => (
-                    <SocioCard
-                      key={cliente.id}
-                      cliente={cliente}
-                      onSelect={handleSelectCliente}
-                      onEdit={openEditModal}
-                      onDelete={(cliente) => {
-                        setSelectedCliente(cliente);
-                        setShowDeleteModal(true);
-                      }}
-                      onToggleEstado={handleToggleEstado}
-                    />
-                  ))}
-                </div>
-
-                {/* Load More Button */}
-                {hasMore && (
-                  <div className="text-center mt-8">
-                    <Button
-                      variant="outline"
-                      onClick={loadMoreClientes}
-                      loading={loading}
-                      className="px-8 border-slate-300 text-slate-700 hover:bg-slate-50"
-                    >
-                      Cargar más socios
-                    </Button>
-                  </div>
-                )}
-
-                {/* Pagination Info */}
-                <div className="text-center text-sm text-slate-500 mt-4">
-                  Mostrando {clientes.length} de {total} socios
-                </div>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Todos los modales mantienen la misma estructura pero con las funciones actualizadas */}
+      {/* Todos los modales mantienen la misma estructura pero con z-index mejorado */}
       {/* Modal de crear socio - PANTALLA COMPLETA CON PORTAL */}
       <Dialog open={showCreateModal} onClose={() => setShowCreateModal(false)} fullScreen>
         <DialogContent fullScreen>
@@ -1129,7 +1079,7 @@ export function SocioAnalytics() {
                     label="Email *"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                     placeholder="email@ejemplo.com"
                     required
                     className="text-xl py-4"
@@ -1283,7 +1233,7 @@ export function SocioAnalytics() {
               onClick={handleCreateCliente}
               loading={loading}
               disabled={!formData.nombre || !formData.email}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-10 py-4 text-xl shadow-lg shadow-purple-500/30"
+              className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white px-10 py-4 text-xl shadow-lg shadow-purple-500/30"
             >
               <UserPlus size={24} className="mr-3" />
               Crear Socio
@@ -1486,7 +1436,7 @@ export function SocioAnalytics() {
               onClick={handleEditCliente}
               loading={loading}
               disabled={!formData.nombre || !formData.email}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-10 py-4 text-xl shadow-lg shadow-emerald-500/30"
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-10 py-4 text-xl shadow-lg shadow-emerald-500/30"
             >
               <Edit3 size={24} className="mr-3" />
               Guardar Cambios
@@ -1797,7 +1747,7 @@ export function SocioAnalytics() {
         </DialogContent>
       </Dialog>
 
-      {/* Componente de creación rápida flotante */}
+      {/* Componente de creación rápida flotante mejorado */}
       <QuickClienteCreator
         onCreateCliente={createCliente}
         loading={loading}
@@ -1807,3 +1757,4 @@ export function SocioAnalytics() {
 }
 
 export default SocioAnalytics;
+
