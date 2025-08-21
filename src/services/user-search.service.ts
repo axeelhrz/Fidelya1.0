@@ -439,6 +439,95 @@ class UserSearchService {
   }
 
   /**
+   * Search users by DNI specifically (more efficient for DNI searches)
+   */
+  async searchByDni(dni: string, excludeAsociacionId?: string): Promise<RegisteredUser[]> {
+    try {
+      console.log('🔍 Searching users by DNI:', dni);
+      
+      const dniSearchTerm = dni.toString().trim();
+      let allUsers: RegisteredUser[] = [];
+
+      // Search in users collection
+      const usersQuery = query(
+        collection(db, this.usersCollection),
+        where('dni', '==', dniSearchTerm),
+        where('estado', '==', 'activo'),
+        limit(5)
+      );
+
+      const usersSnapshot = await getDocs(usersQuery);
+      const usersFromUsers = usersSnapshot.docs.map(docSnapshot => {
+        const data = docSnapshot.data();
+        return {
+          id: docSnapshot.id,
+          uid: data.uid || docSnapshot.id,
+          nombre: data.nombre || '',
+          email: data.email || '',
+          telefono: data.telefono,
+          dni: data.dni,
+          role: data.role || '',
+          estado: data.estado || 'activo',
+          creadoEn: data.creadoEn?.toDate() || new Date(),
+          ultimoAcceso: data.ultimoAcceso?.toDate(),
+          avatar: data.avatar,
+          metadata: data.metadata,
+        } as RegisteredUser;
+      });
+
+      allUsers = [...usersFromUsers];
+
+      // Search in socios collection
+      const sociosQuery = query(
+        collection(db, this.sociosCollection),
+        where('dni', '==', dniSearchTerm),
+        where('estado', '==', 'activo'),
+        limit(5)
+      );
+
+      const sociosSnapshot = await getDocs(sociosQuery);
+      const usersFromSocios = sociosSnapshot.docs.map(docSnapshot => {
+        const data = docSnapshot.data();
+        return {
+          id: docSnapshot.id,
+          uid: data.uid || docSnapshot.id,
+          nombre: data.nombre || '',
+          email: data.email || '',
+          telefono: data.telefono,
+          dni: data.dni,
+          role: 'socio',
+          estado: data.estado || 'activo',
+          creadoEn: data.creadoEn?.toDate() || new Date(),
+          ultimoAcceso: data.ultimoAcceso?.toDate(),
+          avatar: data.avatar,
+          metadata: data.metadata,
+        } as RegisteredUser;
+      });
+
+      // Merge results, avoiding duplicates by email
+      const existingEmails = new Set(allUsers.map(u => u.email.toLowerCase()));
+      const uniqueSociosUsers = usersFromSocios.filter(u => !existingEmails.has(u.email.toLowerCase()));
+      allUsers = [...allUsers, ...uniqueSociosUsers];
+
+      console.log(`✅ Found ${allUsers.length} users with DNI ${dni}`);
+
+      // Filter out existing socios if association ID is provided
+      if (excludeAsociacionId) {
+        const existingSociosEmails = await this.getExistingSociosEmails(excludeAsociacionId);
+        const filteredUsers = allUsers.filter(user => !existingSociosEmails.includes(user.email.toLowerCase()));
+        console.log(`🚫 After filtering existing socios: ${filteredUsers.length} users`);
+        return filteredUsers;
+      }
+
+      return allUsers;
+    } catch (error) {
+      console.error('❌ Error searching by DNI:', error);
+      handleError(error, 'Search By DNI');
+      return [];
+    }
+  }
+
+  /**
    * Debug method to check collections and data
    */
   async debugCollections(): Promise<void> {
