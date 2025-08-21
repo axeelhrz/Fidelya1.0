@@ -8,12 +8,12 @@ import {
   writeBatch,
   serverTimestamp,
   Timestamp,
-  updateDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/constants';
+import { COLLECTIONS, USER_STATES } from '@/lib/constants';
 import { handleError } from '@/lib/error-handler';
 import { Socio } from '@/types/socio';
+import { membershipSyncService } from './membership-sync.service';
 
 class SocioAsociacionService {
   private readonly sociosCollection = COLLECTIONS.SOCIOS;
@@ -21,7 +21,7 @@ class SocioAsociacionService {
   private readonly usersCollection = COLLECTIONS.USERS;
 
   /**
-   * Vincula un socio a una asociación (actualiza ambas partes y la tabla users)
+   * Vincula un socio a una asociación con sincronización de estado mejorada
    */
   async vincularSocioAsociacion(socioId: string, asociacionId: string): Promise<boolean> {
     try {
@@ -85,18 +85,22 @@ class SocioAsociacionService {
       // Verificar si ya está vinculado
       if (socioData.asociacionId === asociacionId) {
         console.log('⚠️ El socio ya está vinculado a esta asociación');
-        return true; // Ya está vinculado, consideramos éxito
+        // Aún así, sincronizar el estado para asegurar consistencia
+        await membershipSyncService.syncMembershipStatus(socioId);
+        return true;
       }
       
       // Usar batch para actualizar todos los documentos de forma atómica
       const batch = writeBatch(db);
       
-      // 4. Actualizar socio con la asociación
+      // 4. Actualizar socio con la asociación y estado activo
       batch.update(socioRef, {
         asociacionId: asociacionId,
         asociacion: asociacionData.nombre || 'Asociación',
         fechaVinculacion: serverTimestamp(),
         vinculadoPor: asociacionId,
+        estado: 'activo', // Asegurar que el socio esté activo
+        estadoMembresia: 'al_dia', // Establecer membresía al día
         actualizadoEn: serverTimestamp(),
       });
       
@@ -105,6 +109,7 @@ class SocioAsociacionService {
         console.log('🔄 Actualizando usuario en colección users');
         batch.update(userRef, {
           asociacionId: asociacionId,
+          estado: USER_STATES.ACTIVO, // Asegurar que el usuario esté activo
           actualizadoEn: serverTimestamp(),
         });
       }
@@ -130,6 +135,10 @@ class SocioAsociacionService {
       
       console.log('✅ Socio vinculado exitosamente a la asociación');
       console.log(`📊 Documentos actualizados: socio (${socioId}), asociación (${asociacionId})${userRef ? ', usuario' : ''}`);
+      
+      // 7. Sincronizar estado de membresía después de la vinculación
+      console.log('🔄 Sincronizando estado de membresía...');
+      await membershipSyncService.syncMembershipStatus(socioId);
       
       return true;
     } catch (error) {
@@ -213,6 +222,7 @@ class SocioAsociacionService {
         asociacion: null,
         fechaVinculacion: null,
         vinculadoPor: null,
+        estadoMembresia: 'pendiente', // Cambiar a pendiente al desvincular
         actualizadoEn: serverTimestamp(),
       });
       
@@ -339,79 +349,22 @@ class SocioAsociacionService {
   }
 
   /**
-   * Sincronizar asociación entre colecciones users y socios
+   * Sincronizar asociación entre colecciones users y socios con validación mejorada
    */
   async sincronizarAsociacionUsuario(userId: string): Promise<boolean> {
     try {
       console.log('🔄 Sincronizando asociación para usuario:', userId);
       
-      // 1. Buscar en colección users
-      const userRef = doc(db, this.usersCollection, userId);
-      const userDoc = await getDoc(userRef);
+      // Usar el servicio de sincronización de membresía
+      const success = await membershipSyncService.syncMembershipStatus(userId);
       
-      if (!userDoc.exists()) {
-        console.log('⚠️ Usuario no encontrado en colección users');
-        return false;
+      if (success) {
+        console.log('✅ Asociación sincronizada correctamente');
+      } else {
+        console.log('❌ Error sincronizando asociación');
       }
       
-      const userData = userDoc.data();
-      
-      // 2. Buscar en colección socios por email o UID
-      let socioDoc = null;
-      let socioRef = null;
-      
-      // Buscar por email
-      if (userData.email) {
-        const socioQuery = query(
-          collection(db, this.sociosCollection),
-          where('email', '==', userData.email.toLowerCase())
-        );
-        const socioSnapshot = await getDocs(socioQuery);
-        
-        if (!socioSnapshot.empty) {
-          socioDoc = socioSnapshot.docs[0];
-          socioRef = socioDoc.ref;
-        }
-      }
-      
-      // Si no se encontró por email, buscar por UID
-      if (!socioDoc) {
-        socioRef = doc(db, this.sociosCollection, userId);
-        socioDoc = await getDoc(socioRef);
-        if (!socioDoc.exists()) {
-          console.log('⚠️ Socio no encontrado en colección socios');
-          return false;
-        }
-      }
-      
-      const socioData = socioDoc.data();
-      
-      // 3. Sincronizar asociacionId
-      if (socioData.asociacionId && socioData.asociacionId !== userData.asociacionId) {
-        console.log('🔄 Actualizando asociacionId en usuario');
-        await updateDoc(userRef, {
-          asociacionId: socioData.asociacionId,
-          actualizadoEn: serverTimestamp(),
-        });
-        console.log('✅ Asociación sincronizada en usuario');
-        return true;
-      } else if (userData.asociacionId && userData.asociacionId !== socioData.asociacionId) {
-        console.log('🔄 Actualizando asociacionId en socio');
-        if (socioRef) {
-          await updateDoc(socioRef, {
-            asociacionId: userData.asociacionId,
-            actualizadoEn: serverTimestamp(),
-          });
-        } else {
-          console.error('❌ socioRef is null, cannot update socio document');
-          return false;
-        }
-        console.log('✅ Asociación sincronizada en socio');
-        return true;
-      }
-      
-      console.log('✅ Asociaciones ya están sincronizadas');
-      return true;
+      return success;
     } catch (error) {
       console.error('❌ Error sincronizando asociación:', error);
       handleError(error, 'Sincronizar Asociación Usuario');
@@ -420,7 +373,7 @@ class SocioAsociacionService {
   }
 
   /**
-   * Debug: Verificar estado de vinculación de un socio
+   * Debug: Verificar estado de vinculación de un socio con sincronización
    */
   async debugSocioVinculacion(socioId: string): Promise<void> {
     try {
@@ -438,6 +391,8 @@ class SocioAsociacionService {
           asociacionId: socioData.asociacionId,
           asociacion: socioData.asociacion,
           fechaVinculacion: socioData.fechaVinculacion,
+          estado: socioData.estado,
+          estadoMembresia: socioData.estadoMembresia,
         });
       } else {
         console.log('❌ Socio no encontrado en colección socios');
@@ -454,6 +409,7 @@ class SocioAsociacionService {
           email: userData.email,
           asociacionId: userData.asociacionId,
           role: userData.role,
+          estado: userData.estado,
         });
       } else {
         console.log('❌ Usuario no encontrado en colección users');
@@ -477,13 +433,53 @@ class SocioAsociacionService {
               email: userByEmailData.email,
               asociacionId: userByEmailData.asociacionId,
               role: userByEmailData.role,
+              estado: userByEmailData.estado,
             });
           }
         }
       }
       
+      // Verificar estado de membresía
+      const membershipStatus = await membershipSyncService.checkMembershipStatus(socioId);
+      if (membershipStatus) {
+        console.log('🔍 Estado de membresía:', membershipStatus);
+        
+        if (membershipStatus.needsSync) {
+          console.log('⚠️ Se requiere sincronización');
+        }
+      }
+      
     } catch (error) {
       console.error('❌ Error en debug:', error);
+    }
+  }
+
+  /**
+   * Corregir estados de membresía inconsistentes para una asociación
+   */
+  async fixAssociationMembershipStates(asociacionId: string): Promise<{
+    success: boolean;
+    fixed: number;
+    errors: string[];
+  }> {
+    try {
+      console.log('🔧 Corrigiendo estados de membresía para asociación:', asociacionId);
+      
+      const result = await membershipSyncService.syncAssociationMembers(asociacionId);
+      
+      return {
+        success: result.success,
+        fixed: result.syncedUsers,
+        errors: result.errors.map(e => e.error),
+      };
+    } catch (error) {
+      console.error('❌ Error corrigiendo estados de membresía:', error);
+      handleError(error, 'Fix Association Membership States');
+      return {
+        success: false,
+        fixed: 0,
+        errors: ['Error general al corregir estados'],
+      };
     }
   }
 }

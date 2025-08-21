@@ -12,6 +12,7 @@ import { auth, db } from '@/lib/firebase';
 import { COLLECTIONS, USER_STATES } from '@/lib/constants';
 import { handleError } from '@/lib/error-handler';
 import { SocioFormData } from '@/types/socio';
+import { membershipSyncService } from './membership-sync.service';
 
 export interface CreateSocioAuthAccountResult {
   success: boolean;
@@ -23,8 +24,7 @@ type SocioDocData = { [key: string]: unknown };
 
 class SocioAuthService {
   /**
-   * Crea una cuenta de Firebase Auth para un socio sin afectar la sesión actual del admin
-   * Utiliza un enfoque que preserva la sesión actual del administrador
+   * Crea una cuenta de Firebase Auth para un socio con estado de membresía correcto
    */
   async createSocioAuthAccount(
     socioData: SocioFormData,
@@ -59,16 +59,16 @@ class SocioAuthService {
       // Crear los documentos en Firestore usando batch
       const batch = writeBatch(db);
 
-      // Documento en la colección users
+      // Documento en la colección users - ACTIVO desde el inicio
       const userDocRef = doc(db, COLLECTIONS.USERS, newUser.uid);
       const userData = {
         email: socioData.email.toLowerCase().trim(),
         nombre: socioData.nombre,
         role: 'socio',
-        estado: USER_STATES.ACTIVO, // Activar inmediatamente
+        estado: USER_STATES.ACTIVO, // ACTIVO desde el inicio
         creadoEn: serverTimestamp(),
         actualizadoEn: serverTimestamp(),
-        asociacionId: asociacionId,
+        asociacionId: asociacionId, // Asignar asociación desde el inicio
         configuracion: {
           notificaciones: true,
           tema: 'light',
@@ -77,6 +77,8 @@ class SocioAuthService {
       };
 
       batch.set(userDocRef, userData);
+
+      // Documento en la colección socios - ACTIVO y AL_DIA desde el inicio
       const socioDocRef = doc(db, COLLECTIONS.SOCIOS, newUser.uid);
       const socioDocData: SocioDocData = {
         nombre: socioData.nombre,
@@ -84,10 +86,12 @@ class SocioAuthService {
         dni: socioData.dni || '',
         telefono: socioData.telefono || '',
         direccion: socioData.direccion || '',
-        asociacionId: asociacionId,
-        estado: socioData.estado || 'activo',
-        estadoMembresia: 'al_dia',
+        asociacionId: asociacionId, // Asignar asociación desde el inicio
+        estado: 'activo', // ACTIVO desde el inicio
+        estadoMembresia: 'al_dia', // AL_DIA desde el inicio - ESTO ES CLAVE
         fechaIngreso: serverTimestamp(),
+        fechaVinculacion: serverTimestamp(), // Fecha de vinculación
+        vinculadoPor: asociacionId, // Vinculado por la asociación
         beneficiosUsados: 0,
         validacionesRealizadas: 0,
         creadoEn: serverTimestamp(),
@@ -122,13 +126,17 @@ class SocioAuthService {
       // Esperar un momento para que Firebase procese el sign out
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Si había un usuario admin logueado, intentar restaurar su sesión
-      // Nota: En Firebase, una vez que haces signOut(), no puedes "restaurar" automáticamente
-      // la sesión anterior. El admin tendrá que volver a loguearse si es necesario.
-      // Sin embargo, en la mayoría de los casos, la aplicación manejará esto automáticamente
-      // a través de onAuthStateChanged.
+      // Verificar y sincronizar el estado de membresía después de la creación
+      console.log('🔄 Verificando estado de membresía después de la creación...');
+      try {
+        await membershipSyncService.syncMembershipStatus(newUser.uid);
+        console.log('✅ Estado de membresía sincronizado correctamente');
+      } catch (syncError) {
+        console.warn('⚠️ Error sincronizando estado de membresía:', syncError);
+        // No fallar la creación por errores de sincronización
+      }
 
-      console.log('✅ Cuenta de socio creada exitosamente sin afectar la sesión del admin');
+      console.log('✅ Cuenta de socio creada exitosamente con estado correcto');
 
       return {
         success: true,

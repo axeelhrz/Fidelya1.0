@@ -27,6 +27,7 @@ import { UserData } from '@/types/auth';
 import { COLLECTIONS, USER_STATES, DASHBOARD_ROUTES } from '@/lib/constants';
 import { handleError } from '@/lib/error-handler';
 import { configService } from '@/lib/config';
+import { membershipSyncService } from './membership-sync.service';
 
 export interface LoginCredentials {
   email: string;
@@ -82,7 +83,7 @@ class AuthService {
   }
 
   /**
-   * Sign in user with email and password
+   * Sign in user with email and password with membership status validation
    */
   async signIn(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
@@ -128,6 +129,24 @@ class AuthService {
         console.warn('🔐 User account is not active:', userData.estado);
         await this.signOut();
         throw new Error(this.getInactiveAccountMessage(userData.estado));
+      }
+
+      // For socios, validate and sync membership status
+      if (userData.role === 'socio') {
+        console.log('🔍 Validating membership status for socio...');
+        try {
+          await membershipSyncService.validateAssociationMembership(userCredential.user.uid);
+          
+          // Get updated user data after potential sync
+          const updatedUserData = await this.getUserData(userCredential.user.uid);
+          if (updatedUserData) {
+            userData.estadoMembresia = updatedUserData.estadoMembresia;
+            userData.asociacionId = updatedUserData.asociacionId;
+          }
+        } catch (syncError) {
+          console.warn('⚠️ Error validating membership status:', syncError);
+          // Don't fail login for sync errors, just log them
+        }
       }
 
       // Clear login attempts on successful login
@@ -338,7 +357,7 @@ class AuthService {
   }
 
   /**
-   * Add role-specific data
+   * Add role-specific data with proper membership status for socios
    */
   private addRoleSpecificData(data: Record<string, unknown>, role: string): void {
     if (role === 'comercio') {
@@ -351,7 +370,7 @@ class AuthService {
       };
     } else if (role === 'socio') {
       data.asociacionesVinculadas = [];
-      data.estadoMembresia = 'pendiente';
+      data.estadoMembresia = 'pendiente'; // Start as pending until association link
     } else if (role === 'asociacion') {
       data.configuracion = {
         notificacionesEmail: true,
@@ -466,7 +485,7 @@ class AuthService {
   }
 
   /**
-   * Complete email verification process
+   * Complete email verification process with membership status sync
    */
   async completeEmailVerification(user: User): Promise<AuthResponse> {
     try {
@@ -495,14 +514,39 @@ class AuthService {
         const roleCollection = this.getRoleCollection(userData.role);
         if (roleCollection) {
           const roleDocRef = doc(db, roleCollection, user.uid);
-          batch.update(roleDocRef, {
+          const updateData: Record<string, unknown> = {
             estado: USER_STATES.ACTIVO,
             actualizadoEn: serverTimestamp(),
-          });
+          };
+
+          // For socios, check if they should have active membership
+          if (userData.role === 'socio') {
+            // Check if socio has an association
+            const socioDoc = await getDoc(roleDocRef);
+            if (socioDoc.exists()) {
+              const socioData = socioDoc.data();
+              if (socioData.asociacionId) {
+                updateData.estadoMembresia = 'al_dia';
+                console.log('🔧 Setting socio membership to al_dia due to association link');
+              }
+            }
+          }
+
+          batch.update(roleDocRef, updateData);
         }
       }
 
       await batch.commit();
+
+      // For socios, sync membership status after activation
+      if (userData?.role === 'socio') {
+        console.log('🔄 Syncing membership status after email verification...');
+        try {
+          await membershipSyncService.syncMembershipStatus(user.uid);
+        } catch (syncError) {
+          console.warn('⚠️ Error syncing membership status after verification:', syncError);
+        }
+      }
 
       const updatedUserData = await this.getUserData(user.uid);
 
@@ -595,7 +639,7 @@ class AuthService {
   }
 
   /**
-   * Get user data from Firestore
+   * Get user data from Firestore with membership status validation
    */
   async getUserData(uid: string): Promise<UserData | null> {
     try {
@@ -609,6 +653,37 @@ class AuthService {
       }
 
       const data = userDoc.data();
+      
+      // For socios, get additional membership information
+            let estadoMembresia: UserData['estadoMembresia'];
+            let asociacionNombre: string | undefined;
+            
+            if (data.role === 'socio') {
+              try {
+                const socioDoc = await getDoc(doc(db, COLLECTIONS.SOCIOS, uid));
+                if (socioDoc.exists()) {
+                  const socioData = socioDoc.data();
+                  const rawEstadoMembresia = socioData.estadoMembresia;
+                  if (['inactivo','suspendido','pendiente','vencido','al_dia'].includes(rawEstadoMembresia)) {
+                    estadoMembresia = rawEstadoMembresia as UserData['estadoMembresia'];
+                  }
+                  asociacionNombre = socioData.asociacion;
+                  
+                  // Sync association ID if different
+                  if (socioData.asociacionId && socioData.asociacionId !== data.asociacionId) {
+                    console.log('🔄 Syncing association ID from socio to user document');
+                    await updateDoc(doc(db, COLLECTIONS.USERS, uid), {
+                      asociacionId: socioData.asociacionId,
+                      actualizadoEn: serverTimestamp(),
+                    });
+                    data.asociacionId = socioData.asociacionId;
+                  }
+                }
+              } catch (socioError) {
+                console.warn('⚠️ Error fetching socio data:', socioError);
+              }
+            }
+
       const userData: UserData = {
         uid: userDoc.id,
         email: data.email,
@@ -626,7 +701,9 @@ class AuthService {
           idioma: 'es',
         },
         metadata: data.metadata,
-        asociacionId: data.asociacionId
+        asociacionId: data.asociacionId,
+        estadoMembresia: estadoMembresia,
+        asociacionNombre: asociacionNombre,
       };
 
       console.log('🔐 User data retrieved successfully');
