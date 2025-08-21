@@ -35,6 +35,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
   const [scanMethod,] = useState<'camera' | 'file'>('camera');
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [selectedCameraId, setSelectedCameraId] = useState<string>('');
+  const [isMobile, setIsMobile] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -42,6 +43,20 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
   const animationFrameRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Detectar si es móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+      const isSmallScreen = window.innerWidth <= 768;
+      setIsMobile(isMobileDevice || isSmallScreen);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Initialize QR scanner when component mounts
   useEffect(() => {
@@ -93,7 +108,25 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
     try {
       console.log('🎥 Requesting camera permission...');
       
-      const constraints: MediaStreamConstraints = {
+      // Configuraciones optimizadas para móvil
+      const mobileConstraints: MediaStreamConstraints = {
+        video: selectedCameraId ? {
+          deviceId: { exact: selectedCameraId },
+          width: { ideal: 1280, max: 1920, min: 640 },
+          height: { ideal: 720, max: 1080, min: 480 },
+          aspectRatio: { ideal: 16/9 },
+          frameRate: { ideal: 30, max: 30 }
+        } : {
+          facingMode: { ideal: facingMode },
+          width: { ideal: 1280, max: 1920, min: 640 },
+          height: { ideal: 720, max: 1080, min: 480 },
+          aspectRatio: { ideal: 16/9 },
+          frameRate: { ideal: 30, max: 30 }
+        }
+      };
+
+      // Configuraciones para desktop
+      const desktopConstraints: MediaStreamConstraints = {
         video: selectedCameraId ? {
           deviceId: { exact: selectedCameraId },
           width: { ideal: 1920, min: 640 },
@@ -107,6 +140,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
         }
       };
 
+      const constraints = isMobile ? mobileConstraints : desktopConstraints;
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       
       // Store the stream reference
@@ -628,21 +662,31 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
               {/* Scanning Overlay */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative">
-                  {/* Scanning Frame - Larger for PC */}
-                  <div className={`w-80 h-80 border-2 rounded-2xl relative transition-colors duration-300 ${
+                  {/* Scanning Frame - Responsive size */}
+                  <div className={`${
+                    isMobile ? 'w-64 h-64' : 'w-80 h-80'
+                  } border-2 rounded-2xl relative transition-colors duration-300 ${
                     isProcessing ? 'border-green-400' : 'border-white/50'
                   }`}>
                     {/* Corner indicators */}
-                    <div className={`absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 rounded-tl-lg transition-colors duration-300 ${
+                    <div className={`absolute top-0 left-0 ${
+                      isMobile ? 'w-8 h-8 border-t-3 border-l-3' : 'w-12 h-12 border-t-4 border-l-4'
+                    } rounded-tl-lg transition-colors duration-300 ${
                       isProcessing ? 'border-green-400' : 'border-violet-400'
                     }`} />
-                    <div className={`absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 rounded-tr-lg transition-colors duration-300 ${
+                    <div className={`absolute top-0 right-0 ${
+                      isMobile ? 'w-8 h-8 border-t-3 border-r-3' : 'w-12 h-12 border-t-4 border-r-4'
+                    } rounded-tr-lg transition-colors duration-300 ${
                       isProcessing ? 'border-green-400' : 'border-violet-400'
                     }`} />
-                    <div className={`absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 rounded-bl-lg transition-colors duration-300 ${
+                    <div className={`absolute bottom-0 left-0 ${
+                      isMobile ? 'w-8 h-8 border-b-3 border-l-3' : 'w-12 h-12 border-b-4 border-l-4'
+                    } rounded-bl-lg transition-colors duration-300 ${
                       isProcessing ? 'border-green-400' : 'border-violet-400'
                     }`} />
-                    <div className={`absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 rounded-br-lg transition-colors duration-300 ${
+                    <div className={`absolute bottom-0 right-0 ${
+                      isMobile ? 'w-8 h-8 border-b-3 border-r-3' : 'w-12 h-12 border-b-4 border-r-4'
+                    } rounded-br-lg transition-colors duration-300 ${
                       isProcessing ? 'border-green-400' : 'border-violet-400'
                     }`} />
                     
@@ -651,7 +695,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
                       <motion.div
                         className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-violet-400 to-transparent"
                         animate={{
-                          y: [0, 320, 0],
+                          y: [0, isMobile ? 256 : 320, 0],
                         }}
                         transition={{
                           duration: 2,
@@ -668,22 +712,32 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
                         animate={{ scale: 1 }}
                         className="absolute inset-0 flex items-center justify-center"
                       >
-                        <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center">
-                          <CheckCircle className="w-10 h-10 text-white" />
+                        <div className={`${
+                          isMobile ? 'w-16 h-16' : 'w-20 h-20'
+                        } bg-green-500 rounded-full flex items-center justify-center`}>
+                          <CheckCircle className={`${
+                            isMobile ? 'w-8 h-8' : 'w-10 h-10'
+                          } text-white`} />
                         </div>
                       </motion.div>
                     )}
                   </div>
                   
                   {/* Instructions */}
-                  <div className="absolute -bottom-24 left-1/2 transform -translate-x-1/2 text-center">
-                    <p className={`text-white text-lg font-medium transition-colors duration-300 mb-2 ${
+                  <div className={`absolute ${
+                    isMobile ? '-bottom-20' : '-bottom-24'
+                  } left-1/2 transform -translate-x-1/2 text-center px-4`}>
+                    <p className={`text-white ${
+                      isMobile ? 'text-base' : 'text-lg'
+                    } font-medium transition-colors duration-300 mb-2 ${
                       isProcessing ? 'text-green-400' : ''
                     }`}>
                       {isProcessing ? '¡Código QR detectado!' : 'Coloca el código QR dentro del marco'}
                     </p>
                     {!isProcessing && (
-                      <p className="text-white/70 text-sm">
+                      <p className={`text-white/70 ${
+                        isMobile ? 'text-xs' : 'text-sm'
+                      }`}>
                         También puedes subir una imagen con el botón de arriba
                       </p>
                     )}
@@ -697,16 +751,18 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
         {/* Bottom Instructions */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 safe-area-bottom">
           <div className="text-center text-white">
-            <p className="text-sm opacity-80 mb-2">
+            <p className={`${isMobile ? 'text-xs' : 'text-sm'} opacity-80 mb-2`}>
               {availableCameras.length > 0 && selectedCameraId && (
                 <>Usando: {availableCameras.find(cam => cam.deviceId === selectedCameraId)?.label || 'Cámara'}<br /></>
               )}
               Mantén estable y asegúrate de que haya buena iluminación
             </p>
-            <div className="flex items-center justify-center space-x-4 text-xs opacity-60">
+            <div className={`flex items-center justify-center space-x-4 ${
+              isMobile ? 'text-xs' : 'text-xs'
+            } opacity-60`}>
               <span>• Enfoque automático</span>
               <span>• Detección instantánea</span>
-              <span>• Múltiples formatos</span>
+              {!isMobile && <span>• Múltiples formatos</span>}
               <span>• Seguro y privado</span>
             </div>
           </div>
