@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('clubs', function (Blueprint $table) {
             // Basic club information
-            $table->string('club_code')->unique()->after('id');
+            $table->string('club_code')->nullable()->after('id');
             $table->string('ruc')->nullable()->after('name');
             $table->string('country')->default('Ecuador')->after('city');
             $table->string('province')->nullable()->after('country');
@@ -77,6 +77,21 @@ return new class extends Migration
             $table->index(['average_ranking']);
             $table->index(['total_members']);
             $table->index(['can_create_tournaments']);
+        });
+
+        // After adding the column, generate codes for existing clubs
+        $clubs = \App\Models\Club::whereNull('club_code')->get();
+        foreach ($clubs as $club) {
+            do {
+                $code = 'CLUB' . strtoupper(\Illuminate\Support\Str::random(6));
+            } while (\App\Models\Club::where('club_code', $code)->exists());
+            
+            $club->update(['club_code' => $code]);
+        }
+
+        // Now make club_code unique
+        Schema::table('clubs', function (Blueprint $table) {
+            $table->unique('club_code');
         });
     }
 
