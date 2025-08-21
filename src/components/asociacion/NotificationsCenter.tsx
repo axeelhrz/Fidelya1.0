@@ -10,8 +10,6 @@ import {
   Users,
   MessageSquare,
   Mail,
-  TrendingUp,
-  TrendingDown,
   Clock,
   CheckCircle,
   XCircle,
