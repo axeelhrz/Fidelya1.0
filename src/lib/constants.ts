@@ -55,6 +55,26 @@ const getDevUrl = (): string => {
   return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
 };
 
+// Helper function to get the production URL (for password reset and email verification)
+const getProductionUrl = (): string => {
+  // En producción, siempre usar el dominio de la plataforma
+  if (process.env.NODE_ENV === 'production') {
+    // Priorizar la URL configurada en variables de entorno
+    if (process.env.NEXT_PUBLIC_APP_URL) {
+      return process.env.NEXT_PUBLIC_APP_URL;
+    }
+    // Si está en Vercel, usar la URL de Vercel
+    if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+      return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+    }
+    // Fallback al dominio principal de la plataforma
+    return 'https://fidelya.vercel.app';
+  }
+  
+  // En desarrollo, usar localhost solo si no hay URL configurada
+  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
+};
+
 // App configuration
 export const APP_CONFIG = {
   name: 'Fidelya',
