@@ -56,7 +56,7 @@ const getDevUrl = (): string => {
 };
 
 // Helper function to get the production URL (for password reset and email verification)
-const getProductionUrl = (): string => {
+export const getProductionUrl = (): string => {
   // En producción, siempre usar el dominio de la plataforma
   if (process.env.NODE_ENV === 'production') {
     // Priorizar la URL configurada en variables de entorno

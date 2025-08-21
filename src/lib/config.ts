@@ -1,4 +1,4 @@
-import { APP_CONFIG, isDevelopment, isProduction } from './constants';
+ import { APP_CONFIG, isDevelopment, isProduction } from './constants';
 
 interface AppConfig {
   app: {

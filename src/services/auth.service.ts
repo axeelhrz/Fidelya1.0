@@ -544,7 +544,7 @@ class AuthService {
       }
 
       const actionCodeSettings: ActionCodeSettings = {
-        url: `${configService.getAppUrl()}/auth/login?reset=true`,
+        url: `${configService.getAuthUrl()}/auth/login?reset=true`,
         handleCodeInApp: false,
       };
 

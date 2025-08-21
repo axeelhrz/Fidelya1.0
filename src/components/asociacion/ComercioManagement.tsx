@@ -993,7 +993,7 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                           {comercio.estado}
                         </span>
                         <span className="inline-flex items-center px-2 lg:px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                          {comercio.categoria}
+                                                      Categoría
                         </span>
                       </div>
                       
@@ -1230,88 +1230,6 @@ export const ComercioManagement: React.FC<ComercioManagementProps> = ({
                       <th className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center space-x-1">
                           {/* Table header actions should not reference 'comercio' */}
-                          {/* <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleViewBeneficios(comercio)}
-                            className="p-1.5 lg:p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-all duration-200"
-                            title="Ver todos los beneficios"
-                          >
-                            <Eye size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button> */}
-
-                          {/* Table header actions should not reference 'comercio' */}
-                          {/* <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleViewValidations(comercio)}
-                            className="p-1.5 lg:p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                            title="Ver validaciones"
-                          >
-                            <FileText size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button>
-
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleGenerateQR(comercio)}
-                            className="p-1.5 lg:p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-all duration-200"
-                            title="Generar QR"
-                          >
-                            <QrCode size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button>
-                          
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleEdit(comercio)}
-                            className="p-1.5 lg:p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all duration-200"
-                            title="Editar"
-                          >
-                            <Edit size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button>
-
-                          {comercio.estado === 'activo' ? (
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => handleStatusChange(comercio, 'inactivo')}
-                              className="p-1.5 lg:p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-all duration-200"
-                              title="Desactivar"
-                            >
-                              <PowerOff size={14} className="lg:w-4 lg:h-4" />
-                            </motion.button>
-                          ) : (
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => handleStatusChange(comercio, 'activo')}
-                              className="p-1.5 lg:p-2 text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 rounded-lg transition-all duration-200"
-                              title="Activar"
-                            >
-                              <Power size={14} className="lg:w-4 lg:h-4" />
-                            </motion.button>
-                          )}
-                          
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setComercioToUnlink(comercio)}
-                            className="p-1.5 lg:p-2 text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-lg transition-all duration-200"
-                            title="Desvincular"
-                          >
-                            <Unlink size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button>
-
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setComercioToDelete(comercio)}
-                            className="p-1.5 lg:p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-all duration-200"
-                            title="Eliminar"
-                          >
-                            <Trash2 size={14} className="lg:w-4 lg:h-4" />
-                          </motion.button>
                         </div>
                       </th>
                     </tr>
