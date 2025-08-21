@@ -76,8 +76,6 @@ const toDate = (timestamp: Timestamp | Date): Date => {
   return new Date();
 };
 
-// Helper function to safely get string value
-
 export const ValidacionesHistory: React.FC = () => {
   const { validaciones, loading, getStats, loadMore, hasMore, refresh, error } = useValidaciones();
   const [searchTerm, setSearchTerm] = useState('');
