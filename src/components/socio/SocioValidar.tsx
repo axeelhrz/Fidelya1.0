@@ -63,12 +63,78 @@ export const SocioValidar: React.FC = () => {
   // Estados para UI
   const [isReady, setIsReady] = useState(false);
 
-  // Enhanced QR Scan handler
+  // Enhanced QR Scan handler with socio status validation
   const handleQRScan = useCallback(
     async (qrData: string) => {
       if (!user) {
         toast.error('Usuario no autenticado');
         return;
+      }
+
+      // VALIDACIÓN PREVIA: Verificar que el socio esté activo antes de procesar el QR
+      if (user.estado !== 'activo') {
+        const estadoMessages = {
+          'inactivo': 'Tu cuenta está inactiva. Contacta al administrador para reactivarla.',
+          'pendiente': 'Tu cuenta está pendiente de activación. Contacta al administrador.',
+          'suspendido': 'Tu cuenta está suspendida. Contacta al administrador para más información.',
+          'vencido': 'Tu cuenta está vencida. Renueva tu membresía para continuar.'
+        };
+        
+        const message = estadoMessages[user.estado as keyof typeof estadoMessages] || 
+                       `Tu cuenta está ${user.estado}. Contacta al administrador.`;
+        
+        toast.error(message);
+        
+        // Create error result for modal
+        const errorResult: ValidacionResponse = {
+          resultado: 'no_habilitado',
+          motivo: message,
+          fechaHora: new Date(),
+          socio: {
+            nombre: user.nombre || 'Usuario',
+            estado: user.estado || 'inactivo',
+            asociacion: user.asociacionId || 'independiente'
+          }
+        };
+        
+        setValidationResult(errorResult);
+        setValidationModalOpen(true);
+        return;
+      }
+
+      // VALIDACIÓN ADICIONAL: Para socios con asociación, verificar estado de membresía
+      if (user.asociacionId) {
+        const estadosInvalidos = ['vencido', 'pendiente', 'suspendido', 'inactivo'];
+        
+        if (user.estadoMembresia && estadosInvalidos.includes(user.estadoMembresia)) {
+          const membershipMessages = {
+            'vencido': 'Tu membresía está vencida. Renueva tu cuota para acceder a beneficios.',
+            'pendiente': 'Tu membresía está pendiente de activación. Contacta a tu asociación.',
+            'suspendido': 'Tu membresía está suspendida. Contacta a tu asociación.',
+            'inactivo': 'Tu membresía está inactiva. Contacta a tu asociación.'
+          };
+          
+          const message = membershipMessages[user.estadoMembresia as keyof typeof membershipMessages] || 
+                         `Tu membresía está ${user.estadoMembresia}. Contacta a tu asociación.`;
+          
+          toast.error(message);
+          
+          // Create error result for modal
+          const errorResult: ValidacionResponse = {
+            resultado: 'no_habilitado',
+            motivo: message,
+            fechaHora: new Date(),
+            socio: {
+              nombre: user.nombre || 'Usuario',
+              estado: user.estadoMembresia || 'inactivo',
+              asociacion: user.asociacionId || 'independiente'
+            }
+          };
+          
+          setValidationResult(errorResult);
+          setValidationModalOpen(true);
+          return;
+        }
       }
 
       setScannerLoading(true);
@@ -147,9 +213,66 @@ export const SocioValidar: React.FC = () => {
     [user]
   );
 
-  // Initialize component
+  // Initialize component with enhanced socio validation
   useEffect(() => {
     if (user && user.role === 'socio') {
+      // VALIDACIÓN INICIAL: Verificar que el socio esté activo al cargar el componente
+      if (user.estado !== 'activo') {
+        console.warn('⚠️ Socio no activo intentando acceder a validaciones:', {
+          userId: user.uid,
+          estado: user.estado,
+          estadoMembresia: user.estadoMembresia
+        });
+        
+        const estadoMessages = {
+          'inactivo': 'Tu cuenta está inactiva. No puedes validar beneficios.',
+          'pendiente': 'Tu cuenta está pendiente de activación.',
+          'suspendido': 'Tu cuenta está suspendida.',
+          'vencido': 'Tu cuenta está vencida.'
+        };
+        
+        const message = estadoMessages[user.estado as keyof typeof estadoMessages] || 
+                       `Tu cuenta está ${user.estado}.`;
+        
+        toast.error(message);
+        setIsReady(false);
+        return;
+      }
+
+      // VALIDACIÓN ADICIONAL: Para socios con asociación
+      if (user.asociacionId) {
+        const estadosInvalidos = ['vencido', 'pendiente', 'suspendido', 'inactivo'];
+        
+        if (user.estadoMembresia && estadosInvalidos.includes(user.estadoMembresia)) {
+          console.warn('⚠️ Socio con membresía inválida intentando acceder a validaciones:', {
+            userId: user.uid,
+            estadoMembresia: user.estadoMembresia,
+            asociacionId: user.asociacionId
+          });
+          
+          const membershipMessages = {
+            'vencido': 'Tu membresía está vencida. No puedes validar beneficios.',
+            'pendiente': 'Tu membresía está pendiente de activación.',
+            'suspendido': 'Tu membresía está suspendida.',
+            'inactivo': 'Tu membresía está inactiva.'
+          };
+          
+          const message = membershipMessages[user.estadoMembresia as keyof typeof membershipMessages] || 
+                         `Tu membresía está ${user.estadoMembresia}.`;
+          
+          toast.error(message);
+          setIsReady(false);
+          return;
+        }
+      }
+
+      console.log('✅ Socio validado correctamente para usar beneficios:', {
+        userId: user.uid,
+        estado: user.estado,
+        estadoMembresia: user.estadoMembresia,
+        asociacionId: user.asociacionId
+      });
+      
       setIsReady(true);
     }
   }, [user]);
