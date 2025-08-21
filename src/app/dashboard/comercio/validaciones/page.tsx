@@ -348,12 +348,9 @@ function ComercioValidacionesContent() {
                         </div>
                         <div>
                           <p className="text-3xl font-bold text-white">
-                            {stats && stats.totalValidaciones && stats.totalValidaciones > 0 
-                              ? `${Math.round((stats.validacionesExitosas / stats.totalValidaciones) * 100)}%`
-                              : '0%'
-                            }
+                            {stats?.validacionesExitosas || 0}
                           </p>
-                          <p className="text-white/70 text-sm font-medium">Tasa de Éxito</p>
+                          <p className="text-white/70 text-sm font-medium">Exitosas</p>
                         </div>
                       </div>
                     </motion.div>
@@ -449,7 +446,7 @@ function ComercioValidacionesContent() {
                         icon: Activity,
                         color: 'from-blue-500 to-blue-600',
                         bgColor: 'from-blue-50 to-blue-100',
-                        change: '+12%',
+                        change: '+12',
                         changeType: 'up'
                       },
                       {
@@ -458,7 +455,7 @@ function ComercioValidacionesContent() {
                         icon: CheckCircle,
                         color: 'from-green-500 to-green-600',
                         bgColor: 'from-green-50 to-green-100',
-                        change: '+8%',
+                        change: '+8',
                         changeType: 'up'
                       },
                       {
@@ -467,7 +464,7 @@ function ComercioValidacionesContent() {
                         icon: AlertCircle,
                         color: 'from-red-500 to-red-600',
                         bgColor: 'from-red-50 to-red-100',
-                        change: '-3%',
+                        change: '-3',
                         changeType: 'down'
                       },
                       {
@@ -476,7 +473,7 @@ function ComercioValidacionesContent() {
                         icon: Target,
                         color: 'from-purple-500 to-purple-600',
                         bgColor: 'from-purple-50 to-purple-100',
-                        change: '+5%',
+                        change: '+5',
                         changeType: 'up'
                       }
                     ].map((stat, index) => (
@@ -705,8 +702,13 @@ function ComercioValidacionesContent() {
                           </div>
                         </div>
                         <div className="text-center">
-                          <p className="text-3xl font-bold text-blue-900">96.8%</p>
-                          <p className="text-sm text-blue-700">+2.3% vs mes anterior</p>
+                          <p className="text-3xl font-bold text-blue-900">
+                            {stats && stats.totalValidaciones && stats.totalValidaciones > 0 
+                              ? `${Math.round((stats.validacionesExitosas / stats.totalValidaciones) * 100)}`
+                              : '0'
+                            }
+                          </p>
+                          <p className="text-sm text-blue-700">+2.3 vs mes anterior</p>
                         </div>
                       </div>
                     </motion.div>
@@ -734,14 +736,14 @@ function ComercioValidacionesContent() {
                         {
                           title: 'Beneficio Más Popular',
                           value: 'Descuento 20%',
-                          subtitle: '45% de todas las validaciones',
+                          subtitle: '45 de todas las validaciones',
                           icon: '🏆',
                           color: 'from-yellow-400 to-orange-500'
                         },
                         {
                           title: 'Horario Preferido',
                           value: '12:00 - 15:00',
-                          subtitle: '38% de la actividad diaria',
+                          subtitle: '38 de la actividad diaria',
                           icon: '⏰',
                           color: 'from-blue-400 to-indigo-500'
                         },
@@ -754,7 +756,7 @@ function ComercioValidacionesContent() {
                         },
                         {
                           title: 'Cliente Recurrente',
-                          value: '67%',
+                          value: '67',
                           subtitle: 'Socios que regresan',
                           icon: '🔄',
                           color: 'from-purple-400 to-violet-500'
