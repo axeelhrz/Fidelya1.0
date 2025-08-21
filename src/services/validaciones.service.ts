@@ -75,16 +75,31 @@ export interface HistorialValidacion {
   notas?: string;
 }
 
+// Datos mínimos requeridos para validar el estado del socio
+interface SocioValidationData {
+  estado: string;
+  estadoMembresia?: string;
+  asociacionId?: string;
+  fechaVencimiento?: Timestamp | Date | string;
+  nombre?: string;
+  numeroSocio?: string;
+  email?: string;
+  asociacionNombre?: string;
+  beneficiosUsados?: number;
+  ahorroTotal?: number;
+}
+
 class ValidacionesService {
-  private readonly collection = COLLECTIONS.VALIDACIONES;
-  private readonly sociosCollection = COLLECTIONS.SOCIOS;
-  private readonly comerciosCollection = COLLECTIONS.COMERCIOS;
-  private readonly beneficiosCollection = COLLECTIONS.BENEFICIOS;
+  // Colecciones utilizadas en Firestore
+  private collection = COLLECTIONS.VALIDACIONES;
+  private sociosCollection = COLLECTIONS.SOCIOS;
+  private comerciosCollection = COLLECTIONS.COMERCIOS;
+  private beneficiosCollection = COLLECTIONS.BENEFICIOS;
 
   /**
    * VALIDACIÓN ESTRICTA DE SOCIO ACTIVO - Reforzada para garantizar que solo socios activos puedan usar beneficios
    */
-  private async validateActiveSocio(socioData: any): Promise<void> {
+  private async validateActiveSocio(socioData: SocioValidationData): Promise<void> {
     console.log('🔍 Validando estado del socio:', {
       estado: socioData.estado,
       estadoMembresia: socioData.estadoMembresia,
@@ -94,14 +109,14 @@ class ValidacionesService {
 
     // 1. VALIDACIÓN CRÍTICA: Estado del socio debe ser 'activo'
     if (socioData.estado !== 'activo') {
-      const estadoMessages = {
+      const estadoMessages: Record<string, string> = {
         'inactivo': 'Tu cuenta está inactiva. Contacta al administrador para reactivarla.',
         'pendiente': 'Tu cuenta está pendiente de activación. Contacta al administrador.',
         'suspendido': 'Tu cuenta está suspendida. Contacta al administrador para más información.',
         'vencido': 'Tu cuenta está vencida. Renueva tu membresía para continuar.'
       };
       
-      const message = estadoMessages[socioData.estado as keyof typeof estadoMessages] || 
+      const message = estadoMessages[socioData.estado] || 
                      `Tu cuenta está ${socioData.estado}. Contacta al administrador.`;
       
       throw new Error(message);
@@ -114,15 +129,15 @@ class ValidacionesService {
       // Estados de membresía que NO permiten usar beneficios
       const estadosInvalidos = ['vencido', 'pendiente', 'suspendido', 'inactivo'];
       
-      if (estadosInvalidos.includes(socioData.estadoMembresia)) {
-        const membershipMessages = {
+      if (socioData.estadoMembresia && estadosInvalidos.includes(socioData.estadoMembresia)) {
+        const membershipMessages: Record<string, string> = {
           'vencido': 'Tu membresía está vencida. Renueva tu cuota para acceder a beneficios.',
           'pendiente': 'Tu membresía está pendiente de activación. Contacta a tu asociación.',
           'suspendido': 'Tu membresía está suspendida. Contacta a tu asociación.',
           'inactivo': 'Tu membresía está inactiva. Contacta a tu asociación.'
         };
         
-        const message = membershipMessages[socioData.estadoMembresia as keyof typeof membershipMessages] || 
+        const message = membershipMessages[socioData.estadoMembresia] || 
                        `Tu membresía está ${socioData.estadoMembresia}. Contacta a tu asociación.`;
         
         throw new Error(message);
@@ -150,8 +165,6 @@ class ValidacionesService {
       // 4. VALIDACIÓN PARA SOCIOS INDEPENDIENTES
       console.log('🔍 Validando socio independiente...');
       
-      // Los socios independientes también deben tener estado activo
-      // y pueden tener restricciones adicionales según la configuración del sistema
       if (socioData.estadoMembresia && socioData.estadoMembresia !== 'al_dia' && socioData.estadoMembresia !== 'activo') {
         throw new Error('Tu estado de membresía no permite acceder a beneficios en este momento.');
       }
@@ -176,10 +189,13 @@ class ValidacionesService {
           throw new Error('Socio no encontrado en el sistema');
         }
 
-        const socioData = socioDoc.data();
+        const socioData = socioDoc.data() as Partial<SocioValidationData>;
         
+        if (!socioData.estado) {
+          throw new Error('Datos de socio inválidos: estado no definido');
+        }
         // VALIDACIÓN ESTRICTA DE SOCIO ACTIVO - NUEVA FUNCIÓN
-        await this.validateActiveSocio(socioData);
+        await this.validateActiveSocio(socioData as SocioValidationData);
 
         // 2. Enhanced comercio validation
         const comercioRef = doc(db, this.comerciosCollection, request.comercioId);
@@ -496,8 +512,8 @@ class ValidacionesService {
           },
           socio: {
             id: request.socioId,
-            nombre: result.socioData.nombre,
-            numeroSocio: result.socioData.numeroSocio,
+            nombre: result.socioData.nombre ?? '',
+            numeroSocio: result.socioData.numeroSocio ?? '',
             estadoMembresia: result.socioData.estadoMembresia || 'independiente',
           },
           validacion: {
@@ -858,7 +874,7 @@ class ValidacionesService {
     let mejorRacha = 0;
     
     const today = new Date();
-    const dates = new Set();
+    const dates = new Set<string>();
     
     // Get unique dates
     sortedValidaciones.forEach(v => {
@@ -868,15 +884,14 @@ class ValidacionesService {
     
     const uniqueDates = Array.from(dates).sort((a, b) => new Date(b as string).getTime() - new Date(a as string).getTime());
     
-    // Calculate current streak
-    let currentDate = new Date(today);
+    // Calculate current streak (consecutive days up to today)
+    let currentDateRef = new Date(today);
     for (const dateStr of uniqueDates) {
-      const validationDate = new Date(dateStr as string);
-      const diffDays = Math.floor((currentDate.getTime() - validationDate.getTime()) / (1000 * 60 * 60 * 24));
-      
+      const validationDate = new Date(dateStr);
+      const diffDays = Math.floor((currentDateRef.getTime() - validationDate.getTime()) / (1000 * 60 * 60 * 24));
       if (diffDays <= 1) {
         rachaActual++;
-        currentDate = validationDate;
+        currentDateRef = validationDate;
       } else {
         break;
       }
@@ -884,20 +899,23 @@ class ValidacionesService {
     
     // Calculate best streak
     let tempStreak = 1;
-    for (let i = 1; i < uniqueDates.length; i++) {
-      const currentDate = new Date(uniqueDates[i-1] as string);
-      const nextDate = new Date(uniqueDates[i] as string);
-      const diffDays = Math.floor((currentDate.getTime() - nextDate.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (diffDays <= 1) {
-        tempStreak++;
-      } else {
-        mejorRacha = Math.max(mejorRacha, tempStreak);
-        tempStreak = 1;
+    if (uniqueDates.length === 1) {
+      mejorRacha = 1;
+    } else {
+      for (let i = 1; i < uniqueDates.length; i++) {
+        const prevDate = new Date(uniqueDates[i - 1]);
+        const nextDate = new Date(uniqueDates[i]);
+        const diffDays = Math.floor((prevDate.getTime() - nextDate.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays <= 1) {
+          tempStreak++;
+        } else {
+          mejorRacha = Math.max(mejorRacha, tempStreak);
+          tempStreak = 1;
+        }
       }
+      mejorRacha = Math.max(mejorRacha, tempStreak);
     }
-    mejorRacha = Math.max(mejorRacha, tempStreak);
-    
+
     return { rachaActual, mejorRacha };
   }
 
@@ -935,15 +953,16 @@ class ValidacionesService {
 
   private calculateSavingsTrend(validacionesPorMes: Array<{ mes: string; ahorro: number }>): 'up' | 'down' | 'stable' {
     if (validacionesPorMes.length < 2) return 'stable';
-    
+
     const recent = validacionesPorMes.slice(-3);
     const older = validacionesPorMes.slice(-6, -3);
-    
+
     const recentAvg = recent.reduce((sum, m) => sum + m.ahorro, 0) / recent.length;
-    const olderAvg = older.reduce((sum, m) => sum + m.ahorro, 0) / older.length;
-    
+    const olderAvg = older.length > 0 ? older.reduce((sum, m) => sum + m.ahorro, 0) / older.length : recentAvg;
+
+    if (olderAvg === 0) return 'stable';
     const change = ((recentAvg - olderAvg) / olderAvg) * 100;
-    
+
     if (change > 10) return 'up';
     if (change < -10) return 'down';
     return 'stable';

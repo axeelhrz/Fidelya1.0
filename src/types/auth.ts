@@ -1,4 +1,3 @@
-
 export interface UserData {
   uid: string;
   email: string;
@@ -19,6 +18,9 @@ export interface UserData {
   // Role-specific metadata
   metadata?: Record<string, unknown>;
   asociacionId?: string; // For socios and asociaciones
+  // Additional properties for socios
+  estadoMembresia?: 'al_dia' | 'vencido' | 'pendiente' | 'suspendido' | 'inactivo';
+  asociacionNombre?: string;
 }
 
 export interface AuthContextType {
