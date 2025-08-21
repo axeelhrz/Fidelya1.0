@@ -54,7 +54,6 @@ import { Button } from '@/components/ui/Button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { Input } from '@/components/ui/Input';
 import { QuickClienteCreator } from '../clientes/QuickClienteCreator';
-import { subDays } from 'date-fns';
 import { toast } from 'react-hot-toast';
 
 // Componente de métrica avanzada mejorado
@@ -609,17 +608,6 @@ export function SocioAnalytics() {
   // Calcular métricas avanzadas basadas en datos reales
   const advancedMetrics = useMemo(() => {
     if (!clienteStats || !clientes.length) return null;
-
-    const now = new Date();
-    const startDate = (() => {
-      switch (timeRange) {
-        case '7d': return subDays(now, 7);
-        case '30d': return subDays(now, 30);
-        case '90d': return subDays(now, 90);
-        case '1y': return subDays(now, 365);
-        default: return subDays(now, 30);
-      }
-    })();
 
     // Usar estadísticas reales del servicio
     const totalSocios = clienteStats.totalClientes;
