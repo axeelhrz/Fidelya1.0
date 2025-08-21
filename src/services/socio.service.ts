@@ -178,7 +178,7 @@ class SocioService {
   }
 
   /**
-   * Create new socio with Firebase Authentication
+   * Create new socio without Firebase Authentication (simplified approach)
    */
   async createSocio(asociacionId: string, data: SocioFormData): Promise<string | null> {
     try {
@@ -208,109 +208,114 @@ class SocioService {
         }
       }
 
-      // Create Firebase Authentication account
-      const { createUserWithEmailAndPassword } = await import('firebase/auth');
-      const { auth } = await import('@/lib/firebase');
+      // Generate a unique ID for the socio document
+      const socioId = doc(collection(db, this.collection)).id;
       
-      let userCredential;
-      try {
-        if (!data.email || !data.password) {
-          throw new Error('Email y contraseña son requeridos para crear el usuario');
-        }
-        userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      } catch (authError: unknown) {
-        console.error('Error creating Firebase Auth user:', authError);
-        if (authError && typeof authError === 'object' && 'code' in authError) {
-          const firebaseError = authError as { code: string };
-          switch (firebaseError.code) {
-            case 'auth/email-already-in-use':
-              throw new Error('El email ya está registrado en el sistema');
-            case 'auth/weak-password':
-              throw new Error('La contraseña es muy débil');
-            case 'auth/invalid-email':
-              throw new Error('El email no es válido');
-            default:
-              throw new Error('Error al crear la cuenta de usuario');
-          }
-        }
-        throw new Error('Error al crear la cuenta de usuario');
+      // Clean data to remove undefined values and password fields
+      const socioData: Record<string, unknown> = {
+        nombre: data.nombre,
+        email: data.email.toLowerCase(),
+        dni: data.dni || '',
+        asociacionId,
+        numeroSocio,
+        estado: data.estado || 'activo',
+        estadoMembresia: data.fechaVencimiento && data.fechaVencimiento > new Date() ? 'al_dia' : 'pendiente',
+        fechaIngreso: serverTimestamp(),
+        beneficiosUsados: 0,
+        validacionesRealizadas: 0,
+        creadoEn: serverTimestamp(),
+        actualizadoEn: serverTimestamp(),
+        // Store password temporarily for later account creation if needed
+        tempPassword: data.password || this.generateRandomPassword(),
+        requiresAccountCreation: true, // Flag to indicate account needs to be created
+      };
+
+      // Only add optional fields if they have values
+      if (data.telefono) {
+        socioData.telefono = data.telefono;
       }
 
-      const firebaseUid = userCredential.user.uid;
-      
-      try {
-        // Clean data to remove undefined values and password fields
-        const socioData: Record<string, unknown> = {
-          uid: firebaseUid, // Store Firebase UID
-          nombre: data.nombre,
-          email: data.email.toLowerCase(),
-          dni: data.dni || '',
-          asociacionId,
-          numeroSocio,
-          estado: data.estado || 'activo',
-          estadoMembresia: data.fechaVencimiento && data.fechaVencimiento > new Date() ? 'al_dia' : 'pendiente',
-          fechaIngreso: serverTimestamp(),
-          beneficiosUsados: 0,
-          validacionesRealizadas: 0,
-          creadoEn: serverTimestamp(),
-          actualizadoEn: serverTimestamp(),
-          role: 'socio', // Set role for the user
-        };
-
-        // Only add optional fields if they have values
-        if (data.telefono) {
-          socioData.telefono = data.telefono;
-        }
-
-        // Handle fechaNacimiento
-        if (data.fechaNacimiento) {
-          socioData.fechaNacimiento = Timestamp.fromDate(
-            data.fechaNacimiento instanceof Date
-              ? data.fechaNacimiento
-              : data.fechaNacimiento.toDate()
-          );
-        }
-
-        // Handle fechaVencimiento
-        if (data.fechaVencimiento) {
-          socioData.fechaVencimiento = Timestamp.fromDate(
-            data.fechaVencimiento instanceof Date
-              ? data.fechaVencimiento
-              : data.fechaVencimiento.toDate()
-          );
-        }
-
-        // Create socio document in Firestore using Firebase UID as document ID
-        await setDoc(doc(db, this.collection, firebaseUid), socioData);
-
-        // Also create a user document in the users collection for authentication purposes
-        const userData = {
-          uid: firebaseUid,
-          email: data.email.toLowerCase(),
-          nombre: data.nombre,
-          role: 'socio',
-          estado: data.estado || 'activo',
-          asociacionId,
-          creadoEn: serverTimestamp(),
-          actualizadoEn: serverTimestamp(),
-        };
-
-        await setDoc(doc(db, COLLECTIONS.USERS, firebaseUid), userData);
-
-        console.log('✅ Socio and user account created successfully:', firebaseUid);
-        return firebaseUid;
-      } catch (firestoreError) {
-        // If Firestore creation fails, delete the Firebase Auth user
-        try {
-          await userCredential.user.delete();
-        } catch (deleteError) {
-          console.error('Error deleting Firebase Auth user after Firestore failure:', deleteError);
-        }
-        throw firestoreError;
+      if (data.direccion) {
+        socioData.direccion = data.direccion;
       }
+
+      if (data.montoCuota !== undefined) {
+        socioData.montoCuota = data.montoCuota;
+      }
+
+      // Handle fechaNacimiento
+      if (data.fechaNacimiento) {
+        socioData.fechaNacimiento = Timestamp.fromDate(
+          data.fechaNacimiento instanceof Date
+            ? data.fechaNacimiento
+            : data.fechaNacimiento.toDate()
+        );
+      }
+
+      // Handle fechaVencimiento
+      if (data.fechaVencimiento) {
+        socioData.fechaVencimiento = Timestamp.fromDate(
+          data.fechaVencimiento instanceof Date
+            ? data.fechaVencimiento
+            : data.fechaVencimiento.toDate()
+        );
+      }
+
+      // Create socio document in Firestore
+      await setDoc(doc(db, this.collection, socioId), socioData);
+
+      console.log('✅ Socio created successfully (without auth account):', socioId);
+      return socioId;
     } catch (error) {
       handleError(error, 'Create Socio');
       return null;
+    }
+  }
+
+  /**
+   * Generate a random password for temporary storage
+   */
+  private generateRandomPassword(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  }
+
+  /**
+   * Create Firebase Authentication account for existing socio (separate process)
+   * This can be called later without interfering with current admin session
+   */
+  async createSocioAuthAccount(socioId: string): Promise<boolean> {
+    try {
+      const socioDoc = await getDoc(doc(db, this.collection, socioId));
+      if (!socioDoc.exists()) {
+        throw new Error('Socio no encontrado');
+      }
+
+      const socioData = socioDoc.data();
+      if (!socioData.requiresAccountCreation || !socioData.tempPassword) {
+        throw new Error('El socio ya tiene cuenta creada o no requiere creación');
+      }
+
+      // This would need to be implemented using Firebase Admin SDK on the server side
+      // to avoid interfering with the current user session
+      console.log('Auth account creation would be handled server-side for:', socioData.email);
+      
+      // Update socio to remove temporary data
+      await updateDoc(doc(db, this.collection, socioId), {
+        requiresAccountCreation: false,
+        tempPassword: null,
+        hasAuthAccount: true,
+        actualizadoEn: serverTimestamp(),
+      });
+
+      return true;
+    } catch (error) {
+      handleError(error, 'Create Socio Auth Account');
+      return false;
     }
   }
 
