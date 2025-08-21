@@ -7,7 +7,6 @@ import { toast } from 'react-hot-toast';
 import { LogoutModal } from '@/components/ui/LogoutModal';
 import { OptimizedComercioTabSystem } from '@/components/layout/OptimizedComercioTabSystem';
 import { ComercioWelcomeCard } from '@/components/comercio/ComercioWelcomeCard';
-import { ValidacionesDebug } from '@/components/debug/ValidacionesDebug';
 import { useAuth } from '@/hooks/useAuth';
 import { useComercio } from '@/hooks/useComercio';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -144,7 +143,7 @@ export default function OptimizedComercioDashboard() {
       setLoggingOut(false);
       setLogoutModalOpen(false);
     }
-  }, []);
+  }, [signOut, router]);
 
   const handleLogoutCancel = useCallback(() => {
     setLogoutModalOpen(false);
@@ -180,9 +179,6 @@ export default function OptimizedComercioDashboard() {
     <>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
         <div className="p-3 sm:p-4 lg:p-6 xl:p-8 space-y-4 sm:space-y-6 lg:space-y-8 max-w-7xl mx-auto">
-          {/* DEBUG COMPONENT - TEMPORAL */}
-          <ValidacionesDebug />
-          
           {/* Optimized Welcome Card */}
           <ComercioWelcomeCard
             user={user ?? {}}
