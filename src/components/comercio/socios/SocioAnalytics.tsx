@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -35,6 +35,7 @@ import {
   Play,
   List,
   Grid,
+  Zap,
   User,
   ShoppingBag,
   Gift,
@@ -42,11 +43,13 @@ import {
   Mail,
   MessageSquare,
   Sparkles,
-  Plus
+  Plus,
+  TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useClientes } from '@/hooks/useClientes';
+import { useComercio } from '@/hooks/useComercio';
 import { Cliente, ClienteFormData } from '@/types/cliente';
 import { Button } from '@/components/ui/Button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
@@ -55,7 +58,7 @@ import { QuickClienteCreator } from '../clientes/QuickClienteCreator';
 import { subDays } from 'date-fns';
 import { toast } from 'react-hot-toast';
 
-// Componente de métrica avanzada
+// Componente de métrica avanzada mejorado
 const AdvancedMetricCard: React.FC<{
   title: string;
   value: string | number;
@@ -66,6 +69,7 @@ const AdvancedMetricCard: React.FC<{
   trend?: 'up' | 'down' | 'neutral';
   subtitle?: string;
   onClick?: () => void;
+  loading?: boolean;
 }> = ({ 
   title, 
   value, 
@@ -74,7 +78,8 @@ const AdvancedMetricCard: React.FC<{
   color, 
   format = 'number', 
   subtitle,
-  onClick 
+  onClick,
+  loading = false
 }) => {
   const formatValue = (val: string | number) => {
     if (typeof val === 'string') return val;
@@ -96,6 +101,22 @@ const AdvancedMetricCard: React.FC<{
   };
 
   const change = calculateChange();
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
+        <div className="flex items-center justify-between mb-4">
+          <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
+          <div className="w-16 h-6 bg-gray-200 rounded"></div>
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -298,13 +319,13 @@ const SocioCard: React.FC<{
       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
         <div className="text-center">
           <div className="text-lg font-bold text-blue-600">
-            {cliente.totalCompras}
+            {cliente.totalCompras || 0}
           </div>
           <div className="text-xs text-slate-500">Compras</div>
         </div>
         <div className="text-center">
           <div className="text-lg font-bold text-emerald-600">
-            ${cliente.montoTotalGastado.toLocaleString()}
+            ${(cliente.montoTotalGastado || 0).toLocaleString()}
           </div>
           <div className="text-xs text-slate-500">Total gastado</div>
         </div>
@@ -345,7 +366,7 @@ const SocioCard: React.FC<{
   );
 };
 
-// Componente principal mejorado
+// Componente principal mejorado con métricas funcionales
 export function SocioAnalytics() {
   const {
     clientes,
@@ -353,6 +374,7 @@ export function SocioAnalytics() {
     error,
     hasMore,
     total,
+    stats: clienteStats,
     loadClientes,
     loadMoreClientes,
     selectCliente,
@@ -368,10 +390,13 @@ export function SocioAnalytics() {
     refreshStats
   } = useClientes();
 
+  // Hook del comercio para actualizar las estadísticas principales
+  const { loadStats: loadComercioStats } = useComercio();
+
   // Estados para analíticas
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'socios'>('socios'); // Cambiar default a socios
+  const [activeTab, setActiveTab] = useState<'analytics' | 'socios'>('socios');
 
   // Estados para gestión de socios
   const [searchTerm, setSearchTerm] = useState('');
@@ -402,6 +427,18 @@ export function SocioAnalytics() {
       recibirSMS: false,
     },
   });
+
+  // Función para actualizar las estadísticas del dashboard principal
+  const updateDashboardStats = async () => {
+    try {
+      await Promise.all([
+        refreshStats(),
+        loadComercioStats()
+      ]);
+    } catch (error) {
+      console.error('Error updating dashboard stats:', error);
+    }
+  };
 
   // Funciones para gestión de socios
   const resetForm = () => {
@@ -454,8 +491,12 @@ export function SocioAnalytics() {
         setShowCreateModal(false);
         resetForm();
         toast.success('Socio creado exitosamente');
+        
+        // Actualizar estadísticas del dashboard principal
+        await updateDashboardStats();
+        
+        // Recargar lista de clientes
         await loadClientes();
-        await refreshStats();
       }
     } catch (error) {
       console.error('Error creating socio:', error);
@@ -472,8 +513,12 @@ export function SocioAnalytics() {
         setShowEditModal(false);
         resetForm();
         toast.success('Socio actualizado exitosamente');
+        
+        // Actualizar estadísticas del dashboard principal
+        await updateDashboardStats();
+        
+        // Recargar lista de clientes
         await loadClientes();
-        await refreshStats();
       }
     } catch (error) {
       console.error('Error updating socio:', error);
@@ -490,8 +535,12 @@ export function SocioAnalytics() {
         setShowDeleteModal(false);
         setSelectedCliente(null);
         toast.success('Socio eliminado exitosamente');
+        
+        // Actualizar estadísticas del dashboard principal
+        await updateDashboardStats();
+        
+        // Recargar lista de clientes
         await loadClientes();
-        await refreshStats();
       }
     } catch (error) {
       console.error('Error deleting socio:', error);
@@ -504,8 +553,12 @@ export function SocioAnalytics() {
     try {
       await updateEstadoCliente(cliente.id, nuevoEstado);
       toast.success(`Socio ${nuevoEstado === 'activo' ? 'activado' : 'desactivado'} exitosamente`);
+      
+      // Actualizar estadísticas del dashboard principal
+      await updateDashboardStats();
+      
+      // Recargar lista de clientes
       await loadClientes();
-      await refreshStats();
     } catch (error) {
       console.error('Error updating estado:', error);
       toast.error('Error al cambiar el estado del socio. Inténtalo de nuevo.');
@@ -530,9 +583,9 @@ export function SocioAnalytics() {
     setShowEditModal(true);
   };
 
-  // Calcular métricas avanzadas
+  // Calcular métricas avanzadas basadas en datos reales
   const advancedMetrics = useMemo(() => {
-    if (!clientes.length) return null;
+    if (!clienteStats || !clientes.length) return null;
 
     const now = new Date();
     const startDate = (() => {
@@ -545,18 +598,21 @@ export function SocioAnalytics() {
       }
     })();
 
+    // Filtrar clientes en el rango de tiempo
     const sociosEnRango = clientes.filter(cliente => 
       cliente.creadoEn.toDate() >= startDate
     );
 
-    const totalSocios = clientes.length;
-    const sociosNuevos = sociosEnRango.length;
-    const sociosActivos = clientes.filter(c => c.estado === 'activo').length;
-    const sociosConCompras = clientes.filter(c => c.totalCompras > 0).length;
+    // Usar estadísticas reales del servicio
+    const totalSocios = clienteStats.totalClientes;
+    const sociosNuevos = clienteStats.clientesNuevos;
+    const sociosActivos = clienteStats.clientesActivos;
+    const sociosConCompras = clientes.filter(c => (c.totalCompras || 0) > 0).length;
     
-    const totalGastado = clientes.reduce((sum, c) => sum + c.montoTotalGastado, 0);
-    const totalCompras = clientes.reduce((sum, c) => sum + c.totalCompras, 0);
-    const totalBeneficios = clientes.reduce((sum, c) => sum + c.beneficiosUsados, 0);
+    // Calcular métricas financieras
+    const totalGastado = clientes.reduce((sum, c) => sum + (c.montoTotalGastado || 0), 0);
+    const totalCompras = clientes.reduce((sum, c) => sum + (c.totalCompras || 0), 0);
+    const totalBeneficios = clientes.reduce((sum, c) => sum + (c.beneficiosUsados || 0), 0);
     
     const promedioGastoPorSocio = totalSocios > 0 ? totalGastado / totalSocios : 0;
     const promedioComprasPorSocio = totalSocios > 0 ? totalCompras / totalSocios : 0;
@@ -564,9 +620,9 @@ export function SocioAnalytics() {
     const tasaRetencion = totalSocios > 0 ? (sociosActivos / totalSocios) * 100 : 0;
     
     const ticketPromedio = totalCompras > 0 ? totalGastado / totalCompras : 0;
-    const clv = promedioGastoPorSocio * (promedioComprasPorSocio / 12) * 24;
+    const clv = clienteStats.valorVidaPromedio || 0;
     const frecuenciaPromedio = clientes.length > 0 
-      ? clientes.reduce((sum, c) => sum + c.frecuenciaVisitas, 0) / clientes.length 
+      ? clientes.reduce((sum, c) => sum + (c.frecuenciaVisitas || 0), 0) / clientes.length 
       : 0;
 
     return {
@@ -584,19 +640,28 @@ export function SocioAnalytics() {
       ticketPromedio,
       clv,
       frecuenciaPromedio,
+      crecimientoMensual: clienteStats.crecimientoMensual || 0,
     };
-  }, [clientes, timeRange]);
+  }, [clientes, timeRange, clienteStats]);
+
+  // Actualizar estadísticas cuando se monta el componente
+  useEffect(() => {
+    updateDashboardStats();
+  }, []);
 
   if (loading && clientes.length === 0) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
-              <div className="w-12 h-12 bg-gray-200 rounded-xl mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-            </div>
+            <AdvancedMetricCard
+              key={i}
+              title=""
+              value={0}
+              icon={<Users size={20} />}
+              color="#3b82f6"
+              loading={true}
+            />
           ))}
         </div>
       </div>
@@ -629,7 +694,7 @@ export function SocioAnalytics() {
               }`}
             >
               <Users size={16} className="inline mr-2" />
-              Socios ({clientes.length})
+              Socios ({total})
             </button>
             <button
               onClick={() => setActiveTab('analytics')}
@@ -647,7 +712,7 @@ export function SocioAnalytics() {
           <Button
             variant="outline"
             leftIcon={<RefreshCw size={16} />}
-            onClick={refreshStats}
+            onClick={updateDashboardStats}
             loading={loading}
             className="border-gray-300 text-gray-700 hover:bg-gray-50"
           >
@@ -707,7 +772,7 @@ export function SocioAnalytics() {
                               <p className="text-sm text-slate-500">{cliente.email}</p>
                             </div>
                             <div className="text-sm text-slate-400">
-                              ${cliente.montoTotalGastado.toLocaleString()}
+                              ${(cliente.montoTotalGastado || 0).toLocaleString()}
                             </div>
                           </div>
                         </div>
@@ -956,7 +1021,7 @@ export function SocioAnalytics() {
             </div>
           </div>
 
-          {/* Métricas principales */}
+          {/* Métricas principales con datos reales */}
           {advancedMetrics && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <AdvancedMetricCard
@@ -1024,20 +1089,122 @@ export function SocioAnalytics() {
                   />
                   
                   <AdvancedMetricCard
-                    title="Frecuencia Promedio"
-                    value={advancedMetrics.frecuenciaPromedio.toFixed(1)}
-                    icon={<Activity size={20} />}
+                    title="Crecimiento Mensual"
+                    value={advancedMetrics.crecimientoMensual}
+                    icon={<TrendingUp size={20} />}
                     color="#84cc16"
-                    subtitle="Visitas por socio"
+                    format="percentage"
+                    subtitle="Crecimiento de la base"
                   />
                 </>
               )}
             </div>
           )}
+
+          {/* Gráficos y análisis adicionales */}
+          {advancedMetrics && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Distribución por estado */}
+              <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+                <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                  <Activity className="text-blue-600" size={24} />
+                  Distribución por Estado
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 bg-emerald-500 rounded-full"></div>
+                      <span className="font-medium text-slate-700">Activos</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-emerald-600">{advancedMetrics.sociosActivos}</div>
+                      <div className="text-sm text-slate-500">
+                        {advancedMetrics.totalSocios > 0 ? ((advancedMetrics.sociosActivos / advancedMetrics.totalSocios) * 100).toFixed(1) : 0}%
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 bg-slate-500 rounded-full"></div>
+                      <span className="font-medium text-slate-700">Inactivos</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-slate-600">
+                        {advancedMetrics.totalSocios - advancedMetrics.sociosActivos}
+                      </div>
+                      <div className="text-sm text-slate-500">
+                        {advancedMetrics.totalSocios > 0 ? (((advancedMetrics.totalSocios - advancedMetrics.sociosActivos) / advancedMetrics.totalSocios) * 100).toFixed(1) : 0}%
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                      <span className="font-medium text-slate-700">Con Compras</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-blue-600">{advancedMetrics.sociosConCompras}</div>
+                      <div className="text-sm text-slate-500">
+                        {advancedMetrics.totalSocios > 0 ? ((advancedMetrics.sociosConCompras / advancedMetrics.totalSocios) * 100).toFixed(1) : 0}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Resumen financiero */}
+              <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+                <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                  <DollarSign className="text-emerald-600" size={24} />
+                  Resumen Financiero
+                </h3>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600">Ingresos Totales</span>
+                    <span className="text-2xl font-bold text-emerald-600">
+                      ${advancedMetrics.totalGastado.toLocaleString()}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600">Promedio por Socio</span>
+                    <span className="text-xl font-semibold text-slate-900">
+                      ${advancedMetrics.promedioGastoPorSocio.toLocaleString()}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600">Ticket Promedio</span>
+                    <span className="text-xl font-semibold text-slate-900">
+                      ${advancedMetrics.ticketPromedio.toLocaleString()}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600">Valor Vida Cliente</span>
+                    <span className="text-xl font-semibold text-purple-600">
+                      ${advancedMetrics.clv.toLocaleString()}
+                    </span>
+                  </div>
+                  
+                  <div className="pt-4 border-t border-slate-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-600">Total Transacciones</span>
+                      <span className="text-lg font-medium text-slate-900">
+                        {advancedMetrics.totalCompras.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 
-      {/* Todos los modales mantienen la misma estructura pero con z-index mejorado */}
+      {/* Todos los modales con la misma estructura pero mejorados */}
       {/* Modal de crear socio - PANTALLA COMPLETA CON PORTAL */}
       <Dialog open={showCreateModal} onClose={() => setShowCreateModal(false)} fullScreen>
         <DialogContent fullScreen>
@@ -1079,7 +1246,7 @@ export function SocioAnalytics() {
                     label="Email *"
                     type="email"
                     value={formData.email}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                     placeholder="email@ejemplo.com"
                     required
                     className="text-xl py-4"
@@ -1242,7 +1409,7 @@ export function SocioAnalytics() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de editar socio - PANTALLA COMPLETA CON PORTAL */}
+      {/* Modal de editar socio - Similar estructura pero con colores emerald */}
       <Dialog open={showEditModal} onClose={() => setShowEditModal(false)} fullScreen>
         <DialogContent fullScreen>
           <DialogHeader>
@@ -1257,10 +1424,11 @@ export function SocioAnalytics() {
             </p>
           </DialogHeader>
 
+          {/* Contenido similar al modal de crear pero con datos pre-llenados */}
           <div className="max-w-6xl mx-auto">
             <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-10 mb-10">
+              {/* Mismo formulario que crear pero con formData pre-llenado */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                {/* Información Personal */}
                 <div className="space-y-8">
                   <div className="flex items-center gap-4 mb-8">
                     <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
@@ -1305,7 +1473,6 @@ export function SocioAnalytics() {
                   />
                 </div>
 
-                {/* Información Adicional */}
                 <div className="space-y-8">
                   <div className="flex items-center gap-4 mb-8">
                     <div className="w-12 h-12 bg-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
@@ -1346,7 +1513,7 @@ export function SocioAnalytics() {
               </div>
             </div>
 
-            {/* Configuración de Comunicación */}
+            {/* Configuración de Comunicación igual que en crear */}
             <div className="bg-white rounded-3xl border border-slate-200 p-10 shadow-lg">
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
@@ -1445,7 +1612,7 @@ export function SocioAnalytics() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de eliminar socio - PANTALLA COMPLETA CON PORTAL */}
+      {/* Modal de eliminar socio */}
       <Dialog open={showDeleteModal} onClose={() => setShowDeleteModal(false)} fullScreen>
         <DialogContent fullScreen>
           <DialogHeader>
@@ -1495,15 +1662,15 @@ export function SocioAnalytics() {
                       <p className="text-slate-600 mb-4 text-lg">{selectedCliente.email}</p>
                       <div className="grid grid-cols-3 gap-6 text-center">
                         <div>
-                          <span className="text-2xl font-bold text-slate-900">{selectedCliente.totalCompras}</span>
+                          <span className="text-2xl font-bold text-slate-900">{selectedCliente.totalCompras || 0}</span>
                           <p className="text-slate-500">Compras</p>
                         </div>
                         <div>
-                          <span className="text-2xl font-bold text-slate-900">${selectedCliente.montoTotalGastado.toLocaleString()}</span>
+                          <span className="text-2xl font-bold text-slate-900">${(selectedCliente.montoTotalGastado || 0).toLocaleString()}</span>
                           <p className="text-slate-500">Total gastado</p>
                         </div>
                         <div>
-                          <span className="text-2xl font-bold text-slate-900">{selectedCliente.beneficiosUsados}</span>
+                          <span className="text-2xl font-bold text-slate-900">{selectedCliente.beneficiosUsados || 0}</span>
                           <p className="text-slate-500">Beneficios usados</p>
                         </div>
                       </div>
@@ -1543,7 +1710,7 @@ export function SocioAnalytics() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de detalle del socio - PANTALLA COMPLETA CON PORTAL */}
+      {/* Modal de detalle del socio */}
       <Dialog open={showDetailModal} onClose={() => setShowDetailModal(false)} fullScreen>
         <DialogContent fullScreen>
           <DialogHeader>
@@ -1662,7 +1829,7 @@ export function SocioAnalytics() {
                     <ShoppingBag size={40} className="text-blue-600" />
                   </div>
                   <div className="text-4xl font-bold text-slate-900 mb-3">
-                    {selectedCliente.totalCompras}
+                    {selectedCliente.totalCompras || 0}
                   </div>
                   <div className="text-slate-500 text-lg">Total Compras</div>
                 </div>
@@ -1672,7 +1839,7 @@ export function SocioAnalytics() {
                     <DollarSign size={40} className="text-emerald-600" />
                   </div>
                   <div className="text-4xl font-bold text-slate-900 mb-3">
-                    ${selectedCliente.montoTotalGastado.toLocaleString()}
+                    ${(selectedCliente.montoTotalGastado || 0).toLocaleString()}
                   </div>
                   <div className="text-slate-500 text-lg">Total Gastado</div>
                 </div>
@@ -1682,7 +1849,7 @@ export function SocioAnalytics() {
                     <Gift size={40} className="text-purple-600" />
                   </div>
                   <div className="text-4xl font-bold text-slate-900 mb-3">
-                    {selectedCliente.beneficiosUsados}
+                    {selectedCliente.beneficiosUsados || 0}
                   </div>
                   <div className="text-slate-500 text-lg">Beneficios Usados</div>
                 </div>
@@ -1692,7 +1859,7 @@ export function SocioAnalytics() {
                     <Receipt size={40} className="text-orange-600" />
                   </div>
                   <div className="text-4xl font-bold text-slate-900 mb-3">
-                    ${selectedCliente.promedioCompra.toLocaleString()}
+                    ${(selectedCliente.promedioCompra || 0).toLocaleString()}
                   </div>
                   <div className="text-slate-500 text-lg">Promedio Compra</div>
                 </div>
@@ -1749,7 +1916,14 @@ export function SocioAnalytics() {
 
       {/* Componente de creación rápida flotante mejorado */}
       <QuickClienteCreator
-        onCreateCliente={createCliente}
+        onCreateCliente={async (clienteData) => {
+          const result = await createCliente(clienteData);
+          if (result) {
+            // Actualizar estadísticas del dashboard principal
+            await updateDashboardStats();
+          }
+          return result;
+        }}
         loading={loading}
       />
     </div>
@@ -1757,4 +1931,3 @@ export function SocioAnalytics() {
 }
 
 export default SocioAnalytics;
-
