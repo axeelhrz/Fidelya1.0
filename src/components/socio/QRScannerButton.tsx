@@ -51,6 +51,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
       const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
       const isSmallScreen = window.innerWidth <= 768;
       setIsMobile(isMobileDevice || isSmallScreen);
+      console.log('📱 Mobile detection:', { isMobileDevice, isSmallScreen, result: isMobileDevice || isSmallScreen });
     };
 
     checkMobile();
@@ -62,6 +63,7 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
   useEffect(() => {
     const initializeScanner = async () => {
       try {
+        console.log('🔄 Initializing QR Scanner...');
         // Dynamically import QR scanner library
         const { BrowserQRCodeReader } = await import('@zxing/library');
         scannerRef.current = new BrowserQRCodeReader();
@@ -141,6 +143,8 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
       };
 
       const constraints = isMobile ? mobileConstraints : desktopConstraints;
+      console.log('📹 Using constraints:', constraints);
+      
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       
       // Store the stream reference
@@ -202,7 +206,13 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
   };
 
   const startScanning = async () => {
+    console.log('🔍 startScanning called - Button clicked!');
+    console.log('Scanner ref:', scannerRef.current);
+    console.log('Loading:', loading);
+    console.log('Disabled:', disabled);
+    
     if (!scannerRef.current) {
+      console.error('❌ Scanner not initialized');
       setError('Escáner no inicializado. Recarga la página e intenta de nuevo.');
       return;
     }
@@ -471,6 +481,9 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
     fileInputRef.current?.click();
   };
 
+  // Debug: Log when component renders
+  console.log('🔄 QRScannerButton render:', { isScanning, loading, disabled, error });
+
   if (!isScanning) {
     return (
       <div className="space-y-4">
@@ -478,7 +491,10 @@ export const QRScannerButton: React.FC<QRScannerButtonProps> = ({
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={startScanning}
+          onClick={() => {
+            console.log('🖱️ Button clicked!');
+            startScanning();
+          }}
           disabled={loading || disabled}
           className="w-full bg-gradient-to-r from-violet-500 to-purple-600 text-white py-4 px-6 rounded-2xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3 relative overflow-hidden group"
         >
