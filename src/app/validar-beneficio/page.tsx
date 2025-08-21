@@ -18,6 +18,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { comercioService } from '@/services/comercio.service';
+import { validacionesService } from '@/services/validaciones.service';
 
 interface Comercio {
   id: string;
@@ -52,7 +53,6 @@ const ValidarBeneficioContent: React.FC = () => {
   
   const [comercio, setComercio] = useState<Comercio | null>(null);
   const [beneficios, setBeneficios] = useState<Beneficio[]>([]);
-  // const [selectedBeneficio, setSelectedBeneficio] = useState<Beneficio | null>(null);
   const [loading, setLoading] = useState(true);
   const [validating, setValidating] = useState(false);
   const [error, setError] = useState<string>('');
@@ -127,9 +127,6 @@ const ValidarBeneficioContent: React.FC = () => {
         });
         setBeneficios(beneficiosMapped);
 
-        // If specific benefit ID is provided, you could select it here if needed
-        // (removed unused selectedBeneficio logic)
-
       } catch (err) {
         console.error('Error loading data:', err);
         setError('Error al cargar la información del comercio');
@@ -157,20 +154,53 @@ const ValidarBeneficioContent: React.FC = () => {
 
     setValidating(true);
     try {
-      // Here you would call your validation service
-      // For now, we'll simulate the validation
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success(`¡Beneficio "${beneficio.titulo}" validado exitosamente!`);
-      
-      // Redirect to socio dashboard after successful validation
-      setTimeout(() => {
-        router.push('/dashboard/socio/historial');
-      }, 2000);
+      console.log('🔍 Iniciando validación de beneficio:', {
+        socioId: user.uid,
+        comercioId: comercioId!,
+        beneficioId: beneficio.id,
+        asociacionId: user.asociacionId
+      });
+
+      // Usar el servicio real de validación
+      const result = await validacionesService.validarAcceso({
+        socioId: user.uid,
+        comercioId: comercioId!,
+        beneficioId: beneficio.id,
+        asociacionId: user.asociacionId
+      });
+
+      console.log('✅ Resultado de validación:', result);
+
+      if (result.success) {
+        toast.success(`¡Beneficio "${beneficio.titulo}" validado exitosamente!`);
+        
+        // Mostrar información detallada del resultado
+        if (result.data) {
+          const { validacion, beneficio: beneficioData, comercio: comercioData } = result.data;
+          
+          // Toast con información detallada
+          toast.success(
+            `🎉 ¡Validación exitosa!\n` +
+            `💰 Ahorro: $${validacion.montoDescuento.toLocaleString()}\n` +
+            `🏪 Comercio: ${comercioData.nombre}\n` +
+            `🎁 Beneficio: ${beneficioData.titulo}`,
+            { duration: 6000 }
+          );
+        }
+        
+        // Redirect to socio dashboard after successful validation
+        setTimeout(() => {
+          router.push('/dashboard/socio/historial');
+        }, 3000);
+      } else {
+        // Mostrar error específico
+        toast.error(`❌ ${result.message || 'Error al validar el beneficio'}`);
+      }
       
     } catch (err) {
-      console.error('Error validating benefit:', err);
-      toast.error('Error al validar el beneficio. Inténtalo de nuevo.');
+      console.error('❌ Error validating benefit:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Error al validar el beneficio. Inténtalo de nuevo.';
+      toast.error(`❌ ${errorMessage}`);
     } finally {
       setValidating(false);
     }
@@ -277,7 +307,9 @@ const ValidarBeneficioContent: React.FC = () => {
                   style={{ objectFit: 'cover' }}
                 />
               ) : (
-                <Store className="w-8 h-8 text-white" />
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <Store className="w-6 h-6 text-white" />
+                </div>
               )}
 
               <div className="flex-1">
@@ -322,6 +354,11 @@ const ValidarBeneficioContent: React.FC = () => {
                   <p className="text-green-600 text-sm">
                     {user.role === 'socio' ? 'Puedes validar beneficios' : 'Solo los socios pueden validar beneficios'}
                   </p>
+                  {user.asociacionId && (
+                    <p className="text-green-600 text-sm">
+                      Asociación: {user.asociacionNombre || 'Asociado'}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
