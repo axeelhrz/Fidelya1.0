@@ -155,16 +155,16 @@ export function useSocios(): UseSociosReturn {
     }
   }, [loadSocios, refreshStats]);
 
-  // Delete socio (soft delete)
+  // Delete socio completely (hard delete)
   const deleteSocio = useCallback(async (id: string): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
 
-      const success = await socioService.deleteSocio(id);
+      const success = await socioService.deleteSocioCompletely(id);
       
       if (success) {
-        toast.success('Socio eliminado exitosamente');
+        toast.success('Socio eliminado completamente');
         await loadSocios(); // Refresh list
         await refreshStats(); // Refresh stats
         return true;
