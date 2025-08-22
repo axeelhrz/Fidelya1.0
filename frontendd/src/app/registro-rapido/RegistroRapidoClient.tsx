@@ -351,13 +351,25 @@ const RegistroRapidoClient: React.FC = () => {
         formData.append('photo', selectedPhoto);
       }
 
-      // Send to API (adjust endpoint if needed)
+      // Send to API
       const response = await axios.post('/api/registro-rapido', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const code = (response.data && (response.data.code || response.data.registrationCode)) || '';
-      setRegistrationCode(code);
+      // Extract registration data from response
+      const responseData = response.data;
+      const registrationInfo = responseData.data || responseData;
+      
+      // Set registration code and data
+      setRegistrationCode(responseData.registration_code || registrationInfo.registration_code || '');
+      setRegistrationData({
+        ...registrationInfo,
+        full_name: `${data.first_name} ${data.last_name}`,
+        email: data.email,
+        location: `${data.city}, ${data.province}`,
+        club: data.club_name || 'Sin club especificado'
+      });
+      
       setIsSuccess(true);
     } catch (error: unknown) {
       console.error('Error en registro rápido:', error);
