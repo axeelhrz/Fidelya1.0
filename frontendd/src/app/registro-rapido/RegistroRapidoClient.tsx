@@ -275,6 +275,7 @@ const RegistroRapidoClient: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [registrationCode, setRegistrationCode] = useState('');
+  const [registrationData, setRegistrationData] = useState<any>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [showCustomRacketBrand, setShowCustomRacketBrand] = useState(false);
