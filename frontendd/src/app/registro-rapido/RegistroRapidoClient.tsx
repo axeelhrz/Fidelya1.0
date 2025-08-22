@@ -178,7 +178,7 @@ const CustomBrandFields: React.FC<{
               className="w-full px-4 py-3 rounded-xl border-2 border-amber-400 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 hover:border-amber-500 text-gray-900 font-semibold placeholder-amber-600"
             />
             <p className="text-xs text-amber-700 font-medium">
-              💡 Ingresa cualquier marca que no esté en la lista
+              Ingresa cualquier marca que no esté en la lista
             </p>
           </div>
 
