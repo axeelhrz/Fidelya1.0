@@ -15,13 +15,15 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'registro-rapido'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
         'http://localhost:3000',
+        'http://localhost:3002', // Added for current frontend port
         'http://127.0.0.1:3000',
+        'http://127.0.0.1:3002', // Added for current frontend port
         'https://involved-retailers-occasionally-macintosh.trycloudflare.com',
         env('FRONTEND_URL', 'http://localhost:3000'),
         // Agregar tu dominio de producción aquí
