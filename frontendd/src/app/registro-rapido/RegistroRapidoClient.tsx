@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, UseFormRegister, UseFormSetValue } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ThemeProvider } from '@mui/material/styles';
@@ -14,6 +14,7 @@ import AuthLayout from '@/components/auth/AuthLayout';
 import AuthHeader from '@/components/auth/AuthHeader';
 import CustomBrandHelper from '@/components/ui/CustomBrandHelper';
 import axios from '@/lib/axios';
+import { isAxiosError } from 'axios';
 
 const registroRapidoSchema = z.object({
   // Información personal básica
@@ -115,15 +116,19 @@ const RUBBER_TYPES = [
   { value: 'pupo_corto', label: 'Pupo Corto' },
   { value: 'antitopspin', label: 'Antitopspin' }
 ];
-const SPONGE_THICKNESSES = ['0.5', '0.7', '1.5', '1.6', '1.8', '1.9', '2', '2.1', '2.2', 'sin esponja'];
 const HARDNESS_LEVELS = ['h42', 'h44', 'h46', 'h48', 'h50'];
+const SPONGE_THICKNESSES = ['sin esponja', '1.0', '1.5', '1.8', '2.0', 'max'];
 
+// Tipos fuertes para los campos de marcas/modelos
+type BrandFieldName = 'racket_brand' | 'drive_rubber_brand' | 'backhand_rubber_brand';
+type CustomBrandFieldName = 'racket_custom_brand' | 'drive_rubber_custom_brand' | 'backhand_rubber_custom_brand';
+type CustomModelFieldName = 'racket_custom_model' | 'drive_rubber_custom_model' | 'backhand_rubber_custom_model';
 // Componente para campos personalizados mejorado
 const CustomBrandFields: React.FC<{
   show: boolean;
-  brandFieldName: string;
-  modelFieldName: string;
-  register: any;
+  brandFieldName: CustomBrandFieldName;
+  modelFieldName: CustomModelFieldName;
+  register: UseFormRegister<RegistroRapidoFormValues>;
   brandLabel?: string;
   modelLabel?: string;
   brandPlaceholder?: string;
@@ -200,9 +205,9 @@ const CustomBrandFields: React.FC<{
 // Componente mejorado para selectores de marca
 const BrandSelector: React.FC<{
   label: string;
-  fieldName: string;
-  register: any;
-  setValue: any;
+  fieldName: BrandFieldName;
+  register: UseFormRegister<RegistroRapidoFormValues>;
+  setValue: UseFormSetValue<RegistroRapidoFormValues>;
   onCustomChange: (isCustom: boolean) => void;
   placeholder?: string;
   helpText?: string;
@@ -226,8 +231,20 @@ const BrandSelector: React.FC<{
           const isCustom = e.target.value === 'custom';
           onCustomChange(isCustom);
           if (!isCustom) {
-            setValue(fieldName.replace('_brand', '_custom_brand'), '');
-            setValue(fieldName.replace('_brand', '_custom_model'), '');
+            switch (fieldName) {
+              case 'racket_brand':
+                setValue('racket_custom_brand', '');
+                setValue('racket_custom_model', '');
+                break;
+              case 'drive_rubber_brand':
+                setValue('drive_rubber_custom_brand', '');
+                setValue('drive_rubber_custom_model', '');
+                break;
+              case 'backhand_rubber_brand':
+                setValue('backhand_rubber_custom_brand', '');
+                setValue('backhand_rubber_custom_model', '');
+                break;
+            }
           }
         }}
         className="w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-900 font-semibold placeholder-gray-600 bg-white hover:border-gray-400 border-gray-300"
@@ -311,7 +328,7 @@ const RegistroRapidoClient: React.FC = () => {
       // Add all form data
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== '') {
-          formData.append(key, value);
+          formData.append(key, String(value));
         }
       });
 
@@ -320,44 +337,49 @@ const RegistroRapidoClient: React.FC = () => {
         // Validate photo size (5MB max)
         if (selectedPhoto.size > 5 * 1024 * 1024) {
           alert('La foto es demasiado grande. El tamaño máximo es 5MB.');
-          setIsSubmitting(false);
           return;
         }
         
         // Validate photo type
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!allowedTypes.includes(selectedPhoto.type)) {
-          alert('Tipo de archivo no válido. Solo se permiten imágenes (JPEG, PNG, GIF, WebP).');
-          setIsSubmitting(false);
+          alert('Tipo de archivo no permitido. Usa JPEG, PNG, GIF o WebP.');
           return;
         }
-        
+
         formData.append('photo', selectedPhoto);
       }
 
-      const response = await axios.post('/api/registro-rapido', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      // Send to API (adjust endpoint if needed)
+      const response = await axios.post('/registro-rapido', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      setRegistrationCode(response.data.registration_code);
+      const code = (response.data && (response.data.code || response.data.registrationCode)) || '';
+      setRegistrationCode(code);
       setIsSuccess(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error en registro rápido:', error);
-      
-      // Handle specific error messages
-      if (error.response?.status === 422) {
-        const errors = error.response.data.errors;
-        if (errors?.email) {
-          alert('Este email ya está registrado en el censo.');
-        } else if (errors?.photo) {
-          alert('Error con la foto: ' + errors.photo[0]);
+
+      if (isAxiosError(error)) {
+        const status = error.response?.status;
+        if (status === 422) {
+          const data = error.response?.data as unknown;
+          const { errors, message } = (data ?? {}) as { errors?: Record<string, string[] | string>; message?: string };
+          if (errors && 'email' in errors) {
+            alert('Este email ya está registrado en el censo.');
+          } else if (errors && 'photo' in errors) {
+            const photoErrors = errors['photo'];
+            const first = Array.isArray(photoErrors) ? photoErrors[0] : String(photoErrors ?? '');
+            alert('Error con la foto: ' + first);
+          } else {
+            alert('Error de validación: ' + (message || 'Por favor revisa los datos ingresados.'));
+          }
+        } else if (status === 500) {
+          alert('Error interno del servidor. Por favor intenta de nuevo más tarde.');
         } else {
-          alert('Error de validación: ' + (error.response.data.message || 'Por favor revisa los datos ingresados.'));
+          alert('Error al registrarse. Por favor intenta de nuevo.');
         }
-      } else if (error.response?.status === 500) {
-        alert('Error interno del servidor. Por favor intenta de nuevo más tarde.');
       } else {
         alert('Error al registrarse. Por favor intenta de nuevo.');
       }
@@ -773,7 +795,7 @@ const RegistroRapidoClient: React.FC = () => {
                       <div>
                         <h4 className="text-blue-900 font-bold text-sm">💡 ¿No encuentras tu marca?</h4>
                         <p className="text-blue-800 text-xs font-medium">
-                          Selecciona "¿Tu marca no está aquí? ¡Agrégala!" para ingresar cualquier marca personalizada
+                          Selecciona &quot;¿Tu marca no está aquí? ¡Agrégala!&quot; para ingresar cualquier marca personalizada
                         </p>
                       </div>
                     </div>

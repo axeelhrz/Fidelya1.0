@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from '@/lib/axios';
+import { isAxiosError } from 'axios';
 
 const clubSchema = z.object({
   // Basic information
@@ -47,12 +48,49 @@ const clubSchema = z.object({
 
 type ClubFormValues = z.infer<typeof clubSchema>;
 
+// Domain types to avoid `any`
+type League = {
+  id: number | string;
+  name: string;
+};
+
+type Club = {
+  id: number;
+  league_id?: number | string;
+  name?: string;
+  ruc?: string;
+  country?: string;
+  province?: string;
+  city?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  google_maps_url?: string;
+  description?: string;
+  founded_date?: string;
+  number_of_tables?: number;
+  can_create_tournaments?: boolean;
+  representative_name?: string;
+  representative_phone?: string;
+  representative_email?: string;
+  admin1_name?: string;
+  admin1_phone?: string;
+  admin1_email?: string;
+  admin2_name?: string;
+  admin2_phone?: string;
+  admin2_email?: string;
+  admin3_name?: string;
+  admin3_phone?: string;
+  admin3_email?: string;
+  logo_path?: string;
+};
+
 interface ClubModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  club?: any;
-  leagues: any[];
+  club?: Club;
+  leagues: League[];
 }
 
 const ECUADOR_PROVINCES = [
@@ -174,7 +212,7 @@ const ClubModal: React.FC<ClubModalProps> = ({ isOpen, onClose, onSuccess, club,
       }
 
       await axios({
-        method: club ? 'post' : 'post', // Laravel handles PUT via _method
+        method: 'post', // Laravel handles PUT via _method
         url,
         data: formData,
         headers: {
@@ -183,10 +221,16 @@ const ClubModal: React.FC<ClubModalProps> = ({ isOpen, onClose, onSuccess, club,
       });
 
       onSuccess();
-      onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving club:', error);
-      alert(error.response?.data?.message || 'Error al guardar el club');
+      if (isAxiosError(error)) {
+        const data = error.response?.data as { message?: string } | undefined;
+        alert(data?.message ?? error.message ?? 'Error al guardar el club');
+      } else if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert('Error al guardar el club');
+      }
     } finally {
       setIsSubmitting(false);
     }

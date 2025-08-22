@@ -25,6 +25,7 @@ import {
   Avatar,
   Divider,
   Stack,
+  Checkbox,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
@@ -46,6 +47,10 @@ import HomeIcon from '@mui/icons-material/Home';
 import CakeIcon from '@mui/icons-material/Cake';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
+import TableRestaurantIcon from '@mui/icons-material/TableRestaurant';
+import GpsFixedIcon from '@mui/icons-material/GpsFixed';
+import MapIcon from '@mui/icons-material/Map';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { styled } from '@mui/material/styles';
 import { useSignUp } from '@/hooks/useSignUp';
 import api from '@/lib/axios';
@@ -93,7 +98,21 @@ const StepIndicator = styled(Box)<{ active?: boolean }>(({ theme, active }) => (
   transition: 'all 0.3s ease',
 }));
 
-// Validation Schema - Updated to handle both string and number IDs
+// Ecuador provinces and cities
+const ECUADOR_PROVINCES = [
+  { name: 'Guayas', cities: ['Guayaquil', 'Milagro', 'Buena Fe', 'Daule', 'Durán'] },
+  { name: 'Pichincha', cities: ['Quito', 'Cayambe', 'Mejía', 'Pedro Moncayo', 'Rumiñahui'] },
+  { name: 'Manabí', cities: ['Manta', 'Portoviejo', 'Chone', 'Montecristi', 'Jipijapa'] },
+  { name: 'Azuay', cities: ['Cuenca', 'Gualaceo', 'Paute', 'Santa Isabel', 'Sigsig'] },
+  { name: 'Tungurahua', cities: ['Ambato', 'Baños', 'Cevallos', 'Mocha', 'Patate'] },
+  { name: 'Los Ríos', cities: ['Quevedo', 'Babahoyo', 'Ventanas', 'Vinces', 'Urdaneta'] },
+  { name: 'Santa Elena', cities: ['La Libertad', 'Salinas', 'Santa Elena'] },
+  { name: 'Galápagos', cities: ['Puerto Ayora', 'Puerto Baquerizo Moreno', 'Puerto Villamil'] },
+  { name: 'El Oro', cities: ['Machala', 'Pasaje', 'Santa Rosa', 'Huaquillas', 'Arenillas'] },
+  { name: 'Esmeraldas', cities: ['Esmeraldas', 'Atacames', 'Muisne', 'Quinindé', 'San Lorenzo'] },
+];
+
+// Validation Schema - Updated with new club fields
 const signUpSchema = z.object({
   role: z.enum(['liga', 'miembro', 'club'], {
     error: 'Selecciona un tipo de cuenta',
@@ -103,13 +122,42 @@ const signUpSchema = z.object({
   password_confirmation: z.string().trim().min(1, 'Confirma tu contraseña'),
   phone: z.string().trim().min(1, 'El teléfono es requerido'),
   country: z.string().trim().min(1, 'El país es requerido'),
-  // Campos opcionales que se harán requeridos según el rol
+  
+  // Liga fields
   league_name: z.string().optional(),
   province: z.string().optional(),
+  
+  // Club fields - Enhanced
   club_name: z.string().optional(),
   parent_league_id: z.string().or(z.undefined()).transform((val) => (val && val.trim() !== '' ? val : undefined)),
   city: z.string().optional(),
   address: z.string().optional(),
+  ruc: z.string().optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  google_maps_url: z.string().url('URL inválida').optional().or(z.literal('')),
+  description: z.string().optional(),
+  founded_date: z.string().optional(),
+  number_of_tables: z.number().min(0).max(50).optional(),
+  can_create_tournaments: z.boolean().optional(),
+  
+  // Club representative
+  representative_name: z.string().optional(),
+  representative_phone: z.string().optional(),
+  representative_email: z.string().email('Email inválido').optional().or(z.literal('')),
+  
+  // Club administrators
+  admin1_name: z.string().optional(),
+  admin1_phone: z.string().optional(),
+  admin1_email: z.string().email('Email inválido').optional().or(z.literal('')),
+  admin2_name: z.string().optional(),
+  admin2_phone: z.string().optional(),
+  admin2_email: z.string().email('Email inválido').optional().or(z.literal('')),
+  admin3_name: z.string().optional(),
+  admin3_phone: z.string().optional(),
+  admin3_email: z.string().email('Email inválido').optional().or(z.literal('')),
+  
+  // Member fields
   full_name: z.string().optional(),
   parent_club_id: z.string().or(z.undefined()).transform((val) => (val && val.trim() !== '' ? val : undefined)),
   birth_date: z.string().optional(),
@@ -120,7 +168,7 @@ const signUpSchema = z.object({
   message: 'Las contraseñas no coinciden',
   path: ['password_confirmation'],
 }).refine((data) => {
-  // Validación específica para Liga
+  // Liga validations
   if (data.role === 'liga') {
     return data.league_name && data.league_name.trim().length > 0;
   }
@@ -129,7 +177,6 @@ const signUpSchema = z.object({
   message: 'El nombre de la liga es requerido',
   path: ['league_name'],
 }).refine((data) => {
-  // Validación específica para Liga - provincia
   if (data.role === 'liga') {
     return data.province && data.province.trim().length > 0;
   }
@@ -138,7 +185,7 @@ const signUpSchema = z.object({
   message: 'La provincia es requerida',
   path: ['province'],
 }).refine((data) => {
-  // Validación específica para Club - nombre
+  // Club validations - Enhanced
   if (data.role === 'club') {
     return data.club_name && data.club_name.trim().length > 0;
   }
@@ -147,7 +194,6 @@ const signUpSchema = z.object({
   message: 'El nombre del club es requerido',
   path: ['club_name'],
 }).refine((data) => {
-  // Validación específica para Club - liga padre
   if (data.role === 'club') {
     return data.parent_league_id && String(data.parent_league_id).trim().length > 0;
   }
@@ -156,7 +202,6 @@ const signUpSchema = z.object({
   message: 'Selecciona la liga a la que pertenece',
   path: ['parent_league_id'],
 }).refine((data) => {
-  // Validación específica para Club - ciudad
   if (data.role === 'club') {
     return data.city && data.city.trim().length > 0;
   }
@@ -165,7 +210,6 @@ const signUpSchema = z.object({
   message: 'La ciudad es requerida',
   path: ['city'],
 }).refine((data) => {
-  // Validación específica para Club - dirección
   if (data.role === 'club') {
     return data.address && data.address.trim().length > 0;
   }
@@ -174,7 +218,7 @@ const signUpSchema = z.object({
   message: 'La dirección es requerida',
   path: ['address'],
 }).refine((data) => {
-  // Validación específica para Miembro - nombre completo
+  // Member validations
   if (data.role === 'miembro') {
     return data.full_name && data.full_name.trim().length > 0;
   }
@@ -183,7 +227,6 @@ const signUpSchema = z.object({
   message: 'El nombre completo es requerido',
   path: ['full_name'],
 }).refine((data) => {
-  // Validación específica para Miembro - club padre
   if (data.role === 'miembro') {
     return data.parent_club_id && String(data.parent_club_id).trim().length > 0;
   }
@@ -192,7 +235,6 @@ const signUpSchema = z.object({
   message: 'Selecciona tu club de pertenencia',
   path: ['parent_club_id'],
 }).refine((data) => {
-  // Validación específica para Miembro - fecha de nacimiento
   if (data.role === 'miembro') {
     return data.birth_date && data.birth_date.trim().length > 0;
   }
@@ -201,7 +243,6 @@ const signUpSchema = z.object({
   message: 'La fecha de nacimiento es requerida',
   path: ['birth_date'],
 }).refine((data) => {
-  // Validación específica para Miembro - género
   if (data.role === 'miembro') {
     return data.gender && (data.gender === 'masculino' || data.gender === 'femenino');
   }
@@ -210,7 +251,6 @@ const signUpSchema = z.object({
   message: 'Selecciona tu género',
   path: ['gender'],
 }).refine((data) => {
-  // Validación específica para Miembro - tipo de caucho
   if (data.role === 'miembro') {
     return data.rubber_type && ['liso', 'pupo', 'ambos'].includes(data.rubber_type);
   }
@@ -277,7 +317,6 @@ const SignUpForm: React.FC = () => {
 
   useEffect(() => {
     setIsClient(true);
-    // Load leagues when component mounts
     fetchLeagues();
   }, []);
 
@@ -288,7 +327,6 @@ const SignUpForm: React.FC = () => {
       setLeagues(response.data.data || []);
     } catch (error) {
       console.error('Error fetching leagues:', error);
-      // Fallback data
       setLeagues([
         { id: '1', name: 'Liga Nacional de Tenis de Mesa', province: 'Nacional' },
         { id: '2', name: 'Liga Provincial de Pichincha', province: 'Pichincha' },
@@ -307,7 +345,6 @@ const SignUpForm: React.FC = () => {
       setClubs(response.data.data || []);
     } catch (error) {
       console.error('Error fetching clubs:', error);
-      // Fallback data
       setClubs([
         { id: '1', name: 'Club Deportivo Los Campeones', city: 'Quito', league: { id: '1', name: 'Liga Nacional' } },
         { id: '2', name: 'Club Raqueta de Oro', city: 'Guayaquil', league: { id: '2', name: 'Liga Provincial' } },
@@ -318,7 +355,6 @@ const SignUpForm: React.FC = () => {
     }
   };
 
-  // Load clubs when component mounts or when needed for member registration
   useEffect(() => {
     if (isClient) {
       fetchClubs();
@@ -348,6 +384,26 @@ const SignUpForm: React.FC = () => {
       parent_league_id: undefined,
       city: '',
       address: '',
+      ruc: '',
+      latitude: undefined,
+      longitude: undefined,
+      google_maps_url: '',
+      description: '',
+      founded_date: '',
+      number_of_tables: undefined,
+      can_create_tournaments: false,
+      representative_name: '',
+      representative_phone: '',
+      representative_email: '',
+      admin1_name: '',
+      admin1_phone: '',
+      admin1_email: '',
+      admin2_name: '',
+      admin2_phone: '',
+      admin2_email: '',
+      admin3_name: '',
+      admin3_phone: '',
+      admin3_email: '',
       full_name: '',
       parent_club_id: undefined,
       birth_date: '',
@@ -358,6 +414,8 @@ const SignUpForm: React.FC = () => {
   });
 
   const watchedRole = watch('role');
+  const watchedProvince = watch('province');
+  const selectedProvince = ECUADOR_PROVINCES.find(p => p.name === watchedProvince);
 
   const onSubmit = async (data: SignUpFormData) => {
     if (currentStep === 0) {
@@ -366,14 +424,12 @@ const SignUpForm: React.FC = () => {
       return;
     }
 
-    // Limpiar campos vacíos antes de enviar
     const cleanedData = { ...data };
     
-    // Limpiar campos opcionales sin valor (evitar comparación con '' que no es parte del tipo)
     if (cleanedData.gender === undefined) delete cleanedData.gender;
     if (cleanedData.rubber_type === undefined) delete cleanedData.rubber_type;
     
-    console.log('📝 Submitting form data:', { ...cleanedData, password: '[HIDDEN]', password_confirmation: '[HIDDEN]' });
+    console.log('Submitting form data:', { ...cleanedData, password: '[HIDDEN]', password_confirmation: '[HIDDEN]' });
     
     clearError();
     await signUp(cleanedData);
@@ -760,10 +816,14 @@ const SignUpForm: React.FC = () => {
                     {watchedRole === 'club' && (
                       <>
                         <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', mt: 2 }}>
-                          Información del Club
+                          Información Básica del Club
                         </Typography>
                         {createTextField('club_name', 'Nombre del club', <BusinessIcon sx={{ color: selectedRoleData.color }} />, {
                           placeholder: 'Ej: Club Deportivo Los Campeones'
+                        })}
+                        
+                        {createTextField('ruc', 'RUC (opcional)', <BusinessIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'Ej: 0912345678001'
                         })}
                         
                         <Controller
@@ -806,13 +866,313 @@ const SignUpForm: React.FC = () => {
                           )}
                         />
 
-                        {createTextField('city', 'Provincia / Ciudad', <LocationOnIcon sx={{ color: selectedRoleData.color }} />, {
-                          placeholder: 'Ej: Quito, Guayaquil, Cuenca'
-                        })}
+                        <Divider sx={{ my: 2 }} />
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                          Ubicación del Club
+                        </Typography>
+
+                        <Controller
+                          name="province"
+                          control={control}
+                          render={({ field }) => (
+                            <FormControl fullWidth>
+                              <InputLabel>Provincia</InputLabel>
+                              <Select
+                                {...field}
+                                label="Provincia"
+                                value={field.value || ''}
+                                sx={{
+                                  borderRadius: 2,
+                                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: selectedRoleData.color,
+                                    borderWidth: 2,
+                                  },
+                                }}
+                              >
+                                {ECUADOR_PROVINCES.map((province) => (
+                                  <MenuItem key={province.name} value={province.name}>
+                                    {province.name}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          )}
+                        />
+
+                        <Controller
+                          name="city"
+                          control={control}
+                          render={({ field }) => (
+                            <FormControl fullWidth error={!!errors.city}>
+                              <InputLabel>Ciudad</InputLabel>
+                              <Select
+                                {...field}
+                                label="Ciudad"
+                                disabled={!selectedProvince}
+                                value={field.value || ''}
+                                sx={{
+                                  borderRadius: 2,
+                                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: selectedRoleData.color,
+                                    borderWidth: 2,
+                                  },
+                                }}
+                              >
+                                {selectedProvince?.cities.map((city) => (
+                                  <MenuItem key={city} value={city}>
+                                    {city}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                              {errors.city && (
+                                <FormHelperText>{errors.city.message}</FormHelperText>
+                              )}
+                            </FormControl>
+                          )}
+                        />
+
                         {createTextField('address', 'Dirección completa', <HomeIcon sx={{ color: selectedRoleData.color }} />, {
                           placeholder: 'Ej: Av. 6 de Diciembre N24-253 y Wilson',
                           multiline: true,
                           rows: 2
+                        })}
+
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                          <Controller
+                            name="latitude"
+                            control={control}
+                            render={({ field }) => (
+                              <TextField
+                                {...field}
+                                fullWidth
+                                label="Latitud (GPS)"
+                                type="number"
+                                placeholder="-2.1894"
+                                InputProps={{
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <GpsFixedIcon sx={{ color: selectedRoleData.color }} />
+                                    </InputAdornment>
+                                  ),
+                                }}
+                                sx={{
+                                  '& .MuiOutlinedInput-root': {
+                                    borderRadius: 2,
+                                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                    '&.Mui-focused fieldset': {
+                                      borderColor: selectedRoleData.color,
+                                      borderWidth: 2,
+                                    },
+                                  },
+                                }}
+                              />
+                            )}
+                          />
+                          <Controller
+                            name="longitude"
+                            control={control}
+                            render={({ field }) => (
+                              <TextField
+                                {...field}
+                                fullWidth
+                                label="Longitud (GPS)"
+                                type="number"
+                                placeholder="-79.8890"
+                                InputProps={{
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <GpsFixedIcon sx={{ color: selectedRoleData.color }} />
+                                    </InputAdornment>
+                                  ),
+                                }}
+                                sx={{
+                                  '& .MuiOutlinedInput-root': {
+                                    borderRadius: 2,
+                                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                    '&.Mui-focused fieldset': {
+                                      borderColor: selectedRoleData.color,
+                                      borderWidth: 2,
+                                    },
+                                  },
+                                }}
+                              />
+                            )}
+                          />
+                        </Box>
+
+                        {createTextField('google_maps_url', 'URL de Google Maps (opcional)', <MapIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'https://maps.google.com/...'
+                        })}
+
+                        <Divider sx={{ my: 2 }} />
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                          Detalles del Club
+                        </Typography>
+
+                        <Controller
+                          name="number_of_tables"
+                          control={control}
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
+                              fullWidth
+                              label="Número de mesas"
+                              type="number"
+                              placeholder="4"
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment position="start">
+                                    <TableRestaurantIcon sx={{ color: selectedRoleData.color }} />
+                                  </InputAdornment>
+                                ),
+                              }}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: 2,
+                                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: selectedRoleData.color,
+                                    borderWidth: 2,
+                                  },
+                                },
+                              }}
+                            />
+                          )}
+                        />
+
+                        <Controller
+                          name="founded_date"
+                          control={control}
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
+                              fullWidth
+                              label="Fecha de fundación (opcional)"
+                              type="date"
+                              InputLabelProps={{ shrink: true }}
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment position="start">
+                                    <CakeIcon sx={{ color: selectedRoleData.color }} />
+                                  </InputAdornment>
+                                ),
+                              }}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: 2,
+                                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: selectedRoleData.color,
+                                    borderWidth: 2,
+                                  },
+                                },
+                              }}
+                            />
+                          )}
+                        />
+
+                        {createTextField('description', 'Descripción del club (opcional)', <BusinessIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'Historia, logros, información adicional...',
+                          multiline: true,
+                          rows: 3
+                        })}
+
+                        <Controller
+                          name="can_create_tournaments"
+                          control={control}
+                          render={({ field }) => (
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  {...field}
+                                  checked={field.value || false}
+                                  sx={{
+                                    '&.Mui-checked': {
+                                      color: selectedRoleData.color,
+                                    },
+                                  }}
+                                />
+                              }
+                              label="Puede crear torneos por ranking"
+                              sx={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                                borderRadius: 2,
+                                p: 2,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                              }}
+                            />
+                          )}
+                        />
+
+                        <Divider sx={{ my: 2 }} />
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                          Representante del Club
+                        </Typography>
+
+                        {createTextField('representative_name', 'Nombre del representante', <PersonIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'Juan Pérez'
+                        })}
+                        {createTextField('representative_phone', 'Teléfono del representante', <PhoneIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: '0999123456'
+                        })}
+                        {createTextField('representative_email', 'Email del representante', <EmailIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'representante@club.com'
+                        })}
+
+                        <Divider sx={{ my: 2 }} />
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                          Administradores del Club
+                        </Typography>
+
+                        {/* Admin 1 */}
+                        <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
+                          Administrador 1
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                          {createTextField('admin1_name', 'Nombre', <AdminPanelSettingsIcon sx={{ color: selectedRoleData.color }} />, {
+                            placeholder: 'María González'
+                          })}
+                          {createTextField('admin1_phone', 'Teléfono', <PhoneIcon sx={{ color: selectedRoleData.color }} />, {
+                            placeholder: '0999654321'
+                          })}
+                        </Box>
+                        {createTextField('admin1_email', 'Email', <EmailIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'admin1@club.com'
+                        })}
+
+                        {/* Admin 2 */}
+                        <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary', mt: 2 }}>
+                          Administrador 2 (opcional)
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                          {createTextField('admin2_name', 'Nombre', <AdminPanelSettingsIcon sx={{ color: selectedRoleData.color }} />, {
+                            placeholder: 'Carlos Rodríguez'
+                          })}
+                          {createTextField('admin2_phone', 'Teléfono', <PhoneIcon sx={{ color: selectedRoleData.color }} />, {
+                            placeholder: '0999987654'
+                          })}
+                        </Box>
+                        {createTextField('admin2_email', 'Email', <EmailIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'admin2@club.com'
+                        })}
+
+                        {/* Admin 3 */}
+                        <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary', mt: 2 }}>
+                          Administrador 3 (opcional)
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                          {createTextField('admin3_name', 'Nombre', <AdminPanelSettingsIcon sx={{ color: selectedRoleData.color }} />, {
+                            placeholder: 'Ana López'
+                          })}
+                          {createTextField('admin3_phone', 'Teléfono', <PhoneIcon sx={{ color: selectedRoleData.color }} />, {
+                            placeholder: '0999456789'
+                          })}
+                        </Box>
+                        {createTextField('admin3_email', 'Email', <EmailIcon sx={{ color: selectedRoleData.color }} />, {
+                          placeholder: 'admin3@club.com'
                         })}
 
                         {/* Logo Upload */}

@@ -80,7 +80,7 @@ const QuickRegistrationWaitingRoom: React.FC<QuickRegistrationWaitingRoomProps> 
       } else {
         setError('No se encontró ningún registro con este email');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al buscar registro:', error);
       setError('Error al buscar el registro. Por favor intenta de nuevo.');
     } finally {
