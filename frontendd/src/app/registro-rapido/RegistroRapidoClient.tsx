@@ -444,24 +444,24 @@ const RegistroRapidoClient: React.FC = () => {
               </svg>
             </div>
             
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">¡Registro Exitoso!</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Registro Exitoso</h2>
             
             {/* Información del usuario registrado */}
             {registrationData && (
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
                 <h3 className="text-xl font-bold text-green-800 mb-3">
-                  👋 ¡Hola {registrationData.full_name}!
+                  Hola {registrationData.full_name}
                 </h3>
                 <div className="space-y-2 text-green-700">
                   <p className="font-semibold">
-                    📧 Email: <span className="font-normal">{registrationData.email}</span>
+                    Email: <span className="font-normal">{registrationData.email}</span>
                   </p>
                   <p className="font-semibold">
-                    📍 Ubicación: <span className="font-normal">{registrationData.location}</span>
+                    Ubicación: <span className="font-normal">{registrationData.location}</span>
                   </p>
                   {registrationData.club && registrationData.club !== 'Sin club especificado' && (
                     <p className="font-semibold">
-                      🏓 Club: <span className="font-normal">{registrationData.club}</span>
+                      Club: <span className="font-normal">{registrationData.club}</span>
                     </p>
                   )}
                 </div>
@@ -470,20 +470,20 @@ const RegistroRapidoClient: React.FC = () => {
             
             {/* Código de registro */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-bold text-blue-800 mb-2">🎫 Tu Código de Registro</h3>
+              <h3 className="text-lg font-bold text-blue-800 mb-2">Tu Código de Registro</h3>
               <div className="bg-white border-2 border-blue-300 rounded-lg p-4 mb-3">
                 <span className="text-2xl font-bold text-blue-600 tracking-wider">
                   {registrationCode || 'Generando código...'}
                 </span>
               </div>
               <p className="text-sm text-blue-700 font-medium">
-                💾 Guarda este código, lo necesitarás para consultar tu estado
+                Guarda este código, lo necesitarás para consultar tu estado
               </p>
             </div>
             
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-6">
               <p className="text-yellow-800 font-semibold text-sm">
-                ⏳ Te has registrado exitosamente en el censo de tenis de mesa. 
+                Te has registrado exitosamente en el censo de tenis de mesa. 
                 Pronto nos pondremos en contacto contigo para completar el proceso.
               </p>
             </div>
@@ -493,19 +493,19 @@ const RegistroRapidoClient: React.FC = () => {
                 onClick={() => router.push('/censo-waiting-room')}
                 className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 px-6 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 font-bold text-lg shadow-lg hover:shadow-xl"
               >
-                🏠 Ir a Sala de Espera
+                Ir a Sala de Espera
               </button>
               <button
                 onClick={() => router.push('/')}
                 className="w-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 py-4 px-6 rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 font-bold text-lg border-2 border-gray-300"
               >
-                🏠 Volver al Inicio
+                Volver al Inicio
               </button>
             </div>
             
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600 font-medium">
-                🔒 Tu información está segura y será utilizada únicamente para el censo de tenis de mesa
+                Tu información está segura y será utilizada únicamente para el censo de tenis de mesa
               </p>
             </div>
           </motion.div>
