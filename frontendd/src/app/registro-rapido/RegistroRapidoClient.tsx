@@ -71,6 +71,14 @@ const registroRapidoSchema = z.object({
 
 type RegistroRapidoFormValues = z.infer<typeof registroRapidoSchema>;
 
+type RegistrationData = {
+  full_name: string;
+  email: string;
+  location: string;
+  club: string;
+  [key: string]: unknown;
+};
+
 const ECUADOR_PROVINCES = [
   { name: 'Guayas', cities: ['Guayaquil', 'Milagro', 'Buena Fe', 'Daule', 'Durán'] },
   { name: 'Pichincha', cities: ['Quito', 'Cayambe', 'Mejía', 'Pedro Moncayo', 'Rumiñahui'] },
@@ -264,7 +272,7 @@ const BrandSelector: React.FC<{
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          {helpText}
+          <span>{helpText}</span>
         </p>
       )}
     </div>
@@ -275,7 +283,7 @@ const RegistroRapidoClient: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [registrationCode, setRegistrationCode] = useState('');
-  const [registrationData, setRegistrationData] = useState<any>(null);
+  const [registrationData, setRegistrationData] = useState<RegistrationData | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [showCustomRacketBrand, setShowCustomRacketBrand] = useState(false);
