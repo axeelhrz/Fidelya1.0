@@ -436,33 +436,77 @@ const RegistroRapidoClient: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center"
+            className="text-center max-w-2xl mx-auto"
           >
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Registro Exitoso</h2>
-            <p className="text-gray-700 font-semibold mb-4">
-              Tu código de registro es: <span className="font-bold text-green-600 text-lg">{registrationCode}</span>
-            </p>
-            <p className="text-gray-700 font-medium mb-6">
-              Te has registrado exitosamente en el censo de tenis de mesa. Pronto nos pondremos en contacto contigo.
-            </p>
+            
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">¡Registro Exitoso!</h2>
+            
+            {/* Información del usuario registrado */}
+            {registrationData && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
+                <h3 className="text-xl font-bold text-green-800 mb-3">
+                  👋 ¡Hola {registrationData.full_name}!
+                </h3>
+                <div className="space-y-2 text-green-700">
+                  <p className="font-semibold">
+                    📧 Email: <span className="font-normal">{registrationData.email}</span>
+                  </p>
+                  <p className="font-semibold">
+                    📍 Ubicación: <span className="font-normal">{registrationData.location}</span>
+                  </p>
+                  {registrationData.club && registrationData.club !== 'Sin club especificado' && (
+                    <p className="font-semibold">
+                      🏓 Club: <span className="font-normal">{registrationData.club}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Código de registro */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
+              <h3 className="text-lg font-bold text-blue-800 mb-2">🎫 Tu Código de Registro</h3>
+              <div className="bg-white border-2 border-blue-300 rounded-lg p-4 mb-3">
+                <span className="text-2xl font-bold text-blue-600 tracking-wider">
+                  {registrationCode || 'Generando código...'}
+                </span>
+              </div>
+              <p className="text-sm text-blue-700 font-medium">
+                💾 Guarda este código, lo necesitarás para consultar tu estado
+              </p>
+            </div>
+            
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-6">
+              <p className="text-yellow-800 font-semibold text-sm">
+                ⏳ Te has registrado exitosamente en el censo de tenis de mesa. 
+                Pronto nos pondremos en contacto contigo para completar el proceso.
+              </p>
+            </div>
+            
             <div className="space-y-3">
               <button
                 onClick={() => router.push('/censo-waiting-room')}
-                className="w-full bg-green-600 text-white py-3 px-4 rounded-xl hover:bg-green-700 transition-colors duration-200 font-bold"
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 px-6 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 font-bold text-lg shadow-lg hover:shadow-xl"
               >
-                Ir a Sala de Espera
+                🏠 Ir a Sala de Espera
               </button>
               <button
                 onClick={() => router.push('/')}
-                className="w-full bg-gray-100 text-gray-800 py-3 px-4 rounded-xl hover:bg-gray-200 transition-colors duration-200 font-bold"
+                className="w-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 py-4 px-6 rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 font-bold text-lg border-2 border-gray-300"
               >
-                Volver al Inicio
+                🏠 Volver al Inicio
               </button>
+            </div>
+            
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600 font-medium">
+                🔒 Tu información está segura y será utilizada únicamente para el censo de tenis de mesa
+              </p>
             </div>
           </motion.div>
         </AuthLayout>
