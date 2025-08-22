@@ -29,6 +29,21 @@ const nextConfig: NextConfig = {
       };
     }
     
+    // Reduce bundle size
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+        },
+      },
+    };
+    
     return config;
   },
   
@@ -37,11 +52,21 @@ const nextConfig: NextConfig = {
     NEXT_TELEMETRY_DISABLED: '1',
   },
   
-  // Output configuration
-  output: 'standalone',
-  
   // Disable source maps in production for faster builds
   productionBrowserSourceMaps: false,
+  
+  // Optimize for Vercel deployment
+  trailingSlash: false,
+  
+  // Handle TypeScript errors during build
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  
+  // Handle ESLint errors during build
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
 };
 
 export default nextConfig;
