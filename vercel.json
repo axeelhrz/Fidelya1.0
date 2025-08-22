@@ -1,13 +1,5 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm install",
   "framework": "nextjs",
-  "functions": {
-    "app/api/**/*.ts": {
-      "runtime": "@vercel/node@3.0.7"
-    }
-  },
   "build": {
     "env": {
       "NEXT_TELEMETRY_DISABLED": "1"
