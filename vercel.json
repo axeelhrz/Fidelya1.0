@@ -5,7 +5,7 @@
   "framework": "nextjs",
   "functions": {
     "app/api/**/*.ts": {
-      "runtime": "nodejs18.x"
+      "runtime": "@vercel/node@3.0.7"
     }
   },
   "build": {
@@ -16,11 +16,5 @@
   "github": {
     "silent": true
   },
-  "regions": ["iad1"],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    }
-  ]
+  "regions": ["iad1"]
 }
