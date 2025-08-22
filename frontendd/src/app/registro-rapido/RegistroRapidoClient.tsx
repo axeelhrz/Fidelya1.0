@@ -351,7 +351,7 @@ const RegistroRapidoClient: React.FC = () => {
       }
 
       // Send to API (adjust endpoint if needed)
-      const response = await axios.post('/registro-rapido', formData, {
+      const response = await axios.post('/api/registro-rapido', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
@@ -829,7 +829,7 @@ const RegistroRapidoClient: React.FC = () => {
                       register={register}
                       brandLabel="Marca de Raqueta"
                       modelLabel="Modelo de Raqueta"
-                      brandPlaceholder="Ej: Tibhar, Andro, Gewo, Donic"
+                      brandPlaceholder="Ej: Tibhar, Andro, Gewo"
                       modelPlaceholder="Ej: Stratus PowerWood, Ligna CO"
                       type="racket"
                     />
@@ -934,7 +934,7 @@ const RegistroRapidoClient: React.FC = () => {
                       register={register}
                       brandLabel="Marca de Caucho Drive"
                       modelLabel="Modelo de Caucho Drive"
-                      brandPlaceholder="Ej: Tibhar, Andro, Gewo, Donic"
+                      brandPlaceholder="Ej: Tibhar, Andro, Gewo"
                       modelPlaceholder="Ej: Evolution MX-P, Hexer"
                       type="rubber"
                     />
@@ -1039,7 +1039,7 @@ const RegistroRapidoClient: React.FC = () => {
                       register={register}
                       brandLabel="Marca de Caucho Back"
                       modelLabel="Modelo de Caucho Back"
-                      brandPlaceholder="Ej: Tibhar, Andro, Gewo, Donic"
+                      brandPlaceholder="Ej: Tibhar, Andro, Gewo"
                       modelPlaceholder="Ej: Grass D.TecS, Plaxon"
                       type="rubber"
                     />
